@@ -90,6 +90,7 @@ export default function ReportForm() {
       behavior_types: behaviors,
       violence_subtypes: hasViolent ? violenceTypes : [],
       participation: participation || null,
+      comment: hasViolent ? violenceComment : null,
     }).select().single();
 
     if (error) {
