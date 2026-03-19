@@ -352,34 +352,33 @@ export default function GradesForm() {
         )}
       </div>
 
-      {/* ===== Team Evaluation - דיווחי צוות כיתה ===== */}
-      <div className="card-styled rounded-2xl p-3 space-y-3 border-blue-200/50">
-        <div className="flex items-center gap-1.5">
-          <Users2 className="h-4 w-4 text-blue-500" />
-          <label className="text-xs font-semibold text-blue-700">דיווחי צוות כיתה</label>
+      {/* ===== Team Evaluation Sections ===== */}
+      {TEAM_CATEGORIES_SECTIONS.map(section => (
+        <div key={section.title} className="card-styled rounded-2xl p-3 space-y-3">
+          <label className="text-xs font-semibold">{section.title}</label>
+          <div className="space-y-2">
+            {section.items.map(cat => (
+              <div key={cat.key} className="flex items-center gap-2">
+                <span className="text-sm w-6 text-center">{cat.icon}</span>
+                <span className="text-xs font-medium w-28 shrink-0">{cat.label}</span>
+                <Select
+                  value={teamRatings[cat.key] || ''}
+                  onValueChange={val => { setTeamRatings(prev => ({ ...prev, [cat.key]: val })); setEvalSaved(false); }}
+                >
+                  <SelectTrigger className="h-8 text-xs flex-1">
+                    <SelectValue placeholder="בחר דירוג" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RATING_OPTIONS.map(r => (
+                      <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="space-y-2">
-          {TEAM_CATEGORIES.map(cat => (
-            <div key={cat.key} className="flex items-center gap-2">
-              <span className="text-sm w-6 text-center">{cat.icon}</span>
-              <span className="text-xs font-medium w-28 shrink-0">{cat.label}</span>
-              <Select
-                value={teamRatings[cat.key] || ''}
-                onValueChange={val => { setTeamRatings(prev => ({ ...prev, [cat.key]: val })); setEvalSaved(false); }}
-              >
-                <SelectTrigger className="h-8 text-xs flex-1">
-                  <SelectValue placeholder="בחר דירוג" />
-                </SelectTrigger>
-                <SelectContent>
-                  {RATING_OPTIONS.map(r => (
-                    <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ))}
-        </div>
-      </div>
+      ))}
 
       {/* Save evaluation button */}
       <Button
