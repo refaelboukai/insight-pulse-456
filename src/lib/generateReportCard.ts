@@ -24,7 +24,6 @@ function getHebrewDate(): string {
     const formatter = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric',
     });
     return formatter.format(now);
   } catch {
@@ -103,17 +102,13 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
       <div style="display:flex;justify-content:space-around;margin-top:30px;padding-top:20px;border-top:2px dashed #e0e0e0;">
         <div style="display:flex;flex-direction:column;align-items:center;width:120px;">
           <img src="${principalSigSrc}" style="width:100px;height:auto;margin-bottom:4px;" />
-          <div style="font-size:11px;color:#666;font-weight:500;">מנהל/ת ביה״ס</div>
+          <div style="font-size:11px;color:#666;font-weight:500;">מנהל ביה״ס</div>
         </div>
         ${signatureLine('מחנכ/ת')}
         ${signatureLine('התלמיד/ה')}
         ${signatureLine('ההורים')}
       </div>
 
-      <!-- Footer -->
-      <div style="text-align:center;margin-top:24px;color:#bbb;font-size:10px;">
-        נוצר באופן אוטומטי • ${gregorianDate}
-      </div>
     </div>
   `;
 
