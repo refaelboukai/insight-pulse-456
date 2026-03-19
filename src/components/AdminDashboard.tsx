@@ -363,9 +363,13 @@ export default function AdminDashboard() {
                   <p className="text-xs font-semibold text-muted-foreground mb-1.5">הכיתה של {cls} ({classStudents.length})</p>
                   <div className="grid grid-cols-3 gap-1">
                     {classStudents.map(s => (
-                      <div key={s.id} className="text-xs p-1.5 rounded-md bg-secondary/50 border border-border text-center">
+                      <button
+                        key={s.id}
+                        onClick={() => setSelectedStudent(s)}
+                        className="text-xs p-1.5 rounded-md bg-secondary/50 border border-border text-center hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
+                      >
                         {s.first_name} {s.last_name}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
