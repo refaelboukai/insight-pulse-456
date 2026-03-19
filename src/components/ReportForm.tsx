@@ -112,11 +112,12 @@ export default function ReportForm() {
   };
 
   const filteredStudents = students.filter(s =>
-    `${s.first_name} ${s.last_name}`.includes(searchQuery) ||
-    s.student_code.includes(searchQuery)
+    `${s.first_name} ${s.last_name}`.includes(searchQuery)
   );
 
   const selectedStudent = students.find(s => s.id === studentId);
+
+  const classes = [...new Set(filteredStudents.map(s => s.class_name))].filter(Boolean);
 
   return (
     <div className="space-y-4 max-w-2xl mx-auto animate-fade-in">
@@ -129,25 +130,31 @@ export default function ReportForm() {
         </CardHeader>
         <CardContent>
           <Input
-            placeholder="חיפוש לפי שם או קוד..."
+            placeholder="חיפוש לפי שם..."
             value={searchQuery}
             onChange={e => setSearchQuery(e.target.value)}
             className="mb-3"
           />
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto">
-            {filteredStudents.map(s => (
-              <button
-                key={s.id}
-                onClick={() => setStudentId(s.id)}
-                className={`p-2 rounded-lg text-sm text-right transition-all border ${
-                  studentId === s.id
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : 'bg-card border-border hover:border-primary/50'
-                }`}
-              >
-                <div className="font-medium">{s.first_name} {s.last_name}</div>
-                <div className="text-xs opacity-75">כיתה {s.grade}{s.class_name}</div>
-              </button>
+          <div className="max-h-64 overflow-y-auto space-y-4">
+            {classes.map(cls => (
+              <div key={cls}>
+                <p className="text-xs font-semibold text-muted-foreground mb-1.5">הכיתה של {cls}</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  {filteredStudents.filter(s => s.class_name === cls).map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => setStudentId(s.id)}
+                      className={`p-2 rounded-lg text-sm text-right transition-all border ${
+                        studentId === s.id
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : 'bg-card border-border hover:border-primary/50'
+                      }`}
+                    >
+                      <div className="font-medium">{s.first_name} {s.last_name}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </CardContent>

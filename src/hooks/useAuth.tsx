@@ -13,8 +13,10 @@ interface AuthCtx {
   signOut: () => Promise<void>;
 }
 
-const STAFF_EMAIL = 'staff@school.local';
-const STAFF_PASSWORD = 'staff1001secure';
+const CODE_MAP: Record<string, { email: string; password: string; name: string; role: AppRole }> = {
+  '1001': { email: 'staff@school.local', password: 'staff1001secure!', name: 'צוות חינוכי', role: 'staff' },
+  '9020': { email: 'admin@school.local', password: 'admin9020secure!', name: 'מנהל מערכת', role: 'admin' },
+};
 
 const AuthContext = createContext<AuthCtx | undefined>(undefined);
 
@@ -59,32 +61,41 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const loginWithCode = async (code: string): Promise<{ error: string | null }> => {
-    if (code !== '1001') {
+    const account = CODE_MAP[code];
+    if (!account) {
       return { error: 'קוד שגוי' };
     }
 
-    // Try sign in first
+    // Try sign in
     const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: STAFF_EMAIL,
-      password: STAFF_PASSWORD,
+      email: account.email,
+      password: account.password,
     });
 
     if (!signInError) return { error: null };
 
     // If user doesn't exist, create it
     if (signInError.message.includes('Invalid login credentials')) {
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: STAFF_EMAIL,
-        password: STAFF_PASSWORD,
-        options: { data: { full_name: 'צוות חינוכי' } },
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: account.email,
+        password: account.password,
+        options: { data: { full_name: account.name } },
       });
 
       if (signUpError) return { error: 'שגיאה ביצירת חשבון' };
 
-      // Try signing in again after signup
+      // Assign role if admin
+      if (account.role === 'admin' && signUpData.user) {
+        await supabase.from('user_roles').insert({
+          user_id: signUpData.user.id,
+          role: 'admin' as const,
+        });
+      }
+
+      // Sign in after signup
       const { error: retryError } = await supabase.auth.signInWithPassword({
-        email: STAFF_EMAIL,
-        password: STAFF_PASSWORD,
+        email: account.email,
+        password: account.password,
       });
 
       if (retryError) return { error: 'שגיאה בכניסה' };
