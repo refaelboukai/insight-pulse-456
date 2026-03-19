@@ -62,10 +62,7 @@ export default function ReportForm() {
     setAttendance('');
     setBehaviors([]);
     setViolenceTypes([]);
-    setSeverity(3);
     setParticipation('');
-    setPerformance(3);
-    setComment('');
   };
 
   const handleSubmit = async () => {
