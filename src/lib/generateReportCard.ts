@@ -20,6 +20,12 @@ interface TeamEvaluation {
   environmental_care?: string | null;
   duties_performance?: string | null;
   studentship?: string | null;
+  problem_solving?: string | null;
+  creative_thinking?: string | null;
+  perseverance?: string | null;
+  emotional_tools?: string | null;
+  cognitive_flexibility?: string | null;
+  self_efficacy?: string | null;
 }
 
 interface ReportCardData {
