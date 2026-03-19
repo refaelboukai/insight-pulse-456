@@ -37,8 +37,8 @@ export default function ReportForm() {
   const [participation, setParticipation] = useState<ParticipationLevel | ''>('');
   const [violenceComment, setViolenceComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
+  const [reportedStudentIds, setReportedStudentIds] = useState<Set<string>>(new Set());
+  const [lastClassName, setLastClassName] = useState<string | null>(null);
   useEffect(() => {
     supabase.from('students').select('*').eq('is_active', true).order('last_name')
       .then(({ data }) => { if (data) setStudents(data); });
@@ -57,9 +57,16 @@ export default function ReportForm() {
 
   const hasViolent = behaviors.includes('violent');
 
-  const resetForm = () => {
+  const resetForm = (keepContext = false) => {
+    const prevStudentClass = students.find(s => s.id === studentId)?.class_name ?? null;
+    if (keepContext) {
+      setLastClassName(prevStudentClass);
+    } else {
+      setLastClassName(null);
+      setSubject('');
+      setReportedStudentIds(new Set());
+    }
     setStudentId('');
-    setSubject('');
     setAttendance('');
     setBehaviors([]);
     setViolenceTypes([]);
@@ -105,18 +112,20 @@ export default function ReportForm() {
           related_report_id: data.id,
         });
       }
+      setReportedStudentIds(prev => new Set(prev).add(studentId));
       toast.success('הדיווח נשמר בהצלחה! ✨');
-      resetForm();
+      resetForm(true);
     }
     setSubmitting(false);
   };
 
-  const filteredStudents = students.filter(s =>
-    `${s.first_name} ${s.last_name}`.includes(searchQuery)
-  );
-
   const selectedStudent = students.find(s => s.id === studentId);
-  const classes = [...new Set(filteredStudents.map(s => s.class_name))].filter(Boolean);
+  const classes = [...new Set(students.map(s => s.class_name))].filter(Boolean);
+
+  // If we have a lastClassName from previous report, show that class first
+  const sortedClasses = lastClassName
+    ? [lastClassName, ...classes.filter(c => c !== lastClassName)]
+    : classes;
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
@@ -133,22 +142,45 @@ export default function ReportForm() {
         </div>
       ) : (
         <div className="card-styled rounded-2xl p-3">
-          {classes.map(cls => (
+          {sortedClasses.map(cls => (
             <div key={cls!} className="mb-3 last:mb-0">
               <p className="text-sm font-bold text-foreground mb-1.5">הכיתה של {cls}</p>
               <div className="flex flex-wrap gap-1">
-                {filteredStudents.filter(s => s.class_name === cls).map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => setStudentId(s.id)}
-                    className="text-xs py-1.5 px-2.5 rounded-lg border border-border bg-card hover:bg-primary/10 hover:border-primary/30 transition-colors"
-                  >
-                    {s.first_name} {s.last_name}
-                  </button>
-                ))}
+                {students.filter(s => s.class_name === cls).map(s => {
+                  const reported = reportedStudentIds.has(s.id);
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => !reported && setStudentId(s.id)}
+                      disabled={reported}
+                      className={`text-xs py-1.5 px-2.5 rounded-lg border transition-colors ${
+                        reported
+                          ? 'border-success/30 bg-success/10 text-success line-through cursor-default'
+                          : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
+                      }`}
+                    >
+                      {reported && '✓ '}{s.first_name} {s.last_name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}
+        </div>
+      )}
+
+      {/* Quick context bar */}
+      {reportedStudentIds.size > 0 && !selectedStudent && (
+        <div className="flex items-center justify-between rounded-xl px-3 py-2 bg-success/10 border border-success/20">
+          <p className="text-xs text-success font-medium">
+            ✓ דווחו {reportedStudentIds.size} תלמידים · {subject}
+          </p>
+          <button
+            onClick={() => resetForm(false)}
+            className="text-xs text-muted-foreground hover:text-foreground underline"
+          >
+            סיום שיעור
+          </button>
         </div>
       )}
 
