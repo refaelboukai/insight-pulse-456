@@ -7,7 +7,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { Slider } from '@/components/ui/slider';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import {
@@ -124,7 +123,7 @@ export default function ReportForm() {
   const classes = [...new Set(filteredStudents.map(s => s.class_name))].filter(Boolean);
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto">
+    <div className="space-y-3 max-w-2xl mx-auto">
       {/* Selected student banner */}
       {selectedStudent && (
         <div className="rounded-xl p-3 flex items-center justify-between animate-fade-in" style={{ background: 'var(--gradient-primary)' }}>
@@ -147,26 +146,26 @@ export default function ReportForm() {
       {!selectedStudent && (
         <div className="card-styled rounded-2xl overflow-hidden animate-slide-up">
           <div className="h-1 w-full" style={{ background: 'var(--gradient-primary)' }} />
-          <div className="p-5">
-            <div className="flex items-center gap-2 mb-4">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Users className="h-4 w-4 text-primary" />
+          <div className="p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Users className="h-3.5 w-3.5 text-primary" />
               </div>
-              <h3 className="font-semibold text-base">בחירת תלמיד/ה</h3>
+              <h3 className="font-semibold text-sm">בחירת תלמיד/ה</h3>
             </div>
             <Input
               placeholder="🔍 חיפוש לפי שם..."
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              className="mb-4 rounded-xl h-11 border-2"
+              className="mb-3 rounded-xl h-10 border-2 text-sm"
             />
-            <Accordion type="multiple" defaultValue={classes as string[]} className="space-y-2">
+            <Accordion type="multiple" defaultValue={classes as string[]} className="space-y-1.5">
               {classes.map(cls => {
                 const classStudents = filteredStudents.filter(s => s.class_name === cls);
                 if (classStudents.length === 0) return null;
                 return (
                   <AccordionItem key={cls!} value={cls!} className="border-2 rounded-xl px-3 overflow-hidden">
-                    <AccordionTrigger className="text-sm font-semibold py-3 hover:no-underline">
+                    <AccordionTrigger className="text-sm font-semibold py-2.5 hover:no-underline">
                       <span className="flex items-center gap-2">
                         <span className="w-2 h-2 rounded-full bg-primary" />
                         הכיתה של {cls}
@@ -176,12 +175,12 @@ export default function ReportForm() {
                       </span>
                     </AccordionTrigger>
                     <AccordionContent className="pb-3">
-                      <div className="grid grid-cols-2 gap-2">
+                      <div className="grid grid-cols-2 gap-1.5">
                         {classStudents.map(s => (
                           <button
                             key={s.id}
                             onClick={() => setStudentId(s.id)}
-                            className="selection-chip selection-chip-inactive text-right"
+                            className="selection-chip selection-chip-inactive text-right py-2 px-3"
                           >
                             <div className="font-medium text-sm">{s.first_name} {s.last_name}</div>
                           </button>
@@ -197,17 +196,17 @@ export default function ReportForm() {
       )}
 
       {selectedStudent && (
-        <div className="space-y-4">
+        <div className="space-y-3">
           {/* Subject */}
-          <div className="card-styled rounded-2xl p-5 animate-slide-up" style={{ animationDelay: '0.05s' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <BookOpen className="h-4 w-4 text-primary" />
+          <div className="card-styled rounded-2xl p-4 animate-slide-up" style={{ animationDelay: '0.05s' }}>
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <BookOpen className="h-3.5 w-3.5 text-primary" />
               </div>
-              <h3 className="font-semibold text-base">מקצוע</h3>
+              <h3 className="font-semibold text-sm">מקצוע</h3>
             </div>
             <Select value={subject} onValueChange={setSubject}>
-              <SelectTrigger className="rounded-xl h-11 border-2">
+              <SelectTrigger className="rounded-xl h-10 border-2 text-sm">
                 <SelectValue placeholder="בחר/י מקצוע" />
               </SelectTrigger>
               <SelectContent>
@@ -219,12 +218,12 @@ export default function ReportForm() {
           </div>
 
           {/* Attendance */}
-          <div className="card-styled rounded-2xl p-5 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Eye className="h-4 w-4 text-primary" />
+          <div className="card-styled rounded-2xl p-4 animate-slide-up" style={{ animationDelay: '0.1s' }}>
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Eye className="h-3.5 w-3.5 text-primary" />
               </div>
-              <h3 className="font-semibold text-base">נוכחות</h3>
+              <h3 className="font-semibold text-sm">נוכחות</h3>
             </div>
             <div className="grid grid-cols-3 gap-2">
               {(Object.entries(ATTENDANCE_LABELS) as [AttendanceStatus, string][]).map(([key, label]) => {
@@ -234,7 +233,7 @@ export default function ReportForm() {
                   <button
                     key={key}
                     onClick={() => setAttendance(key)}
-                    className={`selection-chip flex flex-col items-center gap-1.5 py-4 ${
+                    className={`selection-chip flex flex-col items-center gap-1 py-3 ${
                       isActive
                         ? key === 'full' ? 'border-success bg-[hsl(var(--success)/0.08)]'
                           : key === 'partial' ? 'border-accent bg-[hsl(var(--warning)/0.08)]'
@@ -242,7 +241,7 @@ export default function ReportForm() {
                         : 'selection-chip-inactive'
                     }`}
                   >
-                    <Icon className={`h-5 w-5 ${
+                    <Icon className={`h-4 w-4 ${
                       isActive
                         ? key === 'full' ? 'text-success' : key === 'partial' ? 'text-accent' : 'text-destructive'
                         : 'text-muted-foreground'
@@ -255,18 +254,18 @@ export default function ReportForm() {
           </div>
 
           {/* Behavior */}
-          <div className="card-styled rounded-2xl p-5 animate-slide-up" style={{ animationDelay: '0.15s' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Brain className="h-4 w-4 text-primary" />
+          <div className="card-styled rounded-2xl p-4 animate-slide-up" style={{ animationDelay: '0.15s' }}>
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Brain className="h-3.5 w-3.5 text-primary" />
               </div>
-              <h3 className="font-semibold text-base">התנהגות</h3>
+              <h3 className="font-semibold text-sm">התנהגות</h3>
             </div>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               {(Object.entries(BEHAVIOR_LABELS) as [BehaviorType, string][]).map(([key, label]) => (
                 <label
                   key={key}
-                  className={`selection-chip flex items-center gap-2.5 cursor-pointer ${
+                  className={`selection-chip flex items-center gap-2 cursor-pointer py-2.5 px-3 ${
                     behaviors.includes(key)
                       ? key === 'violent' ? 'border-destructive bg-destructive/8'
                         : 'selection-chip-active'
@@ -277,23 +276,23 @@ export default function ReportForm() {
                     checked={behaviors.includes(key)}
                     onCheckedChange={() => toggleBehavior(key)}
                   />
-                  <span className="text-sm flex-1">{label}</span>
-                  {key === 'violent' && <AlertTriangle className="h-4 w-4 text-destructive" />}
+                  <span className="text-xs flex-1">{label}</span>
+                  {key === 'violent' && <AlertTriangle className="h-3.5 w-3.5 text-destructive" />}
                 </label>
               ))}
             </div>
 
             {hasViolent && (
-              <div className="mt-4 p-4 rounded-xl bg-destructive/5 border-2 border-destructive/15 space-y-3 animate-scale-in">
-                <p className="text-sm font-semibold text-destructive flex items-center gap-1.5">
-                  <AlertTriangle className="h-4 w-4" />
+              <div className="mt-3 p-3 rounded-xl bg-destructive/5 border-2 border-destructive/15 space-y-2 animate-scale-in">
+                <p className="text-xs font-semibold text-destructive flex items-center gap-1.5">
+                  <AlertTriangle className="h-3.5 w-3.5" />
                   סיווג אלימות (חובה)
                 </p>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                   {(Object.entries(VIOLENCE_LABELS) as [ViolenceType, string][]).map(([key, label]) => (
                     <label
                       key={key}
-                      className={`flex items-center gap-2 p-2.5 rounded-lg border-2 cursor-pointer text-sm transition-all ${
+                      className={`flex items-center gap-2 p-2 rounded-lg border-2 cursor-pointer text-xs transition-all ${
                         violenceTypes.includes(key)
                           ? 'bg-destructive/10 border-destructive/40'
                           : 'bg-card border-transparent'
@@ -311,44 +310,46 @@ export default function ReportForm() {
             )}
 
             {behaviors.length > 0 && (
-              <div className="mt-4 space-y-3 animate-fade-in">
+              <div className="mt-3 space-y-2 animate-fade-in">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">רמת חומרה</span>
-                  <Badge className={`severity-badge-${severity} rounded-full px-3`}>
-                    {severity} — {SEVERITY_LABELS[severity]}
+                  <span className="text-xs font-medium">רמת חומרה</span>
+                  <Badge className={`severity-badge-${severity} rounded-full px-2.5 text-xs`}>
+                    {SEVERITY_LABELS[severity]}
                   </Badge>
                 </div>
-                <Slider
-                  value={[severity]}
-                  onValueChange={([v]) => setSeverity(v)}
-                  min={1}
-                  max={5}
-                  step={1}
-                  dir="ltr"
-                  className="py-1"
-                />
-                <div className="flex justify-between text-[10px] text-muted-foreground/60 px-1" dir="ltr">
-                  <span>קל</span>
-                  <span>חמור</span>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {[1, 2, 3, 4, 5].map(level => (
+                    <button
+                      key={level}
+                      onClick={() => setSeverity(level)}
+                      className={`py-2 rounded-lg text-xs font-medium transition-all border-2 ${
+                        severity === level
+                          ? `severity-badge-${level} border-transparent`
+                          : 'bg-card border-border hover:border-muted-foreground/30 text-muted-foreground'
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
           </div>
 
           {/* Participation */}
-          <div className="card-styled rounded-2xl p-5 animate-slide-up" style={{ animationDelay: '0.2s' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <Brain className="h-4 w-4 text-primary" />
+          <div className="card-styled rounded-2xl p-4 animate-slide-up" style={{ animationDelay: '0.2s' }}>
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <Brain className="h-3.5 w-3.5 text-primary" />
               </div>
-              <h3 className="font-semibold text-base">למידה והשתתפות</h3>
+              <h3 className="font-semibold text-sm">למידה והשתתפות</h3>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-1.5">
               {(Object.entries(PARTICIPATION_LABELS) as [ParticipationLevel, string][]).map(([key, label]) => (
                 <button
                   key={key}
                   onClick={() => setParticipation(key)}
-                  className={`w-full selection-chip text-right ${
+                  className={`w-full selection-chip text-right py-2.5 px-3 text-xs ${
                     participation === key ? 'selection-chip-active' : 'selection-chip-inactive'
                   }`}
                 >
@@ -358,46 +359,48 @@ export default function ReportForm() {
             </div>
 
             {participation && (
-              <div className="mt-4 space-y-3 animate-fade-in">
+              <div className="mt-3 space-y-2 animate-fade-in">
                 <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium">רמת ביצועים</span>
-                  <Badge variant="secondary" className="rounded-full px-3">
-                    {performance} — {PERFORMANCE_LABELS[performance]}
+                  <span className="text-xs font-medium">רמת ביצועים</span>
+                  <Badge variant="secondary" className="rounded-full px-2.5 text-xs">
+                    {PERFORMANCE_LABELS[performance]}
                   </Badge>
                 </div>
-                <Slider
-                  value={[performance]}
-                  onValueChange={([v]) => setPerformance(v)}
-                  min={1}
-                  max={5}
-                  step={1}
-                  dir="ltr"
-                  className="py-1"
-                />
-                <div className="flex justify-between text-[10px] text-muted-foreground/60 px-1" dir="ltr">
-                  <span>נמוך</span>
-                  <span>מצוין</span>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {[1, 2, 3, 4, 5].map(level => (
+                    <button
+                      key={level}
+                      onClick={() => setPerformance(level)}
+                      className={`py-2 rounded-lg text-xs font-medium transition-all border-2 ${
+                        performance === level
+                          ? 'bg-primary text-primary-foreground border-transparent'
+                          : 'bg-card border-border hover:border-muted-foreground/30 text-muted-foreground'
+                      }`}
+                    >
+                      {level}
+                    </button>
+                  ))}
                 </div>
               </div>
             )}
           </div>
 
           {/* Comment */}
-          <div className="card-styled rounded-2xl p-5 animate-slide-up" style={{ animationDelay: '0.25s' }}>
-            <div className="flex items-center gap-2 mb-3">
-              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-                <MessageSquare className="h-4 w-4 text-primary" />
+          <div className="card-styled rounded-2xl p-4 animate-slide-up" style={{ animationDelay: '0.25s' }}>
+            <div className="flex items-center gap-2 mb-2.5">
+              <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center">
+                <MessageSquare className="h-3.5 w-3.5 text-primary" />
               </div>
-              <h3 className="font-semibold text-base">הערות</h3>
-              <span className="text-xs text-muted-foreground">(אופציונלי)</span>
+              <h3 className="font-semibold text-sm">הערות</h3>
+              <span className="text-[10px] text-muted-foreground">(אופציונלי)</span>
             </div>
             <Textarea
               placeholder="הוסף/י הערה קצרה..."
               value={comment}
               onChange={e => setComment(e.target.value)}
               maxLength={500}
-              rows={3}
-              className="rounded-xl border-2 resize-none"
+              rows={2}
+              className="rounded-xl border-2 resize-none text-sm"
             />
           </div>
 
@@ -405,10 +408,10 @@ export default function ReportForm() {
           <Button
             onClick={handleSubmit}
             disabled={submitting}
-            className="w-full h-14 text-lg font-semibold rounded-xl btn-primary-gradient border-0 animate-slide-up"
+            className="w-full h-12 text-base font-semibold rounded-xl btn-primary-gradient border-0 animate-slide-up"
             style={{ animationDelay: '0.3s' }}
           >
-            <Send className="ml-2 h-5 w-5" />
+            <Send className="ml-2 h-4 w-4" />
             {submitting ? 'שומר...' : 'שלח דיווח'}
           </Button>
         </div>
