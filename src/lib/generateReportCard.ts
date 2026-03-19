@@ -172,7 +172,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
 
       ${personalNoteHtml}
 
-      ${teamTableHtml}
+      ${teamSectionsHtml}
 
       <!-- Grades Table -->
       <table style="width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">
