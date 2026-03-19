@@ -34,8 +34,9 @@ export async function generateEventPdf(data: EventData): Promise<Blob> {
 
   container.innerHTML = `
     <div style="text-align:center;margin-bottom:24px;">
+      <img src="${logoSrc}" style="max-width:200px;height:auto;margin-bottom:12px;" />
       <div style="font-size:28px;font-weight:bold;color:#1a1a1a;">🚨 דיווח אירוע חריג</div>
-      <div style="font-size:13px;color:#888;margin-top:6px;">בית ספר יבנה</div>
+      <div style="font-size:13px;color:#888;margin-top:6px;">בית אקשטיין</div>
     </div>
     <div style="border:2px solid #e5e5e5;border-radius:12px;overflow:hidden;">
       ${rows.map((r, i) => `
