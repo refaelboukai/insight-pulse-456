@@ -69,32 +69,9 @@ export async function generateEventPdf(data: EventData): Promise<Blob> {
 const WA_GROUP_LINK = 'https://chat.whatsapp.com/J1pEWYXADPU26XwV9bhx2y';
 
 export async function shareEventToWhatsApp(data: EventData) {
-  const blob = await generateEventPdf(data);
-  const file = new File([blob], `אירוע-חריג-${data.date}.pdf`, { type: 'application/pdf' });
   const typeName = INCIDENT_TYPE_LABELS[data.incidentType] || data.incidentType;
-
-  // Try Web Share API (works great on mobile - lets user pick WhatsApp directly)
-  if (navigator.share && navigator.canShare?.({ files: [file] })) {
-    try {
-      await navigator.share({
-        title: '🚨 דיווח אירוע חריג',
-        text: `אירוע חריג - ${typeName}\n\n🔗 קבוצת הניהול: ${WA_GROUP_LINK}`,
-        files: [file],
-      });
-      return;
-    } catch (e) {
-      if ((e as Error).name === 'AbortError') return;
-    }
-  }
-
-  // Fallback: download PDF + open WhatsApp group link with text summary
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url;
-  a.download = file.name;
-  a.click();
-  URL.revokeObjectURL(url);
-
-  const waText = encodeURIComponent(`🚨 *אירוע חריג חדש*\nסוג: ${typeName}\nתיאור: ${data.description}\n\n📎 קובץ PDF מצורף\n\n🔗 קבוצת הניהול:\n${WA_GROUP_LINK}`);
-  window.open(`https://wa.me/?text=${waText}`, '_blank');
+  const waText = encodeURIComponent(`🚨 *אירוע חריג חדש*\nסוג: ${typeName}\nתיאור: ${data.description}\n\n🔗 קבוצת הניהול:\n${WA_GROUP_LINK}`);
+  
+  // Use whatsapp:// deep link which opens the app directly on mobile
+  window.open(`https://api.whatsapp.com/send?text=${waText}`, '_blank');
 }
