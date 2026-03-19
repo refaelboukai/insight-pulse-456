@@ -175,6 +175,61 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* Daily Attendance */}
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <SectionHeader title="ביקור סדיר — היום" icon={ClipboardCheck} count={dailyAttendance.filter(a => !a.is_present).length} badge={dailyAttendance.filter(a => !a.is_present).length > 0 ? 'destructive' : undefined} sectionKey="dailyAttendance" />
+        {expandedSections.dailyAttendance && (
+          <div className="px-3 pb-3">
+            {(() => {
+              const absentRecords = dailyAttendance.filter(a => !a.is_present);
+              const presentCount = students.length - absentRecords.length;
+              if (absentRecords.length === 0) {
+                return (
+                  <div className="text-center py-4">
+                    <CheckCircle2 className="h-6 w-6 text-success mx-auto mb-1.5" />
+                    <p className="text-xs text-success font-medium">כל התלמידים נוכחים היום!</p>
+                    <p className="text-[10px] text-muted-foreground">{presentCount}/{students.length}</p>
+                  </div>
+                );
+              }
+              return (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>📅 {new Date().toLocaleDateString('he-IL')}</span>
+                    <span>{presentCount}/{students.length} נוכחים</span>
+                  </div>
+                  {CLASS_OPTIONS.map(cls => {
+                    const classAbsent = absentRecords.filter(a => {
+                      const s = students.find(st => st.id === a.student_id);
+                      return s?.class_name === cls;
+                    });
+                    if (classAbsent.length === 0) return null;
+                    return (
+                      <div key={cls}>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">הכיתה של {cls}</p>
+                        {classAbsent.map(a => {
+                          const s = students.find(st => st.id === a.student_id);
+                          if (!s) return null;
+                          const reason = a.absence_reason
+                            ? ABSENCE_REASON_LABELS[a.absence_reason] || a.absence_reason
+                            : 'לא צוינה סיבה';
+                          return (
+                            <div key={a.student_id} className="flex items-center justify-between text-xs bg-destructive/5 rounded-lg px-3 py-1.5 mb-1">
+                              <span className="font-medium">{s.first_name} {s.last_name}</span>
+                              <Badge variant="outline" className="text-[10px] px-2">{reason}</Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        )}
+      </div>
+
       {/* Alerts */}
       {unreadAlerts.length > 0 && (
         <div className="card-styled rounded-2xl overflow-hidden border-destructive/20">
