@@ -228,6 +228,68 @@ export type Database = {
         }
         Relationships: []
       }
+      student_evaluations: {
+        Row: {
+          behavior: string | null
+          created_at: string
+          duties_performance: string | null
+          emotional_regulation: string | null
+          environmental_care: string | null
+          general_functioning: string | null
+          group_work: string | null
+          helping_others: string | null
+          id: string
+          independent_work: string | null
+          personal_note: string | null
+          staff_user_id: string
+          student_id: string
+          studentship: string | null
+          updated_at: string
+        }
+        Insert: {
+          behavior?: string | null
+          created_at?: string
+          duties_performance?: string | null
+          emotional_regulation?: string | null
+          environmental_care?: string | null
+          general_functioning?: string | null
+          group_work?: string | null
+          helping_others?: string | null
+          id?: string
+          independent_work?: string | null
+          personal_note?: string | null
+          staff_user_id: string
+          student_id: string
+          studentship?: string | null
+          updated_at?: string
+        }
+        Update: {
+          behavior?: string | null
+          created_at?: string
+          duties_performance?: string | null
+          emotional_regulation?: string | null
+          environmental_care?: string | null
+          general_functioning?: string | null
+          group_work?: string | null
+          helping_others?: string | null
+          id?: string
+          independent_work?: string | null
+          personal_note?: string | null
+          staff_user_id?: string
+          student_id?: string
+          studentship?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_evaluations_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_grades: {
         Row: {
           ai_enhanced_evaluation: string | null

@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { SUBJECTS } from '@/lib/constants';
-import { Send, Sparkles, GraduationCap, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+import { Send, Sparkles, GraduationCap, ChevronDown, ChevronUp, CheckCircle2, Heart, Users2 } from 'lucide-react';
 
 type Student = {
   id: string;
@@ -19,6 +19,20 @@ type Student = {
 };
 
 const CLASS_OPTIONS = ['טלי', 'עדן'];
+
+const RATING_OPTIONS = ['מצטיין/ת', 'טוב מאוד', 'טוב', 'דורש/ת שיפור'];
+
+const TEAM_CATEGORIES = [
+  { key: 'behavior', label: 'התנהגות', icon: '🎯' },
+  { key: 'independent_work', label: 'עבודה עצמאית', icon: '📝' },
+  { key: 'group_work', label: 'עבודה בקבוצה', icon: '👥' },
+  { key: 'emotional_regulation', label: 'ויסות רגשי', icon: '💚' },
+  { key: 'general_functioning', label: 'תפקוד כללי', icon: '⭐' },
+  { key: 'helping_others', label: 'עזרה לאחרים', icon: '🤝' },
+  { key: 'environmental_care', label: 'אכפתיות לסביבה', icon: '🌱' },
+  { key: 'duties_performance', label: 'ביצוע תורנויות', icon: '✅' },
+  { key: 'studentship', label: 'תלמידאות', icon: '🎓' },
+] as const;
 
 export default function GradesForm() {
   const { user } = useAuth();
@@ -33,6 +47,16 @@ export default function GradesForm() {
   const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set());
   const [expandedClass, setExpandedClass] = useState<string | null>(null);
 
+  // Personal note state
+  const [personalNote, setPersonalNote] = useState('');
+  const [personalNoteEnhanced, setPersonalNoteEnhanced] = useState('');
+  const [enhancingNote, setEnhancingNote] = useState(false);
+
+  // Team evaluation state
+  const [teamRatings, setTeamRatings] = useState<Record<string, string>>({});
+  const [savingEval, setSavingEval] = useState(false);
+  const [evalSaved, setEvalSaved] = useState(false);
+
   useEffect(() => {
     supabase.from('students').select('id, first_name, last_name, class_name, is_active')
       .eq('is_active', true).order('class_name').order('last_name')
@@ -40,6 +64,33 @@ export default function GradesForm() {
   }, []);
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
+
+  // Load existing evaluation when student is selected
+  useEffect(() => {
+    if (!selectedStudentId) return;
+    supabase.from('student_evaluations' as any).select('*')
+      .eq('student_id', selectedStudentId)
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .then(({ data }: any) => {
+        if (data && data.length > 0) {
+          const eval_ = data[0];
+          setPersonalNote(eval_.personal_note || '');
+          setPersonalNoteEnhanced('');
+          const ratings: Record<string, string> = {};
+          TEAM_CATEGORIES.forEach(c => {
+            if (eval_[c.key]) ratings[c.key] = eval_[c.key];
+          });
+          setTeamRatings(ratings);
+          setEvalSaved(true);
+        } else {
+          setPersonalNote('');
+          setPersonalNoteEnhanced('');
+          setTeamRatings({});
+          setEvalSaved(false);
+        }
+      });
+  }, [selectedStudentId]);
 
   const handleSelectStudent = (id: string) => {
     setSelectedStudentId(id);
@@ -74,6 +125,34 @@ export default function GradesForm() {
       toast.error(e?.message || 'שגיאה בשיפור הניסוח');
     } finally {
       setEnhancing(false);
+    }
+  };
+
+  const handleEnhancePersonalNote = async () => {
+    if (!personalNote.trim()) {
+      toast.error('נא לכתוב נימה אישית לפני שיפור');
+      return;
+    }
+    setEnhancingNote(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('rephrase-evaluation', {
+        body: {
+          evaluation: personalNote.trim(),
+          studentName: selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : '',
+          subject: 'נימה אישית מהמחנכת',
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.enhanced) {
+        setPersonalNoteEnhanced(data.enhanced);
+        toast.success('הנימה האישית שופרה בהצלחה!');
+      }
+    } catch (e: any) {
+      console.error('Enhance note error:', e);
+      toast.error(e?.message || 'שגיאה בשיפור הניסוח');
+    } finally {
+      setEnhancingNote(false);
     }
   };
 
@@ -115,6 +194,31 @@ export default function GradesForm() {
       setAiEnhancedEvaluation('');
     }
     setSubmitting(false);
+  };
+
+  const handleSaveEvaluation = async () => {
+    if (!selectedStudentId) return;
+    setSavingEval(true);
+    try {
+      const payload: any = {
+        student_id: selectedStudentId,
+        staff_user_id: user!.id,
+        personal_note: personalNoteEnhanced.trim() || personalNote.trim() || null,
+      };
+      TEAM_CATEGORIES.forEach(c => {
+        payload[c.key] = teamRatings[c.key] || null;
+      });
+
+      const { error } = await supabase.from('student_evaluations' as any).insert(payload);
+      if (error) throw error;
+      toast.success('ההערכה הכללית נשמרה בהצלחה!');
+      setEvalSaved(true);
+    } catch (e: any) {
+      console.error('Save evaluation error:', e);
+      toast.error('שגיאה בשמירת ההערכה');
+    } finally {
+      setSavingEval(false);
+    }
   };
 
   // Student selection view
@@ -181,9 +285,97 @@ export default function GradesForm() {
         </div>
       </div>
 
-      {/* Subject selection */}
+      {/* ===== Personal Note - ממני אלייך ===== */}
+      <div className="card-styled rounded-2xl p-3 space-y-2 border-pink-200/50">
+        <div className="flex items-center gap-1.5">
+          <Heart className="h-4 w-4 text-pink-500" />
+          <label className="text-xs font-semibold text-pink-700">ממני אלייך – נימה אישית מהמחנכת והמדריכה</label>
+        </div>
+        <Textarea
+          placeholder="כתבי מילים אישיות, מחזקות ומעודדות לתלמיד/ה..."
+          value={personalNote}
+          onChange={e => { setPersonalNote(e.target.value); setEvalSaved(false); }}
+          className="min-h-[80px] text-sm border-pink-200/50"
+          maxLength={3000}
+        />
+        <Button
+          variant="outline"
+          size="sm"
+          className="gap-1.5 text-xs w-full border-pink-200 hover:bg-pink-50"
+          onClick={handleEnhancePersonalNote}
+          disabled={enhancingNote || !personalNote.trim()}
+        >
+          {enhancingNote ? (
+            <><div className="w-3.5 h-3.5 rounded-full border-2 border-pink-500 border-t-transparent animate-spin" /> משפר ניסוח...</>
+          ) : (
+            <><Sparkles className="h-3.5 w-3.5 text-pink-500" /> שיפור ניסוח עם AI</>
+          )}
+        </Button>
+        {personalNoteEnhanced && (
+          <div className="mt-2 space-y-1.5 p-2.5 rounded-lg bg-pink-50/50 border border-pink-200/30">
+            <div className="flex items-center gap-1">
+              <Sparkles className="h-3 w-3 text-pink-500" />
+              <span className="text-[10px] font-semibold text-pink-600">ניסוח משופר</span>
+            </div>
+            <Textarea
+              value={personalNoteEnhanced}
+              onChange={e => { setPersonalNoteEnhanced(e.target.value); setEvalSaved(false); }}
+              className="min-h-[60px] text-sm border-pink-200/30"
+            />
+          </div>
+        )}
+      </div>
+
+      {/* ===== Team Evaluation - דיווחי צוות כיתה ===== */}
+      <div className="card-styled rounded-2xl p-3 space-y-3 border-blue-200/50">
+        <div className="flex items-center gap-1.5">
+          <Users2 className="h-4 w-4 text-blue-500" />
+          <label className="text-xs font-semibold text-blue-700">דיווחי צוות כיתה</label>
+        </div>
+        <div className="space-y-2">
+          {TEAM_CATEGORIES.map(cat => (
+            <div key={cat.key} className="flex items-center gap-2">
+              <span className="text-sm w-6 text-center">{cat.icon}</span>
+              <span className="text-xs font-medium w-28 shrink-0">{cat.label}</span>
+              <Select
+                value={teamRatings[cat.key] || ''}
+                onValueChange={val => { setTeamRatings(prev => ({ ...prev, [cat.key]: val })); setEvalSaved(false); }}
+              >
+                <SelectTrigger className="h-8 text-xs flex-1">
+                  <SelectValue placeholder="בחר דירוג" />
+                </SelectTrigger>
+                <SelectContent>
+                  {RATING_OPTIONS.map(r => (
+                    <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Save evaluation button */}
+      <Button
+        onClick={handleSaveEvaluation}
+        disabled={savingEval || evalSaved}
+        variant={evalSaved ? 'outline' : 'default'}
+        className="w-full gap-1.5"
+      >
+        {savingEval ? (
+          <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> שומר...</>
+        ) : evalSaved ? (
+          <><CheckCircle2 className="h-4 w-4 text-green-500" /> הערכה כללית נשמרה</>
+        ) : (
+          <><Send className="h-4 w-4" /> שמירת הערכה כללית (ממני אלייך + דיווחי צוות)</>
+        )}
+      </Button>
+
+      <div className="border-t border-border pt-4" />
+
+      {/* ===== Subject Grades ===== */}
       <div className="card-styled rounded-2xl p-3 space-y-3">
-        <label className="text-xs font-semibold">מקצוע</label>
+        <label className="text-xs font-semibold">ציונים לפי מקצוע</label>
         <div className="flex flex-wrap gap-1.5">
           {SUBJECTS.map(s => {
             const key = `${selectedStudentId}-${s}`;
@@ -265,7 +457,7 @@ export default function GradesForm() {
             </div>
           )}
 
-          {/* Submit */}
+          {/* Submit grade */}
           <Button
             onClick={handleSubmit}
             disabled={submitting}
