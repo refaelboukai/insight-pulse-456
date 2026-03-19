@@ -3,13 +3,12 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   SUBJECTS, ATTENDANCE_LABELS, BEHAVIOR_LABELS, VIOLENCE_LABELS,
-  PARTICIPATION_LABELS, SEVERITY_LABELS, PERFORMANCE_LABELS,
+  PARTICIPATION_LABELS,
 } from '@/lib/constants';
 import { AlertTriangle, Send, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
@@ -34,10 +33,7 @@ export default function ReportForm() {
   const [attendance, setAttendance] = useState<AttendanceStatus | ''>('');
   const [behaviors, setBehaviors] = useState<BehaviorType[]>([]);
   const [violenceTypes, setViolenceTypes] = useState<ViolenceType[]>([]);
-  const [severity, setSeverity] = useState(3);
   const [participation, setParticipation] = useState<ParticipationLevel | ''>('');
-  const [performance, setPerformance] = useState(3);
-  const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -65,10 +61,7 @@ export default function ReportForm() {
     setAttendance('');
     setBehaviors([]);
     setViolenceTypes([]);
-    setSeverity(3);
     setParticipation('');
-    setPerformance(3);
-    setComment('');
   };
 
   const handleSubmit = async () => {
@@ -89,10 +82,7 @@ export default function ReportForm() {
       attendance: attendance as AttendanceStatus,
       behavior_types: behaviors,
       violence_subtypes: hasViolent ? violenceTypes : [],
-      behavior_severity: behaviors.length > 0 ? severity : null,
       participation: participation || null,
-      performance_score: participation ? performance : null,
-      comment: comment || null,
     }).select().single();
 
     if (error) {
@@ -262,33 +252,9 @@ export default function ReportForm() {
                 </div>
               </div>
             )}
-
-            {behaviors.length > 0 && (
-              <div className="mt-2 animate-fade-in">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-[11px] font-medium">חומרה</span>
-                  <span className="text-[10px] text-muted-foreground">{SEVERITY_LABELS[severity]}</span>
-                </div>
-                <div className="grid grid-cols-5 gap-1">
-                  {[1, 2, 3, 4, 5].map(level => (
-                    <button
-                      key={level}
-                      onClick={() => setSeverity(level)}
-                      className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${
-                        severity === level
-                          ? `severity-badge-${level} border-transparent`
-                          : 'bg-card border-border text-muted-foreground'
-                      }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
-          {/* Step 5: Participation + Performance */}
+          {/* Step 5: Participation */}
           <div className="card-styled rounded-2xl p-3">
             <p className="text-xs font-semibold mb-2">השתתפות</p>
             <div className="flex flex-wrap gap-1.5">
@@ -306,41 +272,7 @@ export default function ReportForm() {
                 </button>
               ))}
             </div>
-
-            {participation && (
-              <div className="mt-2 animate-fade-in">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-[11px] font-medium">ביצועים</span>
-                  <span className="text-[10px] text-muted-foreground">{PERFORMANCE_LABELS[performance]}</span>
-                </div>
-                <div className="grid grid-cols-5 gap-1">
-                  {[1, 2, 3, 4, 5].map(level => (
-                    <button
-                      key={level}
-                      onClick={() => setPerformance(level)}
-                      className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${
-                        performance === level
-                          ? 'bg-primary text-primary-foreground border-transparent'
-                          : 'bg-card border-border text-muted-foreground'
-                      }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-
-          {/* Step 6: Comment */}
-          <Textarea
-            placeholder="הערות (אופציונלי)..."
-            value={comment}
-            onChange={e => setComment(e.target.value)}
-            maxLength={500}
-            rows={2}
-            className="rounded-xl border-2 resize-none text-sm card-styled"
-          />
 
           {/* Submit */}
           <Button
