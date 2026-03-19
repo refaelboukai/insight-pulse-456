@@ -9,10 +9,12 @@ interface AuthCtx {
   role: AppRole | null;
   loading: boolean;
   fullName: string;
-  signIn: (email: string, password: string) => Promise<{ error: string | null }>;
-  signUp: (email: string, password: string, fullName: string) => Promise<{ error: string | null }>;
+  loginWithCode: (code: string) => Promise<{ error: string | null }>;
   signOut: () => Promise<void>;
 }
+
+const STAFF_EMAIL = 'staff@school.local';
+const STAFF_PASSWORD = 'staff1001secure';
 
 const AuthContext = createContext<AuthCtx | undefined>(undefined);
 
@@ -56,18 +58,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    return { error: error?.message ?? null };
-  };
+  const loginWithCode = async (code: string): Promise<{ error: string | null }> => {
+    if (code !== '1001') {
+      return { error: 'קוד שגוי' };
+    }
 
-  const signUp = async (email: string, password: string, name: string) => {
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: { data: { full_name: name }, emailRedirectTo: window.location.origin },
+    // Try sign in first
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: STAFF_EMAIL,
+      password: STAFF_PASSWORD,
     });
-    return { error: error?.message ?? null };
+
+    if (!signInError) return { error: null };
+
+    // If user doesn't exist, create it
+    if (signInError.message.includes('Invalid login credentials')) {
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: STAFF_EMAIL,
+        password: STAFF_PASSWORD,
+        options: { data: { full_name: 'צוות חינוכי' } },
+      });
+
+      if (signUpError) return { error: 'שגיאה ביצירת חשבון' };
+
+      // Try signing in again after signup
+      const { error: retryError } = await supabase.auth.signInWithPassword({
+        email: STAFF_EMAIL,
+        password: STAFF_PASSWORD,
+      });
+
+      if (retryError) return { error: 'שגיאה בכניסה' };
+      return { error: null };
+    }
+
+    return { error: 'שגיאה בכניסה' };
   };
 
   const signOut = async () => {
@@ -75,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, role, loading, fullName, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, role, loading, fullName, loginWithCode, signOut }}>
       {children}
     </AuthContext.Provider>
   );
