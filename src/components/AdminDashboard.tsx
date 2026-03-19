@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import StudentDetailDialog from '@/components/StudentDetailDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,7 @@ export default function AdminDashboard() {
   const [newLastName, setNewLastName] = useState('');
   const [newClass, setNewClass] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -361,9 +363,13 @@ export default function AdminDashboard() {
                   <p className="text-xs font-semibold text-muted-foreground mb-1.5">הכיתה של {cls} ({classStudents.length})</p>
                   <div className="grid grid-cols-3 gap-1">
                     {classStudents.map(s => (
-                      <div key={s.id} className="text-xs p-1.5 rounded-md bg-secondary/50 border border-border text-center">
+                      <button
+                        key={s.id}
+                        onClick={() => setSelectedStudent(s)}
+                        className="text-xs p-1.5 rounded-md bg-secondary/50 border border-border text-center hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
+                      >
                         {s.first_name} {s.last_name}
-                      </div>
+                      </button>
                     ))}
                   </div>
                 </div>
@@ -382,7 +388,7 @@ export default function AdminDashboard() {
               <div key={r.id} className="p-2.5 rounded-lg border bg-card">
                 <div className="flex justify-between items-start mb-1.5">
                   <div>
-                    <p className="font-medium text-xs">{studentName(r.student_id)}</p>
+                    <button onClick={() => { const s = students.find(st => st.id === r.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline text-right">{studentName(r.student_id)}</button>
                     <p className="text-[10px] text-muted-foreground">{r.lesson_subject}</p>
                   </div>
                   <span className="text-[10px] text-muted-foreground">
@@ -422,6 +428,13 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* Student Detail Dialog */}
+      <StudentDetailDialog
+        student={selectedStudent}
+        open={!!selectedStudent}
+        onOpenChange={(open) => { if (!open) setSelectedStudent(null); }}
+      />
     </div>
   );
 }
