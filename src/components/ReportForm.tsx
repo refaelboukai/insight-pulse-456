@@ -111,12 +111,13 @@ export default function ReportForm() {
     setSubmitting(false);
   };
 
-  const filteredStudents = students.filter(s =>
-    `${s.first_name} ${s.last_name}`.includes(searchQuery)
-  );
-
   const selectedStudent = students.find(s => s.id === studentId);
-  const classes = [...new Set(filteredStudents.map(s => s.class_name))].filter(Boolean);
+  const classes = [...new Set(students.map(s => s.class_name))].filter(Boolean);
+
+  // If we have a lastClassName from previous report, show that class first
+  const sortedClasses = lastClassName
+    ? [lastClassName, ...classes.filter(c => c !== lastClassName)]
+    : classes;
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
