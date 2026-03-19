@@ -60,6 +60,7 @@ export default function AdminDashboard() {
   const [resetPassword, setResetPassword] = useState('');
   const [resetPasswordError, setResetPasswordError] = useState('');
   const [resetting, setResetting] = useState(false);
+  const [generatingCard, setGeneratingCard] = useState<string | null>(null);
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
