@@ -104,8 +104,8 @@ export default function GradesForm() {
           setPersonalNote(eval_.personal_note || '');
           setPersonalNoteEnhanced('');
           const ratings: Record<string, string> = {};
-          TEAM_CATEGORIES.forEach(c => {
-            if (eval_[c.key]) ratings[c.key] = eval_[c.key];
+          ALL_TEAM_KEYS.forEach(key => {
+            if (eval_[key]) ratings[key] = eval_[key];
           });
           setTeamRatings(ratings);
           setEvalSaved(true);
