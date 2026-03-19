@@ -167,6 +167,21 @@ export default function ReportForm() {
             </div>
           ))}
         </div>
+
+        {/* Quick context bar */}
+        {reportedStudentIds.size > 0 && !selectedStudent && (
+          <div className="flex items-center justify-between rounded-xl px-3 py-2 bg-success/10 border border-success/20">
+            <p className="text-xs text-success font-medium">
+              ✓ דווחו {reportedStudentIds.size} תלמידים · {subject}
+            </p>
+            <button
+              onClick={() => resetForm(false)}
+              className="text-xs text-muted-foreground hover:text-foreground underline"
+            >
+              סיום שיעור
+            </button>
+          </div>
+        )}
       )}
 
       {selectedStudent && (
