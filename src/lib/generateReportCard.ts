@@ -107,40 +107,35 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </tr>
   `).join('');
 
-  // Team evaluation rows
+  // Team evaluation sections
   const teamEval = data.teamEvaluation;
-  const teamRows = teamEval ? Object.entries(TEAM_LABELS).map(([key, label], i) => {
-    const val = teamEval[key as keyof TeamEvaluation];
-    if (!val) return '';
+  const teamSectionsHtml = teamEval ? TEAM_SECTIONS.map(section => {
+    const rows = section.items.map((item, i) => {
+      const val = teamEval[item.key as keyof TeamEvaluation];
+      if (!val) return '';
+      return `
+        <tr style="background:${i % 2 === 0 ? '#f8f9ff' : 'white'};">
+          <td style="padding:8px 14px;border:1px solid #e0e0e0;font-weight:600;font-size:12px;color:#333;">${item.label}</td>
+          <td style="padding:8px 14px;border:1px solid #e0e0e0;font-size:13px;color:#1a1a1a;text-align:center;font-weight:500;">${val}</td>
+        </tr>
+      `;
+    }).filter(Boolean).join('');
+    if (!rows) return '';
     return `
-      <tr style="background:${i % 2 === 0 ? '#f8f9ff' : 'white'};">
-        <td style="padding:8px 14px;border:1px solid #e0e0e0;font-weight:600;font-size:12px;color:#333;">${label}</td>
-        <td style="padding:8px 14px;border:1px solid #e0e0e0;font-size:13px;color:#1a1a1a;text-align:center;font-weight:500;">${val}</td>
-      </tr>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:bold;color:${section.color};margin-bottom:8px;">${section.title}</div>
+        <table style="width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">
+          <thead>
+            <tr style="background:${section.color};">
+              <th style="padding:8px 14px;color:white;font-size:12px;text-align:right;">תחום</th>
+              <th style="padding:8px 14px;color:white;font-size:12px;text-align:center;">דירוג</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
     `;
   }).filter(Boolean).join('') : '';
-
-  const personalNoteHtml = data.personalNote ? `
-    <div style="margin-bottom:20px;padding:14px 16px;background:#fdf2f8;border-radius:10px;border:1px solid #f9d4e8;">
-      <div style="font-size:13px;font-weight:bold;color:#be185d;margin-bottom:8px;">💌 ממני אלייך</div>
-      <div style="font-size:12px;color:#333;line-height:1.8;white-space:pre-wrap;">${data.personalNote}</div>
-    </div>
-  ` : '';
-
-  const teamTableHtml = teamRows ? `
-    <div style="margin-bottom:20px;">
-      <div style="font-size:13px;font-weight:bold;color:#1e40af;margin-bottom:8px;">📋 דיווחי צוות כיתה</div>
-      <table style="width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">
-        <thead>
-          <tr style="background:linear-gradient(135deg, #3b5998, #5b7ec2);">
-            <th style="padding:8px 14px;color:white;font-size:12px;text-align:right;border:1px solid #3b5998;">תחום</th>
-            <th style="padding:8px 14px;color:white;font-size:12px;text-align:center;border:1px solid #3b5998;">דירוג</th>
-          </tr>
-        </thead>
-        <tbody>${teamRows}</tbody>
-      </table>
-    </div>
-  ` : '';
 
   const signatureLine = (label: string) => `
     <div style="display:flex;flex-direction:column;align-items:center;width:120px;">
