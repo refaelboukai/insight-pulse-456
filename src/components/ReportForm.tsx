@@ -26,7 +26,11 @@ const ATTENDANCE_ICONS: Record<string, typeof CheckCircle2> = {
   absent: XCircle,
 };
 
-export default function ReportForm() {
+interface ReportFormProps {
+  absentStudentIds?: Set<string>;
+}
+
+export default function ReportForm({ absentStudentIds = new Set() }: ReportFormProps) {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [studentId, setStudentId] = useState('');
@@ -146,7 +150,7 @@ export default function ReportForm() {
             <div key={cls!} className="mb-3 last:mb-0">
               <p className="text-sm font-bold text-foreground mb-1.5">הכיתה של {cls}</p>
               <div className="flex flex-wrap gap-1">
-                {students.filter(s => s.class_name === cls).map(s => {
+                {students.filter(s => s.class_name === cls && !absentStudentIds.has(s.id)).map(s => {
                   const reported = reportedStudentIds.has(s.id);
                   return (
                     <button

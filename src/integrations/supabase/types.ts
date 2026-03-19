@@ -59,6 +59,47 @@ export type Database = {
           },
         ]
       }
+      daily_attendance: {
+        Row: {
+          absence_reason: Database["public"]["Enums"]["absence_reason"] | null
+          attendance_date: string
+          created_at: string
+          id: string
+          is_present: boolean
+          recorded_by: string
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          absence_reason?: Database["public"]["Enums"]["absence_reason"] | null
+          attendance_date?: string
+          created_at?: string
+          id?: string
+          is_present?: boolean
+          recorded_by: string
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          absence_reason?: Database["public"]["Enums"]["absence_reason"] | null
+          attendance_date?: string
+          created_at?: string
+          id?: string
+          is_present?: boolean
+          recorded_by?: string
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "daily_attendance_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exceptional_events: {
         Row: {
           created_at: string
@@ -255,6 +296,14 @@ export type Database = {
       }
     }
     Enums: {
+      absence_reason:
+        | "illness"
+        | "vacation"
+        | "family_arrangements"
+        | "medical_checkup"
+        | "emotional_difficulty"
+        | "school_suspension"
+        | "other"
       app_role: "admin" | "staff"
       attendance_status: "full" | "partial" | "absent"
       behavior_type: "respectful" | "non_respectful" | "disruptive" | "violent"
@@ -392,6 +441,15 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      absence_reason: [
+        "illness",
+        "vacation",
+        "family_arrangements",
+        "medical_checkup",
+        "emotional_difficulty",
+        "school_suspension",
+        "other",
+      ],
       app_role: ["admin", "staff"],
       attendance_status: ["full", "partial", "absent"],
       behavior_type: ["respectful", "non_respectful", "disruptive", "violent"],

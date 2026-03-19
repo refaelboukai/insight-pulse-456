@@ -1,15 +1,18 @@
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import ReportForm from '@/components/ReportForm';
 import ExceptionalEventForm from '@/components/ExceptionalEventForm';
+import DailyAttendance from '@/components/DailyAttendance';
 import AdminDashboard from '@/components/AdminDashboard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, FileText, AlertTriangle, BarChart3, Shield } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 export default function Index() {
   const { role, fullName, signOut } = useAuth();
   const isAdmin = role === 'admin';
+  const [absentStudentIds, setAbsentStudentIds] = useState<Set<string>>(new Set());
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--gradient-warm)' }}>
@@ -43,8 +46,12 @@ export default function Index() {
         {isAdmin ? (
           <AdminDashboard />
         ) : (
-          <Tabs defaultValue="report" dir="rtl">
-            <TabsList className="grid w-full grid-cols-2 mb-4 h-10 p-1 rounded-xl shadow-soft bg-card">
+          <Tabs defaultValue="attendance" dir="rtl">
+            <TabsList className="grid w-full grid-cols-3 mb-4 h-10 p-1 rounded-xl shadow-soft bg-card">
+              <TabsTrigger value="attendance" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-medium">
+                <ClipboardCheck className="h-3.5 w-3.5" />
+                ביקור סדיר
+              </TabsTrigger>
               <TabsTrigger value="report" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-medium">
                 <FileText className="h-3.5 w-3.5" />
                 דיווח שיעור
@@ -54,8 +61,11 @@ export default function Index() {
                 אירוע חריג
               </TabsTrigger>
             </TabsList>
+            <TabsContent value="attendance" className="animate-fade-in mt-0">
+              <DailyAttendance onAttendanceChange={setAbsentStudentIds} />
+            </TabsContent>
             <TabsContent value="report" className="animate-fade-in mt-0">
-              <ReportForm />
+              <ReportForm absentStudentIds={absentStudentIds} />
             </TabsContent>
             <TabsContent value="event" className="animate-fade-in mt-0">
               <ExceptionalEventForm />
