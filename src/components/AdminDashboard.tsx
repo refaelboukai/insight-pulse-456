@@ -193,7 +193,41 @@ export default function AdminDashboard() {
     }
   };
 
-  // Analytics
+  const handleGenerateReportCard = async (student: Student) => {
+    setGeneratingCard(student.id);
+    try {
+      const { data: grades } = await supabase
+        .from('student_grades')
+        .select('*')
+        .eq('student_id', student.id);
+
+      const blob = await generateReportCard({
+        studentName: `${student.first_name} ${student.last_name}`,
+        className: student.class_name || '',
+        grades: (grades || []).map(g => ({
+          subject: g.subject,
+          grade: g.grade,
+          verbal_evaluation: g.verbal_evaluation,
+          ai_enhanced_evaluation: g.ai_enhanced_evaluation,
+        })),
+      });
+
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `תעודה_${student.first_name}_${student.last_name}.pdf`;
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success(`תעודה הופקה עבור ${student.first_name} ${student.last_name}`);
+    } catch (err) {
+      console.error(err);
+      toast.error('שגיאה בהפקת התעודה');
+    } finally {
+      setGeneratingCard(null);
+    }
+  };
+
+
   const behaviorDist = (() => {
     const counts: Record<string, number> = {};
     reports.forEach(r => r.behavior_types?.forEach(b => {
