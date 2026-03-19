@@ -34,10 +34,7 @@ export default function ReportForm() {
   const [attendance, setAttendance] = useState<AttendanceStatus | ''>('');
   const [behaviors, setBehaviors] = useState<BehaviorType[]>([]);
   const [violenceTypes, setViolenceTypes] = useState<ViolenceType[]>([]);
-  const [severity, setSeverity] = useState(3);
   const [participation, setParticipation] = useState<ParticipationLevel | ''>('');
-  const [performance, setPerformance] = useState(3);
-  const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
