@@ -311,191 +311,220 @@ export default function GradesForm() {
         </div>
       </div>
 
-      {/* ===== Personal Note - ממני אלייך ===== */}
-      <div className="card-styled rounded-2xl p-3 space-y-2 border-pink-200/50">
-        <div className="flex items-center gap-1.5">
-          <Heart className="h-4 w-4 text-pink-500" />
-          <label className="text-xs font-semibold text-pink-700">ממני אלייך – נימה אישית מהמחנכת והמדריכה</label>
-        </div>
-        <Textarea
-          placeholder="כתבי מילים אישיות, מחזקות ומעודדות לתלמיד/ה..."
-          value={personalNote}
-          onChange={e => { setPersonalNote(e.target.value); setEvalSaved(false); }}
-          className="min-h-[80px] text-sm border-pink-200/50"
-          maxLength={3000}
-        />
-        <Button
-          variant="outline"
-          size="sm"
-          className="gap-1.5 text-xs w-full border-pink-200 hover:bg-pink-50"
-          onClick={handleEnhancePersonalNote}
-          disabled={enhancingNote || !personalNote.trim()}
+      {/* ===== Accordion: דיווחי מחנכת ===== */}
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <button
+          onClick={() => setEducatorOpen(!educatorOpen)}
+          className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
         >
-          {enhancingNote ? (
-            <><div className="w-3.5 h-3.5 rounded-full border-2 border-pink-500 border-t-transparent animate-spin" /> משפר ניסוח...</>
-          ) : (
-            <><Sparkles className="h-3.5 w-3.5 text-pink-500" /> שיפור ניסוח עם AI</>
-          )}
-        </Button>
-        {personalNoteEnhanced && (
-          <div className="mt-2 space-y-1.5 p-2.5 rounded-lg bg-pink-50/50 border border-pink-200/30">
-            <div className="flex items-center gap-1">
-              <Sparkles className="h-3 w-3 text-pink-500" />
-              <span className="text-[10px] font-semibold text-pink-600">ניסוח משופר</span>
-            </div>
-            <Textarea
-              value={personalNoteEnhanced}
-              onChange={e => { setPersonalNoteEnhanced(e.target.value); setEvalSaved(false); }}
-              className="min-h-[60px] text-sm border-pink-200/30"
-            />
+          <div className="flex items-center gap-2">
+            <Heart className="h-4 w-4 text-pink-500" />
+            <span className="text-sm font-semibold">דיווחי מחנכת</span>
           </div>
-        )}
-      </div>
+          {educatorOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        </button>
+        {educatorOpen && (
+          <div className="px-3 pb-3 space-y-4">
+            {/* Personal Note */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold text-pink-700">💌 ממני אלייך – נימה אישית מהמחנכת והמדריכה</label>
+              <Textarea
+                placeholder="כתבי מילים אישיות, מחזקות ומעודדות לתלמיד/ה..."
+                value={personalNote}
+                onChange={e => { setPersonalNote(e.target.value); setEvalSaved(false); }}
+                className="min-h-[80px] text-sm"
+                maxLength={3000}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5 text-xs w-full"
+                onClick={handleEnhancePersonalNote}
+                disabled={enhancingNote || !personalNote.trim()}
+              >
+                {enhancingNote ? (
+                  <><div className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" /> משפר ניסוח...</>
+                ) : (
+                  <><Sparkles className="h-3.5 w-3.5" /> שיפור ניסוח עם AI</>
+                )}
+              </Button>
+              {personalNoteEnhanced && (
+                <div className="mt-2 space-y-1.5 p-2.5 rounded-lg bg-muted/50 border border-border">
+                  <div className="flex items-center gap-1">
+                    <Sparkles className="h-3 w-3 text-primary" />
+                    <span className="text-[10px] font-semibold text-primary">ניסוח משופר</span>
+                  </div>
+                  <Textarea
+                    value={personalNoteEnhanced}
+                    onChange={e => { setPersonalNoteEnhanced(e.target.value); setEvalSaved(false); }}
+                    className="min-h-[60px] text-sm"
+                  />
+                </div>
+              )}
+            </div>
 
-      {/* ===== Team Evaluation Sections ===== */}
-      {TEAM_CATEGORIES_SECTIONS.map(section => (
-        <div key={section.title} className="card-styled rounded-2xl p-3 space-y-3">
-          <label className="text-xs font-semibold">{section.title}</label>
-          <div className="space-y-2">
-            {section.items.map(cat => (
-              <div key={cat.key} className="flex items-center gap-2">
-                <span className="text-sm w-6 text-center">{cat.icon}</span>
-                <span className="text-xs font-medium w-28 shrink-0">{cat.label}</span>
-                <Select
-                  value={teamRatings[cat.key] || ''}
-                  onValueChange={val => { setTeamRatings(prev => ({ ...prev, [cat.key]: val })); setEvalSaved(false); }}
-                >
-                  <SelectTrigger className="h-8 text-xs flex-1">
-                    <SelectValue placeholder="בחר דירוג" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {RATING_OPTIONS.map(r => (
-                      <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+            {/* Team Evaluation Sections */}
+            {TEAM_CATEGORIES_SECTIONS.map(section => (
+              <div key={section.title} className="space-y-2">
+                <label className="text-xs font-semibold">{section.title}</label>
+                <div className="space-y-2">
+                  {section.items.map(cat => (
+                    <div key={cat.key} className="flex items-center gap-2">
+                      <span className="text-sm w-6 text-center">{cat.icon}</span>
+                      <span className="text-xs font-medium w-28 shrink-0">{cat.label}</span>
+                      <Select
+                        value={teamRatings[cat.key] || ''}
+                        onValueChange={val => { setTeamRatings(prev => ({ ...prev, [cat.key]: val })); setEvalSaved(false); }}
+                      >
+                        <SelectTrigger className="h-8 text-xs flex-1">
+                          <SelectValue placeholder="בחר דירוג" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {RATING_OPTIONS.map(r => (
+                            <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  ))}
+                </div>
               </div>
             ))}
-          </div>
-        </div>
-      ))}
 
-      {/* Save evaluation button */}
-      <Button
-        onClick={handleSaveEvaluation}
-        disabled={savingEval || evalSaved}
-        variant={evalSaved ? 'outline' : 'default'}
-        className="w-full gap-1.5"
-      >
-        {savingEval ? (
-          <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> שומר...</>
-        ) : evalSaved ? (
-          <><CheckCircle2 className="h-4 w-4 text-green-500" /> הערכה כללית נשמרה</>
-        ) : (
-          <><Send className="h-4 w-4" /> שמירת הערכה כללית (ממני אלייך + דיווחי צוות)</>
-        )}
-      </Button>
-
-      <div className="border-t border-border pt-4" />
-
-      {/* ===== Subject Grades ===== */}
-      <div className="card-styled rounded-2xl p-3 space-y-3">
-        <label className="text-xs font-semibold">ציונים לפי מקצוע</label>
-        <div className="flex flex-wrap gap-1.5">
-          {SUBJECTS.map(s => {
-            const key = `${selectedStudentId}-${s}`;
-            const submitted = submittedIds.has(key);
-            return (
-              <button
-                key={s}
-                onClick={() => setSubject(s)}
-                className={`text-xs py-1.5 px-2.5 rounded-lg border transition-colors ${
-                  subject === s
-                    ? 'bg-primary text-primary-foreground border-primary'
-                    : submitted
-                    ? 'bg-success/10 border-success/30 text-success'
-                    : 'bg-card border-border hover:bg-primary/10 hover:border-primary/30'
-                }`}
-              >
-                {submitted && <CheckCircle2 className="h-3 w-3 inline ml-1" />}
-                {s}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {subject && (
-        <>
-          {/* Grade input */}
-          <div className="card-styled rounded-2xl p-3 space-y-2">
-            <label className="text-xs font-semibold">ציון (0-100)</label>
-            <Input
-              type="number"
-              min={0}
-              max={100}
-              placeholder="הזן ציון"
-              value={grade}
-              onChange={e => setGrade(e.target.value)}
-              className="h-10 text-sm"
-            />
-          </div>
-
-          {/* Verbal evaluation */}
-          <div className="card-styled rounded-2xl p-3 space-y-2">
-            <label className="text-xs font-semibold">הערכה מילולית</label>
-            <Textarea
-              placeholder="כתוב הערכה מילולית על התלמיד/ה..."
-              value={verbalEvaluation}
-              onChange={e => setVerbalEvaluation(e.target.value)}
-              className="min-h-[80px] text-sm"
-              maxLength={2000}
-            />
+            {/* Save evaluation button */}
             <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5 text-xs w-full"
-              onClick={handleEnhance}
-              disabled={enhancing || !verbalEvaluation.trim()}
+              onClick={handleSaveEvaluation}
+              disabled={savingEval || evalSaved}
+              variant={evalSaved ? 'outline' : 'default'}
+              className="w-full gap-1.5"
             >
-              {enhancing ? (
-                <><div className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" /> משפר ניסוח...</>
+              {savingEval ? (
+                <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> שומר...</>
+              ) : evalSaved ? (
+                <><CheckCircle2 className="h-4 w-4 text-green-500" /> הערכה כללית נשמרה</>
               ) : (
-                <><Sparkles className="h-3.5 w-3.5" /> שיפור ניסוח עם AI</>
+                <><Send className="h-4 w-4" /> שמירת הערכה כללית</>
               )}
             </Button>
           </div>
+        )}
+      </div>
 
-          {/* AI enhanced evaluation */}
-          {aiEnhancedEvaluation && (
-            <div className="card-styled rounded-2xl p-3 space-y-2 border-primary/20">
-              <div className="flex items-center gap-1.5">
-                <Sparkles className="h-3.5 w-3.5 text-primary" />
-                <label className="text-xs font-semibold text-primary">הערכה משופרת</label>
+      {/* ===== Accordion: דיווחי מורים מקצועיים ===== */}
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <button
+          onClick={() => setSubjectOpen(!subjectOpen)}
+          className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
+        >
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-4 w-4 text-primary" />
+            <span className="text-sm font-semibold">דיווחי מורים מקצועיים</span>
+          </div>
+          {subjectOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+        </button>
+        {subjectOpen && (
+          <div className="px-3 pb-3 space-y-4">
+            {/* Subject selection */}
+            <div className="space-y-2">
+              <label className="text-xs font-semibold">ציונים לפי מקצוע</label>
+              <div className="flex flex-wrap gap-1.5">
+                {SUBJECTS.map(s => {
+                  const key = `${selectedStudentId}-${s}`;
+                  const submitted = submittedIds.has(key);
+                  return (
+                    <button
+                      key={s}
+                      onClick={() => setSubject(s)}
+                      className={`text-xs py-1.5 px-2.5 rounded-lg border transition-colors ${
+                        subject === s
+                          ? 'bg-primary text-primary-foreground border-primary'
+                          : submitted
+                          ? 'bg-success/10 border-success/30 text-success'
+                          : 'bg-card border-border hover:bg-primary/10 hover:border-primary/30'
+                      }`}
+                    >
+                      {submitted && <CheckCircle2 className="h-3 w-3 inline ml-1" />}
+                      {s}
+                    </button>
+                  );
+                })}
               </div>
-              <Textarea
-                value={aiEnhancedEvaluation}
-                onChange={e => setAiEnhancedEvaluation(e.target.value)}
-                className="min-h-[80px] text-sm border-primary/20"
-              />
-              <p className="text-[10px] text-muted-foreground">ניתן לערוך את הטקסט המשופר לפני השמירה</p>
             </div>
-          )}
 
-          {/* Submit grade */}
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full gap-1.5"
-          >
-            {submitting ? (
-              <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> שומר...</>
-            ) : (
-              <><Send className="h-4 w-4" /> שמירת ציון והערכה</>
+            {subject && (
+              <>
+                {/* Grade input */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold">ציון (0-100)</label>
+                  <Input
+                    type="number"
+                    min={0}
+                    max={100}
+                    placeholder="הזן ציון"
+                    value={grade}
+                    onChange={e => setGrade(e.target.value)}
+                    className="h-10 text-sm"
+                  />
+                </div>
+
+                {/* Verbal evaluation */}
+                <div className="space-y-2">
+                  <label className="text-xs font-semibold">הערכה מילולית</label>
+                  <Textarea
+                    placeholder="כתוב הערכה מילולית על התלמיד/ה..."
+                    value={verbalEvaluation}
+                    onChange={e => setVerbalEvaluation(e.target.value)}
+                    className="min-h-[80px] text-sm"
+                    maxLength={2000}
+                  />
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="gap-1.5 text-xs w-full"
+                    onClick={handleEnhance}
+                    disabled={enhancing || !verbalEvaluation.trim()}
+                  >
+                    {enhancing ? (
+                      <><div className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" /> משפר ניסוח...</>
+                    ) : (
+                      <><Sparkles className="h-3.5 w-3.5" /> שיפור ניסוח עם AI</>
+                    )}
+                  </Button>
+                </div>
+
+                {/* AI enhanced evaluation */}
+                {aiEnhancedEvaluation && (
+                  <div className="space-y-2 p-2.5 rounded-lg bg-muted/50 border border-primary/20">
+                    <div className="flex items-center gap-1.5">
+                      <Sparkles className="h-3.5 w-3.5 text-primary" />
+                      <label className="text-xs font-semibold text-primary">הערכה משופרת</label>
+                    </div>
+                    <Textarea
+                      value={aiEnhancedEvaluation}
+                      onChange={e => setAiEnhancedEvaluation(e.target.value)}
+                      className="min-h-[80px] text-sm"
+                    />
+                    <p className="text-[10px] text-muted-foreground">ניתן לערוך את הטקסט המשופר לפני השמירה</p>
+                  </div>
+                )}
+
+                {/* Submit grade */}
+                <Button
+                  onClick={handleSubmit}
+                  disabled={submitting}
+                  className="w-full gap-1.5"
+                >
+                  {submitting ? (
+                    <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> שומר...</>
+                  ) : (
+                    <><Send className="h-4 w-4" /> שמירת ציון והערכה</>
+                  )}
+                </Button>
+              </>
             )}
-          </Button>
-        </>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
