@@ -312,7 +312,7 @@ export default function GradesForm() {
           <div className="px-3 pb-3 space-y-4">
             {/* Personal Note */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-pink-700">💌 ממני אלייך – נימה אישית מהמחנכת והמדריכה</label>
+              <label className="text-xs font-semibold text-foreground">ממני אלייך – נימה אישית מהמחנכת והמדריכה</label>
               <Textarea
                 placeholder="כתבי מילים אישיות, מחזקות ומעודדות לתלמיד/ה..."
                 value={personalNote}
