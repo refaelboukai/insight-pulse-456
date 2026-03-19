@@ -157,7 +157,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                       key={s.id}
                       onClick={() => !reported && setStudentId(s.id)}
                       disabled={reported}
-                      className={`text-xs py-1.5 px-2.5 rounded-lg border transition-colors ${
+                      className={`text-sm py-2 px-3 rounded-lg border transition-colors ${
                         reported
                           ? 'border-success/30 bg-success/10 text-success line-through cursor-default'
                           : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
@@ -198,7 +198,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                 <button
                   key={s}
                   onClick={() => setSubject(s)}
-                  className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${
+                  className={`text-sm py-2 px-3 rounded-full border transition-colors ${
                     subject === s
                       ? 'bg-primary text-primary-foreground border-primary'
                       : 'border-border bg-card hover:border-primary/30'
@@ -252,7 +252,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                   <button
                     key={key}
                     onClick={() => setParticipation(prev => prev === key ? '' : key)}
-                    className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${colorClass}`}
+                    className={`text-sm py-2 px-3 rounded-full border transition-colors ${colorClass}`}
                   >
                     {label}
                   </button>

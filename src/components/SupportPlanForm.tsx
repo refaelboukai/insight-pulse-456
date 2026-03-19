@@ -100,7 +100,7 @@ export default function SupportPlanForm() {
                       key={s.id}
                       onClick={() => !logged && setStudentId(s.id)}
                       disabled={logged}
-                      className={`text-xs py-1.5 px-2.5 rounded-lg border transition-colors ${
+                      className={`text-sm py-2 px-3 rounded-lg border transition-colors ${
                         logged
                           ? 'border-success/30 bg-success/10 text-success line-through cursor-default'
                           : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'

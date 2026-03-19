@@ -419,7 +419,7 @@ export default function GradesForm() {
                     <button
                       key={s}
                       onClick={() => setSubject(s)}
-                      className={`text-xs py-1.5 px-2.5 rounded-lg border transition-colors ${
+                      className={`text-sm py-2 px-3 rounded-lg border transition-colors ${
                         subject === s
                           ? 'bg-primary text-primary-foreground border-primary'
                           : submitted
