@@ -52,18 +52,20 @@ export default function AdminDashboard() {
 
   const fetchAll = async () => {
     const today = new Date().toISOString().split('T')[0];
-    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes] = await Promise.all([
+    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes] = await Promise.all([
       supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('students').select('*').order('class_name').order('last_name'),
       supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
       supabase.from('exceptional_events').select('*').order('created_at', { ascending: false }).limit(50),
       supabase.from('daily_attendance').select('*').eq('attendance_date', today),
+      supabase.from('support_sessions' as any).select('*').order('created_at', { ascending: false }).limit(100),
     ]);
     if (reportsRes.data) setReports(reportsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
     if (alertsRes.data) setAlerts(alertsRes.data);
     if (eventsRes.data) setEvents(eventsRes.data);
     if (attendanceRes.data) setDailyAttendance(attendanceRes.data);
+    if (supportRes.data) setSupportSessions(supportRes.data as any[]);
     setLoading(false);
   };
 
