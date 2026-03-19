@@ -35,6 +35,7 @@ export default function ReportForm() {
   const [behaviors, setBehaviors] = useState<BehaviorType[]>([]);
   const [violenceTypes, setViolenceTypes] = useState<ViolenceType[]>([]);
   const [participation, setParticipation] = useState<ParticipationLevel | ''>('');
+  const [violenceComment, setViolenceComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
