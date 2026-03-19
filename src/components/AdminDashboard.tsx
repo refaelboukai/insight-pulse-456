@@ -388,7 +388,7 @@ export default function AdminDashboard() {
               <div key={r.id} className="p-2.5 rounded-lg border bg-card">
                 <div className="flex justify-between items-start mb-1.5">
                   <div>
-                    <p className="font-medium text-xs">{studentName(r.student_id)}</p>
+                    <button onClick={() => { const s = students.find(st => st.id === r.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline text-right">{studentName(r.student_id)}</button>
                     <p className="text-[10px] text-muted-foreground">{r.lesson_subject}</p>
                   </div>
                   <span className="text-[10px] text-muted-foreground">
