@@ -1,17 +1,19 @@
 import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS, INCIDENT_TYPE_LABELS,
+  SEVERITY_LABELS,
 } from '@/lib/constants';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import {
+  AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -20,7 +22,7 @@ type Student = Database['public']['Tables']['students']['Row'];
 type Alert = Database['public']['Tables']['alerts']['Row'];
 type ExceptionalEvent = Database['public']['Tables']['exceptional_events']['Row'];
 
-const CHART_COLORS = ['hsl(168, 45%, 40%)', 'hsl(140, 40%, 45%)', 'hsl(35, 80%, 55%)', 'hsl(20, 70%, 55%)', 'hsl(0, 65%, 55%)'];
+const CHART_COLORS = ['hsl(168, 50%, 40%)', 'hsl(140, 45%, 42%)', 'hsl(35, 80%, 55%)', 'hsl(15, 70%, 52%)', 'hsl(0, 65%, 52%)'];
 
 const CLASS_OPTIONS = ['טלי', 'עדן'];
 
@@ -30,6 +32,9 @@ export default function AdminDashboard() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [events, setEvents] = useState<ExceptionalEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    alerts: true, events: true, students: false, reports: false,
+  });
 
   // Add student form
   const [showAddStudent, setShowAddStudent] = useState(false);
@@ -37,6 +42,9 @@ export default function AdminDashboard() {
   const [newLastName, setNewLastName] = useState('');
   const [newClass, setNewClass] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
+
+  const toggleSection = (key: string) =>
+    setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
   const fetchAll = async () => {
     const [reportsRes, studentsRes, alertsRes, eventsRes] = await Promise.all([
@@ -70,7 +78,6 @@ export default function AdminDashboard() {
     });
     if (error) {
       toast.error('שגיאה בהוספת תלמיד/ה');
-      console.error(error);
     } else {
       toast.success(`${newFirstName} ${newLastName} נוסף/ה בהצלחה`);
       setNewFirstName('');
@@ -89,23 +96,17 @@ export default function AdminDashboard() {
       counts[b] = (counts[b] || 0) + 1;
     }));
     return Object.entries(counts).map(([name, value]) => ({
-      name: BEHAVIOR_LABELS[name] || name,
-      value,
+      name: BEHAVIOR_LABELS[name] || name, value,
     }));
   })();
 
   const attendanceDist = (() => {
     const counts: Record<string, number> = {};
-    reports.forEach(r => {
-      counts[r.attendance] = (counts[r.attendance] || 0) + 1;
-    });
+    reports.forEach(r => { counts[r.attendance] = (counts[r.attendance] || 0) + 1; });
     return Object.entries(counts).map(([name, value]) => ({
-      name: ATTENDANCE_LABELS[name] || name,
-      value,
+      name: ATTENDANCE_LABELS[name] || name, value,
     }));
   })();
-
-  const recentReports = reports.slice(0, 20);
 
   const studentName = (id: string) => {
     const s = students.find(st => st.id === id);
@@ -113,290 +114,255 @@ export default function AdminDashboard() {
   };
 
   const unreadAlerts = alerts.filter(a => !a.is_read);
+  const avgPerformance = reports.filter(r => r.performance_score).length > 0
+    ? (reports.reduce((s, r) => s + (r.performance_score || 0), 0) / reports.filter(r => r.performance_score).length).toFixed(1)
+    : '—';
+
+  const recentReports = reports.slice(0, 15);
 
   if (loading) {
-    return <div className="flex items-center justify-center p-12 text-muted-foreground">טוען נתונים...</div>;
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
   }
 
+  const SectionHeader = ({ title, icon: Icon, count, badge, sectionKey, color = 'text-primary' }: {
+    title: string; icon: React.ElementType; count?: number; badge?: string;
+    sectionKey: string; color?: string;
+  }) => (
+    <button
+      onClick={() => toggleSection(sectionKey)}
+      className="w-full flex items-center justify-between p-3 hover:bg-muted/50 rounded-xl transition-colors"
+    >
+      <div className="flex items-center gap-2.5">
+        <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${color === 'text-destructive' ? 'bg-destructive/10' : color === 'text-accent' ? 'bg-accent/10' : 'bg-primary/10'}`}>
+          <Icon className={`h-4 w-4 ${color}`} />
+        </div>
+        <span className="font-semibold text-sm">{title}</span>
+        {count !== undefined && (
+          <Badge variant={badge === 'destructive' ? 'destructive' : 'secondary'} className="text-xs rounded-full px-2">
+            {count}
+          </Badge>
+        )}
+      </div>
+      {expandedSections[sectionKey] ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+    </button>
+  );
+
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <Users className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold">{students.length}</p>
-                <p className="text-sm text-muted-foreground">תלמידים</p>
-              </div>
+    <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
+      {/* Stats grid */}
+      <div className="grid grid-cols-4 gap-2">
+        {[
+          { icon: Users, value: students.length, label: 'תלמידים', color: 'bg-primary/10 text-primary' },
+          { icon: FileText, value: reports.length, label: 'דיווחים', color: 'bg-primary/10 text-primary' },
+          { icon: Bell, value: unreadAlerts.length, label: 'התראות', color: 'bg-accent/10 text-accent' },
+          { icon: TrendingUp, value: avgPerformance, label: 'ממוצע', color: 'bg-success/10 text-success' },
+        ].map((stat, i) => (
+          <div key={i} className="card-styled rounded-xl p-3 text-center">
+            <div className={`w-8 h-8 rounded-lg mx-auto mb-1.5 flex items-center justify-center ${stat.color}`}>
+              <stat.icon className="h-4 w-4" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <FileText className="h-8 w-8 text-primary" />
-              <div>
-                <p className="text-2xl font-bold">{reports.length}</p>
-                <p className="text-sm text-muted-foreground">דיווחים</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <Bell className="h-8 w-8 text-accent" />
-              <div>
-                <p className="text-2xl font-bold">{unreadAlerts.length}</p>
-                <p className="text-sm text-muted-foreground">התראות חדשות</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex items-center gap-3">
-              <TrendingUp className="h-8 w-8 text-success" />
-              <div>
-                <p className="text-2xl font-bold">
-                  {reports.filter(r => r.performance_score).length > 0
-                    ? (reports.reduce((s, r) => s + (r.performance_score || 0), 0) / reports.filter(r => r.performance_score).length).toFixed(1)
-                    : '—'}
-                </p>
-                <p className="text-sm text-muted-foreground">ממוצע ביצועים</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+            <p className="text-lg font-bold">{stat.value}</p>
+            <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+          </div>
+        ))}
       </div>
 
-      {/* Student list with add button */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between pb-3">
-          <CardTitle className="text-base">רשימת תלמידים</CardTitle>
+      {/* Alerts */}
+      {unreadAlerts.length > 0 && (
+        <div className="card-styled rounded-2xl overflow-hidden border-destructive/20">
+          <SectionHeader title="התראות" icon={AlertTriangle} count={unreadAlerts.length} badge="destructive" sectionKey="alerts" color="text-destructive" />
+          {expandedSections.alerts && (
+            <div className="px-3 pb-3 space-y-1.5">
+              {unreadAlerts.slice(0, 5).map(a => (
+                <div key={a.id} className="p-2.5 rounded-lg bg-destructive/5 border border-destructive/10">
+                  <div className="flex justify-between items-start gap-2">
+                    <div className="min-w-0 flex-1">
+                      <p className="font-medium text-xs">{studentName(a.student_id)}</p>
+                      <p className="text-xs text-muted-foreground truncate">{a.description}</p>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                      {new Date(a.created_at).toLocaleDateString('he-IL')}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Exceptional Events */}
+      {events.length > 0 && (
+        <div className="card-styled rounded-2xl overflow-hidden border-accent/20">
+          <SectionHeader title="אירועים חריגים" icon={ShieldAlert} count={events.length} sectionKey="events" color="text-accent" />
+          {expandedSections.events && (
+            <div className="px-3 pb-3 space-y-1.5">
+              {events.slice(0, 5).map(ev => (
+                <div key={ev.id} className="p-2.5 rounded-lg bg-accent/5 border border-accent/10">
+                  <div className="flex justify-between items-start gap-2 mb-1">
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                      {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
+                    </Badge>
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(ev.created_at).toLocaleDateString('he-IL')}
+                    </span>
+                  </div>
+                  <p className="text-xs line-clamp-2">{ev.description}</p>
+                  {ev.people_involved && (
+                    <p className="text-[10px] text-muted-foreground mt-1">מעורבים: {ev.people_involved}</p>
+                  )}
+                  {ev.followup_required && (
+                    <Badge variant="destructive" className="text-[10px] mt-1 px-1.5 py-0">נדרש מעקב</Badge>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Charts */}
+      <div className="grid grid-cols-2 gap-2">
+        <div className="card-styled rounded-2xl p-3">
+          <h4 className="text-xs font-semibold mb-2 text-center">התנהגות</h4>
+          {behaviorDist.length > 0 ? (
+            <ResponsiveContainer width="100%" height={160}>
+              <PieChart>
+                <Pie data={behaviorDist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={55} innerRadius={25}>
+                  {behaviorDist.map((_, i) => (
+                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip contentStyle={{ fontSize: 11, direction: 'rtl' }} />
+              </PieChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-center text-muted-foreground text-xs py-8">אין נתונים</p>
+          )}
+        </div>
+
+        <div className="card-styled rounded-2xl p-3">
+          <h4 className="text-xs font-semibold mb-2 text-center">נוכחות</h4>
+          {attendanceDist.length > 0 ? (
+            <ResponsiveContainer width="100%" height={160}>
+              <BarChart data={attendanceDist} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
+                <XAxis dataKey="name" fontSize={9} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <YAxis fontSize={9} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <Tooltip contentStyle={{ fontSize: 11, direction: 'rtl' }} />
+                <Bar dataKey="value" fill="hsl(168, 50%, 40%)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <p className="text-center text-muted-foreground text-xs py-8">אין נתונים</p>
+          )}
+        </div>
+      </div>
+
+      {/* Students */}
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-3 pt-1">
+          <SectionHeader title="תלמידים" icon={Users} count={students.length} sectionKey="students" />
           <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
             <DialogTrigger asChild>
-              <Button size="sm" variant="outline" className="gap-1">
-                <UserPlus className="h-4 w-4" />
-                הוספת תלמיד/ה
+              <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2">
+                <UserPlus className="h-3.5 w-3.5" />
+                הוספה
               </Button>
             </DialogTrigger>
-            <DialogContent dir="rtl">
+            <DialogContent dir="rtl" className="max-w-sm">
               <DialogHeader>
-                <DialogTitle>הוספת תלמיד/ה חדש/ה</DialogTitle>
+                <DialogTitle className="text-sm">הוספת תלמיד/ה</DialogTitle>
               </DialogHeader>
-              <div className="space-y-4 pt-2">
-                <Input
-                  placeholder="שם פרטי"
-                  value={newFirstName}
-                  onChange={e => setNewFirstName(e.target.value)}
-                />
-                <Input
-                  placeholder="שם משפחה"
-                  value={newLastName}
-                  onChange={e => setNewLastName(e.target.value)}
-                />
+              <div className="space-y-3 pt-1">
+                <Input placeholder="שם פרטי" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="h-10 text-sm" />
+                <Input placeholder="שם משפחה" value={newLastName} onChange={e => setNewLastName(e.target.value)} className="h-10 text-sm" />
                 <Select value={newClass} onValueChange={setNewClass}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="בחר/י כיתה" />
-                  </SelectTrigger>
+                  <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י כיתה" /></SelectTrigger>
                   <SelectContent>
-                    {CLASS_OPTIONS.map(c => (
-                      <SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>
-                    ))}
+                    {CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}
                   </SelectContent>
                 </Select>
-                <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full">
+                <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">
                   {addingStudent ? 'מוסיף...' : 'הוספה'}
                 </Button>
               </div>
             </DialogContent>
           </Dialog>
-        </CardHeader>
-        <CardContent>
-          {CLASS_OPTIONS.map(cls => {
-            const classStudents = students.filter(s => s.class_name === cls);
-            return (
-              <div key={cls} className="mb-4">
-                <p className="text-sm font-semibold text-muted-foreground mb-2">הכיתה של {cls} ({classStudents.length})</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                  {classStudents.map(s => (
-                    <div key={s.id} className="text-sm p-2 rounded-md bg-secondary/50 border border-border">
-                      {s.first_name} {s.last_name}
-                    </div>
-                  ))}
-                </div>
-              </div>
-            );
-          })}
-        </CardContent>
-      </Card>
-
-      {/* Alerts */}
-      {unreadAlerts.length > 0 && (
-        <Card className="border-destructive/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-destructive">
-              <AlertTriangle className="h-5 w-5" />
-              התראות ({unreadAlerts.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="max-h-48">
-              <div className="space-y-2">
-                {unreadAlerts.map(a => (
-                  <div key={a.id} className="p-3 rounded-lg bg-destructive/5 border border-destructive/10">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-sm">{studentName(a.student_id)}</p>
-                        <p className="text-sm text-muted-foreground">{a.description}</p>
+        </div>
+        {expandedSections.students && (
+          <div className="px-3 pb-3">
+            {CLASS_OPTIONS.map(cls => {
+              const classStudents = students.filter(s => s.class_name === cls);
+              return (
+                <div key={cls} className="mb-3 last:mb-0">
+                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">הכיתה של {cls} ({classStudents.length})</p>
+                  <div className="grid grid-cols-3 gap-1">
+                    {classStudents.map(s => (
+                      <div key={s.id} className="text-xs p-1.5 rounded-md bg-secondary/50 border border-border text-center">
+                        {s.first_name} {s.last_name}
                       </div>
-                      <Badge variant="destructive" className="text-xs">
-                        {new Date(a.created_at).toLocaleDateString('he-IL')}
-                      </Badge>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Exceptional Events */}
-      {events.length > 0 && (
-        <Card className="border-accent/30">
-          <CardHeader className="pb-3">
-            <CardTitle className="flex items-center gap-2 text-accent">
-              <ShieldAlert className="h-5 w-5" />
-              אירועים חריגים ({events.length})
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ScrollArea className="max-h-64">
-              <div className="space-y-2">
-                {events.map(ev => (
-                  <div key={ev.id} className="p-3 rounded-lg bg-accent/5 border border-accent/10">
-                    <div className="flex justify-between items-start mb-1">
-                      <Badge variant="outline" className="text-xs">
-                        {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
-                      </Badge>
-                      <span className="text-xs text-muted-foreground">
-                        {new Date(ev.created_at).toLocaleDateString('he-IL')}
-                      </span>
-                    </div>
-                    <p className="text-sm mt-1">{ev.description}</p>
-                    {ev.people_involved && (
-                      <p className="text-xs text-muted-foreground mt-1">מעורבים: {ev.people_involved}</p>
-                    )}
-                    {ev.staff_response && (
-                      <p className="text-xs text-muted-foreground mt-1">תגובת צוות: {ev.staff_response}</p>
-                    )}
-                    {ev.followup_required && (
-                      <Badge variant="destructive" className="text-xs mt-1">נדרש מעקב</Badge>
-                    )}
-                    {ev.followup_notes && (
-                      <p className="text-xs text-muted-foreground mt-1">הערות מעקב: {ev.followup_notes}</p>
-                    )}
-                  </div>
-                ))}
-              </div>
-            </ScrollArea>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Charts */}
-      <div className="grid md:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">התפלגות התנהגות</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {behaviorDist.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <PieChart>
-                  <Pie data={behaviorDist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
-                    {behaviorDist.map((_, i) => (
-                      <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
                     ))}
-                  </Pie>
-                  <Tooltip />
-                </PieChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">אין נתונים עדיין</p>
-            )}
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">התפלגות נוכחות</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {attendanceDist.length > 0 ? (
-              <ResponsiveContainer width="100%" height={250}>
-                <BarChart data={attendanceDist}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="name" fontSize={12} />
-                  <YAxis />
-                  <Tooltip />
-                  <Bar dataKey="value" fill="hsl(168, 45%, 40%)" radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <p className="text-center text-muted-foreground py-8">אין נתונים עדיין</p>
-            )}
-          </CardContent>
-        </Card>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
       </div>
 
       {/* Recent reports */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">דיווחים אחרונים</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ScrollArea className="max-h-96">
-            <div className="space-y-3">
-              {recentReports.map(r => (
-                <div key={r.id} className="p-3 rounded-lg border bg-card">
-                  <div className="flex justify-between items-start mb-2">
-                    <div>
-                      <p className="font-medium">{studentName(r.student_id)}</p>
-                      <p className="text-sm text-muted-foreground">{r.lesson_subject}</p>
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {new Date(r.report_date).toLocaleDateString('he-IL')}
-                    </span>
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <SectionHeader title="דיווחים אחרונים" icon={FileText} count={reports.length} sectionKey="reports" />
+        {expandedSections.reports && (
+          <div className="px-3 pb-3 space-y-1.5">
+            {recentReports.map(r => (
+              <div key={r.id} className="p-2.5 rounded-lg border bg-card">
+                <div className="flex justify-between items-start mb-1.5">
+                  <div>
+                    <p className="font-medium text-xs">{studentName(r.student_id)}</p>
+                    <p className="text-[10px] text-muted-foreground">{r.lesson_subject}</p>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge variant="secondary">{ATTENDANCE_LABELS[r.attendance]}</Badge>
-                    {r.behavior_types?.map(b => (
-                      <Badge key={b} variant={b === 'violent' ? 'destructive' : 'outline'}>
-                        {BEHAVIOR_LABELS[b]}
-                      </Badge>
-                    ))}
-                    {r.participation && (
-                      <Badge variant="secondary">{PARTICIPATION_LABELS[r.participation]}</Badge>
-                    )}
-                    {r.performance_score && (
-                      <Badge variant="outline">ביצועים: {r.performance_score}</Badge>
-                    )}
-                  </div>
-                  {r.comment && <p className="text-sm text-muted-foreground mt-2">{r.comment}</p>}
+                  <span className="text-[10px] text-muted-foreground">
+                    {new Date(r.report_date).toLocaleDateString('he-IL')}
+                  </span>
                 </div>
-              ))}
-              {recentReports.length === 0 && (
-                <p className="text-center text-muted-foreground py-8">אין דיווחים עדיין</p>
-              )}
-            </div>
-          </ScrollArea>
-        </CardContent>
-      </Card>
+                <div className="flex flex-wrap gap-1">
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                    {r.attendance === 'full' && <CheckCircle2 className="h-2.5 w-2.5 ml-0.5" />}
+                    {r.attendance === 'partial' && <Clock className="h-2.5 w-2.5 ml-0.5" />}
+                    {r.attendance === 'absent' && <XCircle className="h-2.5 w-2.5 ml-0.5" />}
+                    {ATTENDANCE_LABELS[r.attendance]}
+                  </Badge>
+                  {r.behavior_types?.map(b => (
+                    <Badge key={b} variant={b === 'violent' ? 'destructive' : 'outline'} className="text-[10px] px-1.5 py-0">
+                      {BEHAVIOR_LABELS[b]}
+                    </Badge>
+                  ))}
+                  {r.behavior_severity && (
+                    <Badge className={`severity-badge-${r.behavior_severity} text-[10px] px-1.5 py-0`}>
+                      חומרה {r.behavior_severity}
+                    </Badge>
+                  )}
+                  {r.participation && (
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[r.participation]}</Badge>
+                  )}
+                  {r.performance_score && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">ביצועים: {r.performance_score}</Badge>
+                  )}
+                </div>
+                {r.comment && <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-1">{r.comment}</p>}
+              </div>
+            ))}
+            {recentReports.length === 0 && (
+              <p className="text-center text-muted-foreground text-xs py-6">אין דיווחים עדיין</p>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
