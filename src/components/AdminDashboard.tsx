@@ -359,8 +359,11 @@ export default function AdminDashboard() {
             {CLASS_OPTIONS.map(cls => {
               const classStudents = students.filter(s => s.class_name === cls);
               return (
-                <div key={cls} className="mb-3 last:mb-0">
-                  <p className="text-xs font-semibold text-muted-foreground mb-1.5">הכיתה של {cls} ({classStudents.length})</p>
+                <div key={cls} className="mb-5 last:mb-0">
+                  <div className="flex items-center gap-2 mb-2 pb-1.5 border-b-2 border-primary/30">
+                    <span className="text-base font-bold text-primary">🏫 הכיתה של {cls}</span>
+                    <Badge variant="default" className="text-xs px-2 py-0.5">{classStudents.length} תלמידים</Badge>
+                  </div>
                   <div className="space-y-1">
                     {classStudents.map(s => (
                       <button
