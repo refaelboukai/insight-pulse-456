@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import StudentDetailDialog from '@/components/StudentDetailDialog';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
