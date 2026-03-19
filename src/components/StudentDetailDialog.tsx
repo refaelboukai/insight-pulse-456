@@ -12,8 +12,9 @@ import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
   VIOLENCE_LABELS, ABSENCE_REASON_LABELS,
 } from '@/lib/constants';
-import { CalendarIcon, CheckCircle2, Clock, XCircle, FileText, ClipboardCheck } from 'lucide-react';
+import { CalendarIcon, CheckCircle2, Clock, XCircle, FileText, ClipboardCheck, Sparkles, Download, Loader2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { toast } from 'sonner';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
 type Student = Database['public']['Tables']['students']['Row'];
@@ -29,12 +30,15 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
   const [reports, setReports] = useState<Report[]>([]);
   const [attendanceRecord, setAttendanceRecord] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const [aiSummary, setAiSummary] = useState<string | null>(null);
+  const [generatingSummary, setGeneratingSummary] = useState(false);
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
   useEffect(() => {
     if (student && open) {
       fetchStudentData();
+      setAiSummary(null);
     }
   }, [student, open, dateStr]);
 
@@ -60,6 +64,78 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     setLoading(false);
   };
 
+  const generateAiSummary = async () => {
+    if (!student) return;
+    setGeneratingSummary(true);
+    setAiSummary(null);
+
+    try {
+      // Fetch ALL student data (not just selected date)
+      const [allReports, allAttendance, allEvents] = await Promise.all([
+        supabase.from('lesson_reports')
+          .select('*')
+          .eq('student_id', student.id)
+          .order('report_date', { ascending: false }),
+        supabase.from('daily_attendance')
+          .select('*')
+          .eq('student_id', student.id)
+          .order('attendance_date', { ascending: false }),
+        supabase.from('exceptional_events')
+          .select('*')
+          .order('created_at', { ascending: false }),
+      ]);
+
+      const reportsData = (allReports.data || []).map(r => ({
+        date: r.report_date,
+        subject: r.lesson_subject,
+        attendance: ATTENDANCE_LABELS[r.attendance],
+        behaviors: r.behavior_types?.map(b => BEHAVIOR_LABELS[b]),
+        participation: r.participation ? PARTICIPATION_LABELS[r.participation] : null,
+        violence: r.violence_subtypes?.map(v => VIOLENCE_LABELS[v]),
+        comment: r.comment,
+        severity: r.behavior_severity,
+      }));
+
+      const attendanceData = (allAttendance.data || []).map(a => ({
+        date: a.attendance_date,
+        present: a.is_present,
+        reason: a.absence_reason ? ABSENCE_REASON_LABELS[a.absence_reason] : null,
+      }));
+
+      const { data, error } = await supabase.functions.invoke('student-summary', {
+        body: {
+          studentName: `${student.first_name} ${student.last_name}`,
+          className: student.class_name,
+          reports: reportsData,
+          attendance: attendanceData,
+          events: allEvents.data || [],
+        },
+      });
+
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+
+      setAiSummary(data.summary);
+    } catch (e: any) {
+      console.error('AI summary error:', e);
+      toast.error('שגיאה ביצירת הסיכום');
+    } finally {
+      setGeneratingSummary(false);
+    }
+  };
+
+  const downloadSummary = () => {
+    if (!aiSummary || !student) return;
+    const header = `סיכום תלמיד/ה: ${student.first_name} ${student.last_name}\nכיתה: ${student.class_name || 'לא ידוע'}\nתאריך הפקה: ${format(new Date(), 'dd/MM/yyyy', { locale: he })}\n${'='.repeat(50)}\n\n`;
+    const blob = new Blob([header + aiSummary], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `סיכום_${student.first_name}_${student.last_name}_${format(new Date(), 'yyyy-MM-dd')}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const quickDays = [0, 1, 2, 3, 4].map(d => {
     const date = new Date();
     date.setDate(date.getDate() - d);
@@ -79,6 +155,40 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
             </Badge>
           </DialogTitle>
         </DialogHeader>
+
+        {/* AI Summary Button */}
+        <div className="flex gap-2">
+          <Button
+            onClick={generateAiSummary}
+            disabled={generatingSummary}
+            size="sm"
+            className="gap-1.5 flex-1"
+          >
+            {generatingSummary ? (
+              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> מייצר סיכום...</>
+            ) : (
+              <><Sparkles className="h-3.5 w-3.5" /> סיכום AI מלא</>
+            )}
+          </Button>
+          {aiSummary && (
+            <Button onClick={downloadSummary} size="sm" variant="outline" className="gap-1.5">
+              <Download className="h-3.5 w-3.5" /> הורדה
+            </Button>
+          )}
+        </div>
+
+        {/* AI Summary Display */}
+        {aiSummary && (
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-1">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Sparkles className="h-3.5 w-3.5 text-primary" />
+              <p className="text-xs font-semibold text-primary">סיכום AI</p>
+            </div>
+            <div className="text-xs leading-relaxed whitespace-pre-wrap text-foreground">
+              {aiSummary}
+            </div>
+          </div>
+        )}
 
         {/* Date selector */}
         <div className="space-y-2">
