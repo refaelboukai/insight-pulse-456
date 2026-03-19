@@ -288,9 +288,6 @@ export default function ReportForm() {
               </div>
             )}
           </div>
-              ))}
-            </div>
-          </div>
 
           {/* Submit */}
           <Button
