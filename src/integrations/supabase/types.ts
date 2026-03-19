@@ -231,16 +231,22 @@ export type Database = {
       student_evaluations: {
         Row: {
           behavior: string | null
+          cognitive_flexibility: string | null
           created_at: string
+          creative_thinking: string | null
           duties_performance: string | null
           emotional_regulation: string | null
+          emotional_tools: string | null
           environmental_care: string | null
           general_functioning: string | null
           group_work: string | null
           helping_others: string | null
           id: string
           independent_work: string | null
+          perseverance: string | null
           personal_note: string | null
+          problem_solving: string | null
+          self_efficacy: string | null
           staff_user_id: string
           student_id: string
           studentship: string | null
@@ -248,16 +254,22 @@ export type Database = {
         }
         Insert: {
           behavior?: string | null
+          cognitive_flexibility?: string | null
           created_at?: string
+          creative_thinking?: string | null
           duties_performance?: string | null
           emotional_regulation?: string | null
+          emotional_tools?: string | null
           environmental_care?: string | null
           general_functioning?: string | null
           group_work?: string | null
           helping_others?: string | null
           id?: string
           independent_work?: string | null
+          perseverance?: string | null
           personal_note?: string | null
+          problem_solving?: string | null
+          self_efficacy?: string | null
           staff_user_id: string
           student_id: string
           studentship?: string | null
@@ -265,16 +277,22 @@ export type Database = {
         }
         Update: {
           behavior?: string | null
+          cognitive_flexibility?: string | null
           created_at?: string
+          creative_thinking?: string | null
           duties_performance?: string | null
           emotional_regulation?: string | null
+          emotional_tools?: string | null
           environmental_care?: string | null
           general_functioning?: string | null
           group_work?: string | null
           helping_others?: string | null
           id?: string
           independent_work?: string | null
+          perseverance?: string | null
           personal_note?: string | null
+          problem_solving?: string | null
+          self_efficacy?: string | null
           staff_user_id?: string
           student_id?: string
           studentship?: string | null
