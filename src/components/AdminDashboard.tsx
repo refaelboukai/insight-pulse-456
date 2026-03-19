@@ -103,6 +103,47 @@ export default function AdminDashboard() {
     setAddingStudent(false);
   };
 
+  const generateMonthlyReport = async (sid: string | null) => {
+    setGeneratingReport(true);
+    setMonthlyReport(null);
+    setReportStudentId(sid);
+    try {
+      const { data, error } = await supabase.functions.invoke('monthly-report', {
+        body: { studentId: sid },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setMonthlyReport(data.summary);
+    } catch (e: any) {
+      console.error('Monthly report error:', e);
+      toast.error('שגיאה בהפקת הדוח');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  const shareMonthlyReport = async () => {
+    if (!monthlyReport) return;
+    const title = reportStudentId
+      ? `דוח חודשי - ${studentName(reportStudentId)}`
+      : 'דוח חודשי - כלל התלמידים';
+    if (navigator.share) {
+      try {
+        const blob = new Blob([monthlyReport], { type: 'text/plain;charset=utf-8' });
+        const file = new File([blob], `דוח_חודשי.txt`, { type: 'text/plain' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ title, files: [file] });
+        } else {
+          await navigator.share({ title, text: monthlyReport });
+        }
+        return;
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return;
+      }
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(monthlyReport)}`, '_blank');
+  };
+
   // Analytics
   const behaviorDist = (() => {
     const counts: Record<string, number> = {};
