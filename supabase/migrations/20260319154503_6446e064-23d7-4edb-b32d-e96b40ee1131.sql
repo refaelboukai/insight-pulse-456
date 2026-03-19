@@ -1,0 +1,1 @@
+ALTER TYPE public.participation_level ADD VALUE IF NOT EXISTS 'no_function';

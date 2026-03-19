@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
@@ -34,6 +35,7 @@ export default function ReportForm() {
   const [behaviors, setBehaviors] = useState<BehaviorType[]>([]);
   const [violenceTypes, setViolenceTypes] = useState<ViolenceType[]>([]);
   const [participation, setParticipation] = useState<ParticipationLevel | ''>('');
+  const [violenceComment, setViolenceComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
 
@@ -62,6 +64,7 @@ export default function ReportForm() {
     setBehaviors([]);
     setViolenceTypes([]);
     setParticipation('');
+    setViolenceComment('');
   };
 
   const handleSubmit = async () => {
@@ -71,6 +74,10 @@ export default function ReportForm() {
     }
     if (hasViolent && violenceTypes.length === 0) {
       toast.error('נא לבחור סוג אלימות');
+      return;
+    }
+    if (hasViolent && !violenceComment.trim()) {
+      toast.error('נא לכתוב הערה לתיאור האלימות');
       return;
     }
 
@@ -83,6 +90,7 @@ export default function ReportForm() {
       behavior_types: behaviors,
       violence_subtypes: hasViolent ? violenceTypes : [],
       participation: participation || null,
+      comment: hasViolent ? violenceComment : null,
     }).select().single();
 
     if (error) {
@@ -200,7 +208,27 @@ export default function ReportForm() {
             </div>
           </div>
 
-          {/* Step 4: Behavior */}
+          {/* Step 4: Participation */}
+          <div className="card-styled rounded-2xl p-3">
+            <p className="text-xs font-semibold mb-2">השתתפות</p>
+            <div className="flex flex-wrap gap-1.5">
+              {(Object.entries(PARTICIPATION_LABELS) as [ParticipationLevel, string][]).map(([key, label]) => (
+                <button
+                  key={key}
+                  onClick={() => setParticipation(prev => prev === key ? '' : key)}
+                  className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${
+                    participation === key
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'border-border bg-card hover:border-primary/30'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Step 5: Behavior */}
           <div className="card-styled rounded-2xl p-3">
             <p className="text-xs font-semibold mb-2">התנהגות</p>
             <div className="grid grid-cols-2 gap-1.5">
@@ -226,7 +254,7 @@ export default function ReportForm() {
             </div>
 
             {hasViolent && (
-              <div className="mt-2 p-2.5 rounded-xl bg-destructive/5 border border-destructive/15 animate-scale-in">
+              <div className="mt-2 p-2.5 rounded-xl bg-destructive/5 border border-destructive/15 animate-scale-in space-y-2">
                 <p className="text-[10px] font-semibold text-destructive mb-1.5 flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
                   סיווג אלימות (חובה)
@@ -250,28 +278,15 @@ export default function ReportForm() {
                     </label>
                   ))}
                 </div>
+                <Textarea
+                  placeholder="תאר/י את האירוע (חובה)..."
+                  value={violenceComment}
+                  onChange={e => setViolenceComment(e.target.value)}
+                  rows={2}
+                  className="rounded-lg border-destructive/20 resize-none text-xs mt-1.5"
+                />
               </div>
             )}
-          </div>
-
-          {/* Step 5: Participation */}
-          <div className="card-styled rounded-2xl p-3">
-            <p className="text-xs font-semibold mb-2">השתתפות</p>
-            <div className="flex flex-wrap gap-1.5">
-              {(Object.entries(PARTICIPATION_LABELS) as [ParticipationLevel, string][]).map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => setParticipation(prev => prev === key ? '' : key)}
-                  className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${
-                    participation === key
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'border-border bg-card hover:border-primary/30'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
-            </div>
           </div>
 
           {/* Submit */}

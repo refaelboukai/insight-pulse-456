@@ -22,7 +22,7 @@ export const ATTENDANCE_LABELS: Record<string, string> = {
 export const BEHAVIOR_LABELS: Record<string, string> = {
   respectful: 'התנהגות מכבדת / הולמת',
   non_respectful: 'התנהגות לא מכבדת',
-  disruptive: 'התנהגות משבשת',
+  disruptive: 'התנהגות מפריעה',
   violent: 'התנהגות אלימה',
 };
 
@@ -37,6 +37,7 @@ export const PARTICIPATION_LABELS: Record<string, string> = {
   completed_tasks: 'השלים/ה משימות למידה',
   active_participation: 'השתתפות פעילה',
   no_participation: 'ללא השתתפות',
+  no_function: 'אין תפקוד לימודי',
 };
 
 export const SEVERITY_LABELS: Record<number, string> = {
