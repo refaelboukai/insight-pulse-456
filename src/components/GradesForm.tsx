@@ -24,36 +24,19 @@ const RATING_OPTIONS = ['מצטיין/ת', 'טוב מאוד', 'טוב', 'דור�
 
 const TEAM_CATEGORIES_SECTIONS = [
   {
-    title: '📋 דיווחי צוות כיתה',
-    color: 'blue',
+    title: 'תפקוד והתנהגות',
     items: [
-      { key: 'behavior', label: 'התנהגות', icon: '🎯' },
-      { key: 'independent_work', label: 'עבודה עצמאית', icon: '📝' },
-      { key: 'group_work', label: 'עבודה בקבוצה', icon: '👥' },
-      { key: 'general_functioning', label: 'תפקוד כללי', icon: '⭐' },
-      { key: 'helping_others', label: 'עזרה לאחרים', icon: '🤝' },
-      { key: 'environmental_care', label: 'אכפתיות לסביבה', icon: '🌱' },
-      { key: 'duties_performance', label: 'ביצוע תורנויות', icon: '✅' },
-      { key: 'studentship', label: 'תלמידאות', icon: '🎓' },
+      { key: 'behavior', label: 'התנהגות כללית' },
+      { key: 'studentship', label: 'תלמידאות ותפקוד' },
+      { key: 'group_work', label: 'עבודה בקבוצה ועזרה לאחרים' },
+      { key: 'independent_work', label: 'עבודה עצמאית והתמדה' },
     ],
   },
   {
-    title: '🧠 מיומנויות למידה',
-    color: 'amber',
+    title: 'מיומנויות רגשיות וקוגניטיביות',
     items: [
-      { key: 'problem_solving', label: 'פתרון בעיות', icon: '🧩' },
-      { key: 'creative_thinking', label: 'חשיבה יצירתית', icon: '💡' },
-      { key: 'perseverance', label: 'התמדה וכוח רצון', icon: '💪' },
-    ],
-  },
-  {
-    title: '💚 מיומנויות רגשיות',
-    color: 'emerald',
-    items: [
-      { key: 'emotional_regulation', label: 'ויסות רגשי', icon: '🌊' },
-      { key: 'emotional_tools', label: 'שימוש בכלים שונים', icon: '🧰' },
-      { key: 'cognitive_flexibility', label: 'גמישות מחשבתית', icon: '🔄' },
-      { key: 'self_efficacy', label: 'מסוגלות עצמית', icon: '🌟' },
+      { key: 'emotional_regulation', label: 'ויסות רגשי ומסוגלות' },
+      { key: 'cognitive_flexibility', label: 'גמישות מחשבתית ופתרון בעיות' },
     ],
   },
 ] as const;
