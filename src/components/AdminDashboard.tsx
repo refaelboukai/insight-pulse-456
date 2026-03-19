@@ -428,6 +428,13 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* Student Detail Dialog */}
+      <StudentDetailDialog
+        student={selectedStudent}
+        open={!!selectedStudent}
+        onOpenChange={(open) => { if (!open) setSelectedStudent(null); }}
+      />
     </div>
   );
 }
