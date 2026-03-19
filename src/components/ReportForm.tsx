@@ -267,6 +267,8 @@ export default function ReportForm() {
                   className={`flex items-center gap-2 cursor-pointer py-2 px-2.5 rounded-xl border-2 transition-all text-xs ${
                     behaviors.includes(key)
                       ? key === 'violent' ? 'border-destructive bg-destructive/8 text-destructive'
+                        : key === 'disruptive' ? 'border-accent/50 bg-[hsl(var(--warning)/0.1)] text-accent'
+                        : key === 'non_respectful' ? 'border-yellow-400/50 bg-yellow-50 text-yellow-700 dark:bg-yellow-900/20 dark:text-yellow-400'
                         : 'border-primary bg-primary/8 text-primary'
                       : 'border-border bg-card text-muted-foreground hover:border-muted-foreground/40'
                   }`}
