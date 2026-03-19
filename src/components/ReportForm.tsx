@@ -134,19 +134,27 @@ export default function ReportForm() {
         </div>
       ) : (
         <div className="card-styled rounded-2xl p-3">
-          {classes.map(cls => (
+          {sortedClasses.map(cls => (
             <div key={cls!} className="mb-3 last:mb-0">
               <p className="text-sm font-bold text-foreground mb-1.5">הכיתה של {cls}</p>
               <div className="flex flex-wrap gap-1">
-                {filteredStudents.filter(s => s.class_name === cls).map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => setStudentId(s.id)}
-                    className="text-xs py-1.5 px-2.5 rounded-lg border border-border bg-card hover:bg-primary/10 hover:border-primary/30 transition-colors"
-                  >
-                    {s.first_name} {s.last_name}
-                  </button>
-                ))}
+                {students.filter(s => s.class_name === cls).map(s => {
+                  const reported = reportedStudentIds.has(s.id);
+                  return (
+                    <button
+                      key={s.id}
+                      onClick={() => !reported && setStudentId(s.id)}
+                      disabled={reported}
+                      className={`text-xs py-1.5 px-2.5 rounded-lg border transition-colors ${
+                        reported
+                          ? 'border-success/30 bg-success/10 text-success line-through cursor-default'
+                          : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
+                      }`}
+                    >
+                      {reported && '✓ '}{s.first_name} {s.last_name}
+                    </button>
+                  );
+                })}
               </div>
             </div>
           ))}
