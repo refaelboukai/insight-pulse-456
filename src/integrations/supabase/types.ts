@@ -230,35 +230,65 @@ export type Database = {
       }
       students: {
         Row: {
+          address: string | null
+          city: string | null
           class_name: string | null
           created_at: string
+          date_of_birth: string | null
+          father_email: string | null
+          father_name: string | null
+          father_phone: string | null
           first_name: string
+          gender: string | null
           grade: string | null
           id: string
           is_active: boolean
           last_name: string
+          mother_email: string | null
+          mother_name: string | null
+          mother_phone: string | null
           student_code: string
           updated_at: string
         }
         Insert: {
+          address?: string | null
+          city?: string | null
           class_name?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          father_email?: string | null
+          father_name?: string | null
+          father_phone?: string | null
           first_name: string
+          gender?: string | null
           grade?: string | null
           id?: string
           is_active?: boolean
           last_name: string
+          mother_email?: string | null
+          mother_name?: string | null
+          mother_phone?: string | null
           student_code: string
           updated_at?: string
         }
         Update: {
+          address?: string | null
+          city?: string | null
           class_name?: string | null
           created_at?: string
+          date_of_birth?: string | null
+          father_email?: string | null
+          father_name?: string | null
+          father_phone?: string | null
           first_name?: string
+          gender?: string | null
           grade?: string | null
           id?: string
           is_active?: boolean
           last_name?: string
+          mother_email?: string | null
+          mother_name?: string | null
+          mother_phone?: string | null
           student_code?: string
           updated_at?: string
         }
