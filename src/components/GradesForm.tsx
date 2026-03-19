@@ -82,6 +82,9 @@ export default function GradesForm() {
   const [teamRatings, setTeamRatings] = useState<Record<string, string>>({});
   const [savingEval, setSavingEval] = useState(false);
   const [evalSaved, setEvalSaved] = useState(false);
+  const [educatorOpen, setEducatorOpen] = useState(false);
+  const [subjectOpen, setSubjectOpen] = useState(false);
+  const [evalSaved, setEvalSaved] = useState(false);
 
   useEffect(() => {
     supabase.from('students').select('id, first_name, last_name, class_name, is_active')
