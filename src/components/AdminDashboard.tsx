@@ -39,14 +39,16 @@ export default function AdminDashboard() {
   const [addingStudent, setAddingStudent] = useState(false);
 
   const fetchAll = async () => {
-    const [reportsRes, studentsRes, alertsRes] = await Promise.all([
+    const [reportsRes, studentsRes, alertsRes, eventsRes] = await Promise.all([
       supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('students').select('*').order('class_name').order('last_name'),
       supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
+      supabase.from('exceptional_events').select('*').order('created_at', { ascending: false }).limit(50),
     ]);
     if (reportsRes.data) setReports(reportsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
     if (alertsRes.data) setAlerts(alertsRes.data);
+    if (eventsRes.data) setEvents(eventsRes.data);
     setLoading(false);
   };
 
