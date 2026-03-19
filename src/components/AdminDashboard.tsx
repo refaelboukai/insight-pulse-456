@@ -28,6 +28,7 @@ export default function AdminDashboard() {
   const [reports, setReports] = useState<Report[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [events, setEvents] = useState<ExceptionalEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Add student form
