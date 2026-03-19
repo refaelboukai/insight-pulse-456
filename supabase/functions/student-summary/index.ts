@@ -9,15 +9,16 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   try {
-    const { studentName, studentCode, className, grade, reports, attendance, events } = await req.json();
+    const { studentName, studentCode, className, grade, period, reports, attendance, events } = await req.json();
     const LOVABLE_API_KEY = Deno.env.get("LOVABLE_API_KEY");
     if (!LOVABLE_API_KEY) throw new Error("LOVABLE_API_KEY is not configured");
 
+    const periodLabel = period || 'כל התקופה';
     const totalDays = attendance.length;
     const absentDays = attendance.filter((a: any) => !a.present).length;
     const presentDays = totalDays - absentDays;
 
-    const prompt = `הפק סיכום תפקוד קצר ומובנה בעברית עבור תלמיד/ה. השתמש בפורמט הקבוע הבא בלבד:
+    const prompt = `הפק סיכום תפקוד קצר ומובנה בעברית עבור תלמיד/ה. התקופה: *${periodLabel}*. השתמש בפורמט הקבוע הבא בלבד:
 
 ---
 

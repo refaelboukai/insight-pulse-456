@@ -13,7 +13,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   const [supportSessions, setSupportSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false,
+    dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false, monthlyReport: false,
   });
 
   // Add student form
@@ -46,6 +46,11 @@ export default function AdminDashboard() {
   const [newClass, setNewClass] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+  // Monthly report
+  const [monthlyReport, setMonthlyReport] = useState<string | null>(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [reportStudentId, setReportStudentId] = useState<string | null>(null);
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -96,6 +101,47 @@ export default function AdminDashboard() {
       fetchAll();
     }
     setAddingStudent(false);
+  };
+
+  const generateMonthlyReport = async (sid: string | null) => {
+    setGeneratingReport(true);
+    setMonthlyReport(null);
+    setReportStudentId(sid);
+    try {
+      const { data, error } = await supabase.functions.invoke('monthly-report', {
+        body: { studentId: sid },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      setMonthlyReport(data.summary);
+    } catch (e: any) {
+      console.error('Monthly report error:', e);
+      toast.error('שגיאה בהפקת הדוח');
+    } finally {
+      setGeneratingReport(false);
+    }
+  };
+
+  const shareMonthlyReport = async () => {
+    if (!monthlyReport) return;
+    const title = reportStudentId
+      ? `דוח חודשי - ${studentName(reportStudentId)}`
+      : 'דוח חודשי - כלל התלמידים';
+    if (navigator.share) {
+      try {
+        const blob = new Blob([monthlyReport], { type: 'text/plain;charset=utf-8' });
+        const file = new File([blob], `דוח_חודשי.txt`, { type: 'text/plain' });
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ title, files: [file] });
+        } else {
+          await navigator.share({ title, text: monthlyReport });
+        }
+        return;
+      } catch (e) {
+        if ((e as Error).name === 'AbortError') return;
+      }
+    }
+    window.open(`https://wa.me/?text=${encodeURIComponent(monthlyReport)}`, '_blank');
   };
 
   // Analytics
@@ -485,6 +531,69 @@ export default function AdminDashboard() {
             ))}
             {recentReports.length === 0 && (
               <p className="text-center text-muted-foreground text-xs py-6">אין דיווחים עדיין</p>
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Monthly Report */}
+      <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+        <SectionHeader title="הפק דוח חודשי" icon={FileText} sectionKey="monthlyReport" />
+        {expandedSections.monthlyReport && (
+          <div className="px-3 pb-3 space-y-3">
+            <div className="flex gap-2">
+              <Button
+                onClick={() => generateMonthlyReport(null)}
+                disabled={generatingReport}
+                size="sm"
+                className="gap-1.5 flex-1"
+              >
+                {generatingReport && !reportStudentId ? (
+                  <><div className="w-3.5 h-3.5 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> מפיק דוח...</>
+                ) : (
+                  <><Sparkles className="h-3.5 w-3.5" /> דוח כלל התלמידים</>
+                )}
+              </Button>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold mb-1.5">או בחר תלמיד ספציפי:</p>
+              <div className="flex flex-wrap gap-1">
+                {students.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => generateMonthlyReport(s.id)}
+                    disabled={generatingReport}
+                    className="text-[10px] py-1 px-2 rounded-md border border-border bg-card hover:bg-primary/10 hover:border-primary/30 transition-colors disabled:opacity-50"
+                  >
+                    {s.first_name} {s.last_name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {generatingReport && (
+              <div className="flex items-center justify-center py-6">
+                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <span className="text-xs text-muted-foreground mr-2">מפיק דוח חודשי...</span>
+              </div>
+            )}
+
+            {monthlyReport && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    <p className="text-xs font-semibold text-primary">
+                      דוח חודשי {reportStudentId ? `— ${studentName(reportStudentId)}` : '— כלל התלמידים'}
+                    </p>
+                  </div>
+                  <Button onClick={shareMonthlyReport} size="sm" variant="default" className="gap-1 h-7 text-[10px] bg-[#25D366] hover:bg-[#1da851] text-white">
+                    שיתוף
+                  </Button>
+                </div>
+                <p className="text-xs whitespace-pre-wrap leading-relaxed">{monthlyReport}</p>
+              </div>
             )}
           </div>
         )}
