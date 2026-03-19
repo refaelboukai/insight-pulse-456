@@ -56,17 +56,41 @@ function getGregorianDate(): string {
   return now.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-const TEAM_LABELS: Record<string, string> = {
-  behavior: 'התנהגות',
-  independent_work: 'עבודה עצמאית',
-  group_work: 'עבודה בקבוצה',
-  emotional_regulation: 'ויסות רגשי',
-  general_functioning: 'תפקוד כללי',
-  helping_others: 'עזרה לאחרים',
-  environmental_care: 'אכפתיות לסביבה',
-  duties_performance: 'ביצוע תורנויות',
-  studentship: 'תלמידאות',
-};
+const TEAM_SECTIONS: { title: string; color: string; items: { key: string; label: string }[] }[] = [
+  {
+    title: 'דיווחי צוות כיתה',
+    color: '#3b5998',
+    items: [
+      { key: 'behavior', label: 'התנהגות' },
+      { key: 'independent_work', label: 'עבודה עצמאית' },
+      { key: 'group_work', label: 'עבודה בקבוצה' },
+      { key: 'general_functioning', label: 'תפקוד כללי' },
+      { key: 'helping_others', label: 'עזרה לאחרים' },
+      { key: 'environmental_care', label: 'אכפתיות לסביבה' },
+      { key: 'duties_performance', label: 'ביצוע תורנויות' },
+      { key: 'studentship', label: 'תלמידאות' },
+    ],
+  },
+  {
+    title: 'מיומנויות למידה',
+    color: '#b45309',
+    items: [
+      { key: 'problem_solving', label: 'פתרון בעיות' },
+      { key: 'creative_thinking', label: 'חשיבה יצירתית' },
+      { key: 'perseverance', label: 'התמדה וכוח רצון' },
+    ],
+  },
+  {
+    title: 'מיומנויות רגשיות',
+    color: '#047857',
+    items: [
+      { key: 'emotional_regulation', label: 'ויסות רגשי' },
+      { key: 'emotional_tools', label: 'שימוש בכלים שונים' },
+      { key: 'cognitive_flexibility', label: 'גמישות מחשבתית' },
+      { key: 'self_efficacy', label: 'מסוגלות עצמית' },
+    ],
+  },
+];
 
 export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   const hebrewDate = getHebrewDate();
