@@ -4,7 +4,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS, INCIDENT_TYPE_LABELS,
@@ -13,7 +14,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
@@ -51,6 +52,13 @@ export default function AdminDashboard() {
   const [monthlyReport, setMonthlyReport] = useState<string | null>(null);
   const [generatingReport, setGeneratingReport] = useState(false);
   const [reportStudentId, setReportStudentId] = useState<string | null>(null);
+
+  // Reset all reports
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetPasswordError, setResetPasswordError] = useState('');
+  const [resetting, setResetting] = useState(false);
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -142,6 +150,44 @@ export default function AdminDashboard() {
       }
     }
     window.open(`https://wa.me/?text=${encodeURIComponent(monthlyReport)}`, '_blank');
+  };
+
+  const handleResetPasswordSubmit = () => {
+    if (resetPassword !== '9020') {
+      setResetPasswordError('סיסמה שגויה');
+      return;
+    }
+    setResetPasswordError('');
+    setShowResetPassword(false);
+    setResetPassword('');
+    setShowResetConfirm(true);
+  };
+
+  const handleResetAllReports = async () => {
+    setResetting(true);
+    setShowResetConfirm(false);
+    try {
+      const [r1, r2, r3, r4, r5] = await Promise.all([
+        supabase.from('alerts').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('lesson_reports').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('daily_attendance').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('exceptional_events').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('support_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      ]);
+      const errors = [r1, r2, r3, r4, r5].filter(r => r.error);
+      if (errors.length > 0) {
+        console.error('Reset errors:', errors.map(e => e.error));
+        toast.error('שגיאה באיפוס חלק מהנתונים');
+      } else {
+        toast.success('כל הדיווחים אופסו בהצלחה!');
+      }
+      fetchAll();
+    } catch (e) {
+      console.error('Reset error:', e);
+      toast.error('שגיאה באיפוס הדיווחים');
+    } finally {
+      setResetting(false);
+    }
   };
 
   // Analytics
@@ -598,6 +644,86 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+
+      {/* Reset All Reports */}
+      <div className="card-styled rounded-2xl overflow-hidden border-destructive/30">
+        <div className="p-3">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/10">
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </div>
+            <div>
+              <span className="font-semibold text-sm">איפוס כל הדיווחים</span>
+              <p className="text-[10px] text-muted-foreground">מחיקת כל הדיווחים, ביקורים, אירועים והתראות</p>
+            </div>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="w-full gap-1.5 text-xs"
+            onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }}
+            disabled={resetting}
+          >
+            {resetting ? (
+              <><div className="w-3.5 h-3.5 rounded-full border-2 border-destructive-foreground border-t-transparent animate-spin" /> מאפס...</>
+            ) : (
+              <><Trash2 className="h-3.5 w-3.5" /> איפוס המערכת</>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
+        <DialogContent dir="rtl" className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-sm flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-destructive" />
+              אימות סיסמה
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              הזן את סיסמת המנהל כדי להמשיך באיפוס
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              type="password"
+              placeholder="הזן סיסמה"
+              value={resetPassword}
+              onChange={e => { setResetPassword(e.target.value); setResetPasswordError(''); }}
+              onKeyDown={e => { if (e.key === 'Enter') handleResetPasswordSubmit(); }}
+              className="h-10 text-sm"
+            />
+            {resetPasswordError && (
+              <p className="text-xs text-destructive">{resetPasswordError}</p>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" size="sm" onClick={() => setShowResetPassword(false)}>ביטול</Button>
+            <Button variant="destructive" size="sm" onClick={handleResetPasswordSubmit}>אישור</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Confirmation AlertDialog */}
+      <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <AlertDialogContent dir="rtl" className="max-w-xs">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-sm">האם אתה בטוח?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              פעולה זו תמחק את כל הדיווחים, ביקורים, אירועים חריגים, מפגשי תמיכה והתראות.
+              <br /><br />
+              <strong className="text-destructive">פעולה זו אינה ניתנת לביטול!</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetAllReports} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              כן, אפס הכל
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Student Detail Dialog */}
       <StudentDetailDialog
