@@ -263,6 +263,7 @@ export type Database = {
         | "completed_tasks"
         | "active_participation"
         | "no_participation"
+        | "no_function"
       violence_type: "physical" | "verbal" | "property_damage" | "sexual"
     }
     CompositeTypes: {
@@ -399,6 +400,7 @@ export const Constants = {
         "completed_tasks",
         "active_participation",
         "no_participation",
+        "no_function",
       ],
       violence_type: ["physical", "verbal", "property_damage", "sexual"],
     },
