@@ -63,3 +63,13 @@ export const INCIDENT_TYPE_LABELS: Record<string, string> = {
   safety: 'בטיחות',
   other: 'אחר',
 };
+
+export const ABSENCE_REASON_LABELS: Record<string, string> = {
+  illness: 'מחלה',
+  vacation: 'חופשה',
+  family_arrangements: 'סידורים משפחתיים',
+  medical_checkup: 'בדיקות רפואיות',
+  emotional_difficulty: 'קושי תפקודי - רגשי',
+  school_suspension: 'הרחקה מבית הספר',
+  other: 'אחר',
+};
