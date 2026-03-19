@@ -645,6 +645,86 @@ export default function AdminDashboard() {
         )}
       </div>
 
+      {/* Reset All Reports */}
+      <div className="card-styled rounded-2xl overflow-hidden border-destructive/30">
+        <div className="p-3">
+          <div className="flex items-center gap-2.5 mb-2">
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/10">
+              <Trash2 className="h-4 w-4 text-destructive" />
+            </div>
+            <div>
+              <span className="font-semibold text-sm">איפוס כל הדיווחים</span>
+              <p className="text-[10px] text-muted-foreground">מחיקת כל הדיווחים, ביקורים, אירועים והתראות</p>
+            </div>
+          </div>
+          <Button
+            variant="destructive"
+            size="sm"
+            className="w-full gap-1.5 text-xs"
+            onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }}
+            disabled={resetting}
+          >
+            {resetting ? (
+              <><div className="w-3.5 h-3.5 rounded-full border-2 border-destructive-foreground border-t-transparent animate-spin" /> מאפס...</>
+            ) : (
+              <><Trash2 className="h-3.5 w-3.5" /> איפוס המערכת</>
+            )}
+          </Button>
+        </div>
+      </div>
+
+      {/* Reset Password Dialog */}
+      <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
+        <DialogContent dir="rtl" className="max-w-xs">
+          <DialogHeader>
+            <DialogTitle className="text-sm flex items-center gap-2">
+              <Trash2 className="h-4 w-4 text-destructive" />
+              אימות סיסמה
+            </DialogTitle>
+            <DialogDescription className="text-xs">
+              הזן את סיסמת המנהל כדי להמשיך באיפוס
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3">
+            <Input
+              type="password"
+              placeholder="הזן סיסמה"
+              value={resetPassword}
+              onChange={e => { setResetPassword(e.target.value); setResetPasswordError(''); }}
+              onKeyDown={e => { if (e.key === 'Enter') handleResetPasswordSubmit(); }}
+              className="h-10 text-sm"
+            />
+            {resetPasswordError && (
+              <p className="text-xs text-destructive">{resetPasswordError}</p>
+            )}
+          </div>
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button variant="ghost" size="sm" onClick={() => setShowResetPassword(false)}>ביטול</Button>
+            <Button variant="destructive" size="sm" onClick={handleResetPasswordSubmit}>אישור</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Reset Confirmation AlertDialog */}
+      <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
+        <AlertDialogContent dir="rtl" className="max-w-xs">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-sm">האם אתה בטוח?</AlertDialogTitle>
+            <AlertDialogDescription className="text-xs">
+              פעולה זו תמחק את כל הדיווחים, ביקורים, אירועים חריגים, מפגשי תמיכה והתראות.
+              <br /><br />
+              <strong className="text-destructive">פעולה זו אינה ניתנת לביטול!</strong>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2 sm:gap-0">
+            <AlertDialogCancel>ביטול</AlertDialogCancel>
+            <AlertDialogAction onClick={handleResetAllReports} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              כן, אפס הכל
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
       {/* Student Detail Dialog */}
       <StudentDetailDialog
         student={selectedStudent}
