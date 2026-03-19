@@ -25,7 +25,7 @@ type Student = Database['public']['Tables']['students']['Row'];
 type Alert = Database['public']['Tables']['alerts']['Row'];
 type ExceptionalEvent = Database['public']['Tables']['exceptional_events']['Row'];
 
-const CHART_COLORS = ['hsl(168, 50%, 40%)', 'hsl(140, 45%, 42%)', 'hsl(35, 80%, 55%)', 'hsl(15, 70%, 52%)', 'hsl(0, 65%, 52%)'];
+
 
 const CLASS_OPTIONS = ['טלי', 'עדן'];
 
