@@ -21,11 +21,11 @@ export default function Index() {
       <header className="header-gradient sticky top-0 z-50 shadow-lg">
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img src={logoSrc} alt="לוגו" className="h-9 w-auto rounded-lg" />
+            <img src={logoSrc} alt="לוגו" className="h-10 w-auto rounded-lg" />
             <div>
-              <h1 className="font-bold text-primary-foreground text-sm leading-tight">מערכת דיווח</h1>
-              <p className="text-[10px] text-primary-foreground/70 flex items-center gap-1">
-                {isAdmin && <Shield className="w-2.5 h-2.5" />}
+              <h1 className="font-bold text-primary-foreground text-base leading-tight">בית ספר מרום בית אקשטיין</h1>
+              <p className="text-xs text-primary-foreground/70 flex items-center gap-1">
+                {isAdmin && <Shield className="w-3 h-3" />}
                 {fullName}
               </p>
             </div>
@@ -44,25 +44,33 @@ export default function Index() {
 
       {/* Content */}
       <main className="container mx-auto px-3 py-4 pb-10">
+        {/* School title */}
+        {!isAdmin && (
+          <div className="text-center mb-4">
+            <h2 className="text-lg font-bold text-foreground">בית ספר מרום בית אקשטיין</h2>
+            <p className="text-sm text-muted-foreground">מערכת דיווח חינוכית</p>
+          </div>
+        )}
+
         {isAdmin ? (
           <AdminDashboard />
         ) : (
           <Tabs defaultValue="attendance" dir="rtl">
-            <TabsList className="grid w-full grid-cols-4 mb-4 h-10 p-1 rounded-xl shadow-soft bg-card">
-              <TabsTrigger value="attendance" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-medium">
-                <ClipboardCheck className="h-3 w-3" />
+            <TabsList className="grid w-full grid-cols-4 mb-4 h-11 p-1 rounded-xl shadow-soft bg-card">
+              <TabsTrigger value="attendance" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold">
+                <ClipboardCheck className="h-3.5 w-3.5" />
                 ביקור סדיר
               </TabsTrigger>
-              <TabsTrigger value="report" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-medium">
-                <FileText className="h-3 w-3" />
+              <TabsTrigger value="report" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold">
+                <FileText className="h-3.5 w-3.5" />
                 דיווח שיעור
               </TabsTrigger>
-              <TabsTrigger value="support" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-medium">
-                <HeartHandshake className="h-3 w-3" />
+              <TabsTrigger value="support" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold">
+                <HeartHandshake className="h-3.5 w-3.5" />
                 תכנית תמיכה
               </TabsTrigger>
-              <TabsTrigger value="event" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-medium">
-                <AlertTriangle className="h-3 w-3" />
+              <TabsTrigger value="event" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold">
+                <AlertTriangle className="h-3.5 w-3.5" />
                 אירוע חריג
               </TabsTrigger>
             </TabsList>
