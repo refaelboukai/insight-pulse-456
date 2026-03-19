@@ -253,6 +253,7 @@ export default function ReportForm() {
                 </div>
               </div>
             )}
+          </div>
 
           {/* Step 5: Participation */}
           <div className="card-styled rounded-2xl p-3">
