@@ -196,10 +196,12 @@ export default function AdminDashboard() {
   const handleGenerateReportCard = async (student: Student) => {
     setGeneratingCard(student.id);
     try {
-      const { data: grades } = await supabase
-        .from('student_grades')
-        .select('*')
-        .eq('student_id', student.id);
+      const [{ data: grades }, { data: evals }] = await Promise.all([
+        supabase.from('student_grades').select('*').eq('student_id', student.id),
+        supabase.from('student_evaluations' as any).select('*').eq('student_id', student.id).order('created_at', { ascending: false }).limit(1),
+      ]);
+
+      const latestEval = (evals as any)?.[0] || null;
 
       const blob = await generateReportCard({
         studentName: `${student.first_name} ${student.last_name}`,
@@ -210,6 +212,18 @@ export default function AdminDashboard() {
           verbal_evaluation: g.verbal_evaluation,
           ai_enhanced_evaluation: g.ai_enhanced_evaluation,
         })),
+        personalNote: latestEval?.personal_note || null,
+        teamEvaluation: latestEval ? {
+          behavior: latestEval.behavior,
+          independent_work: latestEval.independent_work,
+          group_work: latestEval.group_work,
+          emotional_regulation: latestEval.emotional_regulation,
+          general_functioning: latestEval.general_functioning,
+          helping_others: latestEval.helping_others,
+          environmental_care: latestEval.environmental_care,
+          duties_performance: latestEval.duties_performance,
+          studentship: latestEval.studentship,
+        } : null,
       });
 
       const url = URL.createObjectURL(blob);
