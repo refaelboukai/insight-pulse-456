@@ -18,6 +18,7 @@ import type { Database } from '@/integrations/supabase/types';
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
 type Student = Database['public']['Tables']['students']['Row'];
 type Alert = Database['public']['Tables']['alerts']['Row'];
+type ExceptionalEvent = Database['public']['Tables']['exceptional_events']['Row'];
 
 const CHART_COLORS = ['hsl(168, 45%, 40%)', 'hsl(140, 40%, 45%)', 'hsl(35, 80%, 55%)', 'hsl(20, 70%, 55%)', 'hsl(0, 65%, 55%)'];
 
