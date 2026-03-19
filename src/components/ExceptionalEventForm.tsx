@@ -46,20 +46,17 @@ export default function ExceptionalEventForm() {
     } else {
       toast.success('האירוע החריג נשמר בהצלחה ✨');
 
-      // Build WhatsApp message for management group
-      const typeName = INCIDENT_TYPE_LABELS[incidentType] || incidentType;
-      const lines = [
-        `🚨 *אירוע חריג חדש*`,
-        `סוג: ${typeName}`,
-        `תיאור: ${description}`,
-      ];
-      if (peopleInvolved) lines.push(`מעורבים: ${peopleInvolved}`);
-      if (staffResponse) lines.push(`תגובת צוות: ${staffResponse}`);
-      if (followupRequired) lines.push(`⚠️ נדרש מעקב`);
-      if (followupNotes) lines.push(`הערות מעקב: ${followupNotes}`);
-
-      const waText = encodeURIComponent(lines.join('\n'));
-      window.open(`https://wa.me/?text=${waText}`, '_blank');
+      // Generate PDF and share to WhatsApp
+      const now = new Date().toLocaleDateString('he-IL');
+      await shareEventToWhatsApp({
+        incidentType,
+        description,
+        peopleInvolved,
+        staffResponse,
+        followupRequired,
+        followupNotes,
+        date: now,
+      });
 
       setIncidentType('');
       setDescription('');
