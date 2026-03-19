@@ -3,7 +3,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
-import { GraduationCap, LogIn, KeyRound, Sparkles } from 'lucide-react';
+import { LogIn, KeyRound, Sparkles } from 'lucide-react';
+import logoSrc from '@/assets/logo.jpeg';
 
 const SAVED_CODE_KEY = 'saved_login_code';
 
@@ -33,36 +34,28 @@ export default function Login() {
 
   return (
     <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--gradient-warm)' }}>
-      {/* Decorative elements */}
       <div className="fixed top-0 left-0 w-full h-full pointer-events-none overflow-hidden">
         <div className="absolute -top-24 -right-24 w-96 h-96 rounded-full opacity-[0.04]" style={{ background: 'var(--gradient-primary)' }} />
         <div className="absolute -bottom-32 -left-32 w-[500px] h-[500px] rounded-full opacity-[0.03]" style={{ background: 'var(--gradient-accent)' }} />
       </div>
 
       <div className="w-full max-w-sm relative animate-scale-in">
-        {/* Card */}
         <div className="card-styled rounded-2xl overflow-hidden">
-          {/* Top accent bar */}
           <div className="h-1.5 w-full" style={{ background: 'var(--gradient-primary)' }} />
 
-          <div className="px-8 pt-10 pb-8">
+          <div className="px-8 pt-8 pb-7">
             {/* Logo */}
-            <div className="text-center mb-8">
-              <div className="relative mx-auto w-20 h-20 mb-5">
-                <div className="absolute inset-0 rounded-2xl opacity-20 animate-pulse-soft" style={{ background: 'var(--gradient-primary)' }} />
-                <div className="relative w-full h-full rounded-2xl bg-primary/10 flex items-center justify-center">
-                  <GraduationCap className="w-10 h-10 text-primary" />
-                </div>
-              </div>
-              <h1 className="text-2xl font-bold text-foreground mb-1">מערכת דיווח תלמידים</h1>
-              <p className="text-sm text-muted-foreground flex items-center justify-center gap-1">
-                <Sparkles className="w-3.5 h-3.5" />
+            <div className="text-center mb-6">
+              <img src={logoSrc} alt="לוגו" className="mx-auto h-16 w-auto rounded-xl mb-4" />
+              <h1 className="text-xl font-bold text-foreground mb-1">מערכת דיווח תלמידים</h1>
+              <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
+                <Sparkles className="w-3 h-3" />
                 מערכת פנימית לצוות חינוכי
               </p>
             </div>
 
             {/* Form */}
-            <form onSubmit={handleLogin} className="space-y-5">
+            <form onSubmit={handleLogin} className="space-y-4">
               <div className="relative">
                 <KeyRound className="absolute right-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -72,38 +65,34 @@ export default function Login() {
                   onChange={e => setCode(e.target.value)}
                   required
                   dir="ltr"
-                  className="text-center text-lg tracking-[0.3em] h-12 pr-10 rounded-xl border-2 focus:border-primary transition-colors"
+                  className="text-center text-lg tracking-[0.3em] h-11 pr-10 rounded-xl border-2 focus:border-primary transition-colors"
                 />
               </div>
 
               <label className="flex items-center gap-2.5 cursor-pointer group">
-                <Checkbox
-                  checked={saveCode}
-                  onCheckedChange={v => setSaveCode(!!v)}
-                />
-                <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">שמור קוד כניסה</span>
+                <Checkbox checked={saveCode} onCheckedChange={v => setSaveCode(!!v)} />
+                <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">שמור קוד כניסה</span>
               </label>
 
               {error && (
                 <div className="text-center py-2 px-3 rounded-lg bg-destructive/8 border border-destructive/15">
-                  <p className="text-destructive text-sm font-medium">{error}</p>
+                  <p className="text-destructive text-xs font-medium">{error}</p>
                 </div>
               )}
 
               <Button
                 type="submit"
                 disabled={loading}
-                className="w-full h-12 text-base font-semibold rounded-xl btn-primary-gradient border-0"
+                className="w-full h-11 text-sm font-semibold rounded-xl btn-primary-gradient border-0"
               >
-                <LogIn className="ml-2 h-5 w-5" />
+                <LogIn className="ml-2 h-4 w-4" />
                 {loading ? 'מתחבר...' : 'כניסה למערכת'}
               </Button>
             </form>
           </div>
         </div>
 
-        {/* Footer */}
-        <p className="text-center text-xs text-muted-foreground/60 mt-6">
+        <p className="text-center text-[10px] text-muted-foreground/60 mt-5">
           גישה מורשית בלבד
         </p>
       </div>
