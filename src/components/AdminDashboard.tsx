@@ -13,7 +13,7 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
@@ -33,9 +33,10 @@ export default function AdminDashboard() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [events, setEvents] = useState<ExceptionalEvent[]>([]);
   const [dailyAttendance, setDailyAttendance] = useState<any[]>([]);
+  const [supportSessions, setSupportSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    dailyAttendance: false, alerts: false, events: false, students: false, reports: false,
+    dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false,
   });
 
   // Add student form
@@ -51,18 +52,20 @@ export default function AdminDashboard() {
 
   const fetchAll = async () => {
     const today = new Date().toISOString().split('T')[0];
-    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes] = await Promise.all([
+    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes] = await Promise.all([
       supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('students').select('*').order('class_name').order('last_name'),
       supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
       supabase.from('exceptional_events').select('*').order('created_at', { ascending: false }).limit(50),
       supabase.from('daily_attendance').select('*').eq('attendance_date', today),
+      supabase.from('support_sessions' as any).select('*').order('created_at', { ascending: false }).limit(100),
     ]);
     if (reportsRes.data) setReports(reportsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
     if (alertsRes.data) setAlerts(alertsRes.data);
     if (eventsRes.data) setEvents(eventsRes.data);
     if (attendanceRes.data) setDailyAttendance(attendanceRes.data);
+    if (supportRes.data) setSupportSessions(supportRes.data as any[]);
     setLoading(false);
   };
 
@@ -285,6 +288,48 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
+
+      {/* Support Sessions */}
+      <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+        <SectionHeader title="תכנית תמיכה" icon={HeartHandshake} count={supportSessions.length} sectionKey="support" />
+        {expandedSections.support && (
+          <div className="px-3 pb-3 space-y-1.5">
+            {supportSessions.length === 0 ? (
+              <p className="text-center text-muted-foreground text-xs py-6">אין דיווחי תמיכה עדיין</p>
+            ) : (
+              supportSessions.slice(0, 10).map((ss: any) => {
+                const SUPPORT_LABELS: Record<string, string> = {
+                  social: 'חברתית', emotional: 'רגשית', academic: 'לימודית', behavioral: 'התנהגותית',
+                };
+                return (
+                  <div key={ss.id} className="p-2.5 rounded-lg border bg-card">
+                    <div className="flex justify-between items-start mb-1">
+                      <button
+                        onClick={() => { const s = students.find(st => st.id === ss.student_id); if (s) setSelectedStudent(s); }}
+                        className="font-medium text-xs text-primary hover:underline text-right"
+                      >
+                        {studentName(ss.student_id)}
+                      </button>
+                      <span className="text-[10px] text-muted-foreground">
+                        {new Date(ss.session_date).toLocaleDateString('he-IL')}
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-muted-foreground mb-1">ספק: {ss.provider_name}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {(ss.support_types || []).map((t: string) => (
+                        <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">
+                          {SUPPORT_LABELS[t] || t}
+                        </Badge>
+                      ))}
+                    </div>
+                    {ss.notes && <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{ss.notes}</p>}
+                  </div>
+                );
+              })
+            )}
+          </div>
+        )}
+      </div>
 
       {/* Charts */}
       <div className="grid grid-cols-2 gap-2">
