@@ -228,6 +228,50 @@ export type Database = {
         }
         Relationships: []
       }
+      student_grades: {
+        Row: {
+          ai_enhanced_evaluation: string | null
+          created_at: string
+          grade: number | null
+          id: string
+          staff_user_id: string
+          student_id: string
+          subject: string
+          updated_at: string
+          verbal_evaluation: string | null
+        }
+        Insert: {
+          ai_enhanced_evaluation?: string | null
+          created_at?: string
+          grade?: number | null
+          id?: string
+          staff_user_id: string
+          student_id: string
+          subject: string
+          updated_at?: string
+          verbal_evaluation?: string | null
+        }
+        Update: {
+          ai_enhanced_evaluation?: string | null
+          created_at?: string
+          grade?: number | null
+          id?: string
+          staff_user_id?: string
+          student_id?: string
+          subject?: string
+          updated_at?: string
+          verbal_evaluation?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_grades_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           address: string | null
