@@ -361,14 +361,27 @@ export default function AdminDashboard() {
               return (
                 <div key={cls} className="mb-3 last:mb-0">
                   <p className="text-xs font-semibold text-muted-foreground mb-1.5">הכיתה של {cls} ({classStudents.length})</p>
-                  <div className="grid grid-cols-3 gap-1">
+                  <div className="space-y-1">
                     {classStudents.map(s => (
                       <button
                         key={s.id}
                         onClick={() => setSelectedStudent(s)}
-                        className="text-xs p-1.5 rounded-md bg-secondary/50 border border-border text-center hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
+                        className="w-full text-right text-xs p-2.5 rounded-lg bg-secondary/50 border border-border hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
                       >
-                        {s.first_name} {s.last_name}
+                        <div className="flex items-center justify-between mb-1">
+                          <span className="font-semibold text-sm">{s.first_name} {s.last_name}</span>
+                          <div className="flex items-center gap-1.5">
+                            {(s as any).gender && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{(s as any).gender === 'ז' ? '👦' : '👧'}</Badge>}
+                            <Badge variant="secondary" className="text-[10px] px-1.5 py-0">שכבה {s.grade}</Badge>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
+                          {(s as any).city && <span>🏠 {(s as any).city}</span>}
+                          {(s as any).date_of_birth && <span>🎂 {new Date((s as any).date_of_birth).toLocaleDateString('he-IL')}</span>}
+                          {(s as any).mother_name && <span>👩 {(s as any).mother_name} {(s as any).mother_phone ? `(${(s as any).mother_phone})` : ''}</span>}
+                          {(s as any).father_name && (s as any).father_name !== 'אין קשר אב' && <span>👨 {(s as any).father_name} {(s as any).father_phone ? `(${(s as any).father_phone})` : ''}</span>}
+                        </div>
+                        {s.student_code && <p className="text-[9px] text-muted-foreground/60 mt-1">ת.ז: {s.student_code}</p>}
                       </button>
                     ))}
                   </div>
