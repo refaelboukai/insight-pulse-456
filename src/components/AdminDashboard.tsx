@@ -248,23 +248,6 @@ export default function AdminDashboard() {
   };
 
 
-  const behaviorDist = (() => {
-    const counts: Record<string, number> = {};
-    reports.forEach(r => r.behavior_types?.forEach(b => {
-      counts[b] = (counts[b] || 0) + 1;
-    }));
-    return Object.entries(counts).map(([name, value]) => ({
-      name: BEHAVIOR_LABELS[name] || name, value,
-    }));
-  })();
-
-  const attendanceDist = (() => {
-    const counts: Record<string, number> = {};
-    reports.forEach(r => { counts[r.attendance] = (counts[r.attendance] || 0) + 1; });
-    return Object.entries(counts).map(([name, value]) => ({
-      name: ATTENDANCE_LABELS[name] || name, value,
-    }));
-  })();
 
   const studentName = (id: string) => {
     const s = students.find(st => st.id === id);
