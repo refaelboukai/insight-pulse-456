@@ -2,13 +2,17 @@ import { useEffect, useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  BEHAVIOR_LABELS, ATTENDANCE_LABELS, VIOLENCE_LABELS,
-  SEVERITY_LABELS, PARTICIPATION_LABELS, PERFORMANCE_LABELS,
+  BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { AlertTriangle, TrendingUp, Users, FileText, Bell } from 'lucide-react';
+import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
+import { AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
@@ -17,26 +21,62 @@ type Alert = Database['public']['Tables']['alerts']['Row'];
 
 const CHART_COLORS = ['hsl(168, 45%, 40%)', 'hsl(140, 40%, 45%)', 'hsl(35, 80%, 55%)', 'hsl(20, 70%, 55%)', 'hsl(0, 65%, 55%)'];
 
+const CLASS_OPTIONS = ['טלי', 'עדן'];
+
 export default function AdminDashboard() {
   const [reports, setReports] = useState<Report[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchAll = async () => {
-      const [reportsRes, studentsRes, alertsRes] = await Promise.all([
-        supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
-        supabase.from('students').select('*'),
-        supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
-      ]);
-      if (reportsRes.data) setReports(reportsRes.data);
-      if (studentsRes.data) setStudents(studentsRes.data);
-      if (alertsRes.data) setAlerts(alertsRes.data);
-      setLoading(false);
-    };
-    fetchAll();
-  }, []);
+  // Add student form
+  const [showAddStudent, setShowAddStudent] = useState(false);
+  const [newFirstName, setNewFirstName] = useState('');
+  const [newLastName, setNewLastName] = useState('');
+  const [newClass, setNewClass] = useState('');
+  const [addingStudent, setAddingStudent] = useState(false);
+
+  const fetchAll = async () => {
+    const [reportsRes, studentsRes, alertsRes] = await Promise.all([
+      supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
+      supabase.from('students').select('*').order('class_name').order('last_name'),
+      supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
+    ]);
+    if (reportsRes.data) setReports(reportsRes.data);
+    if (studentsRes.data) setStudents(studentsRes.data);
+    if (alertsRes.data) setAlerts(alertsRes.data);
+    setLoading(false);
+  };
+
+  useEffect(() => { fetchAll(); }, []);
+
+  const handleAddStudent = async () => {
+    if (!newFirstName.trim() || !newLastName.trim() || !newClass) {
+      toast.error('נא למלא את כל השדות');
+      return;
+    }
+    setAddingStudent(true);
+    const code = `${newClass === 'טלי' ? 'T' : 'E'}${String(students.length + 1).padStart(3, '0')}`;
+    const { error } = await supabase.from('students').insert({
+      student_code: code,
+      first_name: newFirstName.trim(),
+      last_name: newLastName.trim(),
+      grade: newClass,
+      class_name: newClass,
+    });
+    if (error) {
+      toast.error('שגיאה בהוספת תלמיד/ה');
+      console.error(error);
+    } else {
+      toast.success(`${newFirstName} ${newLastName} נוסף/ה בהצלחה`);
+      setNewFirstName('');
+      setNewLastName('');
+      setNewClass('');
+      setShowAddStudent(false);
+      fetchAll();
+    }
+    setAddingStudent(false);
+  };
 
   // Analytics
   const behaviorDist = (() => {
@@ -117,7 +157,9 @@ export default function AdminDashboard() {
               <TrendingUp className="h-8 w-8 text-success" />
               <div>
                 <p className="text-2xl font-bold">
-                  {reports.length > 0 ? (reports.reduce((s, r) => s + (r.performance_score || 0), 0) / reports.filter(r => r.performance_score).length).toFixed(1) : '—'}
+                  {reports.filter(r => r.performance_score).length > 0
+                    ? (reports.reduce((s, r) => s + (r.performance_score || 0), 0) / reports.filter(r => r.performance_score).length).toFixed(1)
+                    : '—'}
                 </p>
                 <p className="text-sm text-muted-foreground">ממוצע ביצועים</p>
               </div>
@@ -125,6 +167,68 @@ export default function AdminDashboard() {
           </CardContent>
         </Card>
       </div>
+
+      {/* Student list with add button */}
+      <Card>
+        <CardHeader className="flex flex-row items-center justify-between pb-3">
+          <CardTitle className="text-base">רשימת תלמידים</CardTitle>
+          <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline" className="gap-1">
+                <UserPlus className="h-4 w-4" />
+                הוספת תלמיד/ה
+              </Button>
+            </DialogTrigger>
+            <DialogContent dir="rtl">
+              <DialogHeader>
+                <DialogTitle>הוספת תלמיד/ה חדש/ה</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-4 pt-2">
+                <Input
+                  placeholder="שם פרטי"
+                  value={newFirstName}
+                  onChange={e => setNewFirstName(e.target.value)}
+                />
+                <Input
+                  placeholder="שם משפחה"
+                  value={newLastName}
+                  onChange={e => setNewLastName(e.target.value)}
+                />
+                <Select value={newClass} onValueChange={setNewClass}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="בחר/י כיתה" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CLASS_OPTIONS.map(c => (
+                      <SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full">
+                  {addingStudent ? 'מוסיף...' : 'הוספה'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        </CardHeader>
+        <CardContent>
+          {CLASS_OPTIONS.map(cls => {
+            const classStudents = students.filter(s => s.class_name === cls);
+            return (
+              <div key={cls} className="mb-4">
+                <p className="text-sm font-semibold text-muted-foreground mb-2">הכיתה של {cls} ({classStudents.length})</p>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
+                  {classStudents.map(s => (
+                    <div key={s.id} className="text-sm p-2 rounded-md bg-secondary/50 border border-border">
+                      {s.first_name} {s.last_name}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </CardContent>
+      </Card>
 
       {/* Alerts */}
       {unreadAlerts.length > 0 && (
