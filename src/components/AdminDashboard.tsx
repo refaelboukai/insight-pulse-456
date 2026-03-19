@@ -223,6 +223,12 @@ export default function AdminDashboard() {
           environmental_care: latestEval.environmental_care,
           duties_performance: latestEval.duties_performance,
           studentship: latestEval.studentship,
+          problem_solving: latestEval.problem_solving,
+          creative_thinking: latestEval.creative_thinking,
+          perseverance: latestEval.perseverance,
+          emotional_tools: latestEval.emotional_tools,
+          cognitive_flexibility: latestEval.cognitive_flexibility,
+          self_efficacy: latestEval.self_efficacy,
         } : null,
       });
 
