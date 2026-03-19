@@ -101,7 +101,10 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
 
       <!-- Signatures -->
       <div style="display:flex;justify-content:space-around;margin-top:30px;padding-top:20px;border-top:2px dashed #e0e0e0;">
-        ${signatureLine('מנהל/ת ביה״ס')}
+        <div style="display:flex;flex-direction:column;align-items:center;width:120px;">
+          <img src="${principalSigSrc}" style="width:100px;height:auto;margin-bottom:4px;" />
+          <div style="font-size:11px;color:#666;font-weight:500;">מנהל/ת ביה״ס</div>
+        </div>
         ${signatureLine('מחנכ/ת')}
         ${signatureLine('התלמיד/ה')}
         ${signatureLine('ההורים')}
