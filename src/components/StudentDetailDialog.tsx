@@ -71,19 +71,29 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     setAiSummary(null);
 
     try {
-      // Fetch ALL student data (not just selected date)
+      // Calculate date filter based on period
+      let fromDate: string | null = null;
+      const now = new Date();
+      if (summaryPeriod === '2weeks') {
+        const d = new Date(now); d.setDate(d.getDate() - 14);
+        fromDate = format(d, 'yyyy-MM-dd');
+      } else if (summaryPeriod === 'month') {
+        const d = new Date(now); d.setMonth(d.getMonth() - 1);
+        fromDate = format(d, 'yyyy-MM-dd');
+      }
+
+      let reportsQuery = supabase.from('lesson_reports').select('*').eq('student_id', student.id).order('report_date', { ascending: false });
+      let attendanceQuery = supabase.from('daily_attendance').select('*').eq('student_id', student.id).order('attendance_date', { ascending: false });
+      let eventsQuery = supabase.from('exceptional_events').select('*').order('created_at', { ascending: false });
+
+      if (fromDate) {
+        reportsQuery = reportsQuery.gte('report_date', fromDate);
+        attendanceQuery = attendanceQuery.gte('attendance_date', fromDate);
+        eventsQuery = eventsQuery.gte('created_at', fromDate);
+      }
+
       const [allReports, allAttendance, allEvents] = await Promise.all([
-        supabase.from('lesson_reports')
-          .select('*')
-          .eq('student_id', student.id)
-          .order('report_date', { ascending: false }),
-        supabase.from('daily_attendance')
-          .select('*')
-          .eq('student_id', student.id)
-          .order('attendance_date', { ascending: false }),
-        supabase.from('exceptional_events')
-          .select('*')
-          .order('created_at', { ascending: false }),
+        reportsQuery, attendanceQuery, eventsQuery,
       ]);
 
       const reportsData = (allReports.data || []).map(r => ({
