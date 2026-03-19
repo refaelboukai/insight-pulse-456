@@ -76,6 +76,10 @@ export default function ReportForm() {
       toast.error('נא לבחור סוג אלימות');
       return;
     }
+    if (hasViolent && !violenceComment.trim()) {
+      toast.error('נא לכתוב הערה לתיאור האלימות');
+      return;
+    }
 
     setSubmitting(true);
     const { data, error } = await supabase.from('lesson_reports').insert({
