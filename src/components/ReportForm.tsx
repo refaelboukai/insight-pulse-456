@@ -37,8 +37,8 @@ export default function ReportForm() {
   const [participation, setParticipation] = useState<ParticipationLevel | ''>('');
   const [violenceComment, setViolenceComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [searchQuery, setSearchQuery] = useState('');
-
+  const [reportedStudentIds, setReportedStudentIds] = useState<Set<string>>(new Set());
+  const [lastClassName, setLastClassName] = useState<string | null>(null);
   useEffect(() => {
     supabase.from('students').select('*').eq('is_active', true).order('last_name')
       .then(({ data }) => { if (data) setStudents(data); });
