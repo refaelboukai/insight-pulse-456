@@ -14,8 +14,9 @@ import {
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap,
 } from 'lucide-react';
+import { generateReportCard } from '@/lib/generateReportCard';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
