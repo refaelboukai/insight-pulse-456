@@ -152,6 +152,44 @@ export default function AdminDashboard() {
     window.open(`https://wa.me/?text=${encodeURIComponent(monthlyReport)}`, '_blank');
   };
 
+  const handleResetPasswordSubmit = () => {
+    if (resetPassword !== '9020') {
+      setResetPasswordError('סיסמה שגויה');
+      return;
+    }
+    setResetPasswordError('');
+    setShowResetPassword(false);
+    setResetPassword('');
+    setShowResetConfirm(true);
+  };
+
+  const handleResetAllReports = async () => {
+    setResetting(true);
+    setShowResetConfirm(false);
+    try {
+      const [r1, r2, r3, r4, r5] = await Promise.all([
+        supabase.from('alerts').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('lesson_reports').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('daily_attendance').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('exceptional_events').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('support_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+      ]);
+      const errors = [r1, r2, r3, r4, r5].filter(r => r.error);
+      if (errors.length > 0) {
+        console.error('Reset errors:', errors.map(e => e.error));
+        toast.error('שגיאה באיפוס חלק מהנתונים');
+      } else {
+        toast.success('כל הדיווחים אופסו בהצלחה!');
+      }
+      fetchAll();
+    } catch (e) {
+      console.error('Reset error:', e);
+      toast.error('שגיאה באיפוס הדיווחים');
+    } finally {
+      setResetting(false);
+    }
+  };
+
   // Analytics
   const behaviorDist = (() => {
     const counts: Record<string, number> = {};
