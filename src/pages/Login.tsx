@@ -5,10 +5,8 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { GraduationCap, LogIn } from 'lucide-react';
 
-const STAFF_CODE = '1001';
-
 export default function Login() {
-  const { signIn } = useAuth();
+  const { loginWithCode } = useAuth();
   const [code, setCode] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -16,13 +14,9 @@ export default function Login() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
-    if (code !== STAFF_CODE) {
-      setError('קוד שגוי');
-      return;
-    }
     setLoading(true);
-    const { error } = await signIn('staff@school.local', 'staff1001');
-    if (error) setError('שגיאה בכניסה. נסה/י שוב.');
+    const { error } = await loginWithCode(code);
+    if (error) setError(error);
     setLoading(false);
   };
 
