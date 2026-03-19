@@ -58,7 +58,7 @@ function getGregorianDate(): string {
 
 const TEAM_SECTIONS: { title: string; color: string; items: { key: string; label: string }[] }[] = [
   {
-    title: 'דיווחי צוות כיתה',
+    title: '📋 דיווחי צוות כיתה',
     color: '#3b5998',
     items: [
       { key: 'behavior', label: 'התנהגות' },
@@ -72,7 +72,7 @@ const TEAM_SECTIONS: { title: string; color: string; items: { key: string; label
     ],
   },
   {
-    title: 'מיומנויות למידה',
+    title: '🧠 מיומנויות למידה',
     color: '#b45309',
     items: [
       { key: 'problem_solving', label: 'פתרון בעיות' },
@@ -81,7 +81,7 @@ const TEAM_SECTIONS: { title: string; color: string; items: { key: string; label
     ],
   },
   {
-    title: 'מיומנויות רגשיות',
+    title: '💚 מיומנויות רגשיות',
     color: '#047857',
     items: [
       { key: 'emotional_regulation', label: 'ויסות רגשי' },
@@ -136,6 +136,13 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
       </div>
     `;
   }).filter(Boolean).join('') : '';
+
+  const personalNoteHtml = data.personalNote ? `
+    <div style="margin-bottom:20px;padding:14px 16px;background:#fdf2f8;border-radius:10px;border:1px solid #f9d4e8;">
+      <div style="font-size:13px;font-weight:bold;color:#be185d;margin-bottom:8px;">💌 ממני אלייך</div>
+      <div style="font-size:12px;color:#333;line-height:1.8;white-space:pre-wrap;">${data.personalNote}</div>
+    </div>
+  ` : '';
 
   const signatureLine = (label: string) => `
     <div style="display:flex;flex-direction:column;align-items:center;width:120px;">
