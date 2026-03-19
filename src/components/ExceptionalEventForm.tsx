@@ -2,13 +2,12 @@ import { useState } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
-import { AlertTriangle, Send } from 'lucide-react';
+import { AlertTriangle, Send, FileWarning, MessageCircle, Users, Shield } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type IncidentType = Database['public']['Enums']['incident_type'];
@@ -44,7 +43,7 @@ export default function ExceptionalEventForm() {
       toast.error('שגיאה בשמירת האירוע');
       console.error(error);
     } else {
-      toast.success('האירוע החריג נשמר בהצלחה');
+      toast.success('האירוע החריג נשמר בהצלחה ✨');
       setIncidentType('');
       setDescription('');
       setPeopleInvolved('');
@@ -56,19 +55,21 @@ export default function ExceptionalEventForm() {
   };
 
   return (
-    <div className="space-y-4 max-w-2xl mx-auto animate-fade-in">
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-lg">
-            <AlertTriangle className="h-5 w-5 text-accent" />
-            דיווח אירוע חריג
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
+    <div className="max-w-2xl mx-auto space-y-4">
+      <div className="card-styled rounded-2xl overflow-hidden animate-slide-up">
+        <div className="h-1 w-full" style={{ background: 'var(--gradient-accent)' }} />
+        <div className="p-5 space-y-5">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+              <FileWarning className="h-4 w-4 text-accent" />
+            </div>
+            <h3 className="font-semibold text-base">דיווח אירוע חריג</h3>
+          </div>
+
           <div>
-            <label className="text-sm font-medium mb-1 block">סוג אירוע</label>
+            <label className="text-sm font-medium mb-1.5 block text-muted-foreground">סוג אירוע</label>
             <Select value={incidentType} onValueChange={v => setIncidentType(v as IncidentType)}>
-              <SelectTrigger>
+              <SelectTrigger className="rounded-xl h-11 border-2">
                 <SelectValue placeholder="בחר/י סוג אירוע" />
               </SelectTrigger>
               <SelectContent>
@@ -80,37 +81,49 @@ export default function ExceptionalEventForm() {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1 block">תיאור האירוע</label>
+            <label className="text-sm font-medium mb-1.5 flex items-center gap-1.5 text-muted-foreground">
+              <MessageCircle className="w-3.5 h-3.5" />
+              תיאור האירוע
+            </label>
             <Textarea
               placeholder="תאר/י את האירוע..."
               value={description}
               onChange={e => setDescription(e.target.value)}
               rows={4}
+              className="rounded-xl border-2 resize-none"
               required
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1 block">מעורבים</label>
+            <label className="text-sm font-medium mb-1.5 flex items-center gap-1.5 text-muted-foreground">
+              <Users className="w-3.5 h-3.5" />
+              מעורבים
+            </label>
             <Textarea
               placeholder="שמות המעורבים..."
               value={peopleInvolved}
               onChange={e => setPeopleInvolved(e.target.value)}
               rows={2}
+              className="rounded-xl border-2 resize-none"
             />
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1 block">תגובת הצוות</label>
+            <label className="text-sm font-medium mb-1.5 flex items-center gap-1.5 text-muted-foreground">
+              <Shield className="w-3.5 h-3.5" />
+              תגובת הצוות
+            </label>
             <Textarea
               placeholder="מה נעשה בתגובה לאירוע..."
               value={staffResponse}
               onChange={e => setStaffResponse(e.target.value)}
               rows={2}
+              className="rounded-xl border-2 resize-none"
             />
           </div>
 
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2.5 cursor-pointer p-3 rounded-xl border-2 border-transparent hover:border-accent/30 transition-colors">
             <Checkbox
               checked={followupRequired}
               onCheckedChange={v => setFollowupRequired(!!v)}
@@ -124,15 +137,21 @@ export default function ExceptionalEventForm() {
               value={followupNotes}
               onChange={e => setFollowupNotes(e.target.value)}
               rows={2}
+              className="rounded-xl border-2 resize-none animate-fade-in"
             />
           )}
 
-          <Button onClick={handleSubmit} disabled={submitting} className="w-full" size="lg">
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="w-full h-12 text-base font-semibold rounded-xl border-0"
+            style={{ background: 'var(--gradient-accent)' }}
+          >
             <Send className="ml-2 h-4 w-4" />
             {submitting ? 'שומר...' : 'שלח דיווח אירוע'}
           </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   );
 }
