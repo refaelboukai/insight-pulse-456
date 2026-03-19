@@ -40,36 +40,28 @@ export default function Index() {
 
       {/* Content */}
       <main className="container mx-auto px-3 py-4 pb-10">
-        <Tabs defaultValue="report" dir="rtl">
-          <TabsList className={`grid w-full ${isAdmin ? 'grid-cols-3' : 'grid-cols-2'} mb-4 h-10 p-1 rounded-xl shadow-soft bg-card`}>
-            <TabsTrigger value="report" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-medium">
-              <FileText className="h-3.5 w-3.5" />
-              דיווח שיעור
-            </TabsTrigger>
-            <TabsTrigger value="event" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-medium">
-              <AlertTriangle className="h-3.5 w-3.5" />
-              אירוע חריג
-            </TabsTrigger>
-            {isAdmin && (
-              <TabsTrigger value="dashboard" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-medium">
-                <BarChart3 className="h-3.5 w-3.5" />
-                לוח בקרה
+        {isAdmin ? (
+          <AdminDashboard />
+        ) : (
+          <Tabs defaultValue="report" dir="rtl">
+            <TabsList className="grid w-full grid-cols-2 mb-4 h-10 p-1 rounded-xl shadow-soft bg-card">
+              <TabsTrigger value="report" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-medium">
+                <FileText className="h-3.5 w-3.5" />
+                דיווח שיעור
               </TabsTrigger>
-            )}
-          </TabsList>
-
-          <TabsContent value="report" className="animate-fade-in mt-0">
-            <ReportForm />
-          </TabsContent>
-          <TabsContent value="event" className="animate-fade-in mt-0">
-            <ExceptionalEventForm />
-          </TabsContent>
-          {isAdmin && (
-            <TabsContent value="dashboard" className="animate-fade-in mt-0">
-              <AdminDashboard />
+              <TabsTrigger value="event" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-medium">
+                <AlertTriangle className="h-3.5 w-3.5" />
+                אירוע חריג
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="report" className="animate-fade-in mt-0">
+              <ReportForm />
             </TabsContent>
-          )}
-        </Tabs>
+            <TabsContent value="event" className="animate-fade-in mt-0">
+              <ExceptionalEventForm />
+            </TabsContent>
+          </Tabs>
+        )}
       </main>
     </div>
   );
