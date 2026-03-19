@@ -44,6 +44,7 @@ export default function AdminDashboard() {
   const [newLastName, setNewLastName] = useState('');
   const [newClass, setNewClass] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
