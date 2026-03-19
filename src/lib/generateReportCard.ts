@@ -109,10 +109,6 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
         ${signatureLine('ההורים')}
       </div>
 
-      <!-- Footer -->
-      <div style="text-align:center;margin-top:24px;color:#bbb;font-size:10px;">
-        נוצר באופן אוטומטי • ${gregorianDate}
-      </div>
     </div>
   `;
 
