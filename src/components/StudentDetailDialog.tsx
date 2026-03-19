@@ -138,6 +138,13 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     URL.revokeObjectURL(url);
   };
 
+  const shareViaWhatsApp = () => {
+    if (!aiSummary || !student) return;
+    const text = aiSummary;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const quickDays = [0, 1, 2, 3, 4].map(d => {
     const date = new Date();
     date.setDate(date.getDate() - d);
