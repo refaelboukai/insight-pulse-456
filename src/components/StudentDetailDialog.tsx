@@ -138,9 +138,30 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     URL.revokeObjectURL(url);
   };
 
-  const shareViaWhatsApp = () => {
+  const shareSummary = async () => {
     if (!aiSummary || !student) return;
+    const title = `סיכום תפקוד - ${student.first_name} ${student.last_name}`;
     const text = aiSummary;
+
+    // Try native share (works on mobile + modern browsers)
+    if (navigator.share) {
+      try {
+        // Try sharing as file first
+        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+        const file = new File([blob], `סיכום_${student.first_name}_${student.last_name}.txt`, { type: 'text/plain' });
+        
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ title, files: [file] });
+        } else {
+          await navigator.share({ title, text });
+        }
+        return;
+      } catch (e) {
+        // User cancelled or share failed — fall through to WhatsApp
+        if ((e as Error).name === 'AbortError') return;
+      }
+    }
+    // Fallback: open WhatsApp
     const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
     window.open(whatsappUrl, '_blank');
   };
@@ -181,8 +202,8 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
           </Button>
           {aiSummary && (
             <>
-              <Button onClick={shareViaWhatsApp} size="sm" variant="default" className="gap-1.5 bg-[#25D366] hover:bg-[#1da851] text-white">
-                <Share2 className="h-3.5 w-3.5" /> WhatsApp
+              <Button onClick={shareSummary} size="sm" variant="default" className="gap-1.5 bg-[#25D366] hover:bg-[#1da851] text-white">
+                <Share2 className="h-3.5 w-3.5" /> שיתוף
               </Button>
               <Button onClick={downloadSummary} size="sm" variant="outline" className="gap-1.5">
                 <Download className="h-3.5 w-3.5" /> הורדה
