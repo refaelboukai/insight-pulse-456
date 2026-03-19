@@ -9,7 +9,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import {
   SUBJECTS, ATTENDANCE_LABELS, BEHAVIOR_LABELS, VIOLENCE_LABELS,
-  PARTICIPATION_LABELS, SEVERITY_LABELS, PERFORMANCE_LABELS,
+  PARTICIPATION_LABELS,
 } from '@/lib/constants';
 import { AlertTriangle, Send, CheckCircle2, XCircle, Clock } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
