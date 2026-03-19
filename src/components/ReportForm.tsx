@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Slider } from '@/components/ui/slider';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import {
   SUBJECTS, ATTENDANCE_LABELS, BEHAVIOR_LABELS, VIOLENCE_LABELS,
@@ -135,28 +136,41 @@ export default function ReportForm() {
             onChange={e => setSearchQuery(e.target.value)}
             className="mb-3"
           />
-          <div className="max-h-64 overflow-y-auto space-y-4">
-            {classes.map(cls => (
-              <div key={cls}>
-                <p className="text-xs font-semibold text-muted-foreground mb-1.5">הכיתה של {cls}</p>
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {filteredStudents.filter(s => s.class_name === cls).map(s => (
-                    <button
-                      key={s.id}
-                      onClick={() => setStudentId(s.id)}
-                      className={`p-2 rounded-lg text-sm text-right transition-all border ${
-                        studentId === s.id
-                          ? 'bg-primary text-primary-foreground border-primary'
-                          : 'bg-card border-border hover:border-primary/50'
-                      }`}
-                    >
-                      <div className="font-medium">{s.first_name} {s.last_name}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            ))}
-          </div>
+          <Accordion type="multiple" defaultValue={classes as string[]} className="space-y-2">
+            {classes.map(cls => {
+              const classStudents = filteredStudents.filter(s => s.class_name === cls);
+              if (classStudents.length === 0) return null;
+              return (
+                <AccordionItem key={cls!} value={cls!} className="border rounded-lg px-3">
+                  <AccordionTrigger className="text-sm font-semibold py-2.5 hover:no-underline">
+                    <span className="flex items-center gap-2">
+                      הכיתה של {cls}
+                      <Badge variant="secondary" className="text-xs font-normal">
+                        {classStudents.length}
+                      </Badge>
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-3">
+                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                      {classStudents.map(s => (
+                        <button
+                          key={s.id}
+                          onClick={() => setStudentId(s.id)}
+                          className={`p-2.5 rounded-lg text-sm text-right transition-all border ${
+                            studentId === s.id
+                              ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                              : 'bg-card border-border hover:border-primary/50 hover:bg-secondary/50'
+                          }`}
+                        >
+                          <div className="font-medium">{s.first_name} {s.last_name}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
         </CardContent>
       </Card>
 
