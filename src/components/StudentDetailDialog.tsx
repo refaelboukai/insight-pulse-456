@@ -12,7 +12,7 @@ import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
   VIOLENCE_LABELS, ABSENCE_REASON_LABELS,
 } from '@/lib/constants';
-import { CalendarIcon, CheckCircle2, Clock, XCircle, FileText, ClipboardCheck, Sparkles, Download, Loader2 } from 'lucide-react';
+import { CalendarIcon, CheckCircle2, Clock, XCircle, FileText, ClipboardCheck, Sparkles, Download, Loader2, Share2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
