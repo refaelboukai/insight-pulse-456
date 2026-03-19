@@ -11,7 +11,7 @@ import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS, INCIDENT_TYPE_LABELS,
   SEVERITY_LABELS, ABSENCE_REASON_LABELS,
 } from '@/lib/constants';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert,
   ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap,
@@ -25,7 +25,7 @@ type Student = Database['public']['Tables']['students']['Row'];
 type Alert = Database['public']['Tables']['alerts']['Row'];
 type ExceptionalEvent = Database['public']['Tables']['exceptional_events']['Row'];
 
-const CHART_COLORS = ['hsl(168, 50%, 40%)', 'hsl(140, 45%, 42%)', 'hsl(35, 80%, 55%)', 'hsl(15, 70%, 52%)', 'hsl(0, 65%, 52%)'];
+
 
 const CLASS_OPTIONS = ['טלי', 'עדן'];
 
@@ -248,23 +248,6 @@ export default function AdminDashboard() {
   };
 
 
-  const behaviorDist = (() => {
-    const counts: Record<string, number> = {};
-    reports.forEach(r => r.behavior_types?.forEach(b => {
-      counts[b] = (counts[b] || 0) + 1;
-    }));
-    return Object.entries(counts).map(([name, value]) => ({
-      name: BEHAVIOR_LABELS[name] || name, value,
-    }));
-  })();
-
-  const attendanceDist = (() => {
-    const counts: Record<string, number> = {};
-    reports.forEach(r => { counts[r.attendance] = (counts[r.attendance] || 0) + 1; });
-    return Object.entries(counts).map(([name, value]) => ({
-      name: ATTENDANCE_LABELS[name] || name, value,
-    }));
-  })();
 
   const studentName = (id: string) => {
     const s = students.find(st => st.id === id);
@@ -480,42 +463,6 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Charts */}
-      <div className="grid grid-cols-2 gap-2">
-        <div className="card-styled rounded-2xl p-3">
-          <h4 className="text-xs font-semibold mb-2 text-center">התנהגות</h4>
-          {behaviorDist.length > 0 ? (
-            <ResponsiveContainer width="100%" height={160}>
-              <PieChart>
-                <Pie data={behaviorDist} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={55} innerRadius={25}>
-                  {behaviorDist.map((_, i) => (
-                    <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />
-                  ))}
-                </Pie>
-                <Tooltip contentStyle={{ fontSize: 11, direction: 'rtl' }} />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-center text-muted-foreground text-xs py-8">אין נתונים</p>
-          )}
-        </div>
-
-        <div className="card-styled rounded-2xl p-3">
-          <h4 className="text-xs font-semibold mb-2 text-center">נוכחות</h4>
-          {attendanceDist.length > 0 ? (
-            <ResponsiveContainer width="100%" height={160}>
-              <BarChart data={attendanceDist} margin={{ top: 5, right: 5, left: -15, bottom: 5 }}>
-                <XAxis dataKey="name" fontSize={9} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <YAxis fontSize={9} tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip contentStyle={{ fontSize: 11, direction: 'rtl' }} />
-                <Bar dataKey="value" fill="hsl(168, 50%, 40%)" radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : (
-            <p className="text-center text-muted-foreground text-xs py-8">אין נתונים</p>
-          )}
-        </div>
-      </div>
 
       {/* Students */}
       <div className="card-styled rounded-2xl overflow-hidden">
