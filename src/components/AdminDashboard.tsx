@@ -53,6 +53,13 @@ export default function AdminDashboard() {
   const [generatingReport, setGeneratingReport] = useState(false);
   const [reportStudentId, setReportStudentId] = useState<string | null>(null);
 
+  // Reset all reports
+  const [showResetPassword, setShowResetPassword] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetPasswordError, setResetPasswordError] = useState('');
+  const [resetting, setResetting] = useState(false);
+
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
