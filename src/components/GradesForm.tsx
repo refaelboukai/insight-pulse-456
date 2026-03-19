@@ -231,8 +231,8 @@ export default function GradesForm() {
         staff_user_id: user!.id,
         personal_note: personalNoteEnhanced.trim() || personalNote.trim() || null,
       };
-      TEAM_CATEGORIES.forEach(c => {
-        payload[c.key] = teamRatings[c.key] || null;
+      ALL_TEAM_KEYS.forEach(key => {
+        payload[key] = teamRatings[key] || null;
       });
 
       const { error } = await supabase.from('student_evaluations' as any).insert(payload);
