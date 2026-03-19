@@ -7,12 +7,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS, INCIDENT_TYPE_LABELS,
-  SEVERITY_LABELS,
+  SEVERITY_LABELS, ABSENCE_REASON_LABELS,
 } from '@/lib/constants';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck,
 } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
@@ -31,9 +31,10 @@ export default function AdminDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [events, setEvents] = useState<ExceptionalEvent[]>([]);
+  const [dailyAttendance, setDailyAttendance] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    alerts: true, events: true, students: true, reports: true,
+    dailyAttendance: true, alerts: true, events: true, students: true, reports: true,
   });
 
   // Add student form
@@ -47,16 +48,19 @@ export default function AdminDashboard() {
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
   const fetchAll = async () => {
-    const [reportsRes, studentsRes, alertsRes, eventsRes] = await Promise.all([
+    const today = new Date().toISOString().split('T')[0];
+    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes] = await Promise.all([
       supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('students').select('*').order('class_name').order('last_name'),
       supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
       supabase.from('exceptional_events').select('*').order('created_at', { ascending: false }).limit(50),
+      supabase.from('daily_attendance').select('*').eq('attendance_date', today),
     ]);
     if (reportsRes.data) setReports(reportsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
     if (alertsRes.data) setAlerts(alertsRes.data);
     if (eventsRes.data) setEvents(eventsRes.data);
+    if (attendanceRes.data) setDailyAttendance(attendanceRes.data);
     setLoading(false);
   };
 
@@ -169,6 +173,61 @@ export default function AdminDashboard() {
             <p className="text-[10px] text-muted-foreground">{stat.label}</p>
           </div>
         ))}
+      </div>
+
+      {/* Daily Attendance */}
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <SectionHeader title="ביקור סדיר — היום" icon={ClipboardCheck} count={dailyAttendance.filter(a => !a.is_present).length} badge={dailyAttendance.filter(a => !a.is_present).length > 0 ? 'destructive' : undefined} sectionKey="dailyAttendance" />
+        {expandedSections.dailyAttendance && (
+          <div className="px-3 pb-3">
+            {(() => {
+              const absentRecords = dailyAttendance.filter(a => !a.is_present);
+              const presentCount = students.length - absentRecords.length;
+              if (absentRecords.length === 0) {
+                return (
+                  <div className="text-center py-4">
+                    <CheckCircle2 className="h-6 w-6 text-success mx-auto mb-1.5" />
+                    <p className="text-xs text-success font-medium">כל התלמידים נוכחים היום!</p>
+                    <p className="text-[10px] text-muted-foreground">{presentCount}/{students.length}</p>
+                  </div>
+                );
+              }
+              return (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                    <span>📅 {new Date().toLocaleDateString('he-IL')}</span>
+                    <span>{presentCount}/{students.length} נוכחים</span>
+                  </div>
+                  {CLASS_OPTIONS.map(cls => {
+                    const classAbsent = absentRecords.filter(a => {
+                      const s = students.find(st => st.id === a.student_id);
+                      return s?.class_name === cls;
+                    });
+                    if (classAbsent.length === 0) return null;
+                    return (
+                      <div key={cls}>
+                        <p className="text-xs font-semibold text-muted-foreground mb-1">הכיתה של {cls}</p>
+                        {classAbsent.map(a => {
+                          const s = students.find(st => st.id === a.student_id);
+                          if (!s) return null;
+                          const reason = a.absence_reason
+                            ? ABSENCE_REASON_LABELS[a.absence_reason] || a.absence_reason
+                            : 'לא צוינה סיבה';
+                          return (
+                            <div key={a.student_id} className="flex items-center justify-between text-xs bg-destructive/5 rounded-lg px-3 py-1.5 mb-1">
+                              <span className="font-medium">{s.first_name} {s.last_name}</span>
+                              <Badge variant="outline" className="text-[10px] px-2">{reason}</Badge>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })}
+                </div>
+              );
+            })()}
+          </div>
+        )}
       </div>
 
       {/* Alerts */}
