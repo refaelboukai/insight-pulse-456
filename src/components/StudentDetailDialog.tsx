@@ -180,9 +180,14 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
             )}
           </Button>
           {aiSummary && (
-            <Button onClick={downloadSummary} size="sm" variant="outline" className="gap-1.5">
-              <Download className="h-3.5 w-3.5" /> הורדה
-            </Button>
+            <>
+              <Button onClick={shareViaWhatsApp} size="sm" variant="default" className="gap-1.5 bg-[#25D366] hover:bg-[#1da851] text-white">
+                <Share2 className="h-3.5 w-3.5" /> WhatsApp
+              </Button>
+              <Button onClick={downloadSummary} size="sm" variant="outline" className="gap-1.5">
+                <Download className="h-3.5 w-3.5" /> הורדה
+              </Button>
+            </>
           )}
         </div>
 
