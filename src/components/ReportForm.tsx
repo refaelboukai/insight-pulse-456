@@ -83,10 +83,7 @@ export default function ReportForm() {
       attendance: attendance as AttendanceStatus,
       behavior_types: behaviors,
       violence_subtypes: hasViolent ? violenceTypes : [],
-      behavior_severity: behaviors.length > 0 ? severity : null,
       participation: participation || null,
-      performance_score: participation ? performance : null,
-      comment: comment || null,
     }).select().single();
 
     if (error) {
