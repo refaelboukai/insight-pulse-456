@@ -167,14 +167,15 @@ export default function AdminDashboard() {
     setResetting(true);
     setShowResetConfirm(false);
     try {
-      const [r1, r2, r3, r4, r5] = await Promise.all([
+      const [r1, r2, r3, r4, r5, r6] = await Promise.all([
         supabase.from('alerts').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
         supabase.from('lesson_reports').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
         supabase.from('daily_attendance').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
         supabase.from('exceptional_events').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
         supabase.from('support_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('student_grades' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
       ]);
-      const errors = [r1, r2, r3, r4, r5].filter(r => r.error);
+      const errors = [r1, r2, r3, r4, r5, r6].filter(r => r.error);
       if (errors.length > 0) {
         console.error('Reset errors:', errors.map(e => e.error));
         toast.error('שגיאה באיפוס חלק מהנתונים');

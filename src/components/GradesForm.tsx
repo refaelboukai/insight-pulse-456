@@ -1,0 +1,284 @@
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { toast } from 'sonner';
+import { SUBJECTS } from '@/lib/constants';
+import { Send, Sparkles, GraduationCap, ChevronDown, ChevronUp, CheckCircle2 } from 'lucide-react';
+
+type Student = {
+  id: string;
+  first_name: string;
+  last_name: string;
+  class_name: string | null;
+  is_active: boolean;
+};
+
+const CLASS_OPTIONS = ['טלי', 'עדן'];
+
+export default function GradesForm() {
+  const { user } = useAuth();
+  const [students, setStudents] = useState<Student[]>([]);
+  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [subject, setSubject] = useState('');
+  const [grade, setGrade] = useState('');
+  const [verbalEvaluation, setVerbalEvaluation] = useState('');
+  const [aiEnhancedEvaluation, setAiEnhancedEvaluation] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [enhancing, setEnhancing] = useState(false);
+  const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set());
+  const [expandedClass, setExpandedClass] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.from('students').select('id, first_name, last_name, class_name, is_active')
+      .eq('is_active', true).order('class_name').order('last_name')
+      .then(({ data }) => { if (data) setStudents(data); });
+  }, []);
+
+  const selectedStudent = students.find(s => s.id === selectedStudentId);
+
+  const handleSelectStudent = (id: string) => {
+    setSelectedStudentId(id);
+    setSubject('');
+    setGrade('');
+    setVerbalEvaluation('');
+    setAiEnhancedEvaluation('');
+  };
+
+  const handleEnhance = async () => {
+    if (!verbalEvaluation.trim()) {
+      toast.error('נא לכתוב הערכה מילולית לפני שיפור');
+      return;
+    }
+    setEnhancing(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('rephrase-evaluation', {
+        body: {
+          evaluation: verbalEvaluation.trim(),
+          studentName: selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : '',
+          subject,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) throw new Error(data.error);
+      if (data?.enhanced) {
+        setAiEnhancedEvaluation(data.enhanced);
+        toast.success('ההערכה שופרה בהצלחה!');
+      }
+    } catch (e: any) {
+      console.error('Enhance error:', e);
+      toast.error(e?.message || 'שגיאה בשיפור הניסוח');
+    } finally {
+      setEnhancing(false);
+    }
+  };
+
+  const handleSubmit = async () => {
+    if (!selectedStudentId || !subject) {
+      toast.error('נא לבחור תלמיד/ה ומקצוע');
+      return;
+    }
+    if (!grade && !verbalEvaluation.trim()) {
+      toast.error('נא להזין ציון או הערכה מילולית');
+      return;
+    }
+    setSubmitting(true);
+    const gradeNum = grade ? parseInt(grade, 10) : null;
+    if (gradeNum !== null && (isNaN(gradeNum) || gradeNum < 0 || gradeNum > 100)) {
+      toast.error('ציון חייב להיות בין 0 ל-100');
+      setSubmitting(false);
+      return;
+    }
+
+    const { error } = await supabase.from('student_grades' as any).insert({
+      student_id: selectedStudentId,
+      staff_user_id: user!.id,
+      subject,
+      grade: gradeNum,
+      verbal_evaluation: verbalEvaluation.trim() || null,
+      ai_enhanced_evaluation: aiEnhancedEvaluation.trim() || null,
+    });
+
+    if (error) {
+      console.error('Insert grade error:', error);
+      toast.error('שגיאה בשמירת הציון');
+    } else {
+      toast.success(`ציון/הערכה נשמרו עבור ${selectedStudent?.first_name} ${selectedStudent?.last_name}`);
+      setSubmittedIds(prev => new Set(prev).add(`${selectedStudentId}-${subject}`));
+      setSubject('');
+      setGrade('');
+      setVerbalEvaluation('');
+      setAiEnhancedEvaluation('');
+    }
+    setSubmitting(false);
+  };
+
+  // Student selection view
+  if (!selectedStudentId) {
+    return (
+      <div className="space-y-3">
+        <div className="text-center mb-2">
+          <GraduationCap className="h-6 w-6 mx-auto text-primary mb-1" />
+          <h3 className="font-bold text-sm">ציונים והערכות</h3>
+          <p className="text-xs text-muted-foreground">בחר/י תלמיד/ה להזנת ציון והערכה</p>
+        </div>
+
+        {CLASS_OPTIONS.map(cls => {
+          const classStudents = students.filter(s => s.class_name === cls);
+          const isExpanded = expandedClass === cls;
+          return (
+            <div key={cls} className="card-styled rounded-2xl overflow-hidden">
+              <button
+                onClick={() => setExpandedClass(isExpanded ? null : cls)}
+                className="w-full flex items-center justify-between p-3 hover:bg-muted/50 transition-colors"
+              >
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-semibold">🏫 הכיתה של {cls}</span>
+                  <Badge variant="secondary" className="text-xs">{classStudents.length}</Badge>
+                </div>
+                {isExpanded ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+              </button>
+              {isExpanded && (
+                <div className="px-3 pb-3 space-y-1">
+                  {classStudents.map(s => (
+                    <button
+                      key={s.id}
+                      onClick={() => handleSelectStudent(s.id)}
+                      className="w-full text-right text-xs p-2.5 rounded-lg bg-secondary/50 border border-border hover:bg-primary/10 hover:border-primary/30 transition-colors"
+                    >
+                      <span className="font-medium">{s.first_name} {s.last_name}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  }
+
+  // Grade entry form for selected student
+  return (
+    <div className="space-y-4">
+      {/* Student header */}
+      <div className="card-styled rounded-2xl p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GraduationCap className="h-5 w-5 text-primary" />
+            <div>
+              <p className="font-bold text-sm">{selectedStudent?.first_name} {selectedStudent?.last_name}</p>
+              <p className="text-[10px] text-muted-foreground">הכיתה של {selectedStudent?.class_name}</p>
+            </div>
+          </div>
+          <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedStudentId('')}>
+            חזרה לרשימה
+          </Button>
+        </div>
+      </div>
+
+      {/* Subject selection */}
+      <div className="card-styled rounded-2xl p-3 space-y-3">
+        <label className="text-xs font-semibold">מקצוע</label>
+        <div className="flex flex-wrap gap-1.5">
+          {SUBJECTS.map(s => {
+            const key = `${selectedStudentId}-${s}`;
+            const submitted = submittedIds.has(key);
+            return (
+              <button
+                key={s}
+                onClick={() => setSubject(s)}
+                className={`text-xs py-1.5 px-2.5 rounded-lg border transition-colors ${
+                  subject === s
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : submitted
+                    ? 'bg-success/10 border-success/30 text-success'
+                    : 'bg-card border-border hover:bg-primary/10 hover:border-primary/30'
+                }`}
+              >
+                {submitted && <CheckCircle2 className="h-3 w-3 inline ml-1" />}
+                {s}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {subject && (
+        <>
+          {/* Grade input */}
+          <div className="card-styled rounded-2xl p-3 space-y-2">
+            <label className="text-xs font-semibold">ציון (0-100)</label>
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              placeholder="הזן ציון"
+              value={grade}
+              onChange={e => setGrade(e.target.value)}
+              className="h-10 text-sm"
+            />
+          </div>
+
+          {/* Verbal evaluation */}
+          <div className="card-styled rounded-2xl p-3 space-y-2">
+            <label className="text-xs font-semibold">הערכה מילולית</label>
+            <Textarea
+              placeholder="כתוב הערכה מילולית על התלמיד/ה..."
+              value={verbalEvaluation}
+              onChange={e => setVerbalEvaluation(e.target.value)}
+              className="min-h-[80px] text-sm"
+              maxLength={2000}
+            />
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5 text-xs w-full"
+              onClick={handleEnhance}
+              disabled={enhancing || !verbalEvaluation.trim()}
+            >
+              {enhancing ? (
+                <><div className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" /> משפר ניסוח...</>
+              ) : (
+                <><Sparkles className="h-3.5 w-3.5" /> שיפור ניסוח עם AI</>
+              )}
+            </Button>
+          </div>
+
+          {/* AI enhanced evaluation */}
+          {aiEnhancedEvaluation && (
+            <div className="card-styled rounded-2xl p-3 space-y-2 border-primary/20">
+              <div className="flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                <label className="text-xs font-semibold text-primary">הערכה משופרת</label>
+              </div>
+              <Textarea
+                value={aiEnhancedEvaluation}
+                onChange={e => setAiEnhancedEvaluation(e.target.value)}
+                className="min-h-[80px] text-sm border-primary/20"
+              />
+              <p className="text-[10px] text-muted-foreground">ניתן לערוך את הטקסט המשופר לפני השמירה</p>
+            </div>
+          )}
+
+          {/* Submit */}
+          <Button
+            onClick={handleSubmit}
+            disabled={submitting}
+            className="w-full gap-1.5"
+          >
+            {submitting ? (
+              <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> שומר...</>
+            ) : (
+              <><Send className="h-4 w-4" /> שמירת ציון והערכה</>
+            )}
+          </Button>
+        </>
+      )}
+    </div>
+  );
+}
