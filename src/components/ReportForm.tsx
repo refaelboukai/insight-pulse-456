@@ -57,9 +57,16 @@ export default function ReportForm() {
 
   const hasViolent = behaviors.includes('violent');
 
-  const resetForm = () => {
+  const resetForm = (keepContext = false) => {
+    const prevStudentClass = students.find(s => s.id === studentId)?.class_name ?? null;
+    if (keepContext) {
+      setLastClassName(prevStudentClass);
+    } else {
+      setLastClassName(null);
+      setSubject('');
+      setReportedStudentIds(new Set());
+    }
     setStudentId('');
-    setSubject('');
     setAttendance('');
     setBehaviors([]);
     setViolenceTypes([]);
