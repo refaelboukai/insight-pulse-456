@@ -36,7 +36,7 @@ export default function AdminDashboard() {
   const [supportSessions, setSupportSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false,
+    dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false, monthlyReport: false,
   });
 
   // Add student form
@@ -46,6 +46,11 @@ export default function AdminDashboard() {
   const [newClass, setNewClass] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+
+  // Monthly report
+  const [monthlyReport, setMonthlyReport] = useState<string | null>(null);
+  const [generatingReport, setGeneratingReport] = useState(false);
+  const [reportStudentId, setReportStudentId] = useState<string | null>(null);
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
