@@ -14,16 +14,256 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      alerts: {
+        Row: {
+          alert_type: string
+          created_at: string
+          description: string
+          id: string
+          is_read: boolean
+          related_report_id: string | null
+          student_id: string
+        }
+        Insert: {
+          alert_type: string
+          created_at?: string
+          description: string
+          id?: string
+          is_read?: boolean
+          related_report_id?: string | null
+          student_id: string
+        }
+        Update: {
+          alert_type?: string
+          created_at?: string
+          description?: string
+          id?: string
+          is_read?: boolean
+          related_report_id?: string | null
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "alerts_related_report_id_fkey"
+            columns: ["related_report_id"]
+            isOneToOne: false
+            referencedRelation: "lesson_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "alerts_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      exceptional_events: {
+        Row: {
+          created_at: string
+          description: string
+          followup_notes: string | null
+          followup_required: boolean
+          id: string
+          incident_type: Database["public"]["Enums"]["incident_type"]
+          people_involved: string | null
+          reported_by: string
+          staff_response: string | null
+        }
+        Insert: {
+          created_at?: string
+          description: string
+          followup_notes?: string | null
+          followup_required?: boolean
+          id?: string
+          incident_type: Database["public"]["Enums"]["incident_type"]
+          people_involved?: string | null
+          reported_by: string
+          staff_response?: string | null
+        }
+        Update: {
+          created_at?: string
+          description?: string
+          followup_notes?: string | null
+          followup_required?: boolean
+          id?: string
+          incident_type?: Database["public"]["Enums"]["incident_type"]
+          people_involved?: string | null
+          reported_by?: string
+          staff_response?: string | null
+        }
+        Relationships: []
+      }
+      lesson_reports: {
+        Row: {
+          attendance: Database["public"]["Enums"]["attendance_status"]
+          behavior_severity: number | null
+          behavior_types: Database["public"]["Enums"]["behavior_type"][]
+          comment: string | null
+          created_at: string
+          id: string
+          lesson_subject: string
+          participation:
+            | Database["public"]["Enums"]["participation_level"]
+            | null
+          performance_score: number | null
+          report_date: string
+          staff_user_id: string
+          student_id: string
+          violence_subtypes:
+            | Database["public"]["Enums"]["violence_type"][]
+            | null
+        }
+        Insert: {
+          attendance: Database["public"]["Enums"]["attendance_status"]
+          behavior_severity?: number | null
+          behavior_types?: Database["public"]["Enums"]["behavior_type"][]
+          comment?: string | null
+          created_at?: string
+          id?: string
+          lesson_subject: string
+          participation?:
+            | Database["public"]["Enums"]["participation_level"]
+            | null
+          performance_score?: number | null
+          report_date?: string
+          staff_user_id: string
+          student_id: string
+          violence_subtypes?:
+            | Database["public"]["Enums"]["violence_type"][]
+            | null
+        }
+        Update: {
+          attendance?: Database["public"]["Enums"]["attendance_status"]
+          behavior_severity?: number | null
+          behavior_types?: Database["public"]["Enums"]["behavior_type"][]
+          comment?: string | null
+          created_at?: string
+          id?: string
+          lesson_subject?: string
+          participation?:
+            | Database["public"]["Enums"]["participation_level"]
+            | null
+          performance_score?: number | null
+          report_date?: string
+          staff_user_id?: string
+          student_id?: string
+          violence_subtypes?:
+            | Database["public"]["Enums"]["violence_type"][]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lesson_reports_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          created_at: string
+          full_name: string
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          full_name: string
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          full_name?: string
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      students: {
+        Row: {
+          class_name: string | null
+          created_at: string
+          first_name: string
+          grade: string | null
+          id: string
+          is_active: boolean
+          last_name: string
+          student_code: string
+          updated_at: string
+        }
+        Insert: {
+          class_name?: string | null
+          created_at?: string
+          first_name: string
+          grade?: string | null
+          id?: string
+          is_active?: boolean
+          last_name: string
+          student_code: string
+          updated_at?: string
+        }
+        Update: {
+          class_name?: string | null
+          created_at?: string
+          first_name?: string
+          grade?: string | null
+          id?: string
+          is_active?: boolean
+          last_name?: string
+          student_code?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      user_roles: {
+        Row: {
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "staff"
+      attendance_status: "full" | "partial" | "absent"
+      behavior_type: "respectful" | "non_respectful" | "disruptive" | "violent"
+      incident_type: "violence" | "bullying" | "medical" | "safety" | "other"
+      participation_level:
+        | "completed_tasks"
+        | "active_participation"
+        | "no_participation"
+      violence_type: "physical" | "verbal" | "property_damage" | "sexual"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +390,17 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "staff"],
+      attendance_status: ["full", "partial", "absent"],
+      behavior_type: ["respectful", "non_respectful", "disruptive", "violent"],
+      incident_type: ["violence", "bullying", "medical", "safety", "other"],
+      participation_level: [
+        "completed_tasks",
+        "active_participation",
+        "no_participation",
+      ],
+      violence_type: ["physical", "verbal", "property_damage", "sexual"],
+    },
   },
 } as const
