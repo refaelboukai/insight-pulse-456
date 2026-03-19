@@ -7,6 +7,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
+import { shareEventToWhatsApp } from '@/lib/generateEventPdf';
 import { AlertTriangle, Send, FileWarning, MessageCircle, Users, Shield } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
