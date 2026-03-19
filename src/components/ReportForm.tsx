@@ -112,8 +112,9 @@ export default function ReportForm() {
           related_report_id: data.id,
         });
       }
+      setReportedStudentIds(prev => new Set(prev).add(studentId));
       toast.success('הדיווח נשמר בהצלחה! ✨');
-      resetForm();
+      resetForm(true);
     }
     setSubmitting(false);
   };
