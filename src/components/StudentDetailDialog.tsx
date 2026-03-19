@@ -198,6 +198,27 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
           </DialogTitle>
         </DialogHeader>
 
+        {/* Period Selection */}
+        <div className="flex gap-1.5">
+          {([
+            { key: '2weeks' as const, label: 'שבועיים' },
+            { key: 'month' as const, label: 'חודש' },
+            { key: 'all' as const, label: 'הכל' },
+          ]).map(p => (
+            <button
+              key={p.key}
+              onClick={() => { setSummaryPeriod(p.key); setAiSummary(null); }}
+              className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${
+                summaryPeriod === p.key
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border bg-card hover:border-primary/30'
+              }`}
+            >
+              {p.label}
+            </button>
+          ))}
+        </div>
+
         {/* AI Summary Button */}
         <div className="flex gap-2">
           <Button
@@ -209,7 +230,7 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
             {generatingSummary ? (
               <><Loader2 className="h-3.5 w-3.5 animate-spin" /> מייצר סיכום...</>
             ) : (
-              <><Sparkles className="h-3.5 w-3.5" /> סיכום AI מלא</>
+              <><Sparkles className="h-3.5 w-3.5" /> סיכום {summaryPeriod === '2weeks' ? 'שבועיים' : summaryPeriod === 'month' ? 'חודשי' : 'מלא'}</>
             )}
           </Button>
           {aiSummary && (
