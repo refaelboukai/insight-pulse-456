@@ -254,32 +254,7 @@ export default function ReportForm() {
               </div>
             )}
 
-            {behaviors.length > 0 && (
-              <div className="mt-2 animate-fade-in">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-[11px] font-medium">חומרה</span>
-                  <span className="text-[10px] text-muted-foreground">{SEVERITY_LABELS[severity]}</span>
-                </div>
-                <div className="grid grid-cols-5 gap-1">
-                  {[1, 2, 3, 4, 5].map(level => (
-                    <button
-                      key={level}
-                      onClick={() => setSeverity(level)}
-                      className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${
-                        severity === level
-                          ? `severity-badge-${level} border-transparent`
-                          : 'bg-card border-border text-muted-foreground'
-                      }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Step 5: Participation + Performance */}
+          {/* Step 5: Participation */}
           <div className="card-styled rounded-2xl p-3">
             <p className="text-xs font-semibold mb-2">השתתפות</p>
             <div className="flex flex-wrap gap-1.5">
@@ -297,41 +272,7 @@ export default function ReportForm() {
                 </button>
               ))}
             </div>
-
-            {participation && (
-              <div className="mt-2 animate-fade-in">
-                <div className="flex justify-between items-center mb-1.5">
-                  <span className="text-[11px] font-medium">ביצועים</span>
-                  <span className="text-[10px] text-muted-foreground">{PERFORMANCE_LABELS[performance]}</span>
-                </div>
-                <div className="grid grid-cols-5 gap-1">
-                  {[1, 2, 3, 4, 5].map(level => (
-                    <button
-                      key={level}
-                      onClick={() => setPerformance(level)}
-                      className={`py-1.5 rounded-lg text-xs font-medium transition-all border ${
-                        performance === level
-                          ? 'bg-primary text-primary-foreground border-transparent'
-                          : 'bg-card border-border text-muted-foreground'
-                      }`}
-                    >
-                      {level}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
-
-          {/* Step 6: Comment */}
-          <Textarea
-            placeholder="הערות (אופציונלי)..."
-            value={comment}
-            onChange={e => setComment(e.target.value)}
-            maxLength={500}
-            rows={2}
-            className="rounded-xl border-2 resize-none text-sm card-styled"
-          />
 
           {/* Submit */}
           <Button
