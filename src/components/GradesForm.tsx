@@ -351,12 +351,11 @@ export default function GradesForm() {
             {/* Team Evaluation Sections */}
             {TEAM_CATEGORIES_SECTIONS.map(section => (
               <div key={section.title} className="space-y-2">
-                <label className="text-xs font-semibold">{section.title}</label>
+                <label className="text-xs font-semibold text-foreground">{section.title}</label>
                 <div className="space-y-2">
                   {section.items.map(cat => (
                     <div key={cat.key} className="flex items-center gap-2">
-                      <span className="text-sm w-6 text-center">{cat.icon}</span>
-                      <span className="text-xs font-medium w-28 shrink-0">{cat.label}</span>
+                      <span className="text-xs font-medium w-40 shrink-0">{cat.label}</span>
                       <Select
                         value={teamRatings[cat.key] || ''}
                         onValueChange={val => { setTeamRatings(prev => ({ ...prev, [cat.key]: val })); setEvalSaved(false); }}
