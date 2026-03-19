@@ -26,7 +26,11 @@ const ATTENDANCE_ICONS: Record<string, typeof CheckCircle2> = {
   absent: XCircle,
 };
 
-export default function ReportForm() {
+interface ReportFormProps {
+  absentStudentIds?: Set<string>;
+}
+
+export default function ReportForm({ absentStudentIds = new Set() }: ReportFormProps) {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [studentId, setStudentId] = useState('');
