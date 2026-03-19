@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
-import { shareEventToWhatsApp } from '@/lib/generateEventPdf';
-import { AlertTriangle, Send, FileWarning, MessageCircle, Users, Shield } from 'lucide-react';
+import { generateEventPdf, shareEventToWhatsApp } from '@/lib/generateEventPdf';
+import { Send, FileWarning, MessageCircle, Users, Shield, FileText, Mail, MessageSquare, X } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type IncidentType = Database['public']['Enums']['incident_type'];
@@ -22,16 +22,43 @@ export default function ExceptionalEventForm() {
   const [followupRequired, setFollowupRequired] = useState(false);
   const [followupNotes, setFollowupNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [generatingPdf, setGeneratingPdf] = useState(false);
+  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
+  const [showShareOptions, setShowShareOptions] = useState(false);
 
-  const handleSubmit = async () => {
+  const getEventData = () => ({
+    incidentType,
+    description,
+    peopleInvolved,
+    staffResponse,
+    followupRequired,
+    followupNotes,
+    date: new Date().toLocaleDateString('he-IL'),
+  });
+
+  const validateForm = () => {
     if (!incidentType || !description || !user) {
       toast.error('נא למלא את כל השדות הנדרשים');
-      return;
+      return false;
     }
+    return true;
+  };
+
+  const resetForm = () => {
+    setIncidentType('');
+    setDescription('');
+    setPeopleInvolved('');
+    setStaffResponse('');
+    setFollowupRequired(false);
+    setFollowupNotes('');
+  };
+
+  const handleReport = async () => {
+    if (!validateForm()) return;
 
     setSubmitting(true);
     const { error } = await supabase.from('exceptional_events').insert({
-      reported_by: user.id,
+      reported_by: user!.id,
       incident_type: incidentType as IncidentType,
       description,
       people_involved: peopleInvolved || null,
@@ -44,28 +71,60 @@ export default function ExceptionalEventForm() {
       toast.error('שגיאה בשמירת האירוע');
       console.error(error);
     } else {
-      toast.success('האירוע החריג נשמר בהצלחה ✨');
-
-      // Generate PDF and share to WhatsApp
-      const now = new Date().toLocaleDateString('he-IL');
-      await shareEventToWhatsApp({
-        incidentType,
-        description,
-        peopleInvolved,
-        staffResponse,
-        followupRequired,
-        followupNotes,
-        date: now,
-      });
-
-      setIncidentType('');
-      setDescription('');
-      setPeopleInvolved('');
-      setStaffResponse('');
-      setFollowupRequired(false);
-      setFollowupNotes('');
+      toast.success('האירוע נשמר בדשבורד בהצלחה ✨');
+      resetForm();
     }
     setSubmitting(false);
+  };
+
+  const handleGenerateReport = async () => {
+    if (!validateForm()) return;
+
+    setGeneratingPdf(true);
+    try {
+      const blob = await generateEventPdf(getEventData());
+      setPdfBlob(blob);
+      setShowShareOptions(true);
+      toast.success('הדוח נוצר בהצלחה 📄');
+    } catch {
+      toast.error('שגיאה ביצירת הדוח');
+    }
+    setGeneratingPdf(false);
+  };
+
+  const handleShareWhatsApp = async () => {
+    await shareEventToWhatsApp(getEventData());
+  };
+
+  const handleShareEmail = () => {
+    if (!pdfBlob) return;
+    const data = getEventData();
+    const typeName = INCIDENT_TYPE_LABELS[data.incidentType] || data.incidentType;
+    const subject = encodeURIComponent(`דיווח אירוע חריג - ${typeName}`);
+    const body = encodeURIComponent(
+      `אירוע חריג - ${typeName}\n\nתיאור: ${data.description}\n${data.peopleInvolved ? `מעורבים: ${data.peopleInvolved}\n` : ''}${data.staffResponse ? `תגובת הצוות: ${data.staffResponse}\n` : ''}${data.followupRequired ? `נדרש מעקב: כן\n${data.followupNotes ? `הערות: ${data.followupNotes}\n` : ''}` : ''}\n\nקובץ PDF מצורף`
+    );
+
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `אירוע-חריג-${data.date}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
+
+    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
+    toast.info('הקובץ הורד — צרף/י אותו למייל');
+  };
+
+  const handleDownloadPdf = () => {
+    if (!pdfBlob) return;
+    const data = getEventData();
+    const url = URL.createObjectURL(pdfBlob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `אירוע-חריג-${data.date}.pdf`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -155,15 +214,66 @@ export default function ExceptionalEventForm() {
             />
           )}
 
-          <Button
-            onClick={handleSubmit}
-            disabled={submitting}
-            className="w-full h-12 text-base font-semibold rounded-xl border-0"
-            style={{ background: 'var(--gradient-accent)' }}
-          >
-            <Send className="ml-2 h-4 w-4" />
-            {submitting ? 'שומר...' : 'שלח דיווח אירוע'}
-          </Button>
+          <div className="flex gap-3">
+            <Button
+              onClick={handleReport}
+              disabled={submitting || generatingPdf}
+              className="flex-1 h-12 text-base font-semibold rounded-xl border-0"
+              style={{ background: 'var(--gradient-accent)' }}
+            >
+              <Send className="ml-2 h-4 w-4" />
+              {submitting ? 'שומר...' : 'דיווח'}
+            </Button>
+
+            <Button
+              onClick={handleGenerateReport}
+              disabled={submitting || generatingPdf}
+              variant="outline"
+              className="flex-1 h-12 text-base font-semibold rounded-xl border-2"
+            >
+              <FileText className="ml-2 h-4 w-4" />
+              {generatingPdf ? 'יוצר דוח...' : 'יצירת דוח'}
+            </Button>
+          </div>
+
+          {showShareOptions && pdfBlob && (
+            <div className="animate-fade-in rounded-xl border-2 border-primary/20 bg-primary/5 p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <h4 className="text-sm font-semibold text-foreground">הדוח מוכן — בחר/י אופן שליחה</h4>
+                <button onClick={() => { setShowShareOptions(false); setPdfBlob(null); }} className="text-muted-foreground hover:text-foreground transition-colors">
+                  <X className="w-4 h-4" />
+                </button>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={handleShareWhatsApp}
+                  size="sm"
+                  className="flex-1 rounded-lg bg-[#25D366] hover:bg-[#1fb855] text-white"
+                >
+                  <MessageSquare className="ml-1.5 h-4 w-4" />
+                  וואטסאפ
+                </Button>
+                <Button
+                  onClick={handleShareEmail}
+                  size="sm"
+                  className="flex-1 rounded-lg"
+                  variant="outline"
+                >
+                  <Mail className="ml-1.5 h-4 w-4" />
+                  מייל
+                </Button>
+                <Button
+                  onClick={handleDownloadPdf}
+                  size="sm"
+                  className="flex-1 rounded-lg"
+                  variant="outline"
+                >
+                  <FileText className="ml-1.5 h-4 w-4" />
+                  הורדה
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>
