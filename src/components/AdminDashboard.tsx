@@ -33,7 +33,7 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState<ExceptionalEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    alerts: true, events: true, students: false, reports: false,
+    alerts: true, events: true, students: true, reports: true,
   });
 
   // Add student form
