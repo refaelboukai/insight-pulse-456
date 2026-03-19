@@ -44,6 +44,22 @@ export default function ExceptionalEventForm() {
       console.error(error);
     } else {
       toast.success('האירוע החריג נשמר בהצלחה ✨');
+
+      // Build WhatsApp message for management group
+      const typeName = INCIDENT_TYPE_LABELS[incidentType] || incidentType;
+      const lines = [
+        `🚨 *אירוע חריג חדש*`,
+        `סוג: ${typeName}`,
+        `תיאור: ${description}`,
+      ];
+      if (peopleInvolved) lines.push(`מעורבים: ${peopleInvolved}`);
+      if (staffResponse) lines.push(`תגובת צוות: ${staffResponse}`);
+      if (followupRequired) lines.push(`⚠️ נדרש מעקב`);
+      if (followupNotes) lines.push(`הערות מעקב: ${followupNotes}`);
+
+      const waText = encodeURIComponent(lines.join('\n'));
+      window.open(`https://wa.me/?text=${waText}`, '_blank');
+
       setIncidentType('');
       setDescription('');
       setPeopleInvolved('');
