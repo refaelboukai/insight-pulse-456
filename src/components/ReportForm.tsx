@@ -237,19 +237,23 @@ export default function ReportForm() {
           <div className="card-styled rounded-2xl p-3">
             <p className="text-xs font-semibold mb-2">השתתפות</p>
             <div className="flex flex-wrap gap-1.5">
-              {(Object.entries(PARTICIPATION_LABELS) as [ParticipationLevel, string][]).map(([key, label]) => (
-                <button
-                  key={key}
-                  onClick={() => setParticipation(prev => prev === key ? '' : key)}
-                  className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${
-                    participation === key
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'border-border bg-card hover:border-primary/30'
-                  }`}
-                >
-                  {label}
-                </button>
-              ))}
+              {(Object.entries(PARTICIPATION_LABELS) as [ParticipationLevel, string][]).map(([key, label]) => {
+                const isActive = participation === key;
+                const colorClass = isActive
+                  ? key === 'no_function' ? 'bg-destructive/10 text-destructive border-destructive/40'
+                    : key === 'no_participation' ? 'bg-[hsl(var(--warning)/0.12)] text-accent border-accent/40'
+                    : 'bg-primary text-primary-foreground border-primary'
+                  : 'border-border bg-card hover:border-primary/30';
+                return (
+                  <button
+                    key={key}
+                    onClick={() => setParticipation(prev => prev === key ? '' : key)}
+                    className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${colorClass}`}
+                  >
+                    {label}
+                  </button>
+                );
+              })}
             </div>
           </div>
 
