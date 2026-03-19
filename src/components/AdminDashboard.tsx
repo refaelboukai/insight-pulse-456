@@ -8,16 +8,17 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
+  BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS, INCIDENT_TYPE_LABELS,
 } from '@/lib/constants';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus } from 'lucide-react';
+import { AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert } from 'lucide-react';
 import { toast } from 'sonner';
 import type { Database } from '@/integrations/supabase/types';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
 type Student = Database['public']['Tables']['students']['Row'];
 type Alert = Database['public']['Tables']['alerts']['Row'];
+type ExceptionalEvent = Database['public']['Tables']['exceptional_events']['Row'];
 
 const CHART_COLORS = ['hsl(168, 45%, 40%)', 'hsl(140, 40%, 45%)', 'hsl(35, 80%, 55%)', 'hsl(20, 70%, 55%)', 'hsl(0, 65%, 55%)'];
 
@@ -27,6 +28,7 @@ export default function AdminDashboard() {
   const [reports, setReports] = useState<Report[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
+  const [events, setEvents] = useState<ExceptionalEvent[]>([]);
   const [loading, setLoading] = useState(true);
 
   // Add student form
@@ -37,14 +39,16 @@ export default function AdminDashboard() {
   const [addingStudent, setAddingStudent] = useState(false);
 
   const fetchAll = async () => {
-    const [reportsRes, studentsRes, alertsRes] = await Promise.all([
+    const [reportsRes, studentsRes, alertsRes, eventsRes] = await Promise.all([
       supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('students').select('*').order('class_name').order('last_name'),
       supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
+      supabase.from('exceptional_events').select('*').order('created_at', { ascending: false }).limit(50),
     ]);
     if (reportsRes.data) setReports(reportsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
     if (alertsRes.data) setAlerts(alertsRes.data);
+    if (eventsRes.data) setEvents(eventsRes.data);
     setLoading(false);
   };
 
@@ -253,6 +257,49 @@ export default function AdminDashboard() {
                         {new Date(a.created_at).toLocaleDateString('he-IL')}
                       </Badge>
                     </div>
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Exceptional Events */}
+      {events.length > 0 && (
+        <Card className="border-accent/30">
+          <CardHeader className="pb-3">
+            <CardTitle className="flex items-center gap-2 text-accent">
+              <ShieldAlert className="h-5 w-5" />
+              אירועים חריגים ({events.length})
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <ScrollArea className="max-h-64">
+              <div className="space-y-2">
+                {events.map(ev => (
+                  <div key={ev.id} className="p-3 rounded-lg bg-accent/5 border border-accent/10">
+                    <div className="flex justify-between items-start mb-1">
+                      <Badge variant="outline" className="text-xs">
+                        {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
+                      </Badge>
+                      <span className="text-xs text-muted-foreground">
+                        {new Date(ev.created_at).toLocaleDateString('he-IL')}
+                      </span>
+                    </div>
+                    <p className="text-sm mt-1">{ev.description}</p>
+                    {ev.people_involved && (
+                      <p className="text-xs text-muted-foreground mt-1">מעורבים: {ev.people_involved}</p>
+                    )}
+                    {ev.staff_response && (
+                      <p className="text-xs text-muted-foreground mt-1">תגובת צוות: {ev.staff_response}</p>
+                    )}
+                    {ev.followup_required && (
+                      <Badge variant="destructive" className="text-xs mt-1">נדרש מעקב</Badge>
+                    )}
+                    {ev.followup_notes && (
+                      <p className="text-xs text-muted-foreground mt-1">הערות מעקב: {ev.followup_notes}</p>
+                    )}
                   </div>
                 ))}
               </div>
