@@ -512,20 +512,7 @@ export default function AdminDashboard() {
                           onClick={() => setSelectedStudent(s)}
                           className="flex-1 text-right text-xs p-2.5 rounded-lg bg-secondary/50 border border-border hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
                         >
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="font-semibold text-sm">{s.first_name} {s.last_name}</span>
-                            <div className="flex items-center gap-1.5">
-                              {(s as any).gender && <Badge variant="outline" className="text-[10px] px-1.5 py-0">{(s as any).gender === 'ז' ? '👦' : '👧'}</Badge>}
-                              <Badge variant="secondary" className="text-[10px] px-1.5 py-0">שכבה {s.grade}</Badge>
-                            </div>
-                          </div>
-                          <div className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
-                            {(s as any).city && <span>🏠 {(s as any).city}</span>}
-                            {(s as any).date_of_birth && <span>🎂 {new Date((s as any).date_of_birth).toLocaleDateString('he-IL')}</span>}
-                            {(s as any).mother_name && <span>👩 {(s as any).mother_name} {(s as any).mother_phone ? `(${(s as any).mother_phone})` : ''}</span>}
-                            {(s as any).father_name && (s as any).father_name !== 'אין קשר אב' && <span>👨 {(s as any).father_name} {(s as any).father_phone ? `(${(s as any).father_phone})` : ''}</span>}
-                          </div>
-                          {s.student_code && <p className="text-[9px] text-muted-foreground/60 mt-1">ת.ז: {s.student_code}</p>}
+                          <span className="font-semibold text-sm">{s.first_name} {s.last_name}</span>
                         </button>
                         <Button
                           size="sm"
