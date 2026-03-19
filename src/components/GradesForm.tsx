@@ -287,7 +287,7 @@ export default function GradesForm() {
             <GraduationCap className="h-5 w-5 text-primary" />
             <div>
               <p className="font-bold text-sm">{selectedStudent?.first_name} {selectedStudent?.last_name}</p>
-              <p className="text-[10px] text-muted-foreground">הכיתה של {selectedStudent?.class_name}</p>
+              <p className="text-xs text-muted-foreground">הכיתה של {selectedStudent?.class_name}</p>
             </div>
           </div>
           <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedStudentId('')}>
@@ -312,7 +312,7 @@ export default function GradesForm() {
           <div className="px-3 pb-3 space-y-4">
             {/* Personal Note */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold text-foreground">ממני אלייך – נימה אישית מהמחנכת והמדריכה</label>
+              <label className="text-sm font-semibold text-foreground">ממני אלייך – נימה אישית מהמחנכת והמדריכה</label>
               <Textarea
                 placeholder="כתבי מילים אישיות, מחזקות ומעודדות לתלמיד/ה..."
                 value={personalNote}
@@ -337,7 +337,7 @@ export default function GradesForm() {
                 <div className="mt-2 space-y-1.5 p-2.5 rounded-lg bg-muted/50 border border-border">
                   <div className="flex items-center gap-1">
                     <Sparkles className="h-3 w-3 text-primary" />
-                    <span className="text-[10px] font-semibold text-primary">ניסוח משופר</span>
+                    <span className="text-sm font-semibold text-primary">ניסוח משופר</span>
                   </div>
                   <Textarea
                     value={personalNoteEnhanced}
@@ -351,21 +351,21 @@ export default function GradesForm() {
             {/* Team Evaluation Sections */}
             {TEAM_CATEGORIES_SECTIONS.map(section => (
               <div key={section.title} className="space-y-2">
-                <label className="text-xs font-semibold text-foreground">{section.title}</label>
+                <label className="text-sm font-semibold text-foreground">{section.title}</label>
                 <div className="space-y-2">
                   {section.items.map(cat => (
                     <div key={cat.key} className="flex items-center gap-2">
-                      <span className="text-xs font-medium w-40 shrink-0">{cat.label}</span>
+                      <span className="text-sm font-medium w-40 shrink-0">{cat.label}</span>
                       <Select
                         value={teamRatings[cat.key] || ''}
                         onValueChange={val => { setTeamRatings(prev => ({ ...prev, [cat.key]: val })); setEvalSaved(false); }}
                       >
-                        <SelectTrigger className="h-8 text-xs flex-1">
+                        <SelectTrigger className="h-8 text-sm flex-1">
                           <SelectValue placeholder="בחר דירוג" />
                         </SelectTrigger>
                         <SelectContent>
                           {RATING_OPTIONS.map(r => (
-                            <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
+                            <SelectItem key={r} value={r} className="text-sm">{r}</SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
@@ -410,7 +410,7 @@ export default function GradesForm() {
           <div className="px-3 pb-3 space-y-4">
             {/* Subject selection */}
             <div className="space-y-2">
-              <label className="text-xs font-semibold">ציונים לפי מקצוע</label>
+              <label className="text-sm font-semibold">ציונים לפי מקצוע</label>
               <div className="flex flex-wrap gap-1.5">
                 {SUBJECTS.map(s => {
                   const key = `${selectedStudentId}-${s}`;
@@ -419,7 +419,7 @@ export default function GradesForm() {
                     <button
                       key={s}
                       onClick={() => setSubject(s)}
-                      className={`text-xs py-1.5 px-2.5 rounded-lg border transition-colors ${
+                      className={`text-sm py-2 px-3 rounded-lg border transition-colors ${
                         subject === s
                           ? 'bg-primary text-primary-foreground border-primary'
                           : submitted
@@ -453,7 +453,7 @@ export default function GradesForm() {
 
                 {/* Verbal evaluation */}
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold">הערכה מילולית</label>
+                  <label className="text-sm font-semibold">הערכה מילולית</label>
                   <Textarea
                     placeholder="כתוב הערכה מילולית על התלמיד/ה..."
                     value={verbalEvaluation}
@@ -481,14 +481,14 @@ export default function GradesForm() {
                   <div className="space-y-2 p-2.5 rounded-lg bg-muted/50 border border-primary/20">
                     <div className="flex items-center gap-1.5">
                       <Sparkles className="h-3.5 w-3.5 text-primary" />
-                      <label className="text-xs font-semibold text-primary">הערכה משופרת</label>
+                      <label className="text-sm font-semibold text-primary">הערכה משופרת</label>
                     </div>
                     <Textarea
                       value={aiEnhancedEvaluation}
                       onChange={e => setAiEnhancedEvaluation(e.target.value)}
                       className="min-h-[80px] text-sm"
                     />
-                    <p className="text-[10px] text-muted-foreground">ניתן לערוך את הטקסט המשופר לפני השמירה</p>
+                    <p className="text-xs text-muted-foreground">ניתן לערוך את הטקסט המשופר לפני השמירה</p>
                   </div>
                 )}
 

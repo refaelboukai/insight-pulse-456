@@ -100,7 +100,7 @@ export default function SupportPlanForm() {
                       key={s.id}
                       onClick={() => !logged && setStudentId(s.id)}
                       disabled={logged}
-                      className={`text-xs py-1.5 px-2.5 rounded-lg border transition-colors ${
+                      className={`text-sm py-2 px-3 rounded-lg border transition-colors ${
                         logged
                           ? 'border-success/30 bg-success/10 text-success line-through cursor-default'
                           : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
@@ -135,7 +135,7 @@ export default function SupportPlanForm() {
         <>
           {/* Provider name */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-xs font-semibold mb-2">שם הספק / גורם מטפל</p>
+            <p className="text-sm font-semibold mb-2">שם הספק / גורם מטפל</p>
             <Input
               placeholder="למשל: יועצת בית הספר, עו״ס..."
               value={providerName}
@@ -146,7 +146,7 @@ export default function SupportPlanForm() {
 
           {/* Support type */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-xs font-semibold mb-2">סוג תמיכה</p>
+            <p className="text-sm font-semibold mb-2">סוג תמיכה</p>
             <div className="grid grid-cols-2 gap-1.5">
               {SUPPORT_TYPES.map(type => {
                 const isActive = supportTypes.includes(type);
@@ -169,7 +169,7 @@ export default function SupportPlanForm() {
 
           {/* Notes */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-xs font-semibold mb-2">הערות (אופציונלי)</p>
+            <p className="text-sm font-semibold mb-2">הערות (אופציונלי)</p>
             <Textarea
               placeholder="פרטים נוספים על המפגש..."
               value={notes}
