@@ -41,7 +41,8 @@ interface ReportCardData {
 function getHebrewDate(): string {
   try {
     const now = new Date();
-    const formatter = new Intl.DateTimeFormat('he-IL-u-ca-hebrew', {
+    // Use he-u-ca-hebrew with numberingSystem set to hebr for gematria
+    const formatter = new Intl.DateTimeFormat('he-u-ca-hebrew-nu-hebr', {
       day: 'numeric',
       month: 'long',
     });
