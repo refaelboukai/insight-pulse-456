@@ -48,17 +48,21 @@ export default function Index() {
           <AdminDashboard />
         ) : (
           <Tabs defaultValue="attendance" dir="rtl">
-            <TabsList className="grid w-full grid-cols-3 mb-4 h-10 p-1 rounded-xl shadow-soft bg-card">
-              <TabsTrigger value="attendance" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-medium">
-                <ClipboardCheck className="h-3.5 w-3.5" />
+            <TabsList className="grid w-full grid-cols-4 mb-4 h-10 p-1 rounded-xl shadow-soft bg-card">
+              <TabsTrigger value="attendance" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-medium">
+                <ClipboardCheck className="h-3 w-3" />
                 ביקור סדיר
               </TabsTrigger>
-              <TabsTrigger value="report" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-medium">
-                <FileText className="h-3.5 w-3.5" />
+              <TabsTrigger value="report" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-medium">
+                <FileText className="h-3 w-3" />
                 דיווח שיעור
               </TabsTrigger>
-              <TabsTrigger value="event" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-medium">
-                <AlertTriangle className="h-3.5 w-3.5" />
+              <TabsTrigger value="support" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-medium">
+                <HeartHandshake className="h-3 w-3" />
+                תכנית תמיכה
+              </TabsTrigger>
+              <TabsTrigger value="event" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-medium">
+                <AlertTriangle className="h-3 w-3" />
                 אירוע חריג
               </TabsTrigger>
             </TabsList>
@@ -67,6 +71,9 @@ export default function Index() {
             </TabsContent>
             <TabsContent value="report" className="animate-fade-in mt-0">
               <ReportForm absentStudentIds={absentStudentIds} />
+            </TabsContent>
+            <TabsContent value="support" className="animate-fade-in mt-0">
+              <SupportPlanForm />
             </TabsContent>
             <TabsContent value="event" className="animate-fade-in mt-0">
               <ExceptionalEventForm />
