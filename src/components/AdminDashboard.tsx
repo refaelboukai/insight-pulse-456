@@ -536,6 +536,69 @@ export default function AdminDashboard() {
         )}
       </div>
 
+      {/* Monthly Report */}
+      <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+        <SectionHeader title="הפק דוח חודשי" icon={FileText} sectionKey="monthlyReport" />
+        {expandedSections.monthlyReport && (
+          <div className="px-3 pb-3 space-y-3">
+            <div className="flex gap-2">
+              <Button
+                onClick={() => generateMonthlyReport(null)}
+                disabled={generatingReport}
+                size="sm"
+                className="gap-1.5 flex-1"
+              >
+                {generatingReport && !reportStudentId ? (
+                  <><div className="w-3.5 h-3.5 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> מפיק דוח...</>
+                ) : (
+                  <><Sparkles className="h-3.5 w-3.5" /> דוח כלל התלמידים</>
+                )}
+              </Button>
+            </div>
+
+            <div>
+              <p className="text-xs font-semibold mb-1.5">או בחר תלמיד ספציפי:</p>
+              <div className="flex flex-wrap gap-1">
+                {students.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => generateMonthlyReport(s.id)}
+                    disabled={generatingReport}
+                    className="text-[10px] py-1 px-2 rounded-md border border-border bg-card hover:bg-primary/10 hover:border-primary/30 transition-colors disabled:opacity-50"
+                  >
+                    {s.first_name} {s.last_name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {generatingReport && (
+              <div className="flex items-center justify-center py-6">
+                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                <span className="text-xs text-muted-foreground mr-2">מפיק דוח חודשי...</span>
+              </div>
+            )}
+
+            {monthlyReport && (
+              <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-1.5">
+                    <Sparkles className="h-3.5 w-3.5 text-primary" />
+                    <p className="text-xs font-semibold text-primary">
+                      דוח חודשי {reportStudentId ? `— ${studentName(reportStudentId)}` : '— כלל התלמידים'}
+                    </p>
+                  </div>
+                  <Button onClick={shareMonthlyReport} size="sm" variant="default" className="gap-1 h-7 text-[10px] bg-[#25D366] hover:bg-[#1da851] text-white">
+                    שיתוף
+                  </Button>
+                </div>
+                <p className="text-xs whitespace-pre-wrap leading-relaxed">{monthlyReport}</p>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Student Detail Dialog */}
       <StudentDetailDialog
         student={selectedStudent}
