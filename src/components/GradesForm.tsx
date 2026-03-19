@@ -22,17 +22,43 @@ const CLASS_OPTIONS = ['טלי', 'עדן'];
 
 const RATING_OPTIONS = ['מצטיין/ת', 'טוב מאוד', 'טוב', 'דורש/ת שיפור'];
 
-const TEAM_CATEGORIES = [
-  { key: 'behavior', label: 'התנהגות', icon: '🎯' },
-  { key: 'independent_work', label: 'עבודה עצמאית', icon: '📝' },
-  { key: 'group_work', label: 'עבודה בקבוצה', icon: '👥' },
-  { key: 'emotional_regulation', label: 'ויסות רגשי', icon: '💚' },
-  { key: 'general_functioning', label: 'תפקוד כללי', icon: '⭐' },
-  { key: 'helping_others', label: 'עזרה לאחרים', icon: '🤝' },
-  { key: 'environmental_care', label: 'אכפתיות לסביבה', icon: '🌱' },
-  { key: 'duties_performance', label: 'ביצוע תורנויות', icon: '✅' },
-  { key: 'studentship', label: 'תלמידאות', icon: '🎓' },
+const TEAM_CATEGORIES_SECTIONS = [
+  {
+    title: '📋 דיווחי צוות כיתה',
+    color: 'blue',
+    items: [
+      { key: 'behavior', label: 'התנהגות', icon: '🎯' },
+      { key: 'independent_work', label: 'עבודה עצמאית', icon: '📝' },
+      { key: 'group_work', label: 'עבודה בקבוצה', icon: '👥' },
+      { key: 'general_functioning', label: 'תפקוד כללי', icon: '⭐' },
+      { key: 'helping_others', label: 'עזרה לאחרים', icon: '🤝' },
+      { key: 'environmental_care', label: 'אכפתיות לסביבה', icon: '🌱' },
+      { key: 'duties_performance', label: 'ביצוע תורנויות', icon: '✅' },
+      { key: 'studentship', label: 'תלמידאות', icon: '🎓' },
+    ],
+  },
+  {
+    title: '🧠 מיומנויות למידה',
+    color: 'amber',
+    items: [
+      { key: 'problem_solving', label: 'פתרון בעיות', icon: '🧩' },
+      { key: 'creative_thinking', label: 'חשיבה יצירתית', icon: '💡' },
+      { key: 'perseverance', label: 'התמדה וכוח רצון', icon: '💪' },
+    ],
+  },
+  {
+    title: '💚 מיומנויות רגשיות',
+    color: 'emerald',
+    items: [
+      { key: 'emotional_regulation', label: 'ויסות רגשי', icon: '🌊' },
+      { key: 'emotional_tools', label: 'שימוש בכלים שונים', icon: '🧰' },
+      { key: 'cognitive_flexibility', label: 'גמישות מחשבתית', icon: '🔄' },
+      { key: 'self_efficacy', label: 'מסוגלות עצמית', icon: '🌟' },
+    ],
+  },
 ] as const;
+
+const ALL_TEAM_KEYS = TEAM_CATEGORIES_SECTIONS.flatMap(s => s.items.map(i => i.key));
 
 export default function GradesForm() {
   const { user } = useAuth();
@@ -78,8 +104,8 @@ export default function GradesForm() {
           setPersonalNote(eval_.personal_note || '');
           setPersonalNoteEnhanced('');
           const ratings: Record<string, string> = {};
-          TEAM_CATEGORIES.forEach(c => {
-            if (eval_[c.key]) ratings[c.key] = eval_[c.key];
+          ALL_TEAM_KEYS.forEach(key => {
+            if (eval_[key]) ratings[key] = eval_[key];
           });
           setTeamRatings(ratings);
           setEvalSaved(true);
@@ -205,8 +231,8 @@ export default function GradesForm() {
         staff_user_id: user!.id,
         personal_note: personalNoteEnhanced.trim() || personalNote.trim() || null,
       };
-      TEAM_CATEGORIES.forEach(c => {
-        payload[c.key] = teamRatings[c.key] || null;
+      ALL_TEAM_KEYS.forEach(key => {
+        payload[key] = teamRatings[key] || null;
       });
 
       const { error } = await supabase.from('student_evaluations' as any).insert(payload);
@@ -326,34 +352,33 @@ export default function GradesForm() {
         )}
       </div>
 
-      {/* ===== Team Evaluation - דיווחי צוות כיתה ===== */}
-      <div className="card-styled rounded-2xl p-3 space-y-3 border-blue-200/50">
-        <div className="flex items-center gap-1.5">
-          <Users2 className="h-4 w-4 text-blue-500" />
-          <label className="text-xs font-semibold text-blue-700">דיווחי צוות כיתה</label>
+      {/* ===== Team Evaluation Sections ===== */}
+      {TEAM_CATEGORIES_SECTIONS.map(section => (
+        <div key={section.title} className="card-styled rounded-2xl p-3 space-y-3">
+          <label className="text-xs font-semibold">{section.title}</label>
+          <div className="space-y-2">
+            {section.items.map(cat => (
+              <div key={cat.key} className="flex items-center gap-2">
+                <span className="text-sm w-6 text-center">{cat.icon}</span>
+                <span className="text-xs font-medium w-28 shrink-0">{cat.label}</span>
+                <Select
+                  value={teamRatings[cat.key] || ''}
+                  onValueChange={val => { setTeamRatings(prev => ({ ...prev, [cat.key]: val })); setEvalSaved(false); }}
+                >
+                  <SelectTrigger className="h-8 text-xs flex-1">
+                    <SelectValue placeholder="בחר דירוג" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {RATING_OPTIONS.map(r => (
+                      <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ))}
+          </div>
         </div>
-        <div className="space-y-2">
-          {TEAM_CATEGORIES.map(cat => (
-            <div key={cat.key} className="flex items-center gap-2">
-              <span className="text-sm w-6 text-center">{cat.icon}</span>
-              <span className="text-xs font-medium w-28 shrink-0">{cat.label}</span>
-              <Select
-                value={teamRatings[cat.key] || ''}
-                onValueChange={val => { setTeamRatings(prev => ({ ...prev, [cat.key]: val })); setEvalSaved(false); }}
-              >
-                <SelectTrigger className="h-8 text-xs flex-1">
-                  <SelectValue placeholder="בחר דירוג" />
-                </SelectTrigger>
-                <SelectContent>
-                  {RATING_OPTIONS.map(r => (
-                    <SelectItem key={r} value={r} className="text-xs">{r}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          ))}
-        </div>
-      </div>
+      ))}
 
       {/* Save evaluation button */}
       <Button

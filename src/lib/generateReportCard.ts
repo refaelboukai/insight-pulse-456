@@ -20,6 +20,12 @@ interface TeamEvaluation {
   environmental_care?: string | null;
   duties_performance?: string | null;
   studentship?: string | null;
+  problem_solving?: string | null;
+  creative_thinking?: string | null;
+  perseverance?: string | null;
+  emotional_tools?: string | null;
+  cognitive_flexibility?: string | null;
+  self_efficacy?: string | null;
 }
 
 interface ReportCardData {
@@ -50,17 +56,41 @@ function getGregorianDate(): string {
   return now.toLocaleDateString('he-IL', { day: 'numeric', month: 'long', year: 'numeric' });
 }
 
-const TEAM_LABELS: Record<string, string> = {
-  behavior: 'התנהגות',
-  independent_work: 'עבודה עצמאית',
-  group_work: 'עבודה בקבוצה',
-  emotional_regulation: 'ויסות רגשי',
-  general_functioning: 'תפקוד כללי',
-  helping_others: 'עזרה לאחרים',
-  environmental_care: 'אכפתיות לסביבה',
-  duties_performance: 'ביצוע תורנויות',
-  studentship: 'תלמידאות',
-};
+const TEAM_SECTIONS: { title: string; color: string; items: { key: string; label: string }[] }[] = [
+  {
+    title: '📋 דיווחי צוות כיתה',
+    color: '#3b5998',
+    items: [
+      { key: 'behavior', label: 'התנהגות' },
+      { key: 'independent_work', label: 'עבודה עצמאית' },
+      { key: 'group_work', label: 'עבודה בקבוצה' },
+      { key: 'general_functioning', label: 'תפקוד כללי' },
+      { key: 'helping_others', label: 'עזרה לאחרים' },
+      { key: 'environmental_care', label: 'אכפתיות לסביבה' },
+      { key: 'duties_performance', label: 'ביצוע תורנויות' },
+      { key: 'studentship', label: 'תלמידאות' },
+    ],
+  },
+  {
+    title: '🧠 מיומנויות למידה',
+    color: '#b45309',
+    items: [
+      { key: 'problem_solving', label: 'פתרון בעיות' },
+      { key: 'creative_thinking', label: 'חשיבה יצירתית' },
+      { key: 'perseverance', label: 'התמדה וכוח רצון' },
+    ],
+  },
+  {
+    title: '💚 מיומנויות רגשיות',
+    color: '#047857',
+    items: [
+      { key: 'emotional_regulation', label: 'ויסות רגשי' },
+      { key: 'emotional_tools', label: 'שימוש בכלים שונים' },
+      { key: 'cognitive_flexibility', label: 'גמישות מחשבתית' },
+      { key: 'self_efficacy', label: 'מסוגלות עצמית' },
+    ],
+  },
+];
 
 export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   const hebrewDate = getHebrewDate();
@@ -77,16 +107,33 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </tr>
   `).join('');
 
-  // Team evaluation rows
+  // Team evaluation sections
   const teamEval = data.teamEvaluation;
-  const teamRows = teamEval ? Object.entries(TEAM_LABELS).map(([key, label], i) => {
-    const val = teamEval[key as keyof TeamEvaluation];
-    if (!val) return '';
+  const teamSectionsHtml = teamEval ? TEAM_SECTIONS.map(section => {
+    const rows = section.items.map((item, i) => {
+      const val = teamEval[item.key as keyof TeamEvaluation];
+      if (!val) return '';
+      return `
+        <tr style="background:${i % 2 === 0 ? '#f8f9ff' : 'white'};">
+          <td style="padding:8px 14px;border:1px solid #e0e0e0;font-weight:600;font-size:12px;color:#333;">${item.label}</td>
+          <td style="padding:8px 14px;border:1px solid #e0e0e0;font-size:13px;color:#1a1a1a;text-align:center;font-weight:500;">${val}</td>
+        </tr>
+      `;
+    }).filter(Boolean).join('');
+    if (!rows) return '';
     return `
-      <tr style="background:${i % 2 === 0 ? '#f8f9ff' : 'white'};">
-        <td style="padding:8px 14px;border:1px solid #e0e0e0;font-weight:600;font-size:12px;color:#333;">${label}</td>
-        <td style="padding:8px 14px;border:1px solid #e0e0e0;font-size:13px;color:#1a1a1a;text-align:center;font-weight:500;">${val}</td>
-      </tr>
+      <div style="margin-bottom:16px;">
+        <div style="font-size:13px;font-weight:bold;color:${section.color};margin-bottom:8px;">${section.title}</div>
+        <table style="width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">
+          <thead>
+            <tr style="background:${section.color};">
+              <th style="padding:8px 14px;color:white;font-size:12px;text-align:right;">תחום</th>
+              <th style="padding:8px 14px;color:white;font-size:12px;text-align:center;">דירוג</th>
+            </tr>
+          </thead>
+          <tbody>${rows}</tbody>
+        </table>
+      </div>
     `;
   }).filter(Boolean).join('') : '';
 
@@ -94,21 +141,6 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     <div style="margin-bottom:20px;padding:14px 16px;background:#fdf2f8;border-radius:10px;border:1px solid #f9d4e8;">
       <div style="font-size:13px;font-weight:bold;color:#be185d;margin-bottom:8px;">💌 ממני אלייך</div>
       <div style="font-size:12px;color:#333;line-height:1.8;white-space:pre-wrap;">${data.personalNote}</div>
-    </div>
-  ` : '';
-
-  const teamTableHtml = teamRows ? `
-    <div style="margin-bottom:20px;">
-      <div style="font-size:13px;font-weight:bold;color:#1e40af;margin-bottom:8px;">📋 דיווחי צוות כיתה</div>
-      <table style="width:100%;border-collapse:collapse;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">
-        <thead>
-          <tr style="background:linear-gradient(135deg, #3b5998, #5b7ec2);">
-            <th style="padding:8px 14px;color:white;font-size:12px;text-align:right;border:1px solid #3b5998;">תחום</th>
-            <th style="padding:8px 14px;color:white;font-size:12px;text-align:center;border:1px solid #3b5998;">דירוג</th>
-          </tr>
-        </thead>
-        <tbody>${teamRows}</tbody>
-      </table>
     </div>
   ` : '';
 
@@ -147,7 +179,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
 
       ${personalNoteHtml}
 
-      ${teamTableHtml}
+      ${teamSectionsHtml}
 
       <!-- Grades Table -->
       <table style="width:100%;border-collapse:collapse;margin-bottom:24px;border-radius:8px;overflow:hidden;border:1px solid #e0e0e0;">
