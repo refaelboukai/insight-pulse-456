@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { ABSENCE_REASON_LABELS } from '@/lib/constants';
-import { CheckCircle2, XCircle } from 'lucide-react';
+import { CheckCircle2, XCircle, ClipboardCheck } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type Student = Database['public']['Tables']['students']['Row'];
@@ -69,7 +69,6 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
     const wasPresent = current?.is_present ?? true;
     const newPresent = !wasPresent;
 
-    // Update local state immediately
     const newMap = new Map(attendance);
     newMap.set(studentId, {
       student_id: studentId,
@@ -79,7 +78,6 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
     setAttendance(newMap);
     notifyAbsent(newMap);
 
-    // Upsert to DB
     const { error } = await supabase.from('daily_attendance').upsert({
       student_id: studentId,
       attendance_date: today,
@@ -133,11 +131,11 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
       {/* Summary */}
-      <div className="flex items-center justify-between rounded-xl px-3 py-2 bg-primary/10 border border-primary/20">
-        <p className="text-xs font-medium text-primary">
+      <div className="flex items-center justify-between rounded-xl px-4 py-3 bg-primary/10 border border-primary/20">
+        <p className="text-sm font-semibold text-primary">
           📅 ביקור סדיר · {new Date().toLocaleDateString('he-IL')}
         </p>
-        <Badge variant="secondary" className="text-xs">
+        <Badge variant="secondary" className="text-sm px-3">
           {presentCount}/{students.length} נוכחים
         </Badge>
       </div>
@@ -149,16 +147,20 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
           const rec = attendance.get(s.id);
           return !rec || rec.is_present;
         }).length;
+        const classAbsent = classStudents.filter(s => {
+          const rec = attendance.get(s.id);
+          return rec && !rec.is_present;
+        });
 
         return (
-          <div key={cls} className="card-styled rounded-2xl p-3">
-            <div className="flex items-center justify-between mb-2">
-              <p className="text-sm font-bold text-foreground">הכיתה של {cls}</p>
-              <Badge variant="secondary" className="text-[10px]">
-                {classPresentCount}/{classStudents.length}
+          <div key={cls} className="card-styled rounded-2xl p-4">
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-base font-bold text-foreground">הכיתה של {cls}</p>
+              <Badge variant="secondary" className="text-xs px-2.5">
+                {classPresentCount}/{classStudents.length} נוכחים
               </Badge>
             </div>
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {classStudents.map(s => {
                 const rec = attendance.get(s.id);
                 const isPresent = !rec || rec.is_present;
@@ -168,33 +170,33 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
                   <div key={s.id}>
                     <button
                       onClick={() => togglePresence(s.id)}
-                      className={`w-full flex items-center justify-between py-2 px-3 rounded-xl border-2 transition-all text-sm ${
+                      className={`w-full flex items-center justify-between py-2.5 px-3.5 rounded-xl border-2 transition-all ${
                         isPresent
                           ? 'border-success/30 bg-success/5 text-foreground'
                           : 'border-destructive/30 bg-destructive/5 text-muted-foreground'
                       }`}
                     >
-                      <span className="font-medium text-xs">
+                      <span className="font-medium text-sm">
                         {s.first_name} {s.last_name}
                       </span>
-                      <span className={`flex items-center gap-1 text-[11px] ${
+                      <span className={`flex items-center gap-1.5 text-xs ${
                         isPresent ? 'text-success' : 'text-destructive'
                       }`}>
                         {isPresent ? (
-                          <><CheckCircle2 className="h-3.5 w-3.5" /> הגיע לבית הספר</>
+                          <><CheckCircle2 className="h-4 w-4" /> הגיע לבית הספר</>
                         ) : (
-                          <><XCircle className="h-3.5 w-3.5" /> לא הגיע לבית הספר</>
+                          <><XCircle className="h-4 w-4" /> לא הגיע לבית הספר</>
                         )}
                       </span>
                     </button>
 
                     {isAbsent && (
-                      <div className="mt-1 mr-3 flex flex-wrap gap-1 animate-fade-in">
+                      <div className="mt-1.5 mr-3 flex flex-wrap gap-1.5 animate-fade-in">
                         {Object.entries(ABSENCE_REASON_LABELS).map(([key, label]) => (
                           <button
                             key={key}
                             onClick={() => setAbsenceReason(s.id, key)}
-                            className={`text-[10px] py-1 px-2 rounded-full border transition-colors ${
+                            className={`text-xs py-1.5 px-2.5 rounded-full border transition-colors ${
                               rec?.absence_reason === key
                                 ? 'bg-destructive/15 border-destructive/40 text-destructive font-medium'
                                 : 'border-border bg-card hover:border-destructive/30 text-muted-foreground'
@@ -209,6 +211,34 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
                 );
               })}
             </div>
+
+            {/* Class absence summary */}
+            {classAbsent.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-border">
+                <div className="flex items-center gap-1.5 mb-2">
+                  <ClipboardCheck className="h-3.5 w-3.5 text-destructive" />
+                  <p className="text-xs font-semibold text-destructive">
+                    סיכום חסרים — הכיתה של {cls}
+                  </p>
+                </div>
+                <div className="space-y-1">
+                  {classAbsent.map(s => {
+                    const rec = attendance.get(s.id);
+                    const reason = rec?.absence_reason 
+                      ? ABSENCE_REASON_LABELS[rec.absence_reason] || rec.absence_reason
+                      : 'לא צוינה סיבה';
+                    return (
+                      <div key={s.id} className="flex items-center justify-between text-xs bg-destructive/5 rounded-lg px-3 py-1.5">
+                        <span className="font-medium">{s.first_name} {s.last_name}</span>
+                        <Badge variant="outline" className="text-[10px] px-2">
+                          {reason}
+                        </Badge>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
         );
       })}
