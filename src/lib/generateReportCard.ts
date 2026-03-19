@@ -93,6 +93,9 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   const hebrewDate = getHebrewDate();
   const gregorianDate = getGregorianDate();
 
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:595px;padding:0;background:white;font-family:Arial,sans-serif;direction:rtl;';
+
   // Build each section as a separate block so we can render page-by-page
   const teamEval = data.teamEvaluation;
 
