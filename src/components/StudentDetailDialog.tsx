@@ -105,7 +105,9 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
       const { data, error } = await supabase.functions.invoke('student-summary', {
         body: {
           studentName: `${student.first_name} ${student.last_name}`,
+          studentCode: student.student_code,
           className: student.class_name,
+          grade: student.grade,
           reports: reportsData,
           attendance: attendanceData,
           events: allEvents.data || [],
