@@ -5,9 +5,10 @@ import ExceptionalEventForm from '@/components/ExceptionalEventForm';
 import DailyAttendance from '@/components/DailyAttendance';
 import AdminDashboard from '@/components/AdminDashboard';
 import SupportPlanForm from '@/components/SupportPlanForm';
+import GradesForm from '@/components/GradesForm';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 export default function Index() {
