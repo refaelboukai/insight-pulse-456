@@ -191,7 +191,7 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
                   {classPresentCount}/{classStudents.length}
                 </Badge>
                 {missingReason && (
-                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0 animate-pulse">חסרה סיבה!</Badge>
+                  <Badge variant="destructive" className="text-xs px-1.5 py-0 animate-pulse">חסרה סיבה!</Badge>
                 )}
               </div>
               {isExpanded ? <ChevronUp className="h-5 w-5 text-muted-foreground" /> : <ChevronDown className="h-5 w-5 text-muted-foreground" />}

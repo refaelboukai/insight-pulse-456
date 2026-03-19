@@ -192,7 +192,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
         <>
           {/* Step 2: Subject — pill buttons */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-xs font-semibold mb-2">מקצוע</p>
+            <p className="text-sm font-semibold mb-2">מקצוע</p>
             <div className="flex flex-wrap gap-1.5">
               {SUBJECTS.map(s => (
                 <button
@@ -212,7 +212,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
 
           {/* Step 3: Attendance */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-xs font-semibold mb-2">נוכחות</p>
+            <p className="text-sm font-semibold mb-2">נוכחות</p>
             <div className="grid grid-cols-3 gap-1.5">
               {(Object.entries(ATTENDANCE_LABELS) as [AttendanceStatus, string][]).map(([key, label]) => {
                 const Icon = ATTENDANCE_ICONS[key];
@@ -239,7 +239,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
 
           {/* Step 4: Participation */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-xs font-semibold mb-2">השתתפות</p>
+            <p className="text-sm font-semibold mb-2">השתתפות</p>
             <div className="flex flex-wrap gap-1.5">
               {(Object.entries(PARTICIPATION_LABELS) as [ParticipationLevel, string][]).map(([key, label]) => {
                 const isActive = participation === key;
@@ -263,7 +263,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
 
           {/* Step 5: Behavior */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-xs font-semibold mb-2">התנהגות</p>
+            <p className="text-sm font-semibold mb-2">התנהגות</p>
             <div className="grid grid-cols-2 gap-1.5">
               {(Object.entries(BEHAVIOR_LABELS) as [BehaviorType, string][]).map(([key, label]) => (
                 <label
@@ -290,7 +290,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
 
             {hasViolent && (
               <div className="mt-2 p-2.5 rounded-xl bg-destructive/5 border border-destructive/15 animate-scale-in space-y-2">
-                <p className="text-[10px] font-semibold text-destructive mb-1.5 flex items-center gap-1">
+                <p className="text-xs font-semibold text-destructive mb-1.5 flex items-center gap-1">
                   <AlertTriangle className="h-3 w-3" />
                   סיווג אלימות (חובה)
                 </p>
@@ -298,7 +298,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                   {(Object.entries(VIOLENCE_LABELS) as [ViolenceType, string][]).map(([key, label]) => (
                     <label
                       key={key}
-                      className={`flex items-center gap-1.5 p-2 rounded-lg border cursor-pointer text-[11px] transition-all ${
+                      className={`flex items-center gap-1.5 p-2 rounded-lg border cursor-pointer text-xs transition-all ${
                         violenceTypes.includes(key)
                           ? 'bg-destructive/10 border-destructive/40'
                           : 'bg-card border-transparent'
