@@ -22,7 +22,7 @@ export const ATTENDANCE_LABELS: Record<string, string> = {
 export const BEHAVIOR_LABELS: Record<string, string> = {
   respectful: 'התנהגות מכבדת / הולמת',
   non_respectful: 'התנהגות לא מכבדת',
-  disruptive: 'התנהגות משבשת',
+  disruptive: 'התנהגות מפריעה',
   violent: 'התנהגות אלימה',
 };
 
