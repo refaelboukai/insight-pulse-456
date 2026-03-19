@@ -294,6 +294,47 @@ export type Database = {
         }
         Relationships: []
       }
+      support_sessions: {
+        Row: {
+          created_at: string
+          id: string
+          notes: string | null
+          provider_name: string
+          session_date: string
+          staff_user_id: string
+          student_id: string
+          support_types: Database["public"]["Enums"]["support_type"][]
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          provider_name: string
+          session_date?: string
+          staff_user_id: string
+          student_id: string
+          support_types?: Database["public"]["Enums"]["support_type"][]
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          notes?: string | null
+          provider_name?: string
+          session_date?: string
+          staff_user_id?: string
+          student_id?: string
+          support_types?: Database["public"]["Enums"]["support_type"][]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_sessions_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       user_roles: {
         Row: {
           id: string
@@ -343,6 +384,7 @@ export type Database = {
         | "active_participation"
         | "no_participation"
         | "no_function"
+      support_type: "social" | "emotional" | "academic" | "behavioral"
       violence_type: "physical" | "verbal" | "property_damage" | "sexual"
     }
     CompositeTypes: {
@@ -490,6 +532,7 @@ export const Constants = {
         "no_participation",
         "no_function",
       ],
+      support_type: ["social", "emotional", "academic", "behavioral"],
       violence_type: ["physical", "verbal", "property_damage", "sexual"],
     },
   },
