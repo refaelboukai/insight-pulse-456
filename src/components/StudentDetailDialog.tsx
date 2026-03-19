@@ -12,7 +12,7 @@ import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
   VIOLENCE_LABELS, ABSENCE_REASON_LABELS,
 } from '@/lib/constants';
-import { CalendarIcon, CheckCircle2, Clock, XCircle, FileText, ClipboardCheck, Sparkles, Download, Loader2 } from 'lucide-react';
+import { CalendarIcon, CheckCircle2, Clock, XCircle, FileText, ClipboardCheck, Sparkles, Download, Loader2, Share2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
@@ -138,6 +138,13 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     URL.revokeObjectURL(url);
   };
 
+  const shareViaWhatsApp = () => {
+    if (!aiSummary || !student) return;
+    const text = aiSummary;
+    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    window.open(whatsappUrl, '_blank');
+  };
+
   const quickDays = [0, 1, 2, 3, 4].map(d => {
     const date = new Date();
     date.setDate(date.getDate() - d);
@@ -173,9 +180,14 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
             )}
           </Button>
           {aiSummary && (
-            <Button onClick={downloadSummary} size="sm" variant="outline" className="gap-1.5">
-              <Download className="h-3.5 w-3.5" /> הורדה
-            </Button>
+            <>
+              <Button onClick={shareViaWhatsApp} size="sm" variant="default" className="gap-1.5 bg-[#25D366] hover:bg-[#1da851] text-white">
+                <Share2 className="h-3.5 w-3.5" /> WhatsApp
+              </Button>
+              <Button onClick={downloadSummary} size="sm" variant="outline" className="gap-1.5">
+                <Download className="h-3.5 w-3.5" /> הורדה
+              </Button>
+            </>
           )}
         </div>
 
