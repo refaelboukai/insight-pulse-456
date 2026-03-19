@@ -133,16 +133,9 @@ export default function ReportForm() {
         </div>
       ) : (
         <div className="card-styled rounded-2xl p-3">
-          <Input
-            placeholder="🔍 חיפוש תלמיד/ה..."
-            value={searchQuery}
-            onChange={e => setSearchQuery(e.target.value)}
-            className="mb-2 rounded-xl h-9 border-2 text-sm"
-            autoFocus
-          />
           {classes.map(cls => (
-            <div key={cls!} className="mb-2 last:mb-0">
-              <p className="text-[10px] font-semibold text-muted-foreground mb-1">הכיתה של {cls}</p>
+            <div key={cls!} className="mb-3 last:mb-0">
+              <p className="text-sm font-bold text-foreground mb-1.5">הכיתה של {cls}</p>
               <div className="flex flex-wrap gap-1">
                 {filteredStudents.filter(s => s.class_name === cls).map(s => (
                   <button
