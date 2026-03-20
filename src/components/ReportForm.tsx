@@ -309,7 +309,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
 
           {/* Step 5: Behavior */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-sm font-semibold mb-2">התנהגות</p>
+            <p className="text-base font-bold mb-2">התנהגות</p>
             <div className="grid grid-cols-2 gap-1.5">
               {(Object.entries(BEHAVIOR_LABELS) as [BehaviorType, string][]).map(([key, label]) => (
                 <label
