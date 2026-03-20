@@ -173,9 +173,9 @@ export default function SupportPlanForm() {
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
       <div className="card-styled rounded-2xl p-3">
-        <p className="text-sm font-semibold mb-2">בחר/י את שמך</p>
+        <p className="text-sm font-bold mb-2">בחר/י את שמך</p>
         <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
-          <SelectTrigger className="h-10 text-sm">
+          <SelectTrigger className="h-11 text-sm">
             <SelectValue placeholder="בחר/י איש צוות" />
           </SelectTrigger>
           <SelectContent>
