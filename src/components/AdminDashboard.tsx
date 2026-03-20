@@ -15,7 +15,7 @@ import {
 } from '@/lib/constants';
 
 import {
-  AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert,
+  AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield,
   ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
@@ -36,8 +36,11 @@ const SUPPORT_LABELS: Record<string, string> = {
 };
 const SUPPORT_TYPES_LIST = ['social', 'emotional', 'academic', 'behavioral'] as const;
 
+type DashboardView = 'management' | 'טלי' | 'עדן';
+
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const [activeView, setActiveView] = useState<DashboardView>('management');
   const [reports, setReports] = useState<Report[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -49,6 +52,13 @@ export default function AdminDashboard() {
     dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false, monthlyReport: false, staffManagement: false,
   });
 
+  const classFilter = activeView === 'management' ? null : activeView;
+  const filteredStudents = classFilter ? students.filter(s => s.class_name === classFilter) : students;
+  const filteredStudentIds = new Set(filteredStudents.map(s => s.id));
+  const filteredReports = classFilter ? reports.filter(r => filteredStudentIds.has(r.student_id)) : reports;
+  const filteredAlerts = classFilter ? alerts.filter(a => filteredStudentIds.has(a.student_id)) : alerts;
+  const filteredAttendance = classFilter ? dailyAttendance.filter(a => filteredStudentIds.has(a.student_id)) : dailyAttendance;
+
   // Staff management
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
   const [newStaffName, setNewStaffName] = useState('');
@@ -56,6 +66,7 @@ export default function AdminDashboard() {
 
   // Support assignments
   const [supportAssignments, setSupportAssignments] = useState<any[]>([]);
+  const filteredAssignments = classFilter ? supportAssignments.filter((sa: any) => filteredStudentIds.has(sa.student_id)) : supportAssignments;
   const [showAddAssignment, setShowAddAssignment] = useState(false);
   const [assignStudentId, setAssignStudentId] = useState('');
   const [assignStaffId, setAssignStaffId] = useState('');
@@ -377,12 +388,13 @@ export default function AdminDashboard() {
     return s ? `${s.first_name} ${s.last_name}` : 'לא ידוע';
   };
 
-  const unreadAlerts = alerts.filter(a => !a.is_read);
-  const avgPerformance = reports.filter(r => r.performance_score).length > 0
-    ? (reports.reduce((s, r) => s + (r.performance_score || 0), 0) / reports.filter(r => r.performance_score).length).toFixed(1)
+  const unreadAlerts = filteredAlerts.filter(a => !a.is_read);
+  const avgPerformance = filteredReports.filter(r => r.performance_score).length > 0
+    ? (filteredReports.reduce((s, r) => s + (r.performance_score || 0), 0) / filteredReports.filter(r => r.performance_score).length).toFixed(1)
     : '—';
 
-  const recentReports = reports.slice(0, 15);
+  const recentReports = filteredReports.slice(0, 15);
+  const isManagement = activeView === 'management';
 
   if (loading) {
     return (
@@ -417,11 +429,33 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
+      {/* View Selector */}
+      <div className="grid grid-cols-3 gap-1.5 p-1 bg-card rounded-xl shadow-soft">
+        {([
+          { key: 'management' as DashboardView, label: 'צוות הנהלה', icon: Shield },
+          { key: 'טלי' as DashboardView, label: 'הכיתה של טלי', icon: Users },
+          { key: 'עדן' as DashboardView, label: 'הכיתה של עדן', icon: Users },
+        ]).map(v => (
+          <button
+            key={v.key}
+            onClick={() => setActiveView(v.key)}
+            className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg text-xs font-semibold transition-all ${
+              activeView === v.key
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-muted/50'
+            }`}
+          >
+            <v.icon className="h-3.5 w-3.5" />
+            {v.label}
+          </button>
+        ))}
+      </div>
+
       {/* Stats grid */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { icon: Users, value: students.length, label: 'תלמידים', color: 'bg-primary/10 text-primary' },
-          { icon: FileText, value: reports.length, label: 'דיווחים', color: 'bg-primary/10 text-primary' },
+          { icon: Users, value: filteredStudents.length, label: 'תלמידים', color: 'bg-primary/10 text-primary' },
+          { icon: FileText, value: filteredReports.length, label: 'דיווחים', color: 'bg-primary/10 text-primary' },
           { icon: Bell, value: unreadAlerts.length, label: 'התראות', color: 'bg-accent/10 text-accent' },
           { icon: TrendingUp, value: avgPerformance, label: 'ממוצע', color: 'bg-success/10 text-success' },
         ].map((stat, i) => (
@@ -437,18 +471,18 @@ export default function AdminDashboard() {
 
       {/* Daily Attendance */}
       <div className="card-styled rounded-2xl overflow-hidden">
-        <SectionHeader title="ביקור סדיר — היום" icon={ClipboardCheck} count={dailyAttendance.filter(a => !a.is_present).length} badge={dailyAttendance.filter(a => !a.is_present).length > 0 ? 'destructive' : undefined} sectionKey="dailyAttendance" />
+        <SectionHeader title="ביקור סדיר — היום" icon={ClipboardCheck} count={filteredAttendance.filter(a => !a.is_present).length} badge={filteredAttendance.filter(a => !a.is_present).length > 0 ? 'destructive' : undefined} sectionKey="dailyAttendance" />
         {expandedSections.dailyAttendance && (
           <div className="px-3 pb-3">
             {(() => {
-              const absentRecords = dailyAttendance.filter(a => !a.is_present);
-              const presentCount = students.length - absentRecords.length;
+              const absentRecords = filteredAttendance.filter(a => !a.is_present);
+              const presentCount = filteredStudents.length - absentRecords.length;
               if (absentRecords.length === 0) {
                 return (
                   <div className="text-center py-4">
                     <CheckCircle2 className="h-6 w-6 text-success mx-auto mb-1.5" />
                     <p className="text-xs text-success font-medium">כל התלמידים נוכחים היום!</p>
-                    <p className="text-[10px] text-muted-foreground">{presentCount}/{students.length}</p>
+                    <p className="text-[10px] text-muted-foreground">{presentCount}/{filteredStudents.length}</p>
                   </div>
                 );
               }
@@ -456,7 +490,7 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                     <span>📅 {new Date().toLocaleDateString('he-IL')}</span>
-                    <span>{presentCount}/{students.length} נוכחים</span>
+                    <span>{presentCount}/{filteredStudents.length} נוכחים</span>
                   </div>
                   {CLASS_OPTIONS.map(cls => {
                     const classAbsent = absentRecords.filter(a => {
@@ -514,8 +548,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Exceptional Events */}
-      {events.length > 0 && (
+      {/* Exceptional Events - management only */}
+      {isManagement && events.length > 0 && (
         <div className="card-styled rounded-2xl overflow-hidden border-accent/20">
           <SectionHeader title="אירועים חריגים" icon={ShieldAlert} count={events.length} sectionKey="events" color="text-accent" />
           {expandedSections.events && (
@@ -544,7 +578,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Staff Management */}
+      {/* Staff Management - management only */}
+      {isManagement && (
       <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
         <SectionHeader title="ניהול אנשי צוות" icon={UserCog} count={staffMembers.length} sectionKey="staffManagement" />
         {expandedSections.staffManagement && (
@@ -578,22 +613,25 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+      )}
 
       {/* Support Assignments */}
       <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
         <div className="flex items-center justify-between px-3 pt-1">
-          <SectionHeader title="שיוך תמיכות" icon={HeartHandshake} count={supportAssignments.length} sectionKey="support" />
+          <SectionHeader title="שיוך תמיכות" icon={HeartHandshake} count={filteredAssignments.length} sectionKey="support" />
+          {isManagement && (
           <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2" onClick={() => setShowAddAssignment(true)}>
             <Plus className="h-3.5 w-3.5" />
             שיוך חדש
           </Button>
+          )}
         </div>
         {expandedSections.support && (
           <div className="px-3 pb-3 space-y-1.5">
-            {supportAssignments.length === 0 ? (
-              <p className="text-center text-muted-foreground text-xs py-6">אין שיוכי תמיכה. לחצ/י על ״שיוך חדש״</p>
+            {filteredAssignments.length === 0 ? (
+              <p className="text-center text-muted-foreground text-xs py-6">אין שיוכי תמיכה{isManagement ? '. לחצ/י על ״שיוך חדש״' : ''}</p>
             ) : (
-              supportAssignments.map((sa: any) => (
+              filteredAssignments.map((sa: any) => (
                 <div key={sa.id} className="p-2.5 rounded-lg border bg-card">
                   <div className="flex justify-between items-start mb-1">
                     <div>
@@ -664,7 +702,7 @@ export default function AdminDashboard() {
                   );
                 })}
             </div>
-            <Input value={assignDescription} onChange={e => setAssignDescription(e.target.value)} className="h-10 text-sm" placeholder="תיאור התמיכה (לדוגמה: שיחה אישית, ליווי בהפסקה...)" />
+            <Textarea value={assignDescription} onChange={e => setAssignDescription(e.target.value)} className="text-sm min-h-[70px]" placeholder="תאר/י את התמיכה שצריך לספק (לדוגמה: שיחה אישית, ליווי בהפסקה, תרגול כישורים חברתיים...)" />
             </div>
             <Select value={assignFrequency} onValueChange={setAssignFrequency}>
               <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
@@ -673,7 +711,10 @@ export default function AdminDashboard() {
                 <SelectItem value="weekly">שבועי</SelectItem>
               </SelectContent>
             </Select>
-            <Input type="date" value={assignTargetDate} onChange={e => setAssignTargetDate(e.target.value)} className="h-10 text-sm" placeholder="תאריך יעד (אופציונלי)" />
+            <div>
+              <p className="text-xs font-semibold mb-1.5">תאריך יעד לבדיקת ביצוע</p>
+              <Input type="date" value={assignTargetDate} onChange={e => setAssignTargetDate(e.target.value)} className="h-10 text-sm" />
+            </div>
             <Input value={assignNotesForParents} onChange={e => setAssignNotesForParents(e.target.value)} className="h-10 text-sm" placeholder="הערה להורים (אופציונלי)" />
             <Button onClick={handleAddAssignment} disabled={addingAssignment} className="w-full h-10 text-sm">
               {addingAssignment ? 'משייך...' : 'שייך תמיכה'}
@@ -686,7 +727,8 @@ export default function AdminDashboard() {
       {/* Students */}
       <div className="card-styled rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-3 pt-1">
-          <SectionHeader title="תלמידים" icon={Users} count={students.length} sectionKey="students" />
+          <SectionHeader title="תלמידים" icon={Users} count={filteredStudents.length} sectionKey="students" />
+          {isManagement && (
           <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
             <DialogTrigger asChild>
               <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2">
@@ -713,11 +755,12 @@ export default function AdminDashboard() {
               </div>
             </DialogContent>
           </Dialog>
+          )}
         </div>
         {expandedSections.students && (
           <div className="px-3 pb-3">
-            {CLASS_OPTIONS.map(cls => {
-              const classStudents = students.filter(s => s.class_name === cls);
+            {(classFilter ? [classFilter] : CLASS_OPTIONS).map(cls => {
+              const classStudents = filteredStudents.filter(s => s.class_name === cls);
               return (
                 <div key={cls} className="mb-5 last:mb-0">
                   <div className="flex items-center gap-2 mb-2 pb-1.5 border-b-2 border-primary/30">
@@ -812,7 +855,8 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Monthly Report */}
+      {/* Monthly Report - management only */}
+      {isManagement && (
       <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
         <SectionHeader title="הפק דוח חודשי" icon={FileText} sectionKey="monthlyReport" />
         {expandedSections.monthlyReport && (
@@ -874,8 +918,10 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+      )}
 
-      {/* Reset All Reports */}
+      {/* Reset All Reports - management only */}
+      {isManagement && (
       <div className="card-styled rounded-2xl overflow-hidden border-destructive/30">
         <div className="p-3">
           <div className="flex items-center gap-2.5 mb-2">
@@ -902,6 +948,7 @@ export default function AdminDashboard() {
           </Button>
         </div>
       </div>
+      )}
 
       {/* Reset Password Dialog */}
       <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
