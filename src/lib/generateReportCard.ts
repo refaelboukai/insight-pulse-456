@@ -193,7 +193,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
       <div style="page-break-inside:avoid;text-align:center;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid ${colors.accent};">
         <img src="${logoSrc}" style="max-width:100px;height:auto;margin-bottom:6px;" />
         <div style="font-size:20px;font-weight:700;color:${colors.accent};margin-bottom:2px;">בית ספר מרום בית אקשטיין</div>
-        <div style="font-size:13px;color:${colors.textLight};font-weight:500;letter-spacing:2px;">תעודת הערכה</div>
+        <div style="font-size:13px;color:${colors.textLight};font-weight:500;letter-spacing:2px;">תעודת הערכה${data.semesterLabel ? ` — ${data.semesterLabel}` : ''}</div>
       </div>
 
       <!-- Student Info -->
