@@ -127,12 +127,55 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
   };
 
   const selectedStudent = students.find(s => s.id === studentId);
+  const submittedStudent = useMemo(() => {
+    // Keep reference to the student that was just submitted (for dialog)
+    return students.find(s => reportedStudentIds.has(s.id) && s.class_name);
+  }, [reportedStudentIds, students]);
   const classes = [...new Set(students.map(s => s.class_name))].filter(Boolean);
 
-  // If we have a lastClassName from previous report, show that class first
   const sortedClasses = lastClassName
     ? [lastClassName, ...classes.filter(c => c !== lastClassName)]
     : classes;
+
+  // Find the next unreported student in the same class
+  const getNextStudentInClass = () => {
+    const currentStudent = students.find(s => s.id === studentId) || 
+      [...reportedStudentIds].map(id => students.find(s => s.id === id)).filter(Boolean).pop();
+    if (!currentStudent?.class_name) return null;
+    const classStudents = students
+      .filter(s => s.class_name === currentStudent.class_name && !absentStudentIds.has(s.id) && !reportedStudentIds.has(s.id));
+    return classStudents[0] || null;
+  };
+
+  const handleSameStudent = () => {
+    setShowPostSubmitDialog(false);
+    const lastStudentId = [...reportedStudentIds].pop();
+    if (lastStudentId) {
+      // Remove from reported so they can report again for same student
+      setReportedStudentIds(prev => {
+        const next = new Set(prev);
+        next.delete(lastStudentId);
+        return next;
+      });
+      setStudentId(lastStudentId);
+    }
+    setAttendance('');
+    setBehaviors([]);
+    setViolenceTypes([]);
+    setParticipations([]);
+    setViolenceComment('');
+    toast.success('הדיווח נשמר בהצלחה! ✨');
+  };
+
+  const handleNextStudent = () => {
+    setShowPostSubmitDialog(false);
+    const next = getNextStudentInClass();
+    resetForm(true);
+    if (next) {
+      setStudentId(next.id);
+    }
+    toast.success('הדיווח נשמר בהצלחה! ✨');
+  };
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
