@@ -193,8 +193,8 @@ export default function SupportPlanForm() {
       )}
 
       {assignments.map(a => {
-        const count = getCompletionCount(a.id);
-        const required = getRequiredCount(a);
+        const count = getCompletionCount(a);
+        const required = a.frequency_count || 1;
         const allDone = count >= required;
         return (
           <div
