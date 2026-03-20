@@ -22,9 +22,6 @@ export default function ExceptionalEventForm() {
   const [followupRequired, setFollowupRequired] = useState(false);
   const [followupNotes, setFollowupNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [generatingPdf, setGeneratingPdf] = useState(false);
-  const [pdfBlob, setPdfBlob] = useState<Blob | null>(null);
-  const [showShareOptions, setShowShareOptions] = useState(false);
 
   const getEventData = () => ({
     incidentType,
