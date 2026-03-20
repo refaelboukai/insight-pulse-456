@@ -214,66 +214,15 @@ export default function ExceptionalEventForm() {
             />
           )}
 
-          <div className="flex gap-3">
-            <Button
+          <Button
               onClick={handleReport}
-              disabled={submitting || generatingPdf}
-              className="flex-1 h-12 text-base font-semibold rounded-xl border-0"
+              disabled={submitting}
+              className="w-full h-12 text-base font-semibold rounded-xl border-0"
               style={{ background: 'var(--gradient-accent)' }}
             >
               <Send className="ml-2 h-4 w-4" />
               {submitting ? 'שומר...' : 'דיווח'}
             </Button>
-
-            <Button
-              onClick={handleGenerateReport}
-              disabled={submitting || generatingPdf}
-              variant="outline"
-              className="flex-1 h-12 text-base font-semibold rounded-xl border-2"
-            >
-              <FileText className="ml-2 h-4 w-4" />
-              {generatingPdf ? 'יוצר דוח...' : 'יצירת דוח'}
-            </Button>
-          </div>
-
-          {showShareOptions && pdfBlob && (
-            <div className="animate-fade-in rounded-xl border-2 border-primary/20 bg-primary/5 p-4 space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-sm font-semibold text-foreground">הדוח מוכן — בחר/י אופן שליחה</h4>
-                <button onClick={() => { setShowShareOptions(false); setPdfBlob(null); }} className="text-muted-foreground hover:text-foreground transition-colors">
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-              <div className="flex gap-2">
-                <Button
-                  onClick={handleShareWhatsApp}
-                  size="sm"
-                  className="flex-1 rounded-lg bg-[#25D366] hover:bg-[#1fb855] text-white"
-                >
-                  <MessageSquare className="ml-1.5 h-4 w-4" />
-                  וואטסאפ
-                </Button>
-                <Button
-                  onClick={handleShareEmail}
-                  size="sm"
-                  className="flex-1 rounded-lg"
-                  variant="outline"
-                >
-                  <Mail className="ml-1.5 h-4 w-4" />
-                  מייל
-                </Button>
-                <Button
-                  onClick={handleDownloadPdf}
-                  size="sm"
-                  className="flex-1 rounded-lg"
-                  variant="outline"
-                >
-                  <FileText className="ml-1.5 h-4 w-4" />
-                  הורדה
-                </Button>
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>
