@@ -569,7 +569,8 @@ export default function AdminDashboard() {
                       <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">{SUPPORT_LABELS[t] || t}</Badge>
                     ))}
                   </div>
-                  {sa.target_date && <p className="text-[10px] text-muted-foreground mt-1">יעד: {new Date(sa.target_date).toLocaleDateString('he-IL')}</p>}
+                  {sa.support_description && <p className="text-[10px] text-foreground/80 mt-1">📝 {sa.support_description}</p>}
+                  {sa.target_date && <p className="text-[10px] text-muted-foreground mt-0.5">יעד: {new Date(sa.target_date).toLocaleDateString('he-IL')}</p>}
                   {sa.notes_for_parents && <p className="text-[10px] text-muted-foreground mt-0.5">הערה להורים: {sa.notes_for_parents}</p>}
                 </div>
               ))
