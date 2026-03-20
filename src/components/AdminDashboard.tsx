@@ -87,6 +87,15 @@ export default function AdminDashboard() {
   const [resetting, setResetting] = useState(false);
   const [generatingCard, setGeneratingCard] = useState<string | null>(null);
 
+  // Edit report
+  const [editingReport, setEditingReport] = useState<Report | null>(null);
+  const [editAttendance, setEditAttendance] = useState('');
+  const [editBehaviorTypes, setEditBehaviorTypes] = useState<string[]>([]);
+  const [editParticipation, setEditParticipation] = useState('');
+  const [editComment, setEditComment] = useState('');
+  const [editSubject, setEditSubject] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
+
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
