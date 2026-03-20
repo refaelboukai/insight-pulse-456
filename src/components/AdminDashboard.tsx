@@ -490,7 +490,7 @@ export default function AdminDashboard() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
                     <span>📅 {new Date().toLocaleDateString('he-IL')}</span>
-                    <span>{presentCount}/{students.length} נוכחים</span>
+                    <span>{presentCount}/{filteredStudents.length} נוכחים</span>
                   </div>
                   {CLASS_OPTIONS.map(cls => {
                     const classAbsent = absentRecords.filter(a => {
