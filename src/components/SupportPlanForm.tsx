@@ -234,7 +234,7 @@ export default function SupportPlanForm() {
             <div className={`flex items-center justify-between rounded-xl px-3 py-2 ${allDone ? 'bg-success/10 border border-success/30' : 'bg-muted/50 border border-border'}`}>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className={`h-4 w-4 ${allDone ? 'text-success' : 'text-muted-foreground'}`} />
-                <span className={`text-sm font-semibold ${allDone ? 'text-success' : 'text-foreground'}`}>
+                <span className={`text-base font-bold ${allDone ? 'text-success' : 'text-foreground'}`}>
                   {count}/{required}
                 </span>
                 <span className="text-xs text-muted-foreground">בוצעו {a.frequency === 'daily' ? 'היום' : 'השבוע'}</span>
