@@ -82,7 +82,7 @@ export default function SupportPlanForm() {
       const [assignRes, compRes] = await Promise.all([
         supabase.from('support_assignments').select('*, staff_members(name)')
           .eq('staff_member_id', selectedStaffId)
-          .eq('is_active', true),
+          .eq('is_active', true) as any,
         supabase.from('support_completions').select('*')
           .eq('completion_date', today),
       ]);
@@ -219,6 +219,9 @@ export default function SupportPlanForm() {
                 </Badge>
               ))}
             </div>
+            {(a as any).support_description && (
+              <p className="text-xs text-foreground/80 mt-1">📝 {(a as any).support_description}</p>
+            )}
           </div>
         );
       })}

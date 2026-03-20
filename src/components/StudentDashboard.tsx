@@ -16,6 +16,10 @@ const SUPPORT_LABELS: Record<string, string> = {
   social: 'חברתית', emotional: 'רגשית', academic: 'לימודית', behavioral: 'התנהגותית',
 };
 
+const SEMESTER_LABELS: Record<string, string> = {
+  semester_a: 'סמסטר א׳', semester_b: 'סמסטר ב׳', summer: 'סמסטר קיץ',
+};
+
 export default function StudentDashboard() {
   const { lockedStudentId } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
@@ -193,7 +197,12 @@ export default function StudentDashboard() {
             ) : (
               grades.map(g => (
                 <div key={g.id} className="p-2.5 rounded-lg border bg-card flex items-center justify-between">
-                  <span className="font-medium text-sm">{g.subject}</span>
+                  <div>
+                    <span className="font-medium text-sm">{g.subject}</span>
+                    <span className="text-[10px] text-muted-foreground mr-1.5">
+                      {SEMESTER_LABELS[g.semester] || g.semester}
+                    </span>
+                  </div>
                   <Badge variant="default" className="text-sm px-3 py-0.5">
                     {g.grade ?? '—'}
                   </Badge>

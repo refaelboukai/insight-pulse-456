@@ -840,7 +840,7 @@ export default function AdminDashboard() {
 
       {/* Recent reports */}
       <div className="card-styled rounded-2xl overflow-hidden">
-        <SectionHeader title="דיווחים אחרונים" icon={FileText} count={reports.length} sectionKey="reports" />
+        <SectionHeader title="דיווחים אחרונים" icon={FileText} count={filteredReports.length} sectionKey="reports" />
         {expandedSections.reports && (
           <div className="px-3 pb-3 space-y-1.5">
             {recentReports.map(r => (
@@ -917,7 +917,7 @@ export default function AdminDashboard() {
             <div>
               <p className="text-xs font-semibold mb-1.5">או בחר תלמיד ספציפי:</p>
               <div className="flex flex-wrap gap-1">
-                {students.map(s => (
+                {filteredStudents.map(s => (
                   <button
                     key={s.id}
                     onClick={() => generateMonthlyReport(s.id)}
