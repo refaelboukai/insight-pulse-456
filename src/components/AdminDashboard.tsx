@@ -551,12 +551,12 @@ export default function AdminDashboard() {
   };
 
   // Render support assignments
-  const renderSupport = (viewAssignments: any[], sectionPrefix: string, showManagement: boolean) => (
+  const renderSupport = (viewAssignments: any[], sectionPrefix: string, showManagement: boolean, classFilter: string | null = null) => (
     <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
       <div className="flex items-center justify-between px-3 pt-1">
         <SectionHeader title="שיוך תמיכות" icon={HeartHandshake} count={viewAssignments.length} sectionKey={`${sectionPrefix}_support`} />
         {showManagement && (
-          <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2" onClick={() => setShowAddAssignment(true)}>
+          <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2" onClick={() => { setAssignClassFilter(classFilter); setShowAddAssignment(true); }}>
             <Plus className="h-3.5 w-3.5" />
             שיוך חדש
           </Button>
