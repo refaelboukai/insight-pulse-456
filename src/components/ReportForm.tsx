@@ -285,7 +285,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
 
           {/* Step 4: Learning */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-sm font-semibold mb-2">למידה</p>
+            <p className="text-base font-bold mb-2">למידה</p>
             <div className="flex flex-wrap gap-1.5">
               {(Object.entries(PARTICIPATION_LABELS) as [ParticipationLevel, string][]).map(([key, label]) => {
                 const isActive = participations.includes(key);
