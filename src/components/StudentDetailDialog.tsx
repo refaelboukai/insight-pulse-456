@@ -51,7 +51,8 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
       supabase.from('lesson_reports')
         .select('*')
         .eq('student_id', student.id)
-        .eq('report_date', dateStr)
+        .gte('report_date', `${dateStr}T00:00:00`)
+        .lte('report_date', `${dateStr}T23:59:59`)
         .order('created_at', { ascending: false }),
       supabase.from('daily_attendance')
         .select('*')
