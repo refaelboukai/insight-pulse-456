@@ -36,6 +36,7 @@ interface ReportCardData {
   teamEvaluation?: TeamEvaluation | null;
   principalName?: string;
   teacherName?: string;
+  semesterLabel?: string;
 }
 
 function getHebrewDate(): string {
