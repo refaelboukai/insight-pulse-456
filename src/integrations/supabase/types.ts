@@ -228,6 +228,27 @@ export type Database = {
         }
         Relationships: []
       }
+      staff_members: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          name?: string
+        }
+        Relationships: []
+      }
       student_evaluations: {
         Row: {
           behavior: string | null
@@ -418,6 +439,101 @@ export type Database = {
         }
         Relationships: []
       }
+      support_assignments: {
+        Row: {
+          assigned_by: string
+          created_at: string
+          frequency: string
+          id: string
+          is_active: boolean
+          notes_for_parents: string | null
+          staff_member_id: string
+          student_id: string
+          support_types: Database["public"]["Enums"]["support_type"][]
+          target_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          assigned_by: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          notes_for_parents?: string | null
+          staff_member_id: string
+          student_id: string
+          support_types?: Database["public"]["Enums"]["support_type"][]
+          target_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          assigned_by?: string
+          created_at?: string
+          frequency?: string
+          id?: string
+          is_active?: boolean
+          notes_for_parents?: string | null
+          staff_member_id?: string
+          student_id?: string
+          support_types?: Database["public"]["Enums"]["support_type"][]
+          target_date?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_assignments_staff_member_id_fkey"
+            columns: ["staff_member_id"]
+            isOneToOne: false
+            referencedRelation: "staff_members"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "support_assignments_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_completions: {
+        Row: {
+          assignment_id: string
+          completed_by: string
+          completion_date: string
+          created_at: string
+          id: string
+          is_completed: boolean
+          notes: string | null
+        }
+        Insert: {
+          assignment_id: string
+          completed_by: string
+          completion_date?: string
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          notes?: string | null
+        }
+        Update: {
+          assignment_id?: string
+          completed_by?: string
+          completion_date?: string
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          notes?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_completions_assignment_id_fkey"
+            columns: ["assignment_id"]
+            isOneToOne: false
+            referencedRelation: "support_assignments"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       support_sessions: {
         Row: {
           created_at: string
@@ -499,7 +615,7 @@ export type Database = {
         | "emotional_difficulty"
         | "school_suspension"
         | "other"
-      app_role: "admin" | "staff"
+      app_role: "admin" | "staff" | "student"
       attendance_status: "full" | "partial" | "absent"
       behavior_type: "respectful" | "non_respectful" | "disruptive" | "violent"
       incident_type: "violence" | "bullying" | "medical" | "safety" | "other"
@@ -646,7 +762,7 @@ export const Constants = {
         "school_suspension",
         "other",
       ],
-      app_role: ["admin", "staff"],
+      app_role: ["admin", "staff", "student"],
       attendance_status: ["full", "partial", "absent"],
       behavior_type: ["respectful", "non_respectful", "disruptive", "violent"],
       incident_type: ["violence", "bullying", "medical", "safety", "other"],

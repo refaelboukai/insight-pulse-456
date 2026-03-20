@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-type AppRole = 'admin' | 'staff';
+export type AppRole = 'admin' | 'staff' | 'student';
 
 interface AuthCtx {
   user: User | null;
@@ -16,6 +16,7 @@ interface AuthCtx {
 const CODE_MAP: Record<string, { email: string; password: string; name: string; role: AppRole }> = {
   '1001': { email: 'staff@school.local', password: 'staff1001secure!', name: 'צוות חינוכי', role: 'staff' },
   '9020': { email: 'admin@school.local', password: 'admin9020secure!', name: 'מנהל מערכת', role: 'admin' },
+  '555': { email: 'student@school.local', password: 'student555secure!', name: 'תלמיד/ה', role: 'student' },
 };
 
 const AuthContext = createContext<AuthCtx | undefined>(undefined);
@@ -38,13 +39,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    // Set up auth state listener first
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (!mounted) return;
       const u = session?.user ?? null;
       setUser(u);
       if (u) {
-        // Use setTimeout to avoid Supabase deadlock
         setTimeout(() => {
           if (mounted) fetchRoleAndProfile(u.id);
         }, 0);
@@ -55,7 +54,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    // Then check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       const u = session?.user ?? null;
@@ -80,7 +78,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: 'קוד שגוי' };
     }
 
-    // Try sign in
     const { error: signInError } = await supabase.auth.signInWithPassword({
       email: account.email,
       password: account.password,
@@ -88,7 +85,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     if (!signInError) return { error: null };
 
-    // If user doesn't exist, create it
     if (signInError.message.includes('Invalid login credentials')) {
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
         email: account.email,
@@ -98,15 +94,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
       if (signUpError) return { error: 'שגיאה ביצירת חשבון' };
 
-      // Assign role if admin
-      if (account.role === 'admin' && signUpData.user) {
-        await supabase.from('user_roles').insert({
-          user_id: signUpData.user.id,
-          role: 'admin' as const,
-        });
+      if (signUpData.user) {
+        const roleToAssign = account.role;
+        if (roleToAssign === 'admin' || roleToAssign === 'student') {
+          await supabase.from('user_roles').insert({
+            user_id: signUpData.user.id,
+            role: roleToAssign as any,
+          });
+        }
       }
 
-      // Sign in after signup
       const { error: retryError } = await supabase.auth.signInWithPassword({
         email: account.email,
         password: account.password,

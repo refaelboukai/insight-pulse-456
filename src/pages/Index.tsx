@@ -6,14 +6,16 @@ import DailyAttendance from '@/components/DailyAttendance';
 import AdminDashboard from '@/components/AdminDashboard';
 import SupportPlanForm from '@/components/SupportPlanForm';
 import GradesForm from '@/components/GradesForm';
+import StudentDashboard from '@/components/StudentDashboard';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 export default function Index() {
   const { role, fullName, signOut } = useAuth();
   const isAdmin = role === 'admin';
+  const isStudent = role === 'student';
   const [absentStudentIds, setAbsentStudentIds] = useState<Set<string>>(new Set());
 
   return (
@@ -27,6 +29,7 @@ export default function Index() {
               <h1 className="font-bold text-primary-foreground text-base leading-tight">בית ספר מרום בית אקשטיין</h1>
               <p className="text-xs text-primary-foreground/70 flex items-center gap-1">
                 {isAdmin && <Shield className="w-3 h-3" />}
+                {isStudent && <User className="w-3 h-3" />}
                 {fullName}
               </p>
             </div>
@@ -45,15 +48,23 @@ export default function Index() {
 
       {/* Content */}
       <main className="container mx-auto px-3 py-4 pb-10">
-        {/* School title */}
-        {!isAdmin && (
+        {/* School title for non-admin, non-student */}
+        {!isAdmin && !isStudent && (
           <div className="text-center mb-4">
             <h2 className="text-lg font-bold text-foreground">בית ספר מרום בית אקשטיין</h2>
             <p className="text-sm text-muted-foreground">מערכת דיווח חינוכית</p>
           </div>
         )}
 
-        {isAdmin ? (
+        {isStudent ? (
+          <>
+            <div className="text-center mb-4">
+              <h2 className="text-lg font-bold text-foreground">פורטל תלמידים</h2>
+              <p className="text-sm text-muted-foreground">צפייה בדיווחים, ציונים ותכנית תמיכה</p>
+            </div>
+            <StudentDashboard />
+          </>
+        ) : isAdmin ? (
           <AdminDashboard />
         ) : (
           <Tabs defaultValue="attendance" dir="rtl">
