@@ -384,7 +384,7 @@ export default function AdminDashboard() {
     const { error } = await supabase.from('lesson_reports').update({
       attendance: editAttendance as any,
       behavior_types: editBehaviorTypes as any,
-      participation: (editParticipation || null) as any,
+      participation: editParticipations as any,
       comment: editComment.trim() || null,
       lesson_subject: editSubject,
     }).eq('id', editingReport.id);
