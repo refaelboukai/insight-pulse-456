@@ -913,9 +913,9 @@ export default function AdminDashboard() {
                       חומרה {r.behavior_severity}
                     </Badge>
                   )}
-                  {r.participation && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[r.participation]}</Badge>
-                  )}
+                  {r.participation && r.participation.length > 0 && r.participation.map(p => (
+                    <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>
+                  ))}
                   {r.performance_score && (
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0">ביצועים: {r.performance_score}</Badge>
                   )}
