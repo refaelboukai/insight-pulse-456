@@ -1,7 +1,7 @@
 import { registerSW } from 'virtual:pwa-register';
 
-// Auto-update every 3 hours (in milliseconds)
-const UPDATE_INTERVAL = 3 * 60 * 60 * 1000;
+// Auto-update every 30 minutes (in milliseconds)
+const UPDATE_INTERVAL = 30 * 60 * 1000;
 
 const updateSW = registerSW({
   onRegisteredSW(swUrl, registration) {
