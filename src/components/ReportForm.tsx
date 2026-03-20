@@ -381,6 +381,40 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
           </Button>
         </>
       )}
+
+      {/* Post-submit dialog */}
+      <Dialog open={showPostSubmitDialog} onOpenChange={setShowPostSubmitDialog}>
+        <DialogContent className="max-w-xs rounded-2xl p-5 text-center" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center justify-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-success" />
+              הדיווח נשמר!
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mt-1">
+              מה תרצה לעשות עכשיו?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 mt-3">
+            <Button
+              onClick={handleSameStudent}
+              variant="outline"
+              className="w-full h-11 rounded-xl text-sm font-medium gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              דיווח נוסף לאותו תלמיד
+            </Button>
+            <Button
+              onClick={handleNextStudent}
+              className="w-full h-11 rounded-xl text-sm font-medium btn-primary-gradient border-0 gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              {getNextStudentInClass()
+                ? `דיווח ל${getNextStudentInClass()!.first_name} ${getNextStudentInClass()!.last_name}`
+                : 'תלמיד הבא מהכיתה'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
