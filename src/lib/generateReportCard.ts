@@ -42,9 +42,11 @@ interface ReportCardData {
 function getHebrewDate(): string {
   try {
     const now = new Date();
+    // nu-hebr renders day numbers as Hebrew gematria letters, month as Hebrew name
     const formatter = new Intl.DateTimeFormat('he-u-ca-hebrew-nu-hebr', {
       day: 'numeric',
       month: 'long',
+      year: 'numeric',
     });
     return formatter.format(now);
   } catch {
@@ -90,11 +92,49 @@ const TEAM_SECTIONS: { title: string; items: { key: string; label: string }[] }[
   },
 ];
 
+/** Preload an image and return a data-URL */
+function preloadImageAsDataUrl(src: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        c.getContext('2d')!.drawImage(img, 0, 0);
+        resolve(c.toDataURL('image/jpeg'));
+      } catch {
+        resolve(src);
+      }
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
+}
+
+async function renderPageToCanvas(html: string): Promise<HTMLCanvasElement> {
+  const container = document.createElement('div');
+  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:595px;padding:0;background:white;font-family:Arial,sans-serif;direction:rtl;z-index:-1;';
+  container.innerHTML = html;
+  document.body.appendChild(container);
+  await new Promise((r) => setTimeout(r, 100));
+  try {
+    return await html2canvas(container, { scale: 2, useCORS: true, allowTaint: true, logging: false });
+  } finally {
+    document.body.removeChild(container);
+  }
+}
+
 export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   const hebrewDate = getHebrewDate();
   const gregorianDate = getGregorianDate();
 
-  // Light azure color palette
+  const [logoDataUrl, sigDataUrl] = await Promise.all([
+    preloadImageAsDataUrl(logoSrc),
+    preloadImageAsDataUrl(principalSigSrc),
+  ]);
+
   const colors = {
     headerBg: '#e8f4fb',
     headerBorder: '#b8d8ea',
@@ -112,12 +152,8 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     white: '#ffffff',
   };
 
-  const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:595px;padding:0;background:white;font-family:Arial,sans-serif;direction:rtl;';
-
   const teamEval = data.teamEvaluation;
 
-  // Collect team eval rows
   const allTeamRows = teamEval ? TEAM_SECTIONS.map(section => {
     const rows = section.items.map(item => {
       const val = teamEval[item.key as keyof TeamEvaluation];
@@ -137,14 +173,14 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   }).filter(Boolean).join('') : '';
 
   const personalNoteHtml = data.personalNote ? `
-    <div style="page-break-inside:avoid;margin-bottom:20px;">
+    <div style="margin-bottom:20px;">
       <div style="font-size:12px;font-weight:700;color:${colors.sectionTitle};margin-bottom:8px;border-bottom:1px solid ${colors.headerBorder};padding-bottom:4px;">ממני אלייך — נימה אישית</div>
       <div style="font-size:11px;color:${colors.text};line-height:1.9;white-space:pre-wrap;padding:12px 14px;border:1px solid ${colors.noteBorder};border-radius:4px;background:${colors.noteBg};">${data.personalNote}</div>
     </div>
   ` : '';
 
   const teamTableHtml = allTeamRows ? `
-    <div style="page-break-inside:avoid;margin-bottom:20px;">
+    <div style="margin-bottom:20px;">
       <div style="font-size:12px;font-weight:700;color:${colors.sectionTitle};margin-bottom:8px;border-bottom:1px solid ${colors.headerBorder};padding-bottom:4px;">הערכה תפקודית</div>
       <table style="width:100%;border-collapse:collapse;border:1px solid ${colors.tableBorder};">
         <thead>
@@ -158,8 +194,44 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </div>
   ` : '';
 
+  // --- Header block (shared between pages) ---
+  const headerHtml = `
+    <div style="text-align:center;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid ${colors.accent};">
+      <img src="${logoDataUrl}" style="max-width:100px;height:auto;margin-bottom:6px;" />
+      <div style="font-size:20px;font-weight:700;color:${colors.accent};margin-bottom:2px;">בית ספר מרום בית אקשטיין</div>
+      <div style="font-size:13px;color:${colors.textLight};font-weight:500;letter-spacing:2px;">תעודת הערכה${data.semesterLabel ? ` — ${data.semesterLabel}` : ''}</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding:12px 16px;border:1px solid ${colors.noteBorder};border-radius:4px;background:${colors.headerBg};">
+      <div>
+        <div style="font-size:9px;color:${colors.textLight};margin-bottom:2px;font-weight:600;letter-spacing:1px;">שם התלמיד/ה</div>
+        <div style="font-size:16px;font-weight:700;color:${colors.text};">${data.studentName}</div>
+      </div>
+      <div style="text-align:center;">
+        <div style="font-size:9px;color:${colors.textLight};margin-bottom:2px;font-weight:600;letter-spacing:1px;">כיתה</div>
+        <div style="font-size:15px;font-weight:700;color:${colors.text};">${data.className || '—'}</div>
+      </div>
+      <div style="text-align:left;">
+        <div style="font-size:9px;color:${colors.textLight};margin-bottom:2px;font-weight:600;letter-spacing:1px;">תאריך</div>
+        <div style="font-size:11px;color:${colors.text};">${gregorianDate}</div>
+        <div style="font-size:11px;color:${colors.textLight};">${hebrewDate}</div>
+      </div>
+    </div>
+  `;
+
+  // --- PAGE 1: Teacher (מחנכת) section ---
+  const page1Html = `
+    <div style="padding:36px 40px 28px;">
+      ${headerHtml}
+      <div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:16px;text-align:center;letter-spacing:1px;">📝 דיווח מחנכ/ת</div>
+      ${personalNoteHtml}
+      ${teamTableHtml}
+      ${!personalNoteHtml && !teamTableHtml ? `<div style="padding:30px;text-align:center;color:${colors.textLight};font-size:12px;">לא הוזנה הערכת מחנכ/ת</div>` : ''}
+    </div>
+  `;
+
+  // --- PAGE 2: Grades + Signatures ---
   const gradeBlocks = data.grades.map((g, i) => `
-    <div style="page-break-inside:avoid;display:flex;border-bottom:1px solid ${colors.tableBorder};background:${i % 2 === 0 ? colors.tableAltRow : colors.white};">
+    <div style="display:flex;border-bottom:1px solid ${colors.tableBorder};background:${i % 2 === 0 ? colors.tableAltRow : colors.white};">
       <div style="padding:8px 14px;font-weight:600;font-size:11px;color:${colors.text};width:80px;flex-shrink:0;border-left:1px solid ${colors.tableBorder};">${g.subject}</div>
       <div style="padding:8px 14px;font-size:13px;color:${colors.accent};text-align:center;width:45px;flex-shrink:0;font-weight:700;border-left:1px solid ${colors.tableBorder};">${g.grade ?? '—'}</div>
       <div style="padding:8px 14px;font-size:11px;color:${colors.text};line-height:1.7;white-space:pre-wrap;flex:1;">${g.ai_enhanced_evaluation || g.verbal_evaluation || '—'}</div>
@@ -168,7 +240,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
 
   const gradesBlockHtml = `
     <div style="margin-bottom:20px;">
-      <div style="font-size:12px;font-weight:700;color:${colors.sectionTitle};margin-bottom:8px;border-bottom:1px solid ${colors.headerBorder};padding-bottom:4px;">ציונים והערכות מקצועיות</div>
+      <div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:12px;text-align:center;letter-spacing:1px;">📚 ציונים והערכות מקצועיות</div>
       <div style="border:1px solid ${colors.tableBorder};">
         <div style="display:flex;background:${colors.tableHeaderBg};border-bottom:1px solid ${colors.headerBorder};">
           <div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};width:80px;flex-shrink:0;border-left:1px solid ${colors.headerBorder};">מקצוע</div>
@@ -187,78 +259,64 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </div>
   `;
 
-  container.innerHTML = `
-    <div style="padding:36px 40px 28px;position:relative;">
-      <!-- Header -->
-      <div style="page-break-inside:avoid;text-align:center;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid ${colors.accent};">
-        <img src="${logoSrc}" style="max-width:100px;height:auto;margin-bottom:6px;" />
-        <div style="font-size:20px;font-weight:700;color:${colors.accent};margin-bottom:2px;">בית ספר מרום בית אקשטיין</div>
-        <div style="font-size:13px;color:${colors.textLight};font-weight:500;letter-spacing:2px;">תעודת הערכה${data.semesterLabel ? ` — ${data.semesterLabel}` : ''}</div>
-      </div>
-
-      <!-- Student Info -->
-      <div style="page-break-inside:avoid;display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding:12px 16px;border:1px solid ${colors.noteBorder};border-radius:4px;background:${colors.headerBg};">
-        <div>
-          <div style="font-size:9px;color:${colors.textLight};margin-bottom:2px;font-weight:600;letter-spacing:1px;">שם התלמיד/ה</div>
-          <div style="font-size:16px;font-weight:700;color:${colors.text};">${data.studentName}</div>
+  const signaturesHtml = `
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid ${colors.headerBorder};">
+      <div style="display:flex;justify-content:space-around;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;align-items:center;width:100px;">
+          <img src="${sigDataUrl}" style="width:80px;height:auto;margin-bottom:4px;" />
+          <div style="font-size:9px;color:${colors.textLight};font-weight:600;">מנהל ביה״ס</div>
         </div>
-        <div style="text-align:center;">
-          <div style="font-size:9px;color:${colors.textLight};margin-bottom:2px;font-weight:600;letter-spacing:1px;">כיתה</div>
-          <div style="font-size:15px;font-weight:700;color:${colors.text};">${data.className || '—'}</div>
-        </div>
-        <div style="text-align:left;">
-          <div style="font-size:9px;color:${colors.textLight};margin-bottom:2px;font-weight:600;letter-spacing:1px;">תאריך</div>
-          <div style="font-size:11px;color:${colors.text};">${gregorianDate}</div>
-          <div style="font-size:11px;color:${colors.textLight};">${hebrewDate}</div>
-        </div>
-      </div>
-
-      ${personalNoteHtml}
-
-      ${teamTableHtml}
-
-      ${gradesBlockHtml}
-
-      <!-- Signatures -->
-      <div style="page-break-inside:avoid;margin-top:32px;padding-top:16px;border-top:1px solid ${colors.headerBorder};">
-        <div style="display:flex;justify-content:space-around;align-items:flex-end;">
-          <div style="display:flex;flex-direction:column;align-items:center;width:100px;">
-            <img src="${principalSigSrc}" style="width:80px;height:auto;margin-bottom:4px;" />
-            <div style="font-size:9px;color:${colors.textLight};font-weight:600;">מנהל ביה״ס</div>
-          </div>
-          ${signatureLine('מחנכ/ת')}
-          ${signatureLine('התלמיד/ה')}
-          ${signatureLine('ההורים')}
-        </div>
+        ${signatureLine('מחנכ/ת')}
+        ${signatureLine('התלמיד/ה')}
+        ${signatureLine('ההורים')}
       </div>
     </div>
   `;
 
-  document.body.appendChild(container);
+  const page2Html = `
+    <div style="padding:36px 40px 28px;">
+      ${headerHtml}
+      ${gradesBlockHtml}
+      ${signaturesHtml}
+    </div>
+  `;
 
-  try {
-    const canvas = await html2canvas(container, { scale: 2, useCORS: true });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfPageHeight = pdf.internal.pageSize.getHeight();
-    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+  // Render both pages to canvases
+  const [canvas1, canvas2] = await Promise.all([
+    renderPageToCanvas(page1Html),
+    renderPageToCanvas(page2Html),
+  ]);
 
-    let heightLeft = imgHeight;
-    let position = 0;
+  const pdf = new jsPDF('p', 'mm', 'a4');
+  const pdfWidth = pdf.internal.pageSize.getWidth();
+  const pdfPageHeight = pdf.internal.pageSize.getHeight();
 
-    pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
+  // Add page 1
+  const img1Height = (canvas1.height * pdfWidth) / canvas1.width;
+  let heightLeft = img1Height;
+  let position = 0;
+  pdf.addImage(canvas1.toDataURL('image/png'), 'PNG', 0, position, pdfWidth, img1Height);
+  heightLeft -= pdfPageHeight;
+  while (heightLeft > 0) {
+    position -= pdfPageHeight;
+    pdf.addPage();
+    pdf.addImage(canvas1.toDataURL('image/png'), 'PNG', 0, position, pdfWidth, img1Height);
     heightLeft -= pdfPageHeight;
-
-    while (heightLeft > 0) {
-      position -= pdfPageHeight;
-      pdf.addPage();
-      pdf.addImage(imgData, 'PNG', 0, position, pdfWidth, imgHeight);
-      heightLeft -= pdfPageHeight;
-    }
-
-    return pdf.output('blob');
-  } finally {
-    document.body.removeChild(container);
   }
+
+  // Add page 2
+  pdf.addPage();
+  const img2Height = (canvas2.height * pdfWidth) / canvas2.width;
+  heightLeft = img2Height;
+  position = 0;
+  pdf.addImage(canvas2.toDataURL('image/png'), 'PNG', 0, position, pdfWidth, img2Height);
+  heightLeft -= pdfPageHeight;
+  while (heightLeft > 0) {
+    position -= pdfPageHeight;
+    pdf.addPage();
+    pdf.addImage(canvas2.toDataURL('image/png'), 'PNG', 0, position, pdfWidth, img2Height);
+    heightLeft -= pdfPageHeight;
+  }
+
+  return pdf.output('blob');
 }
