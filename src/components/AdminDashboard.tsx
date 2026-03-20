@@ -52,14 +52,12 @@ export default function AdminDashboard() {
     dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false, monthlyReport: false, staffManagement: false,
   });
 
-  // Filtered data based on active view
   const classFilter = activeView === 'management' ? null : activeView;
   const filteredStudents = classFilter ? students.filter(s => s.class_name === classFilter) : students;
   const filteredStudentIds = new Set(filteredStudents.map(s => s.id));
   const filteredReports = classFilter ? reports.filter(r => filteredStudentIds.has(r.student_id)) : reports;
   const filteredAlerts = classFilter ? alerts.filter(a => filteredStudentIds.has(a.student_id)) : alerts;
   const filteredAttendance = classFilter ? dailyAttendance.filter(a => filteredStudentIds.has(a.student_id)) : dailyAttendance;
-  const filteredAssignments = classFilter ? supportAssignments.filter((sa: any) => filteredStudentIds.has(sa.student_id)) : supportAssignments;
 
   // Staff management
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
