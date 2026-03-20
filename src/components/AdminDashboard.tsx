@@ -499,47 +499,141 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Support Sessions */}
+      {/* Staff Management */}
       <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
-        <SectionHeader title="תכנית תמיכה" icon={HeartHandshake} count={supportSessions.length} sectionKey="support" />
-        {expandedSections.support && (
-          <div className="px-3 pb-3 space-y-1.5">
-            {supportSessions.length === 0 ? (
-              <p className="text-center text-muted-foreground text-xs py-6">אין דיווחי תמיכה עדיין</p>
-            ) : (
-              supportSessions.slice(0, 10).map((ss: any) => {
-                const SUPPORT_LABELS: Record<string, string> = {
-                  social: 'חברתית', emotional: 'רגשית', academic: 'לימודית', behavioral: 'התנהגותית',
-                };
-                return (
-                  <div key={ss.id} className="p-2.5 rounded-lg border bg-card">
-                    <div className="flex justify-between items-start mb-1">
-                      <button
-                        onClick={() => { const s = students.find(st => st.id === ss.student_id); if (s) setSelectedStudent(s); }}
-                        className="font-medium text-xs text-primary hover:underline text-right"
-                      >
-                        {studentName(ss.student_id)}
-                      </button>
-                      <span className="text-[10px] text-muted-foreground">
-                        {new Date(ss.session_date).toLocaleDateString('he-IL')}
-                      </span>
-                    </div>
-                    <p className="text-[10px] text-muted-foreground mb-1">ספק: {ss.provider_name}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {(ss.support_types || []).map((t: string) => (
-                        <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">
-                          {SUPPORT_LABELS[t] || t}
-                        </Badge>
-                      ))}
-                    </div>
-                    {ss.notes && <p className="text-[10px] text-muted-foreground mt-1 line-clamp-1">{ss.notes}</p>}
-                  </div>
-                );
-              })
+        <SectionHeader title="ניהול אנשי צוות" icon={UserCog} count={staffMembers.length} sectionKey="staffManagement" />
+        {expandedSections.staffManagement && (
+          <div className="px-3 pb-3 space-y-2">
+            {/* Add staff */}
+            <div className="flex gap-2">
+              <Input
+                placeholder="שם איש צוות חדש"
+                value={newStaffName}
+                onChange={e => setNewStaffName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleAddStaff(); }}
+                className="h-9 text-sm flex-1"
+              />
+              <Button size="sm" onClick={handleAddStaff} disabled={addingStaff} className="gap-1 h-9">
+                <Plus className="h-3.5 w-3.5" />
+                הוסף
+              </Button>
+            </div>
+            {/* Staff list */}
+            {staffMembers.map(sm => (
+              <div key={sm.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
+                <span className="text-sm font-medium">{sm.name}</span>
+                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteStaff(sm.id)}>
+                  <X className="h-3.5 w-3.5" />
+                </Button>
+              </div>
+            ))}
+            {staffMembers.length === 0 && (
+              <p className="text-center text-muted-foreground text-xs py-3">אין אנשי צוות. הוסף שמות כדי לשייך תמיכות</p>
             )}
           </div>
         )}
       </div>
+
+      {/* Support Assignments */}
+      <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+        <div className="flex items-center justify-between px-3 pt-1">
+          <SectionHeader title="שיוך תמיכות" icon={HeartHandshake} count={supportAssignments.length} sectionKey="support" />
+          <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2" onClick={() => setShowAddAssignment(true)}>
+            <Plus className="h-3.5 w-3.5" />
+            שיוך חדש
+          </Button>
+        </div>
+        {expandedSections.support && (
+          <div className="px-3 pb-3 space-y-1.5">
+            {supportAssignments.length === 0 ? (
+              <p className="text-center text-muted-foreground text-xs py-6">אין שיוכי תמיכה. לחצ/י על ״שיוך חדש״</p>
+            ) : (
+              supportAssignments.map((sa: any) => (
+                <div key={sa.id} className="p-2.5 rounded-lg border bg-card">
+                  <div className="flex justify-between items-start mb-1">
+                    <div>
+                      <p className="font-medium text-xs">{studentName(sa.student_id)}</p>
+                      <p className="text-[10px] text-muted-foreground">מאמן: {sa.staff_members?.name || '—'}</p>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Badge variant="outline" className="text-[10px]">{sa.frequency === 'daily' ? 'יומי' : 'שבועי'}</Badge>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => handleDeleteAssignment(sa.id)}>
+                        <X className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {(sa.support_types || []).map((t: string) => (
+                      <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">{SUPPORT_LABELS[t] || t}</Badge>
+                    ))}
+                  </div>
+                  {sa.target_date && <p className="text-[10px] text-muted-foreground mt-1">יעד: {new Date(sa.target_date).toLocaleDateString('he-IL')}</p>}
+                  {sa.notes_for_parents && <p className="text-[10px] text-muted-foreground mt-0.5">הערה להורים: {sa.notes_for_parents}</p>}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Add Assignment Dialog */}
+      <Dialog open={showAddAssignment} onOpenChange={setShowAddAssignment}>
+        <DialogContent dir="rtl" className="max-w-sm">
+          <DialogHeader>
+            <DialogTitle className="text-sm">שיוך תמיכה חדש</DialogTitle>
+            <DialogDescription className="text-xs">הגדר ספק תמיכה לתלמיד</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 pt-1">
+            <Select value={assignStudentId} onValueChange={setAssignStudentId}>
+              <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י תלמיד" /></SelectTrigger>
+              <SelectContent>
+                {students.map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.class_name})</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Select value={assignStaffId} onValueChange={setAssignStaffId}>
+              <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י מאמן/ספק" /></SelectTrigger>
+              <SelectContent>
+                {staffMembers.map(sm => (
+                  <SelectItem key={sm.id} value={sm.id}>{sm.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <div>
+              <p className="text-xs font-semibold mb-1.5">סוג תמיכה</p>
+              <div className="grid grid-cols-2 gap-1.5">
+                {SUPPORT_TYPES_LIST.map(type => {
+                  const isActive = assignSupportTypes.includes(type);
+                  return (
+                    <button
+                      key={type}
+                      onClick={() => toggleAssignSupportType(type)}
+                      className={`text-xs py-2 px-3 rounded-xl border transition-all font-medium ${
+                        isActive ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'
+                      }`}
+                    >
+                      {SUPPORT_LABELS[type]}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+            <Select value={assignFrequency} onValueChange={setAssignFrequency}>
+              <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="daily">יומי</SelectItem>
+                <SelectItem value="weekly">שבועי</SelectItem>
+              </SelectContent>
+            </Select>
+            <Input type="date" value={assignTargetDate} onChange={e => setAssignTargetDate(e.target.value)} className="h-10 text-sm" placeholder="תאריך יעד (אופציונלי)" />
+            <Input value={assignNotesForParents} onChange={e => setAssignNotesForParents(e.target.value)} className="h-10 text-sm" placeholder="הערה להורים (אופציונלי)" />
+            <Button onClick={handleAddAssignment} disabled={addingAssignment} className="w-full h-10 text-sm">
+              {addingAssignment ? 'משייך...' : 'שייך תמיכה'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
 
       {/* Students */}
