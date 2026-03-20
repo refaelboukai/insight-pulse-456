@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
@@ -17,8 +17,9 @@ const SUPPORT_LABELS: Record<string, string> = {
 };
 
 export default function StudentDashboard() {
+  const { lockedStudentId } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
-  const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [selectedStudentId, setSelectedStudentId] = useState(lockedStudentId || '');
   const [reports, setReports] = useState<Report[]>([]);
   const [grades, setGrades] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
@@ -27,13 +28,22 @@ export default function StudentDashboard() {
     reports: true, grades: false, support: false,
   });
 
+  const isLocked = !!lockedStudentId;
+
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
   useEffect(() => {
-    supabase.from('students').select('*').eq('is_active', true).order('last_name')
-      .then(({ data }) => { if (data) setStudents(data); setLoading(false); });
-  }, []);
+    if (isLocked) {
+      // Locked mode: only fetch this student
+      supabase.from('students').select('*').eq('id', lockedStudentId!).maybeSingle()
+        .then(({ data }) => { if (data) setStudents([data]); setSelectedStudentId(data?.id || ''); setLoading(false); });
+    } else {
+      // Generic mode: show all students for selection
+      supabase.from('students').select('*').eq('is_active', true).order('last_name')
+        .then(({ data }) => { if (data) setStudents(data); setLoading(false); });
+    }
+  }, [lockedStudentId]);
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
 
@@ -126,9 +136,11 @@ export default function StudentDashboard() {
           {selectedStudent.first_name} {selectedStudent.last_name}
           <span className="text-primary-foreground/60 font-normal mr-2 text-xs">הכיתה של {selectedStudent.class_name}</span>
         </p>
-        <button onClick={() => setSelectedStudentId('')} className="text-primary-foreground/70 hover:text-primary-foreground text-xs underline">
-          החלף
-        </button>
+        {!isLocked && (
+          <button onClick={() => setSelectedStudentId('')} className="text-primary-foreground/70 hover:text-primary-foreground text-xs underline">
+            החלף
+          </button>
+        )}
       </div>
 
       {/* Today's Reports */}
