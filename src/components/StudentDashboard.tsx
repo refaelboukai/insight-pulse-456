@@ -136,9 +136,11 @@ export default function StudentDashboard() {
           {selectedStudent.first_name} {selectedStudent.last_name}
           <span className="text-primary-foreground/60 font-normal mr-2 text-xs">הכיתה של {selectedStudent.class_name}</span>
         </p>
-        <button onClick={() => setSelectedStudentId('')} className="text-primary-foreground/70 hover:text-primary-foreground text-xs underline">
-          החלף
-        </button>
+        {!isLocked && (
+          <button onClick={() => setSelectedStudentId('')} className="text-primary-foreground/70 hover:text-primary-foreground text-xs underline">
+            החלף
+          </button>
+        )}
       </div>
 
       {/* Today's Reports */}
