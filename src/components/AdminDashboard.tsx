@@ -66,6 +66,7 @@ export default function AdminDashboard() {
 
   // Support assignments
   const [supportAssignments, setSupportAssignments] = useState<any[]>([]);
+  const filteredAssignments = classFilter ? supportAssignments.filter((sa: any) => filteredStudentIds.has(sa.student_id)) : supportAssignments;
   const [showAddAssignment, setShowAddAssignment] = useState(false);
   const [assignStudentId, setAssignStudentId] = useState('');
   const [assignStaffId, setAssignStaffId] = useState('');
