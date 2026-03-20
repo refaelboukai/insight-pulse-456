@@ -97,6 +97,7 @@ export default function AdminDashboard() {
   const [resetPasswordError, setResetPasswordError] = useState('');
   const [resetting, setResetting] = useState(false);
   const [generatingCard, setGeneratingCard] = useState<string | null>(null);
+  const [reportCardSemester, setReportCardSemester] = useState<string>('all');
 
   // Edit report
   const [editingReport, setEditingReport] = useState<Report | null>(null);
@@ -294,11 +295,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const SEMESTER_LABELS: Record<string, string> = {
+    semester_a: 'סמסטר א׳',
+    semester_b: 'סמסטר ב׳',
+    summer: 'סמסטר קיץ',
+    all: 'שנתי מאוחד',
+  };
+
   const handleGenerateReportCard = async (student: Student) => {
     setGeneratingCard(student.id);
     try {
+      let gradesQuery = supabase.from('student_grades' as any).select('*').eq('student_id', student.id);
+      if (reportCardSemester !== 'all') {
+        gradesQuery = gradesQuery.eq('semester', reportCardSemester);
+      }
       const [{ data: grades }, { data: evals }] = await Promise.all([
-        supabase.from('student_grades').select('*').eq('student_id', student.id),
+        gradesQuery,
         supabase.from('student_evaluations' as any).select('*').eq('student_id', student.id).order('created_at', { ascending: false }).limit(1),
       ]);
 
@@ -307,7 +319,8 @@ export default function AdminDashboard() {
       const blob = await generateReportCard({
         studentName: `${student.first_name} ${student.last_name}`,
         className: student.class_name || '',
-        grades: (grades || []).map(g => ({
+        semesterLabel: SEMESTER_LABELS[reportCardSemester] || '',
+        grades: (grades || []).map((g: any) => ({
           subject: g.subject,
           grade: g.grade,
           verbal_evaluation: g.verbal_evaluation,
@@ -333,10 +346,11 @@ export default function AdminDashboard() {
         } : null,
       });
 
+      const semSuffix = reportCardSemester === 'all' ? 'שנתי' : SEMESTER_LABELS[reportCardSemester];
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `תעודה_${student.first_name}_${student.last_name}.pdf`;
+      a.download = `תעודה_${semSuffix}_${student.first_name}_${student.last_name}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success(`תעודה הופקה עבור ${student.first_name} ${student.last_name}`);
@@ -759,6 +773,30 @@ export default function AdminDashboard() {
         </div>
         {expandedSections.students && (
           <div className="px-3 pb-3">
+            {/* Semester selector for report cards */}
+            <div className="mb-3 p-2 rounded-lg bg-muted/30 border border-border">
+              <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">תעודה לפי תקופה:</p>
+              <div className="grid grid-cols-4 gap-1">
+                {[
+                  { value: 'semester_a', label: 'סמסטר א׳' },
+                  { value: 'semester_b', label: 'סמסטר ב׳' },
+                  { value: 'summer', label: 'קיץ' },
+                  { value: 'all', label: 'שנתי' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setReportCardSemester(opt.value)}
+                    className={`text-[10px] py-1.5 px-1 rounded-md border transition-all font-semibold ${
+                      reportCardSemester === opt.value
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'border-border bg-card hover:bg-primary/10'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             {(classFilter ? [classFilter] : CLASS_OPTIONS).map(cls => {
               const classStudents = filteredStudents.filter(s => s.class_name === cls);
               return (
