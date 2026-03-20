@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { toast } from 'sonner';
+import { exportReportsToExcel } from '@/lib/exportReportsToExcel';
 import type { Database } from '@/integrations/supabase/types';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
