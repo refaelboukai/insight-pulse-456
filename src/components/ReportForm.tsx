@@ -258,7 +258,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
 
           {/* Step 3: Attendance */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-sm font-semibold mb-2">נוכחות</p>
+            <p className="text-base font-bold mb-2">נוכחות</p>
             <div className="grid grid-cols-3 gap-1.5">
               {(Object.entries(ATTENDANCE_LABELS) as [AttendanceStatus, string][]).map(([key, label]) => {
                 const Icon = ATTENDANCE_ICONS[key];
