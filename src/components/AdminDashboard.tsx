@@ -619,7 +619,8 @@ export default function AdminDashboard() {
                     </button>
                   );
                 })}
-              </div>
+            </div>
+            <Input value={assignDescription} onChange={e => setAssignDescription(e.target.value)} className="h-10 text-sm" placeholder="תיאור התמיכה (לדוגמה: שיחה אישית, ליווי בהפסקה...)" />
             </div>
             <Select value={assignFrequency} onValueChange={setAssignFrequency}>
               <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
