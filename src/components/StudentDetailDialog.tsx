@@ -102,7 +102,7 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
         subject: r.lesson_subject,
         attendance: ATTENDANCE_LABELS[r.attendance],
         behaviors: r.behavior_types?.map(b => BEHAVIOR_LABELS[b]),
-        participation: r.participation ? PARTICIPATION_LABELS[r.participation] : null,
+        participation: r.participation && r.participation.length > 0 ? r.participation.map(p => PARTICIPATION_LABELS[p]).join(', ') : null,
         violence: r.violence_subtypes?.map(v => VIOLENCE_LABELS[v]),
         comment: r.comment,
         severity: r.behavior_severity,
