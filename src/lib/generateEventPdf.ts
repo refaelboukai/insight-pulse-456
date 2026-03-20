@@ -13,12 +13,36 @@ interface EventData {
   date: string;
 }
 
+/** Preload an image and return a data-URL so html2canvas never needs a network fetch */
+function preloadImageAsDataUrl(src: string): Promise<string> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const c = document.createElement('canvas');
+        c.width = img.naturalWidth;
+        c.height = img.naturalHeight;
+        c.getContext('2d')!.drawImage(img, 0, 0);
+        resolve(c.toDataURL('image/jpeg'));
+      } catch {
+        resolve(src); // fallback to original
+      }
+    };
+    img.onerror = () => resolve(src);
+    img.src = src;
+  });
+}
+
 export async function generateEventPdf(data: EventData): Promise<Blob> {
   const typeName = INCIDENT_TYPE_LABELS[data.incidentType] || data.incidentType;
 
-  // Create a hidden container with styled HTML
+  // Preload logo as data-URL to avoid CORS / loading issues with html2canvas
+  const logoDataUrl = await preloadImageAsDataUrl(logoSrc);
+
   const container = document.createElement('div');
-  container.style.cssText = 'position:fixed;left:-9999px;top:0;width:595px;padding:40px;background:white;font-family:Arial,sans-serif;direction:rtl;';
+  container.style.cssText =
+    'position:fixed;left:-9999px;top:0;width:595px;padding:40px;background:white;font-family:Arial,sans-serif;direction:rtl;z-index:-1;';
 
   const rows = [
     { label: 'סוג אירוע', value: typeName },
@@ -34,17 +58,21 @@ export async function generateEventPdf(data: EventData): Promise<Blob> {
 
   container.innerHTML = `
     <div style="text-align:center;margin-bottom:24px;">
-      <img src="${logoSrc}" style="max-width:200px;height:auto;margin-bottom:12px;" />
+      <img src="${logoDataUrl}" style="max-width:200px;height:auto;margin-bottom:12px;" />
       <div style="font-size:28px;font-weight:bold;color:#1a1a1a;">🚨 דיווח אירוע חריג</div>
       <div style="font-size:13px;color:#888;margin-top:6px;">בית אקשטיין</div>
     </div>
     <div style="border:2px solid #e5e5e5;border-radius:12px;overflow:hidden;">
-      ${rows.map((r, i) => `
+      ${rows
+        .map(
+          (r, i) => `
         <div style="display:flex;padding:14px 18px;${i % 2 === 0 ? 'background:#f9f9f9;' : 'background:white;'}border-bottom:1px solid #eee;">
           <div style="min-width:120px;font-weight:bold;color:#444;font-size:14px;">${r.label}</div>
           <div style="flex:1;color:#1a1a1a;font-size:14px;white-space:pre-wrap;">${r.value}</div>
         </div>
-      `).join('')}
+      `
+        )
+        .join('')}
     </div>
     <div style="text-align:center;margin-top:30px;color:#bbb;font-size:11px;">
       נוצר אוטומטית • ${data.date}
@@ -53,8 +81,16 @@ export async function generateEventPdf(data: EventData): Promise<Blob> {
 
   document.body.appendChild(container);
 
+  // Wait a tick for the browser to lay out + render the image
+  await new Promise((r) => setTimeout(r, 100));
+
   try {
-    const canvas = await html2canvas(container, { scale: 2, useCORS: true });
+    const canvas = await html2canvas(container, {
+      scale: 2,
+      useCORS: true,
+      allowTaint: true,
+      logging: false,
+    });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'mm', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -64,14 +100,4 @@ export async function generateEventPdf(data: EventData): Promise<Blob> {
   } finally {
     document.body.removeChild(container);
   }
-}
-
-const WA_GROUP_LINK = 'https://chat.whatsapp.com/J1pEWYXADPU26XwV9bhx2y';
-
-export async function shareEventToWhatsApp(data: EventData) {
-  const typeName = INCIDENT_TYPE_LABELS[data.incidentType] || data.incidentType;
-  const waText = encodeURIComponent(`🚨 *אירוע חריג חדש*\nסוג: ${typeName}\nתיאור: ${data.description}\n\n🔗 קבוצת הניהול:\n${WA_GROUP_LINK}`);
-  
-  // Use whatsapp:// deep link which opens the app directly on mobile
-  window.open(`https://api.whatsapp.com/send?text=${waText}`, '_blank');
 }
