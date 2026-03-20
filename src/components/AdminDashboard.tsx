@@ -140,6 +140,7 @@ export default function AdminDashboard() {
       student_id: assignStudentId,
       staff_member_id: assignStaffId,
       support_types: assignSupportTypes,
+      support_description: assignDescription.trim() || null,
       frequency: assignFrequency,
       target_date: assignTargetDate || null,
       notes_for_parents: assignNotesForParents.trim() || null,
