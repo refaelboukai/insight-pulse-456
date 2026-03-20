@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
 import { SUBJECTS } from '@/lib/constants';
-import { Send, Sparkles, GraduationCap, ChevronDown, ChevronUp, CheckCircle2, Heart, Users2 } from 'lucide-react';
+import { Send, Sparkles, GraduationCap, ChevronDown, ChevronUp, CheckCircle2, Heart, Users2, Plus, X } from 'lucide-react';
 
 type Student = {
   id: string;
@@ -18,7 +18,15 @@ type Student = {
   is_active: boolean;
 };
 
+type SubGrade = { grade: string; weight: string };
+
 const CLASS_OPTIONS = ['טלי', 'עדן'];
+
+const SEMESTER_OPTIONS = [
+  { value: 'semester_a', label: 'סמסטר א׳' },
+  { value: 'semester_b', label: 'סמסטר ב׳' },
+  { value: 'summer', label: 'סמסטר קיץ' },
+];
 
 const RATING_OPTIONS = ['מצטיין/ת', 'טוב מאוד', 'טוב', 'דורש/ת שיפור'];
 
@@ -47,8 +55,9 @@ export default function GradesForm() {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState('');
+  const [semester, setSemester] = useState('semester_a');
   const [subject, setSubject] = useState('');
-  const [grade, setGrade] = useState('');
+  const [subGrades, setSubGrades] = useState<SubGrade[]>([{ grade: '', weight: '100' }]);
   const [verbalEvaluation, setVerbalEvaluation] = useState('');
   const [aiEnhancedEvaluation, setAiEnhancedEvaluation] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -106,10 +115,38 @@ export default function GradesForm() {
   const handleSelectStudent = (id: string) => {
     setSelectedStudentId(id);
     setSubject('');
-    setGrade('');
+    setSubGrades([{ grade: '', weight: '100' }]);
     setVerbalEvaluation('');
     setAiEnhancedEvaluation('');
   };
+
+  // Sub-grades management
+  const addSubGrade = () => {
+    if (subGrades.length >= 4) return;
+    setSubGrades(prev => [...prev, { grade: '', weight: '' }]);
+  };
+
+  const removeSubGrade = (index: number) => {
+    if (subGrades.length <= 1) return;
+    setSubGrades(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const updateSubGrade = (index: number, field: keyof SubGrade, value: string) => {
+    setSubGrades(prev => prev.map((sg, i) => i === index ? { ...sg, [field]: value } : sg));
+  };
+
+  // Calculate weighted total
+  const calculateTotal = (): number | null => {
+    const validGrades = subGrades.filter(sg => sg.grade && sg.weight);
+    if (validGrades.length === 0) return null;
+    const totalWeight = validGrades.reduce((s, sg) => s + parseFloat(sg.weight || '0'), 0);
+    if (totalWeight === 0) return null;
+    const weightedSum = validGrades.reduce((s, sg) => s + (parseFloat(sg.grade) * parseFloat(sg.weight)), 0);
+    return Math.round(weightedSum / totalWeight);
+  };
+
+  const totalGrade = calculateTotal();
+  const totalWeight = subGrades.reduce((s, sg) => s + (parseFloat(sg.weight || '0') || 0), 0);
 
   const handleEnhance = async () => {
     if (!verbalEvaluation.trim()) {
@@ -172,23 +209,31 @@ export default function GradesForm() {
       toast.error('נא לבחור תלמיד/ה ומקצוע');
       return;
     }
-    if (!grade && !verbalEvaluation.trim()) {
+    if (totalGrade === null && !verbalEvaluation.trim()) {
       toast.error('נא להזין ציון או הערכה מילולית');
       return;
     }
-    setSubmitting(true);
-    const gradeNum = grade ? parseInt(grade, 10) : null;
-    if (gradeNum !== null && (isNaN(gradeNum) || gradeNum < 0 || gradeNum > 100)) {
+    if (totalGrade !== null && (totalGrade < 0 || totalGrade > 100)) {
       toast.error('ציון חייב להיות בין 0 ל-100');
-      setSubmitting(false);
       return;
     }
+    if (totalWeight > 0 && Math.abs(totalWeight - 100) > 1) {
+      toast.error('סך המשקלים חייב להיות 100%');
+      return;
+    }
+    setSubmitting(true);
+
+    const subGradesData = subGrades
+      .filter(sg => sg.grade)
+      .map(sg => ({ grade: parseFloat(sg.grade), weight: parseFloat(sg.weight || '100') }));
 
     const { error } = await supabase.from('student_grades' as any).insert({
       student_id: selectedStudentId,
       staff_user_id: user!.id,
       subject,
-      grade: gradeNum,
+      semester,
+      grade: totalGrade,
+      sub_grades: subGradesData.length > 0 ? subGradesData : null,
       verbal_evaluation: verbalEvaluation.trim() || null,
       ai_enhanced_evaluation: aiEnhancedEvaluation.trim() || null,
     });
@@ -198,9 +243,9 @@ export default function GradesForm() {
       toast.error('שגיאה בשמירת הציון');
     } else {
       toast.success(`ציון/הערכה נשמרו עבור ${selectedStudent?.first_name} ${selectedStudent?.last_name}`);
-      setSubmittedIds(prev => new Set(prev).add(`${selectedStudentId}-${subject}`));
+      setSubmittedIds(prev => new Set(prev).add(`${selectedStudentId}-${subject}-${semester}`));
       setSubject('');
-      setGrade('');
+      setSubGrades([{ grade: '', weight: '100' }]);
       setVerbalEvaluation('');
       setAiEnhancedEvaluation('');
     }
@@ -277,6 +322,8 @@ export default function GradesForm() {
     );
   }
 
+  const semesterLabel = SEMESTER_OPTIONS.find(s => s.value === semester)?.label || '';
+
   // Grade entry form for selected student
   return (
     <div className="space-y-4">
@@ -293,6 +340,26 @@ export default function GradesForm() {
           <Button variant="ghost" size="sm" className="text-xs h-7" onClick={() => setSelectedStudentId('')}>
             חזרה לרשימה
           </Button>
+        </div>
+      </div>
+
+      {/* Semester selector */}
+      <div className="card-styled rounded-2xl p-3">
+        <label className="text-xs font-semibold mb-2 block">בחר/י סמסטר</label>
+        <div className="grid grid-cols-3 gap-1.5">
+          {SEMESTER_OPTIONS.map(sem => (
+            <button
+              key={sem.value}
+              onClick={() => setSemester(sem.value)}
+              className={`text-xs py-2.5 px-2 rounded-lg border transition-all font-semibold ${
+                semester === sem.value
+                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                  : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
+              }`}
+            >
+              {sem.label}
+            </button>
+          ))}
         </div>
       </div>
 
@@ -403,6 +470,7 @@ export default function GradesForm() {
           <div className="flex items-center gap-2">
             <GraduationCap className="h-4 w-4 text-primary" />
             <span className="text-sm font-semibold">דיווחי מורים מקצועיים</span>
+            <Badge variant="outline" className="text-[10px]">{semesterLabel}</Badge>
           </div>
           {subjectOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
         </button>
@@ -410,15 +478,15 @@ export default function GradesForm() {
           <div className="px-3 pb-3 space-y-4">
             {/* Subject selection */}
             <div className="space-y-2">
-              <label className="text-sm font-semibold">ציונים לפי מקצוע</label>
+              <label className="text-sm font-semibold">ציונים לפי מקצוע — {semesterLabel}</label>
               <div className="flex flex-wrap gap-1.5">
                 {SUBJECTS.map(s => {
-                  const key = `${selectedStudentId}-${s}`;
+                  const key = `${selectedStudentId}-${s}-${semester}`;
                   const submitted = submittedIds.has(key);
                   return (
                     <button
                       key={s}
-                      onClick={() => setSubject(s)}
+                      onClick={() => { setSubject(s); setSubGrades([{ grade: '', weight: '100' }]); }}
                       className={`text-sm py-2 px-3 rounded-lg border transition-colors ${
                         subject === s
                           ? 'bg-primary text-primary-foreground border-primary'
@@ -437,18 +505,61 @@ export default function GradesForm() {
 
             {subject && (
               <>
-                {/* Grade input */}
+                {/* Sub-grades with weights */}
                 <div className="space-y-2">
-                  <label className="text-xs font-semibold">ציון (0-100)</label>
-                  <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    placeholder="הזן ציון"
-                    value={grade}
-                    onChange={e => setGrade(e.target.value)}
-                    className="h-10 text-sm"
-                  />
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-semibold">ציונים ומשקלים</label>
+                    {subGrades.length < 4 && (
+                      <Button variant="ghost" size="sm" className="h-6 text-[10px] gap-1 px-2" onClick={addSubGrade}>
+                        <Plus className="h-3 w-3" /> הוסף ציון
+                      </Button>
+                    )}
+                  </div>
+                  <div className="space-y-1.5">
+                    {subGrades.map((sg, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <div className="flex-1">
+                          <Input
+                            type="number"
+                            min={0}
+                            max={100}
+                            placeholder={`ציון ${i + 1}`}
+                            value={sg.grade}
+                            onChange={e => updateSubGrade(i, 'grade', e.target.value)}
+                            className="h-9 text-sm"
+                          />
+                        </div>
+                        <div className="w-20">
+                          <Input
+                            type="number"
+                            min={0}
+                            max={100}
+                            placeholder="משקל %"
+                            value={sg.weight}
+                            onChange={e => updateSubGrade(i, 'weight', e.target.value)}
+                            className="h-9 text-sm text-center"
+                          />
+                        </div>
+                        {subGrades.length > 1 && (
+                          <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-destructive" onClick={() => removeSubGrade(i)}>
+                            <X className="h-3.5 w-3.5" />
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  {/* Total display */}
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-muted/50 border border-border">
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-semibold">סה״כ ציון משוקלל:</span>
+                      <span className={`text-sm font-bold ${totalGrade !== null ? 'text-primary' : 'text-muted-foreground'}`}>
+                        {totalGrade !== null ? totalGrade : '—'}
+                      </span>
+                    </div>
+                    <span className={`text-[10px] ${Math.abs(totalWeight - 100) > 1 && totalWeight > 0 ? 'text-destructive font-semibold' : 'text-muted-foreground'}`}>
+                      משקל: {totalWeight}%
+                    </span>
+                  </div>
                 </div>
 
                 {/* Verbal evaluation */}
@@ -501,7 +612,7 @@ export default function GradesForm() {
                   {submitting ? (
                     <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> שומר...</>
                   ) : (
-                    <><Send className="h-4 w-4" /> שמירת ציון והערכה</>
+                    <><Send className="h-4 w-4" /> שמירת ציון והערכה — {semesterLabel}</>
                   )}
                 </Button>
               </>
