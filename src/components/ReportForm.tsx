@@ -238,7 +238,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
         <>
           {/* Step 2: Subject — pill buttons */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-sm font-semibold mb-2">מקצוע</p>
+            <p className="text-base font-bold mb-2">מקצוע</p>
             <div className="flex flex-wrap gap-1.5">
               {SUBJECTS.map(s => (
                 <button
