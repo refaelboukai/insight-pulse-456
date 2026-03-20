@@ -73,6 +73,7 @@ export default function AdminDashboard() {
   const [assignStaffId, setAssignStaffId] = useState('');
   const [assignSupportTypes, setAssignSupportTypes] = useState<string[]>([]);
   const [assignFrequency, setAssignFrequency] = useState('weekly');
+  const [assignFrequencyCount, setAssignFrequencyCount] = useState(1);
   const [assignTargetDate, setAssignTargetDate] = useState('');
   const [assignNotesForParents, setAssignNotesForParents] = useState('');
   const [assignDescription, setAssignDescription] = useState('');
@@ -165,6 +166,7 @@ export default function AdminDashboard() {
       support_types: assignSupportTypes,
       support_description: assignDescription.trim() || null,
       frequency: assignFrequency,
+      frequency_count: assignFrequencyCount,
       target_date: assignTargetDate || null,
       notes_for_parents: assignNotesForParents.trim() || null,
       assigned_by: user.id,
@@ -173,7 +175,7 @@ export default function AdminDashboard() {
     else {
       toast.success('תמיכה שויכה בהצלחה');
       setShowAddAssignment(false);
-      setAssignStudentId(''); setAssignStaffId(''); setAssignSupportTypes([]); setAssignFrequency('weekly'); setAssignTargetDate(''); setAssignNotesForParents(''); setAssignDescription('');
+      setAssignStudentId(''); setAssignStaffId(''); setAssignSupportTypes([]); setAssignFrequency('weekly'); setAssignFrequencyCount(1); setAssignTargetDate(''); setAssignNotesForParents(''); setAssignDescription('');
       fetchAll();
     }
     setAddingAssignment(false);
@@ -737,13 +739,29 @@ export default function AdminDashboard() {
             </div>
             <Textarea value={assignDescription} onChange={e => setAssignDescription(e.target.value)} className="text-sm min-h-[70px]" placeholder="תאר/י את התמיכה שצריך לספק (לדוגמה: שיחה אישית, ליווי בהפסקה, תרגול כישורים חברתיים...)" />
             </div>
-            <Select value={assignFrequency} onValueChange={setAssignFrequency}>
-              <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                <SelectItem value="daily">יומי</SelectItem>
-                <SelectItem value="weekly">שבועי</SelectItem>
-              </SelectContent>
-            </Select>
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-xs font-semibold mb-1.5">תדירות</p>
+                <Select value={assignFrequency} onValueChange={setAssignFrequency}>
+                  <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="daily">יומי</SelectItem>
+                    <SelectItem value="weekly">שבועי</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1.5">מספר מופעים {assignFrequency === 'daily' ? 'ביום' : 'בשבוע'}</p>
+                <Select value={String(assignFrequencyCount)} onValueChange={v => setAssignFrequencyCount(Number(v))}>
+                  <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {[1,2,3,4,5,6,7].map(n => (
+                      <SelectItem key={n} value={String(n)}>{n}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
             <div>
               <p className="text-xs font-semibold mb-1.5">תאריך יעד לבדיקת ביצוע</p>
               <Input type="date" value={assignTargetDate} onChange={e => setAssignTargetDate(e.target.value)} className="h-10 text-sm" />
