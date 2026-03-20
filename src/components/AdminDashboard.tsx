@@ -57,6 +57,7 @@ export default function AdminDashboard() {
   // Support assignments
   const [supportAssignments, setSupportAssignments] = useState<any[]>([]);
   const [showAddAssignment, setShowAddAssignment] = useState(false);
+  const [assignClassFilter, setAssignClassFilter] = useState<string | null>(null);
   const [assignStudentId, setAssignStudentId] = useState('');
   const [assignStaffId, setAssignStaffId] = useState('');
   const [assignSupportTypes, setAssignSupportTypes] = useState<string[]>([]);
@@ -550,12 +551,12 @@ export default function AdminDashboard() {
   };
 
   // Render support assignments
-  const renderSupport = (viewAssignments: any[], sectionPrefix: string, showManagement: boolean) => (
+  const renderSupport = (viewAssignments: any[], sectionPrefix: string, showManagement: boolean, classFilter: string | null = null) => (
     <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
       <div className="flex items-center justify-between px-3 pt-1">
         <SectionHeader title="שיוך תמיכות" icon={HeartHandshake} count={viewAssignments.length} sectionKey={`${sectionPrefix}_support`} />
         {showManagement && (
-          <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2" onClick={() => setShowAddAssignment(true)}>
+          <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2" onClick={() => { setAssignClassFilter(classFilter); setShowAddAssignment(true); }}>
             <Plus className="h-3.5 w-3.5" />
             שיוך חדש
           </Button>
@@ -1048,9 +1049,30 @@ export default function AdminDashboard() {
                   {renderAttendance(viewAttendance, viewStudents, 'tali')}
                   {renderAlerts(unreadAlerts, 'tali')}
                   {renderEvents(viewEvents, 'tali')}
-                  {renderSupport(viewAssignments, 'tali', true)}
+                  {renderSupport(viewAssignments, 'tali', true, 'טלי')}
                   {renderStudents(viewStudents, 'tali', false)}
                   {renderReports(viewReports, 'tali')}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 text-xs"
+                    onClick={() => {
+                      const classStudentIds = new Set(viewStudents.map(s => s.id));
+                      exportReportsToExcel({
+                        reports: reports.filter(r => classStudentIds.has(r.student_id)),
+                        students: viewStudents,
+                        alerts: alerts.filter(a => classStudentIds.has(a.student_id)),
+                        events: events.filter(ev => ev.people_involved && viewStudents.some(s => ev.people_involved!.includes(s.first_name) || ev.people_involved!.includes(s.last_name))),
+                        dailyAttendance: dailyAttendance.filter(a => classStudentIds.has(a.student_id)),
+                        supportSessions: supportSessions.filter((ss: any) => classStudentIds.has(ss.student_id)),
+                        supportAssignments: supportAssignments.filter((sa: any) => classStudentIds.has(sa.student_id)),
+                      });
+                      toast.success('קובץ אקסל הורד — הכיתה של טלי');
+                    }}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    הורדת נתוני הכיתה לאקסל
+                  </Button>
                 </div>
               );
             })()}
@@ -1079,9 +1101,30 @@ export default function AdminDashboard() {
                   {renderAttendance(viewAttendance, viewStudents, 'eden')}
                   {renderAlerts(unreadAlerts, 'eden')}
                   {renderEvents(viewEvents, 'eden')}
-                  {renderSupport(viewAssignments, 'eden', true)}
+                  {renderSupport(viewAssignments, 'eden', true, 'עדן')}
                   {renderStudents(viewStudents, 'eden', false)}
                   {renderReports(viewReports, 'eden')}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 text-xs"
+                    onClick={() => {
+                      const classStudentIds = new Set(viewStudents.map(s => s.id));
+                      exportReportsToExcel({
+                        reports: reports.filter(r => classStudentIds.has(r.student_id)),
+                        students: viewStudents,
+                        alerts: alerts.filter(a => classStudentIds.has(a.student_id)),
+                        events: events.filter(ev => ev.people_involved && viewStudents.some(s => ev.people_involved!.includes(s.first_name) || ev.people_involved!.includes(s.last_name))),
+                        dailyAttendance: dailyAttendance.filter(a => classStudentIds.has(a.student_id)),
+                        supportSessions: supportSessions.filter((ss: any) => classStudentIds.has(ss.student_id)),
+                        supportAssignments: supportAssignments.filter((sa: any) => classStudentIds.has(sa.student_id)),
+                      });
+                      toast.success('קובץ אקסל הורד — הכיתה של עדן');
+                    }}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    הורדת נתוני הכיתה לאקסל
+                  </Button>
                 </div>
               );
             })()}
@@ -1100,8 +1143,8 @@ export default function AdminDashboard() {
             <Select value={assignStudentId} onValueChange={setAssignStudentId}>
               <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י תלמיד" /></SelectTrigger>
               <SelectContent>
-                {students.map(s => (
-                  <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.class_name})</SelectItem>
+                {(assignClassFilter ? students.filter(s => s.class_name === assignClassFilter) : students).map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}{!assignClassFilter ? ` (${s.class_name})` : ''}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
