@@ -30,7 +30,13 @@ type ExceptionalEvent = Database['public']['Tables']['exceptional_events']['Row'
 
 const CLASS_OPTIONS = ['טלי', 'עדן'];
 
+const SUPPORT_LABELS: Record<string, string> = {
+  social: 'חברתית', emotional: 'רגשית', academic: 'לימודית', behavioral: 'התנהגותית',
+};
+const SUPPORT_TYPES_LIST = ['social', 'emotional', 'academic', 'behavioral'] as const;
+
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [reports, setReports] = useState<Report[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -39,8 +45,24 @@ export default function AdminDashboard() {
   const [supportSessions, setSupportSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false, monthlyReport: false,
+    dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false, monthlyReport: false, staffManagement: false,
   });
+
+  // Staff management
+  const [staffMembers, setStaffMembers] = useState<any[]>([]);
+  const [newStaffName, setNewStaffName] = useState('');
+  const [addingStaff, setAddingStaff] = useState(false);
+
+  // Support assignments
+  const [supportAssignments, setSupportAssignments] = useState<any[]>([]);
+  const [showAddAssignment, setShowAddAssignment] = useState(false);
+  const [assignStudentId, setAssignStudentId] = useState('');
+  const [assignStaffId, setAssignStaffId] = useState('');
+  const [assignSupportTypes, setAssignSupportTypes] = useState<string[]>([]);
+  const [assignFrequency, setAssignFrequency] = useState('weekly');
+  const [assignTargetDate, setAssignTargetDate] = useState('');
+  const [assignNotesForParents, setAssignNotesForParents] = useState('');
+  const [addingAssignment, setAddingAssignment] = useState(false);
 
   // Add student form
   const [showAddStudent, setShowAddStudent] = useState(false);
