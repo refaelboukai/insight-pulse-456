@@ -484,6 +484,24 @@ export default function AdminDashboard() {
         ))}
       </div>
 
+      {/* Export Excel */}
+      {isManagement && (
+        <Button
+          variant="outline"
+          className="w-full gap-2"
+          onClick={() => {
+            exportReportsToExcel({
+              reports, students, alerts, events,
+              dailyAttendance, supportSessions, supportAssignments,
+            });
+            toast.success('קובץ האקסל הורד בהצלחה');
+          }}
+        >
+          <Download className="h-4 w-4" />
+          הורדת כל הדיווחים לאקסל
+        </Button>
+      )}
+
       {/* Daily Attendance */}
       <div className="card-styled rounded-2xl overflow-hidden">
         <SectionHeader title="ביקור סדיר — היום" icon={ClipboardCheck} count={filteredAttendance.filter(a => !a.is_present).length} badge={filteredAttendance.filter(a => !a.is_present).length > 0 ? 'destructive' : undefined} sectionKey="dailyAttendance" />
