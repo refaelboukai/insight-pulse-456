@@ -144,33 +144,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: 'שגיאה בכניסה' };
     }
 
-    // Personal student code — look up student by student_code
-    const { data: student } = await supabase
-      .from('students')
-      .select('id, first_name, last_name')
-      .eq('student_code', code.toUpperCase().trim())
-      .maybeSingle();
-
-    if (!student) {
-      return { error: 'קוד שגוי' };
-    }
-
-    // Sign in with shared student account
-    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+    // Personal student code — sign in first, then look up student
+    // Sign in with shared student account first (needed for RLS)
+    const { error: signInError } = await supabase.auth.signInWithPassword({
       email: STUDENT_ACCOUNT.email,
       password: STUDENT_ACCOUNT.password,
     });
 
     if (signInError) {
-      // Account might not exist yet, create it
       if (signInError.message.includes('Invalid login credentials')) {
-        const { error: signUpError } = await supabase.auth.signUp({
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
           email: STUDENT_ACCOUNT.email,
           password: STUDENT_ACCOUNT.password,
           options: { data: { full_name: 'תלמיד/ה' } },
         });
         if (signUpError) return { error: 'שגיאה בכניסה' };
-
+        if (signUpData.user) {
+          await supabase.from('user_roles').insert({ user_id: signUpData.user.id, role: 'student' as any });
+        }
         const { error: retryError } = await supabase.auth.signInWithPassword({
           email: STUDENT_ACCOUNT.email,
           password: STUDENT_ACCOUNT.password,
@@ -179,6 +170,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         return { error: 'שגיאה בכניסה' };
       }
+    }
+
+    // Now authenticated — look up student by code
+    const { data: student } = await supabase
+      .from('students')
+      .select('id, first_name, last_name')
+      .eq('student_code', code.toUpperCase().trim())
+      .maybeSingle();
+
+    if (!student) {
+      // Invalid code — sign out
+      await supabase.auth.signOut();
+      return { error: 'קוד שגוי' };
     }
 
     // Lock to this specific student
