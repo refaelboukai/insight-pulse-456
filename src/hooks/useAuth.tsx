@@ -91,22 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!signInError && signInData.user) {
-        // Only student role can be self-assigned (RLS restriction)
-        if (account.role === 'student') {
-          const { data: existingRole } = await supabase.from('user_roles')
-            .select('id').eq('user_id', signInData.user.id).eq('role', 'student' as any).maybeSingle();
-          if (!existingRole) {
-            await supabase.from('user_roles').insert({
-              user_id: signInData.user.id,
-              role: 'student' as any,
-            });
-          }
-        }
-        // Admin/staff roles are pre-seeded in the database
-        if (code === '555') {
-          sessionStorage.removeItem(LOCKED_STUDENT_KEY);
-          setLockedStudentId(null);
-        }
+        // Admin/staff roles are pre-seeded via database trigger
         return { error: null };
       }
 
