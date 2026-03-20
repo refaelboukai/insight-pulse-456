@@ -271,7 +271,7 @@ export default function SupportPlanForm() {
       {selectedStaffId && assignments.length > 0 && (
         <div className="flex items-center justify-between rounded-xl px-3 py-2 bg-primary/5 border border-primary/20">
           <p className="text-xs font-medium text-primary">
-            {assignments.filter(a => getCompletionCount(a.id) >= getRequiredCount(a)).length}/{assignments.length} הושלמו היום
+            {assignments.filter(a => getCompletionCount(a) >= (a.frequency_count || 1)).length}/{assignments.length} הושלמו {assignments.some(a => a.frequency === 'weekly') ? 'השבוע' : 'היום'}
           </p>
         </div>
       )}
