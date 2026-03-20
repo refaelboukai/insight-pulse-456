@@ -16,6 +16,10 @@ const SUPPORT_LABELS: Record<string, string> = {
   social: 'חברתית', emotional: 'רגשית', academic: 'לימודית', behavioral: 'התנהגותית',
 };
 
+const SEMESTER_LABELS: Record<string, string> = {
+  semester_a: 'סמסטר א׳', semester_b: 'סמסטר ב׳', summer: 'סמסטר קיץ',
+};
+
 export default function StudentDashboard() {
   const { lockedStudentId } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
