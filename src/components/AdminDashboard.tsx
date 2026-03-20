@@ -919,8 +919,6 @@ export default function AdminDashboard() {
 
       {/* Reset All Reports - management only */}
       {isManagement && (
-
-      {/* Reset All Reports */}
       <div className="card-styled rounded-2xl overflow-hidden border-destructive/30">
         <div className="p-3">
           <div className="flex items-center gap-2.5 mb-2">
