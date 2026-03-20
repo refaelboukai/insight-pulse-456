@@ -7,8 +7,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { toast } from 'sonner';
 import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
-import { generateEventPdf, shareEventToWhatsApp } from '@/lib/generateEventPdf';
-import { Send, FileWarning, MessageCircle, Users, Shield, FileText, Mail, MessageSquare, X } from 'lucide-react';
+import { generateEventPdf } from '@/lib/generateEventPdf';
+import { Send, FileWarning, MessageCircle, Users, Shield } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type IncidentType = Database['public']['Enums']['incident_type'];
