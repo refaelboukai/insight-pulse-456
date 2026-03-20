@@ -441,13 +441,13 @@ export default function GradesForm() {
                 <label className="text-sm font-semibold text-foreground">{section.title}</label>
                 <div className="space-y-2">
                   {section.items.map(cat => (
-                    <div key={cat.key} className="flex items-center gap-2">
-                      <span className="text-sm font-medium w-40 shrink-0">{cat.label}</span>
+                    <div key={cat.key} className="flex flex-col gap-1.5 sm:flex-row sm:items-center sm:gap-2">
+                      <span className="text-sm font-medium shrink-0">{cat.label}</span>
                       <Select
                         value={teamRatings[cat.key] || ''}
                         onValueChange={val => { setTeamRatings(prev => ({ ...prev, [cat.key]: val })); setEvalSaved(false); }}
                       >
-                        <SelectTrigger className="h-8 text-sm flex-1">
+                        <SelectTrigger className="h-9 text-sm">
                           <SelectValue placeholder="בחר דירוג" />
                         </SelectTrigger>
                         <SelectContent>
