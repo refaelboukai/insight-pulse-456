@@ -1,0 +1,1 @@
+ALTER TABLE public.support_assignments ADD COLUMN IF NOT EXISTS support_description text;

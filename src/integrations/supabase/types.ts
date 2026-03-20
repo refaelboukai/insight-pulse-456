@@ -449,6 +449,7 @@ export type Database = {
           notes_for_parents: string | null
           staff_member_id: string
           student_id: string
+          support_description: string | null
           support_types: Database["public"]["Enums"]["support_type"][]
           target_date: string | null
           updated_at: string
@@ -462,6 +463,7 @@ export type Database = {
           notes_for_parents?: string | null
           staff_member_id: string
           student_id: string
+          support_description?: string | null
           support_types?: Database["public"]["Enums"]["support_type"][]
           target_date?: string | null
           updated_at?: string
@@ -475,6 +477,7 @@ export type Database = {
           notes_for_parents?: string | null
           staff_member_id?: string
           student_id?: string
+          support_description?: string | null
           support_types?: Database["public"]["Enums"]["support_type"][]
           target_date?: string | null
           updated_at?: string
