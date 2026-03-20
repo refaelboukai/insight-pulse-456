@@ -46,6 +46,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
   const [submitting, setSubmitting] = useState(false);
   const [reportedStudentIds, setReportedStudentIds] = useState<Set<string>>(new Set());
   const [lastClassName, setLastClassName] = useState<string | null>(null);
+  const [showPostSubmitDialog, setShowPostSubmitDialog] = useState(false);
   useEffect(() => {
     supabase.from('students').select('*').eq('is_active', true).order('last_name')
       .then(({ data }) => { if (data) setStudents(data); });
