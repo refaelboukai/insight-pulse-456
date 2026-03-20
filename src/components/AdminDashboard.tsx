@@ -917,7 +917,7 @@ export default function AdminDashboard() {
             <div>
               <p className="text-xs font-semibold mb-1.5">או בחר תלמיד ספציפי:</p>
               <div className="flex flex-wrap gap-1">
-                {students.map(s => (
+                {filteredStudents.map(s => (
                   <button
                     key={s.id}
                     onClick={() => generateMonthlyReport(s.id)}
