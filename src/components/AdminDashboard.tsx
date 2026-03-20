@@ -105,7 +105,7 @@ export default function AdminDashboard() {
   const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [editAttendance, setEditAttendance] = useState('');
   const [editBehaviorTypes, setEditBehaviorTypes] = useState<string[]>([]);
-  const [editParticipation, setEditParticipation] = useState('');
+  const [editParticipations, setEditParticipations] = useState<string[]>([]);
   const [editComment, setEditComment] = useState('');
   const [editSubject, setEditSubject] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
@@ -369,7 +369,7 @@ export default function AdminDashboard() {
     setEditingReport(r);
     setEditAttendance(r.attendance);
     setEditBehaviorTypes([...(r.behavior_types || [])]);
-    setEditParticipation(r.participation || '');
+    setEditParticipations([...(r.participation || [])]);
     setEditComment(r.comment || '');
     setEditSubject(r.lesson_subject);
   };
@@ -384,7 +384,7 @@ export default function AdminDashboard() {
     const { error } = await supabase.from('lesson_reports').update({
       attendance: editAttendance as any,
       behavior_types: editBehaviorTypes as any,
-      participation: (editParticipation || null) as any,
+      participation: editParticipations as any,
       comment: editComment.trim() || null,
       lesson_subject: editSubject,
     }).eq('id', editingReport.id);
@@ -913,9 +913,9 @@ export default function AdminDashboard() {
                       חומרה {r.behavior_severity}
                     </Badge>
                   )}
-                  {r.participation && (
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[r.participation]}</Badge>
-                  )}
+                  {r.participation && r.participation.length > 0 && r.participation.map(p => (
+                    <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>
+                  ))}
                   {r.performance_score && (
                     <Badge variant="outline" className="text-[10px] px-1.5 py-0">ביצועים: {r.performance_score}</Badge>
                   )}
@@ -1132,8 +1132,8 @@ export default function AdminDashboard() {
                 <p className="text-xs font-semibold mb-1">השתתפות</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {Object.entries(PARTICIPATION_LABELS).map(([k, v]) => (
-                    <button key={k} onClick={() => setEditParticipation(editParticipation === k ? '' : k)}
-                      className={`text-xs py-2 px-2 rounded-lg border transition-all font-medium ${editParticipation === k ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'}`}>
+                    <button key={k} onClick={() => setEditParticipations(prev => prev.includes(k) ? prev.filter(x => x !== k) : [...prev, k])}
+                      className={`text-xs py-2 px-2 rounded-lg border transition-all font-medium ${editParticipations.includes(k) ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'}`}>
                       {v}
                     </button>
                   ))}

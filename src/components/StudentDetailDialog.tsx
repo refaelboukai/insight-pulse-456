@@ -102,7 +102,7 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
         subject: r.lesson_subject,
         attendance: ATTENDANCE_LABELS[r.attendance],
         behaviors: r.behavior_types?.map(b => BEHAVIOR_LABELS[b]),
-        participation: r.participation ? PARTICIPATION_LABELS[r.participation] : null,
+        participation: r.participation && r.participation.length > 0 ? r.participation.map(p => PARTICIPATION_LABELS[p]).join(', ') : null,
         violence: r.violence_subtypes?.map(v => VIOLENCE_LABELS[v]),
         comment: r.comment,
         severity: r.behavior_severity,
@@ -369,11 +369,11 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
                             {BEHAVIOR_LABELS[b]}
                           </Badge>
                         ))}
-                        {r.participation && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                            {PARTICIPATION_LABELS[r.participation]}
+                        {r.participation && r.participation.length > 0 && r.participation.map(p => (
+                          <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">
+                            {PARTICIPATION_LABELS[p]}
                           </Badge>
-                        )}
+                        ))}
                         {r.violence_subtypes && r.violence_subtypes.length > 0 && (
                           r.violence_subtypes.map(v => (
                             <Badge key={v} variant="destructive" className="text-[10px] px-1.5 py-0">

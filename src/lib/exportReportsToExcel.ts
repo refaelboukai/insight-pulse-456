@@ -49,7 +49,7 @@ export function exportReportsToExcel(data: ExportData) {
     'נוכחות': ATTENDANCE_LABELS[r.attendance] || r.attendance,
     'התנהגות': (r.behavior_types || []).map(b => BEHAVIOR_LABELS[b] || b).join(', '),
     'חומרה': r.behavior_severity ? (SEVERITY_LABELS[r.behavior_severity] || r.behavior_severity) : '',
-    'השתתפות': r.participation ? (PARTICIPATION_LABELS[r.participation] || r.participation) : '',
+    'למידה': r.participation && r.participation.length > 0 ? r.participation.map(p => PARTICIPATION_LABELS[p] || p).join(', ') : '',
     'ציון ביצוע': r.performance_score || '',
     'הערה': r.comment || '',
   }));

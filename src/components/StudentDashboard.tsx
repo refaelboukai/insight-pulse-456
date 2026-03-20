@@ -175,9 +175,9 @@ export default function StudentDashboard() {
                         {BEHAVIOR_LABELS[b]}
                       </Badge>
                     ))}
-                    {r.participation && (
-                      <Badge variant="secondary" className="text-xs px-1.5 py-0">{PARTICIPATION_LABELS[r.participation]}</Badge>
-                    )}
+                    {r.participation && r.participation.length > 0 && r.participation.map(p => (
+                      <Badge key={p} variant="secondary" className="text-xs px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>
+                    ))}
                   </div>
                   {r.comment && <p className="text-xs text-muted-foreground mt-1.5">{r.comment}</p>}
                 </div>
