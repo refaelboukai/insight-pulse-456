@@ -62,6 +62,7 @@ export default function AdminDashboard() {
   const [assignFrequency, setAssignFrequency] = useState('weekly');
   const [assignTargetDate, setAssignTargetDate] = useState('');
   const [assignNotesForParents, setAssignNotesForParents] = useState('');
+  const [assignDescription, setAssignDescription] = useState('');
   const [addingAssignment, setAddingAssignment] = useState(false);
 
   // Add student form
