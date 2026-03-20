@@ -15,7 +15,7 @@ import {
 } from '@/lib/constants';
 
 import {
-  AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield,
+  AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield, Download,
   ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
