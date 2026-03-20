@@ -105,7 +105,7 @@ export default function AdminDashboard() {
   const [editingReport, setEditingReport] = useState<Report | null>(null);
   const [editAttendance, setEditAttendance] = useState('');
   const [editBehaviorTypes, setEditBehaviorTypes] = useState<string[]>([]);
-  const [editParticipation, setEditParticipation] = useState('');
+  const [editParticipations, setEditParticipations] = useState<string[]>([]);
   const [editComment, setEditComment] = useState('');
   const [editSubject, setEditSubject] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
