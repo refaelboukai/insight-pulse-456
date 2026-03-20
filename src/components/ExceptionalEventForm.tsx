@@ -169,7 +169,7 @@ export default function ExceptionalEventForm() {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1.5 block text-muted-foreground">סוג אירוע</label>
+            <label className="text-sm font-bold block text-muted-foreground">סוג אירוע</label>
             <Select value={incidentType} onValueChange={v => setIncidentType(v as IncidentType)}>
               <SelectTrigger className="rounded-xl h-11 border-2">
                 <SelectValue placeholder="בחר/י סוג אירוע" />
