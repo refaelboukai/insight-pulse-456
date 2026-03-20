@@ -265,7 +265,27 @@ export default function GradesForm() {
         payload[key] = teamRatings[key] || null;
       });
 
-      const { error } = await supabase.from('student_evaluations' as any).insert(payload);
+      // Check if evaluation already exists for this student by this staff
+      const { data: existing } = await supabase.from('student_evaluations' as any)
+        .select('id')
+        .eq('student_id', selectedStudentId)
+        .eq('staff_user_id', user!.id)
+        .order('created_at', { ascending: false })
+        .limit(1);
+
+      let error;
+      if (existing && (existing as any[]).length > 0) {
+        // Update existing evaluation
+        const result = await supabase.from('student_evaluations' as any)
+          .update(payload)
+          .eq('id', (existing as any[])[0].id);
+        error = result.error;
+      } else {
+        // Insert new evaluation
+        const result = await supabase.from('student_evaluations' as any).insert(payload);
+        error = result.error;
+      }
+
       if (error) throw error;
       toast.success('ההערכה הכללית נשמרה בהצלחה!');
       setEvalSaved(true);
