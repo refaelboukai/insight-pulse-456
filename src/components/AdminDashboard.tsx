@@ -947,6 +947,7 @@ export default function AdminDashboard() {
           </Button>
         </div>
       </div>
+      )}
 
       {/* Reset Password Dialog */}
       <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
