@@ -852,7 +852,8 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Monthly Report */}
+      {/* Monthly Report - management only */}
+      {isManagement && (
       <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
         <SectionHeader title="הפק דוח חודשי" icon={FileText} sectionKey="monthlyReport" />
         {expandedSections.monthlyReport && (
