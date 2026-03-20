@@ -78,12 +78,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: 'קוד שגוי' };
     }
 
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: account.email,
       password: account.password,
     });
 
-    if (!signInError) return { error: null };
+    if (!signInError && signInData.user) {
+      // Ensure role exists for existing users
+      if (account.role === 'admin' || account.role === 'student') {
+        const { data: existingRole } = await supabase.from('user_roles')
+          .select('id').eq('user_id', signInData.user.id).eq('role', account.role as any).maybeSingle();
+        if (!existingRole) {
+          await supabase.from('user_roles').insert({
+            user_id: signInData.user.id,
+            role: account.role as any,
+          });
+        }
+      }
+      return { error: null };
+    }
 
     if (signInError.message.includes('Invalid login credentials')) {
       const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
