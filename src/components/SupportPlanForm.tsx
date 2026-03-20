@@ -203,8 +203,8 @@ export default function SupportPlanForm() {
           >
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="font-semibold text-sm">{studentName(a.student_id)}</p>
-                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                <p className="font-bold text-base">{studentName(a.student_id)}</p>
+                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <Badge variant="outline" className="text-xs">
                     {a.frequency === 'daily' ? 'יומי' : 'שבועי'} · {required} {a.frequency === 'daily' ? 'ביום' : 'בשבוע'}
                   </Badge>
