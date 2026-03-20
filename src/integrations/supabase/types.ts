@@ -450,6 +450,7 @@ export type Database = {
           assigned_by: string
           created_at: string
           frequency: string
+          frequency_count: number
           id: string
           is_active: boolean
           notes_for_parents: string | null
@@ -464,6 +465,7 @@ export type Database = {
           assigned_by: string
           created_at?: string
           frequency?: string
+          frequency_count?: number
           id?: string
           is_active?: boolean
           notes_for_parents?: string | null
@@ -478,6 +480,7 @@ export type Database = {
           assigned_by?: string
           created_at?: string
           frequency?: string
+          frequency_count?: number
           id?: string
           is_active?: boolean
           notes_for_parents?: string | null

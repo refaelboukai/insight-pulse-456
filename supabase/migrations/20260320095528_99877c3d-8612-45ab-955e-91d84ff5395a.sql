@@ -1,0 +1,1 @@
+ALTER TABLE public.support_assignments ADD COLUMN frequency_count integer NOT NULL DEFAULT 1;
