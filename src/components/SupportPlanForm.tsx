@@ -74,13 +74,21 @@ export default function SupportPlanForm() {
   useEffect(() => {
     if (!selectedStaffId) { setAssignments([]); setCompletions([]); return; }
     const load = async () => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      // Get start of current week (Sunday)
+      const dayOfWeek = today.getDay();
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - dayOfWeek);
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
       const [assignRes, compRes] = await Promise.all([
         supabase.from('support_assignments').select('*, staff_members(name)')
           .eq('staff_member_id', selectedStaffId)
           .eq('is_active', true) as any,
         supabase.from('support_completions').select('*')
-          .eq('completion_date', today),
+          .gte('completion_date', weekStartStr)
+          .lte('completion_date', todayStr),
       ]);
       if (assignRes.data) setAssignments(assignRes.data as any[]);
       if (compRes.data) setCompletions(compRes.data as any[]);
