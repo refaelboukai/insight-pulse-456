@@ -166,6 +166,7 @@ export default function AdminDashboard() {
       support_types: assignSupportTypes,
       support_description: assignDescription.trim() || null,
       frequency: assignFrequency,
+      frequency_count: assignFrequencyCount,
       target_date: assignTargetDate || null,
       notes_for_parents: assignNotesForParents.trim() || null,
       assigned_by: user.id,
