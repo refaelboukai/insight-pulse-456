@@ -21,6 +21,7 @@ import {
   ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
+import { generateEventPdf } from '@/lib/generateEventPdf';
 import { toast } from 'sonner';
 import { exportReportsToExcel } from '@/lib/exportReportsToExcel';
 import type { Database } from '@/integrations/supabase/types';
