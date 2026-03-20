@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import StudentDetailDialog from '@/components/StudentDetailDialog';
+import CodesManager from '@/components/CodesManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS, INCIDENT_TYPE_LABELS,
   SEVERITY_LABELS, ABSENCE_REASON_LABELS,
@@ -16,7 +18,7 @@ import {
 
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield, Download,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { toast } from 'sonner';
@@ -28,8 +30,6 @@ type Student = Database['public']['Tables']['students']['Row'];
 type Alert = Database['public']['Tables']['alerts']['Row'];
 type ExceptionalEvent = Database['public']['Tables']['exceptional_events']['Row'];
 
-
-
 const CLASS_OPTIONS = ['טלי', 'עדן'];
 
 const SUPPORT_LABELS: Record<string, string> = {
@@ -37,11 +37,8 @@ const SUPPORT_LABELS: Record<string, string> = {
 };
 const SUPPORT_TYPES_LIST = ['social', 'emotional', 'academic', 'behavioral'] as const;
 
-type DashboardView = 'management' | 'טלי' | 'עדן';
-
 export default function AdminDashboard() {
   const { user } = useAuth();
-  const [activeView, setActiveView] = useState<DashboardView>('management');
   const [reports, setReports] = useState<Report[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -49,16 +46,7 @@ export default function AdminDashboard() {
   const [dailyAttendance, setDailyAttendance] = useState<any[]>([]);
   const [supportSessions, setSupportSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false, monthlyReport: false, staffManagement: false,
-  });
-
-  const classFilter = activeView === 'management' ? null : activeView;
-  const filteredStudents = classFilter ? students.filter(s => s.class_name === classFilter) : students;
-  const filteredStudentIds = new Set(filteredStudents.map(s => s.id));
-  const filteredReports = classFilter ? reports.filter(r => filteredStudentIds.has(r.student_id)) : reports;
-  const filteredAlerts = classFilter ? alerts.filter(a => filteredStudentIds.has(a.student_id)) : alerts;
-  const filteredAttendance = classFilter ? dailyAttendance.filter(a => filteredStudentIds.has(a.student_id)) : dailyAttendance;
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
 
   // Staff management
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
@@ -67,7 +55,6 @@ export default function AdminDashboard() {
 
   // Support assignments
   const [supportAssignments, setSupportAssignments] = useState<any[]>([]);
-  const filteredAssignments = classFilter ? supportAssignments.filter((sa: any) => filteredStudentIds.has(sa.student_id)) : supportAssignments;
   const [showAddAssignment, setShowAddAssignment] = useState(false);
   const [assignStudentId, setAssignStudentId] = useState('');
   const [assignStaffId, setAssignStaffId] = useState('');
@@ -399,19 +386,10 @@ export default function AdminDashboard() {
     else { toast.success('הדיווח נמחק'); setEditingReport(null); fetchAll(); }
   };
 
-
   const studentName = (id: string) => {
     const s = students.find(st => st.id === id);
     return s ? `${s.first_name} ${s.last_name}` : 'לא ידוע';
   };
-
-  const unreadAlerts = filteredAlerts.filter(a => !a.is_read);
-  const avgPerformance = filteredReports.filter(r => r.performance_score).length > 0
-    ? (filteredReports.reduce((s, r) => s + (r.performance_score || 0), 0) / filteredReports.filter(r => r.performance_score).length).toFixed(1)
-    : '—';
-
-  const recentReports = filteredReports.slice(0, 15);
-  const isManagement = activeView === 'management';
 
   if (loading) {
     return (
@@ -444,256 +422,613 @@ export default function AdminDashboard() {
     </button>
   );
 
-  return (
-    <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
-      {/* View Selector */}
-      <div className="grid grid-cols-3 gap-1.5 p-1 bg-card rounded-xl shadow-soft">
-        {([
-          { key: 'management' as DashboardView, label: 'צוות הנהלה', icon: Shield },
-          { key: 'טלי' as DashboardView, label: 'הכיתה של טלי', icon: Users },
-          { key: 'עדן' as DashboardView, label: 'הכיתה של עדן', icon: Users },
-        ]).map(v => (
-          <button
-            key={v.key}
-            onClick={() => setActiveView(v.key)}
-            className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg text-xs font-semibold transition-all ${
-              activeView === v.key
-                ? 'bg-primary text-primary-foreground shadow-sm'
-                : 'text-muted-foreground hover:bg-muted/50'
-            }`}
-          >
-            <v.icon className="h-3.5 w-3.5" />
-            {v.label}
-          </button>
-        ))}
-      </div>
+  // Helper: get filtered data for a view
+  const getViewData = (classFilter: string | null) => {
+    const viewStudents = classFilter ? students.filter(s => s.class_name === classFilter) : students;
+    const viewStudentIds = new Set(viewStudents.map(s => s.id));
+    const viewReports = classFilter ? reports.filter(r => viewStudentIds.has(r.student_id)) : reports;
+    const viewAlerts = classFilter ? alerts.filter(a => viewStudentIds.has(a.student_id)) : alerts;
+    const viewAttendance = classFilter ? dailyAttendance.filter(a => viewStudentIds.has(a.student_id)) : dailyAttendance;
+    const viewAssignments = classFilter ? supportAssignments.filter((sa: any) => viewStudentIds.has(sa.student_id)) : supportAssignments;
+    const unreadAlerts = viewAlerts.filter(a => !a.is_read);
+    const avgPerformance = viewReports.filter(r => r.performance_score).length > 0
+      ? (viewReports.reduce((s, r) => s + (r.performance_score || 0), 0) / viewReports.filter(r => r.performance_score).length).toFixed(1)
+      : '—';
+    return { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, unreadAlerts, avgPerformance };
+  };
 
-      {/* Stats grid */}
-      <div className="grid grid-cols-4 gap-2">
-        {[
-          { icon: Users, value: filteredStudents.length, label: 'תלמידים', color: 'bg-primary/10 text-primary' },
-          { icon: FileText, value: filteredReports.length, label: 'דיווחים', color: 'bg-primary/10 text-primary' },
-          { icon: Bell, value: unreadAlerts.length, label: 'התראות', color: 'bg-accent/10 text-accent' },
-          { icon: TrendingUp, value: avgPerformance, label: 'ממוצע', color: 'bg-success/10 text-success' },
-        ].map((stat, i) => (
-          <div key={i} className="card-styled rounded-xl p-3 text-center">
-            <div className={`w-8 h-8 rounded-lg mx-auto mb-1.5 flex items-center justify-center ${stat.color}`}>
-              <stat.icon className="h-4 w-4" />
-            </div>
-            <p className="text-lg font-bold">{stat.value}</p>
-            <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+  // Render stats grid
+  const renderStats = (viewStudents: Student[], viewReports: Report[], unreadAlerts: Alert[], avgPerformance: string) => (
+    <div className="grid grid-cols-4 gap-2 mb-3">
+      {[
+        { icon: Users, value: viewStudents.length, label: 'תלמידים', color: 'bg-primary/10 text-primary' },
+        { icon: FileText, value: viewReports.length, label: 'דיווחים', color: 'bg-primary/10 text-primary' },
+        { icon: Bell, value: unreadAlerts.length, label: 'התראות', color: 'bg-accent/10 text-accent' },
+        { icon: TrendingUp, value: avgPerformance, label: 'ממוצע', color: 'bg-success/10 text-success' },
+      ].map((stat, i) => (
+        <div key={i} className="card-styled rounded-xl p-3 text-center">
+          <div className={`w-8 h-8 rounded-lg mx-auto mb-1.5 flex items-center justify-center ${stat.color}`}>
+            <stat.icon className="h-4 w-4" />
           </div>
-        ))}
-      </div>
+          <p className="text-lg font-bold">{stat.value}</p>
+          <p className="text-[10px] text-muted-foreground">{stat.label}</p>
+        </div>
+      ))}
+    </div>
+  );
 
-      {/* Export Excel */}
-      {isManagement && (
-        <Button
-          variant="outline"
-          className="w-full gap-2"
-          onClick={() => {
-            exportReportsToExcel({
-              reports, students, alerts, events,
-              dailyAttendance, supportSessions, supportAssignments,
-            });
-            toast.success('קובץ האקסל הורד בהצלחה');
-          }}
-        >
-          <Download className="h-4 w-4" />
-          הורדת כל הדיווחים לאקסל
-        </Button>
-      )}
-
-      {/* Daily Attendance */}
-      <div className="card-styled rounded-2xl overflow-hidden">
-        <SectionHeader title="ביקור סדיר — היום" icon={ClipboardCheck} count={filteredAttendance.filter(a => !a.is_present).length} badge={filteredAttendance.filter(a => !a.is_present).length > 0 ? 'destructive' : undefined} sectionKey="dailyAttendance" />
-        {expandedSections.dailyAttendance && (
-          <div className="px-3 pb-3">
-            {(() => {
-              const absentRecords = filteredAttendance.filter(a => !a.is_present);
-              const presentCount = filteredStudents.length - absentRecords.length;
-              if (absentRecords.length === 0) {
-                return (
-                  <div className="text-center py-4">
-                    <CheckCircle2 className="h-6 w-6 text-success mx-auto mb-1.5" />
-                    <p className="text-xs text-success font-medium">כל התלמידים נוכחים היום!</p>
-                    <p className="text-[10px] text-muted-foreground">{presentCount}/{filteredStudents.length}</p>
-                  </div>
-                );
-              }
+  // Render attendance section
+  const renderAttendance = (viewAttendance: any[], viewStudents: Student[], sectionPrefix: string) => (
+    <div className="card-styled rounded-2xl overflow-hidden">
+      <SectionHeader title="ביקור סדיר — היום" icon={ClipboardCheck} count={viewAttendance.filter(a => !a.is_present).length} badge={viewAttendance.filter(a => !a.is_present).length > 0 ? 'destructive' : undefined} sectionKey={`${sectionPrefix}_dailyAttendance`} />
+      {expandedSections[`${sectionPrefix}_dailyAttendance`] && (
+        <div className="px-3 pb-3">
+          {(() => {
+            const absentRecords = viewAttendance.filter(a => !a.is_present);
+            const presentCount = viewStudents.length - absentRecords.length;
+            if (absentRecords.length === 0) {
               return (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
-                    <span>📅 {new Date().toLocaleDateString('he-IL')}</span>
-                    <span>{presentCount}/{filteredStudents.length} נוכחים</span>
-                  </div>
-                  {CLASS_OPTIONS.map(cls => {
-                    const classAbsent = absentRecords.filter(a => {
-                      const s = students.find(st => st.id === a.student_id);
-                      return s?.class_name === cls;
-                    });
-                    if (classAbsent.length === 0) return null;
-                    return (
-                      <div key={cls}>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">הכיתה של {cls}</p>
-                        {classAbsent.map(a => {
-                          const s = students.find(st => st.id === a.student_id);
-                          if (!s) return null;
-                          const reason = a.absence_reason
-                            ? ABSENCE_REASON_LABELS[a.absence_reason] || a.absence_reason
-                            : 'לא צוינה סיבה';
-                          return (
-                            <div key={a.student_id} className="flex items-center justify-between text-xs bg-destructive/5 rounded-lg px-3 py-1.5 mb-1">
-                              <span className="font-medium">{s.first_name} {s.last_name}</span>
-                              <Badge variant="outline" className="text-[10px] px-2">{reason}</Badge>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
+                <div className="text-center py-4">
+                  <CheckCircle2 className="h-6 w-6 text-success mx-auto mb-1.5" />
+                  <p className="text-xs text-success font-medium">כל התלמידים נוכחים היום!</p>
+                  <p className="text-[10px] text-muted-foreground">{presentCount}/{viewStudents.length}</p>
                 </div>
               );
-            })()}
-          </div>
-        )}
-      </div>
-
-      {/* Alerts */}
-      {unreadAlerts.length > 0 && (
-        <div className="card-styled rounded-2xl overflow-hidden border-destructive/20">
-          <SectionHeader title="התראות" icon={AlertTriangle} count={unreadAlerts.length} badge="destructive" sectionKey="alerts" color="text-destructive" />
-          {expandedSections.alerts && (
-            <div className="px-3 pb-3 space-y-1.5">
-              {unreadAlerts.slice(0, 5).map(a => (
-                <div key={a.id} className="p-2.5 rounded-lg bg-destructive/5 border border-destructive/10">
-                  <div className="flex justify-between items-start gap-2">
-                    <div className="min-w-0 flex-1">
-                      <p className="font-medium text-xs">{studentName(a.student_id)}</p>
-                      <p className="text-xs text-muted-foreground truncate">{a.description}</p>
+            }
+            return (
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-muted-foreground mb-1">
+                  <span>📅 {new Date().toLocaleDateString('he-IL')}</span>
+                  <span>{presentCount}/{viewStudents.length} נוכחים</span>
+                </div>
+                {CLASS_OPTIONS.map(cls => {
+                  const classAbsent = absentRecords.filter(a => {
+                    const s = students.find(st => st.id === a.student_id);
+                    return s?.class_name === cls;
+                  });
+                  if (classAbsent.length === 0) return null;
+                  return (
+                    <div key={cls}>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">הכיתה של {cls}</p>
+                      {classAbsent.map(a => {
+                        const s = students.find(st => st.id === a.student_id);
+                        if (!s) return null;
+                        const reason = a.absence_reason
+                          ? ABSENCE_REASON_LABELS[a.absence_reason] || a.absence_reason
+                          : 'לא צוינה סיבה';
+                        return (
+                          <div key={a.student_id} className="flex items-center justify-between text-xs bg-destructive/5 rounded-lg px-3 py-1.5 mb-1">
+                            <span className="font-medium">{s.first_name} {s.last_name}</span>
+                            <Badge variant="outline" className="text-[10px] px-2">{reason}</Badge>
+                          </div>
+                        );
+                      })}
                     </div>
-                    <span className="text-[10px] text-muted-foreground whitespace-nowrap">
-                      {new Date(a.created_at).toLocaleDateString('he-IL')}
-                    </span>
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
+                  );
+                })}
+              </div>
+            );
+          })()}
         </div>
       )}
+    </div>
+  );
 
-      {/* Exceptional Events - management only */}
-      {isManagement && events.length > 0 && (
-        <div className="card-styled rounded-2xl overflow-hidden border-accent/20">
-          <SectionHeader title="אירועים חריגים" icon={ShieldAlert} count={events.length} sectionKey="events" color="text-accent" />
-          {expandedSections.events && (
-            <div className="px-3 pb-3 space-y-1.5">
-              {events.slice(0, 5).map(ev => (
-                <div key={ev.id} className="p-2.5 rounded-lg bg-accent/5 border border-accent/10">
-                  <div className="flex justify-between items-start gap-2 mb-1">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                      {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
-                    </Badge>
-                    <span className="text-[10px] text-muted-foreground">
-                      {new Date(ev.created_at).toLocaleDateString('he-IL')}
-                    </span>
+  // Render alerts section
+  const renderAlerts = (unreadAlerts: Alert[], sectionPrefix: string) => {
+    if (unreadAlerts.length === 0) return null;
+    return (
+      <div className="card-styled rounded-2xl overflow-hidden border-destructive/20">
+        <SectionHeader title="התראות" icon={AlertTriangle} count={unreadAlerts.length} badge="destructive" sectionKey={`${sectionPrefix}_alerts`} color="text-destructive" />
+        {expandedSections[`${sectionPrefix}_alerts`] && (
+          <div className="px-3 pb-3 space-y-1.5">
+            {unreadAlerts.slice(0, 5).map(a => (
+              <div key={a.id} className="p-2.5 rounded-lg bg-destructive/5 border border-destructive/10">
+                <div className="flex justify-between items-start gap-2">
+                  <div className="min-w-0 flex-1">
+                    <p className="font-medium text-xs">{studentName(a.student_id)}</p>
+                    <p className="text-xs text-muted-foreground truncate">{a.description}</p>
                   </div>
-                  <p className="text-xs line-clamp-2">{ev.description}</p>
-                  {ev.people_involved && (
-                    <p className="text-[10px] text-muted-foreground mt-1">מעורבים: {ev.people_involved}</p>
-                  )}
-                  {ev.followup_required && (
-                    <Badge variant="destructive" className="text-[10px] mt-1 px-1.5 py-0">נדרש מעקב</Badge>
-                  )}
+                  <span className="text-[10px] text-muted-foreground whitespace-nowrap">
+                    {new Date(a.created_at).toLocaleDateString('he-IL')}
+                  </span>
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* Staff Management - management only */}
-      {isManagement && (
-      <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
-        <SectionHeader title="ניהול אנשי צוות" icon={UserCog} count={staffMembers.length} sectionKey="staffManagement" />
-        {expandedSections.staffManagement && (
-          <div className="px-3 pb-3 space-y-2">
-            {/* Add staff */}
-            <div className="flex gap-2">
-              <Input
-                placeholder="שם איש צוות חדש"
-                value={newStaffName}
-                onChange={e => setNewStaffName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleAddStaff(); }}
-                className="h-9 text-sm flex-1"
-              />
-              <Button size="sm" onClick={handleAddStaff} disabled={addingStaff} className="gap-1 h-9">
-                <Plus className="h-3.5 w-3.5" />
-                הוסף
-              </Button>
-            </div>
-            {/* Staff list */}
-            {staffMembers.map(sm => (
-              <div key={sm.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
-                <span className="text-sm font-medium">{sm.name}</span>
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteStaff(sm.id)}>
-                  <X className="h-3.5 w-3.5" />
-                </Button>
               </div>
             ))}
-            {staffMembers.length === 0 && (
-              <p className="text-center text-muted-foreground text-xs py-3">אין אנשי צוות. הוסף שמות כדי לשייך תמיכות</p>
-            )}
           </div>
         )}
       </div>
-      )}
+    );
+  };
 
-      {/* Support Assignments */}
-      <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
-        <div className="flex items-center justify-between px-3 pt-1">
-          <SectionHeader title="שיוך תמיכות" icon={HeartHandshake} count={filteredAssignments.length} sectionKey="support" />
-          {isManagement && (
+  // Render support assignments
+  const renderSupport = (viewAssignments: any[], sectionPrefix: string, showManagement: boolean) => (
+    <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+      <div className="flex items-center justify-between px-3 pt-1">
+        <SectionHeader title="שיוך תמיכות" icon={HeartHandshake} count={viewAssignments.length} sectionKey={`${sectionPrefix}_support`} />
+        {showManagement && (
           <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2" onClick={() => setShowAddAssignment(true)}>
             <Plus className="h-3.5 w-3.5" />
             שיוך חדש
           </Button>
-          )}
-        </div>
-        {expandedSections.support && (
-          <div className="px-3 pb-3 space-y-1.5">
-            {filteredAssignments.length === 0 ? (
-              <p className="text-center text-muted-foreground text-xs py-6">אין שיוכי תמיכה{isManagement ? '. לחצ/י על ״שיוך חדש״' : ''}</p>
-            ) : (
-              filteredAssignments.map((sa: any) => (
-                <div key={sa.id} className="p-2.5 rounded-lg border bg-card">
-                  <div className="flex justify-between items-start mb-1">
-                    <div>
-                      <p className="font-medium text-xs">{studentName(sa.student_id)}</p>
-                      <p className="text-[10px] text-muted-foreground">מאמן: {sa.staff_members?.name || '—'}</p>
-                    </div>
-                    <div className="flex items-center gap-1">
-                      <Badge variant="outline" className="text-[10px]">{sa.frequency === 'daily' ? 'יומי' : 'שבועי'}</Badge>
+        )}
+      </div>
+      {expandedSections[`${sectionPrefix}_support`] && (
+        <div className="px-3 pb-3 space-y-1.5">
+          {viewAssignments.length === 0 ? (
+            <p className="text-center text-muted-foreground text-xs py-6">אין שיוכי תמיכה{showManagement ? '. לחצ/י על ״שיוך חדש״' : ''}</p>
+          ) : (
+            viewAssignments.map((sa: any) => (
+              <div key={sa.id} className="p-2.5 rounded-lg border bg-card">
+                <div className="flex justify-between items-start mb-1">
+                  <div>
+                    <p className="font-medium text-xs">{studentName(sa.student_id)}</p>
+                    <p className="text-[10px] text-muted-foreground">מאמן: {sa.staff_members?.name || '—'}</p>
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Badge variant="outline" className="text-[10px]">{sa.frequency === 'daily' ? 'יומי' : 'שבועי'}</Badge>
+                    {showManagement && (
                       <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => handleDeleteAssignment(sa.id)}>
                         <X className="h-3 w-3" />
                       </Button>
-                    </div>
+                    )}
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {(sa.support_types || []).map((t: string) => (
-                      <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">{SUPPORT_LABELS[t] || t}</Badge>
-                    ))}
-                  </div>
-                  {sa.support_description && <p className="text-[10px] text-foreground/80 mt-1">📝 {sa.support_description}</p>}
-                  {sa.target_date && <p className="text-[10px] text-muted-foreground mt-0.5">יעד: {new Date(sa.target_date).toLocaleDateString('he-IL')}</p>}
-                  {sa.notes_for_parents && <p className="text-[10px] text-muted-foreground mt-0.5">הערה להורים: {sa.notes_for_parents}</p>}
                 </div>
-              ))
+                <div className="flex flex-wrap gap-1">
+                  {(sa.support_types || []).map((t: string) => (
+                    <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">{SUPPORT_LABELS[t] || t}</Badge>
+                  ))}
+                </div>
+                {sa.support_description && <p className="text-[10px] text-foreground/80 mt-1">📝 {sa.support_description}</p>}
+                {sa.target_date && <p className="text-[10px] text-muted-foreground mt-0.5">יעד: {new Date(sa.target_date).toLocaleDateString('he-IL')}</p>}
+                {sa.notes_for_parents && <p className="text-[10px] text-muted-foreground mt-0.5">הערה להורים: {sa.notes_for_parents}</p>}
+              </div>
+            ))
+          )}
+        </div>
+      )}
+    </div>
+  );
+
+  // Render students list
+  const renderStudents = (viewStudents: Student[], sectionPrefix: string, showManagement: boolean) => (
+    <div className="card-styled rounded-2xl overflow-hidden">
+      <div className="flex items-center justify-between px-3 pt-1">
+        <SectionHeader title="תלמידים" icon={Users} count={viewStudents.length} sectionKey={`${sectionPrefix}_students`} />
+        {showManagement && (
+          <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2">
+                <UserPlus className="h-3.5 w-3.5" />
+                הוספה
+              </Button>
+            </DialogTrigger>
+            <DialogContent dir="rtl" className="max-w-sm">
+              <DialogHeader>
+                <DialogTitle className="text-sm">הוספת תלמיד/ה</DialogTitle>
+              </DialogHeader>
+              <div className="space-y-3 pt-1">
+                <Input placeholder="שם פרטי" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="h-10 text-sm" />
+                <Input placeholder="שם משפחה" value={newLastName} onChange={e => setNewLastName(e.target.value)} className="h-10 text-sm" />
+                <Select value={newClass} onValueChange={setNewClass}>
+                  <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י כיתה" /></SelectTrigger>
+                  <SelectContent>
+                    {CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}
+                  </SelectContent>
+                </Select>
+                <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">
+                  {addingStudent ? 'מוסיף...' : 'הוספה'}
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
+        )}
+      </div>
+      {expandedSections[`${sectionPrefix}_students`] && (
+        <div className="px-3 pb-3">
+          {showManagement && (
+            <div className="mb-3 p-2 rounded-lg bg-muted/30 border border-border">
+              <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">תעודה לפי תקופה:</p>
+              <div className="grid grid-cols-4 gap-1">
+                {[
+                  { value: 'semester_a', label: 'סמסטר א׳' },
+                  { value: 'semester_b', label: 'סמסטר ב׳' },
+                  { value: 'summer', label: 'קיץ' },
+                  { value: 'all', label: 'שנתי' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setReportCardSemester(opt.value)}
+                    className={`text-[10px] py-1.5 px-1 rounded-md border transition-all font-semibold ${
+                      reportCardSemester === opt.value
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'border-border bg-card hover:bg-primary/10'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+          {(sectionPrefix === 'mgmt' ? CLASS_OPTIONS : [sectionPrefix === 'tali' ? 'טלי' : 'עדן']).map(cls => {
+            const classStudents = viewStudents.filter(s => s.class_name === cls);
+            return (
+              <div key={cls} className="mb-5 last:mb-0">
+                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b-2 border-primary/30">
+                  <span className="text-base font-bold text-primary">🏫 הכיתה של {cls}</span>
+                  <Badge variant="default" className="text-xs px-2 py-0.5">{classStudents.length} תלמידים</Badge>
+                </div>
+                <div className="space-y-1">
+                  {classStudents.map(s => (
+                    <div key={s.id} className="flex items-stretch gap-1.5">
+                      <button
+                        onClick={() => setSelectedStudent(s)}
+                        className="flex-1 text-right text-xs p-2.5 rounded-lg bg-secondary/50 border border-border hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
+                      >
+                        <span className="font-semibold text-sm">{s.first_name} {s.last_name}</span>
+                      </button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="self-center h-8 px-2 gap-1 text-[10px] border-primary/30 hover:bg-primary/10"
+                        disabled={generatingCard === s.id}
+                        onClick={() => handleGenerateReportCard(s)}
+                      >
+                        {generatingCard === s.id ? (
+                          <div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                        ) : (
+                          <GraduationCap className="h-3.5 w-3.5" />
+                        )}
+                        תעודה
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  // Render reports section
+  const renderReports = (viewReports: Report[], sectionPrefix: string) => {
+    const recentReports = viewReports.slice(0, 15);
+    return (
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <SectionHeader title="דיווחים אחרונים" icon={FileText} count={viewReports.length} sectionKey={`${sectionPrefix}_reports`} />
+        {expandedSections[`${sectionPrefix}_reports`] && (
+          <div className="px-3 pb-3 space-y-1.5">
+            {recentReports.map(r => (
+              <div key={r.id} className="p-2.5 rounded-lg border bg-card">
+                <div className="flex justify-between items-start mb-1.5">
+                  <div>
+                    <button onClick={() => { const s = students.find(st => st.id === r.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline text-right">{studentName(r.student_id)}</button>
+                    <p className="text-[10px] text-muted-foreground">{r.lesson_subject}</p>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(r.report_date).toLocaleDateString('he-IL')}
+                    </span>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditReport(r)}>
+                      <Pencil className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-1">
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                    {r.attendance === 'full' && <CheckCircle2 className="h-2.5 w-2.5 ml-0.5" />}
+                    {r.attendance === 'partial' && <Clock className="h-2.5 w-2.5 ml-0.5" />}
+                    {r.attendance === 'absent' && <XCircle className="h-2.5 w-2.5 ml-0.5" />}
+                    {ATTENDANCE_LABELS[r.attendance]}
+                  </Badge>
+                  {r.behavior_types?.map(b => (
+                    <Badge key={b} variant={b === 'violent' ? 'destructive' : 'outline'} className="text-[10px] px-1.5 py-0">
+                      {BEHAVIOR_LABELS[b]}
+                    </Badge>
+                  ))}
+                  {r.behavior_severity && (
+                    <Badge className={`severity-badge-${r.behavior_severity} text-[10px] px-1.5 py-0`}>
+                      חומרה {r.behavior_severity}
+                    </Badge>
+                  )}
+                  {r.participation && r.participation.length > 0 && r.participation.map(p => (
+                    <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>
+                  ))}
+                  {r.performance_score && (
+                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">ביצועים: {r.performance_score}</Badge>
+                  )}
+                </div>
+                {r.comment && <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-1">{r.comment}</p>}
+              </div>
+            ))}
+            {recentReports.length === 0 && (
+              <p className="text-center text-muted-foreground text-xs py-6">אין דיווחים עדיין</p>
             )}
           </div>
         )}
       </div>
+    );
+  };
+
+  return (
+    <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
+      {/* Top-level Accordion for views */}
+      <Accordion type="multiple" dir="rtl" className="space-y-3">
+        {/* Management View */}
+        <AccordionItem value="management" className="card-styled rounded-2xl overflow-hidden border-none shadow-soft">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 rounded-2xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary/10">
+                <Shield className="h-4.5 w-4.5 text-primary" />
+              </div>
+              <div className="text-right">
+                <span className="font-bold text-sm">צוות הנהלה</span>
+                <p className="text-[10px] text-muted-foreground">ניהול מערכת מלא</p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-3 pb-4">
+            {(() => {
+              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, unreadAlerts, avgPerformance } = getViewData(null);
+              return (
+                <div className="space-y-3">
+                  {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
+
+                  {/* Export Excel */}
+                  <Button
+                    variant="outline"
+                    className="w-full gap-2"
+                    onClick={() => {
+                      exportReportsToExcel({
+                        reports, students, alerts, events,
+                        dailyAttendance, supportSessions, supportAssignments,
+                      });
+                      toast.success('קובץ האקסל הורד בהצלחה');
+                    }}
+                  >
+                    <Download className="h-4 w-4" />
+                    הורדת כל הדיווחים לאקסל
+                  </Button>
+
+                  {/* Codes Manager */}
+                  <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+                    <SectionHeader title="ניהול קודים" icon={Key} count={students.length + 3} sectionKey="mgmt_codes" />
+                    {expandedSections.mgmt_codes && (
+                      <div className="px-3 pb-3">
+                        <CodesManager students={students} onRefresh={fetchAll} />
+                      </div>
+                    )}
+                  </div>
+
+                  {renderAttendance(viewAttendance, viewStudents, 'mgmt')}
+                  {renderAlerts(unreadAlerts, 'mgmt')}
+
+                  {/* Exceptional Events */}
+                  {events.length > 0 && (
+                    <div className="card-styled rounded-2xl overflow-hidden border-accent/20">
+                      <SectionHeader title="אירועים חריגים" icon={ShieldAlert} count={events.length} sectionKey="mgmt_events" color="text-accent" />
+                      {expandedSections.mgmt_events && (
+                        <div className="px-3 pb-3 space-y-1.5">
+                          {events.slice(0, 5).map(ev => (
+                            <div key={ev.id} className="p-2.5 rounded-lg bg-accent/5 border border-accent/10">
+                              <div className="flex justify-between items-start gap-2 mb-1">
+                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                  {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
+                                </Badge>
+                                <span className="text-[10px] text-muted-foreground">
+                                  {new Date(ev.created_at).toLocaleDateString('he-IL')}
+                                </span>
+                              </div>
+                              <p className="text-xs line-clamp-2">{ev.description}</p>
+                              {ev.people_involved && (
+                                <p className="text-[10px] text-muted-foreground mt-1">מעורבים: {ev.people_involved}</p>
+                              )}
+                              {ev.followup_required && (
+                                <Badge variant="destructive" className="text-[10px] mt-1 px-1.5 py-0">נדרש מעקב</Badge>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Staff Management */}
+                  <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+                    <SectionHeader title="ניהול אנשי צוות" icon={UserCog} count={staffMembers.length} sectionKey="mgmt_staffManagement" />
+                    {expandedSections.mgmt_staffManagement && (
+                      <div className="px-3 pb-3 space-y-2">
+                        <div className="flex gap-2">
+                          <Input
+                            placeholder="שם איש צוות חדש"
+                            value={newStaffName}
+                            onChange={e => setNewStaffName(e.target.value)}
+                            onKeyDown={e => { if (e.key === 'Enter') handleAddStaff(); }}
+                            className="h-9 text-sm flex-1"
+                          />
+                          <Button size="sm" onClick={handleAddStaff} disabled={addingStaff} className="gap-1 h-9">
+                            <Plus className="h-3.5 w-3.5" />
+                            הוסף
+                          </Button>
+                        </div>
+                        {staffMembers.map(sm => (
+                          <div key={sm.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
+                            <span className="text-sm font-medium">{sm.name}</span>
+                            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive hover:text-destructive" onClick={() => handleDeleteStaff(sm.id)}>
+                              <X className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        ))}
+                        {staffMembers.length === 0 && (
+                          <p className="text-center text-muted-foreground text-xs py-3">אין אנשי צוות. הוסף שמות כדי לשייך תמיכות</p>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {renderSupport(viewAssignments, 'mgmt', true)}
+                  {renderStudents(viewStudents, 'mgmt', true)}
+                  {renderReports(viewReports, 'mgmt')}
+
+                  {/* Monthly Report */}
+                  <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+                    <SectionHeader title="הפק דוח חודשי" icon={FileText} sectionKey="mgmt_monthlyReport" />
+                    {expandedSections.mgmt_monthlyReport && (
+                      <div className="px-3 pb-3 space-y-3">
+                        <div className="flex gap-2">
+                          <Button
+                            onClick={() => generateMonthlyReport(null)}
+                            disabled={generatingReport}
+                            size="sm"
+                            className="gap-1.5 flex-1"
+                          >
+                            {generatingReport && !reportStudentId ? (
+                              <><div className="w-3.5 h-3.5 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> מפיק דוח...</>
+                            ) : (
+                              <><Sparkles className="h-3.5 w-3.5" /> דוח כלל התלמידים</>
+                            )}
+                          </Button>
+                        </div>
+
+                        <div>
+                          <p className="text-xs font-semibold mb-1.5">או בחר תלמיד ספציפי:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {students.map(s => (
+                              <button
+                                key={s.id}
+                                onClick={() => generateMonthlyReport(s.id)}
+                                disabled={generatingReport}
+                                className="text-[10px] py-1 px-2 rounded-md border border-border bg-card hover:bg-primary/10 hover:border-primary/30 transition-colors disabled:opacity-50"
+                              >
+                                {s.first_name} {s.last_name}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+
+                        {generatingReport && (
+                          <div className="flex items-center justify-center py-6">
+                            <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                            <span className="text-xs text-muted-foreground mr-2">מפיק דוח חודשי...</span>
+                          </div>
+                        )}
+
+                        {monthlyReport && (
+                          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-1.5">
+                                <Sparkles className="h-3.5 w-3.5 text-primary" />
+                                <p className="text-xs font-semibold text-primary">
+                                  דוח חודשי {reportStudentId ? `— ${studentName(reportStudentId)}` : '— כלל התלמידים'}
+                                </p>
+                              </div>
+                              <Button onClick={shareMonthlyReport} size="sm" variant="default" className="gap-1 h-7 text-[10px] bg-[#25D366] hover:bg-[#1da851] text-white">
+                                שיתוף
+                              </Button>
+                            </div>
+                            <p className="text-xs whitespace-pre-wrap leading-relaxed">{monthlyReport}</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Reset All Reports */}
+                  <div className="card-styled rounded-2xl overflow-hidden border-destructive/30">
+                    <div className="p-3">
+                      <div className="flex items-center gap-2.5 mb-2">
+                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/10">
+                          <Trash2 className="h-4 w-4 text-destructive" />
+                        </div>
+                        <div>
+                          <span className="font-semibold text-sm">איפוס כל הדיווחים</span>
+                          <p className="text-[10px] text-muted-foreground">מחיקת כל הדיווחים, ביקורים, אירועים והתראות</p>
+                        </div>
+                      </div>
+                      <Button
+                        variant="destructive"
+                        size="sm"
+                        className="w-full gap-1.5 text-xs"
+                        onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }}
+                        disabled={resetting}
+                      >
+                        {resetting ? (
+                          <><div className="w-3.5 h-3.5 rounded-full border-2 border-destructive-foreground border-t-transparent animate-spin" /> מאפס...</>
+                        ) : (
+                          <><Trash2 className="h-3.5 w-3.5" /> איפוס המערכת</>
+                        )}
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Tali's Class */}
+        <AccordionItem value="tali" className="card-styled rounded-2xl overflow-hidden border-none shadow-soft">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 rounded-2xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary/10">
+                <Users className="h-4.5 w-4.5 text-primary" />
+              </div>
+              <div className="text-right">
+                <span className="font-bold text-sm">הכיתה של טלי</span>
+                <p className="text-[10px] text-muted-foreground">{students.filter(s => s.class_name === 'טלי').length} תלמידים</p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-3 pb-4">
+            {(() => {
+              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, unreadAlerts, avgPerformance } = getViewData('טלי');
+              return (
+                <div className="space-y-3">
+                  {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
+                  {renderAttendance(viewAttendance, viewStudents, 'tali')}
+                  {renderAlerts(unreadAlerts, 'tali')}
+                  {renderSupport(viewAssignments, 'tali', false)}
+                  {renderStudents(viewStudents, 'tali', false)}
+                  {renderReports(viewReports, 'tali')}
+                </div>
+              );
+            })()}
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Eden's Class */}
+        <AccordionItem value="eden" className="card-styled rounded-2xl overflow-hidden border-none shadow-soft">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 rounded-2xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary/10">
+                <Users className="h-4.5 w-4.5 text-primary" />
+              </div>
+              <div className="text-right">
+                <span className="font-bold text-sm">הכיתה של עדן</span>
+                <p className="text-[10px] text-muted-foreground">{students.filter(s => s.class_name === 'עדן').length} תלמידים</p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-3 pb-4">
+            {(() => {
+              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, unreadAlerts, avgPerformance } = getViewData('עדן');
+              return (
+                <div className="space-y-3">
+                  {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
+                  {renderAttendance(viewAttendance, viewStudents, 'eden')}
+                  {renderAlerts(unreadAlerts, 'eden')}
+                  {renderSupport(viewAssignments, 'eden', false)}
+                  {renderStudents(viewStudents, 'eden', false)}
+                  {renderReports(viewReports, 'eden')}
+                </div>
+              );
+            })()}
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
 
       {/* Add Assignment Dialog */}
       <Dialog open={showAddAssignment} onOpenChange={setShowAddAssignment}>
@@ -774,257 +1109,6 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-
-      {/* Students */}
-      <div className="card-styled rounded-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-3 pt-1">
-          <SectionHeader title="תלמידים" icon={Users} count={filteredStudents.length} sectionKey="students" />
-          {isManagement && (
-          <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
-            <DialogTrigger asChild>
-              <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2">
-                <UserPlus className="h-3.5 w-3.5" />
-                הוספה
-              </Button>
-            </DialogTrigger>
-            <DialogContent dir="rtl" className="max-w-sm">
-              <DialogHeader>
-                <DialogTitle className="text-sm">הוספת תלמיד/ה</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-3 pt-1">
-                <Input placeholder="שם פרטי" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="h-10 text-sm" />
-                <Input placeholder="שם משפחה" value={newLastName} onChange={e => setNewLastName(e.target.value)} className="h-10 text-sm" />
-                <Select value={newClass} onValueChange={setNewClass}>
-                  <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י כיתה" /></SelectTrigger>
-                  <SelectContent>
-                    {CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}
-                  </SelectContent>
-                </Select>
-                <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">
-                  {addingStudent ? 'מוסיף...' : 'הוספה'}
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-          )}
-        </div>
-        {expandedSections.students && (
-          <div className="px-3 pb-3">
-            {/* Semester selector for report cards */}
-            <div className="mb-3 p-2 rounded-lg bg-muted/30 border border-border">
-              <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">תעודה לפי תקופה:</p>
-              <div className="grid grid-cols-4 gap-1">
-                {[
-                  { value: 'semester_a', label: 'סמסטר א׳' },
-                  { value: 'semester_b', label: 'סמסטר ב׳' },
-                  { value: 'summer', label: 'קיץ' },
-                  { value: 'all', label: 'שנתי' },
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setReportCardSemester(opt.value)}
-                    className={`text-[10px] py-1.5 px-1 rounded-md border transition-all font-semibold ${
-                      reportCardSemester === opt.value
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border bg-card hover:bg-primary/10'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-            {(classFilter ? [classFilter] : CLASS_OPTIONS).map(cls => {
-              const classStudents = filteredStudents.filter(s => s.class_name === cls);
-              return (
-                <div key={cls} className="mb-5 last:mb-0">
-                  <div className="flex items-center gap-2 mb-2 pb-1.5 border-b-2 border-primary/30">
-                    <span className="text-base font-bold text-primary">🏫 הכיתה של {cls}</span>
-                    <Badge variant="default" className="text-xs px-2 py-0.5">{classStudents.length} תלמידים</Badge>
-                  </div>
-                  <div className="space-y-1">
-                    {classStudents.map(s => (
-                      <div key={s.id} className="flex items-stretch gap-1.5">
-                        <button
-                          onClick={() => setSelectedStudent(s)}
-                          className="flex-1 text-right text-xs p-2.5 rounded-lg bg-secondary/50 border border-border hover:bg-primary/10 hover:border-primary/30 transition-colors cursor-pointer"
-                        >
-                          <span className="font-semibold text-sm">{s.first_name} {s.last_name}</span>
-                        </button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="self-center h-8 px-2 gap-1 text-[10px] border-primary/30 hover:bg-primary/10"
-                          disabled={generatingCard === s.id}
-                          onClick={() => handleGenerateReportCard(s)}
-                        >
-                          {generatingCard === s.id ? (
-                            <div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                          ) : (
-                            <GraduationCap className="h-3.5 w-3.5" />
-                          )}
-                          תעודה
-                        </Button>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </div>
-
-      {/* Recent reports */}
-      <div className="card-styled rounded-2xl overflow-hidden">
-        <SectionHeader title="דיווחים אחרונים" icon={FileText} count={filteredReports.length} sectionKey="reports" />
-        {expandedSections.reports && (
-          <div className="px-3 pb-3 space-y-1.5">
-            {recentReports.map(r => (
-              <div key={r.id} className="p-2.5 rounded-lg border bg-card">
-                <div className="flex justify-between items-start mb-1.5">
-                  <div>
-                    <button onClick={() => { const s = students.find(st => st.id === r.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline text-right">{studentName(r.student_id)}</button>
-                    <p className="text-[10px] text-muted-foreground">{r.lesson_subject}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-muted-foreground">
-                      {new Date(r.report_date).toLocaleDateString('he-IL')}
-                    </span>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditReport(r)}>
-                      <Pencil className="h-3 w-3 text-muted-foreground" />
-                    </Button>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                    {r.attendance === 'full' && <CheckCircle2 className="h-2.5 w-2.5 ml-0.5" />}
-                    {r.attendance === 'partial' && <Clock className="h-2.5 w-2.5 ml-0.5" />}
-                    {r.attendance === 'absent' && <XCircle className="h-2.5 w-2.5 ml-0.5" />}
-                    {ATTENDANCE_LABELS[r.attendance]}
-                  </Badge>
-                  {r.behavior_types?.map(b => (
-                    <Badge key={b} variant={b === 'violent' ? 'destructive' : 'outline'} className="text-[10px] px-1.5 py-0">
-                      {BEHAVIOR_LABELS[b]}
-                    </Badge>
-                  ))}
-                  {r.behavior_severity && (
-                    <Badge className={`severity-badge-${r.behavior_severity} text-[10px] px-1.5 py-0`}>
-                      חומרה {r.behavior_severity}
-                    </Badge>
-                  )}
-                  {r.participation && r.participation.length > 0 && r.participation.map(p => (
-                    <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>
-                  ))}
-                  {r.performance_score && (
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">ביצועים: {r.performance_score}</Badge>
-                  )}
-                </div>
-                {r.comment && <p className="text-[10px] text-muted-foreground mt-1.5 line-clamp-1">{r.comment}</p>}
-              </div>
-            ))}
-            {recentReports.length === 0 && (
-              <p className="text-center text-muted-foreground text-xs py-6">אין דיווחים עדיין</p>
-            )}
-          </div>
-        )}
-      </div>
-
-      {/* Monthly Report - management only */}
-      {isManagement && (
-      <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
-        <SectionHeader title="הפק דוח חודשי" icon={FileText} sectionKey="monthlyReport" />
-        {expandedSections.monthlyReport && (
-          <div className="px-3 pb-3 space-y-3">
-            <div className="flex gap-2">
-              <Button
-                onClick={() => generateMonthlyReport(null)}
-                disabled={generatingReport}
-                size="sm"
-                className="gap-1.5 flex-1"
-              >
-                {generatingReport && !reportStudentId ? (
-                  <><div className="w-3.5 h-3.5 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> מפיק דוח...</>
-                ) : (
-                  <><Sparkles className="h-3.5 w-3.5" /> דוח כלל התלמידים</>
-                )}
-              </Button>
-            </div>
-
-            <div>
-              <p className="text-xs font-semibold mb-1.5">או בחר תלמיד ספציפי:</p>
-              <div className="flex flex-wrap gap-1">
-                {filteredStudents.map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => generateMonthlyReport(s.id)}
-                    disabled={generatingReport}
-                    className="text-[10px] py-1 px-2 rounded-md border border-border bg-card hover:bg-primary/10 hover:border-primary/30 transition-colors disabled:opacity-50"
-                  >
-                    {s.first_name} {s.last_name}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {generatingReport && (
-              <div className="flex items-center justify-center py-6">
-                <div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                <span className="text-xs text-muted-foreground mr-2">מפיק דוח חודשי...</span>
-              </div>
-            )}
-
-            {monthlyReport && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-1.5">
-                    <Sparkles className="h-3.5 w-3.5 text-primary" />
-                    <p className="text-xs font-semibold text-primary">
-                      דוח חודשי {reportStudentId ? `— ${studentName(reportStudentId)}` : '— כלל התלמידים'}
-                    </p>
-                  </div>
-                  <Button onClick={shareMonthlyReport} size="sm" variant="default" className="gap-1 h-7 text-[10px] bg-[#25D366] hover:bg-[#1da851] text-white">
-                    שיתוף
-                  </Button>
-                </div>
-                <p className="text-xs whitespace-pre-wrap leading-relaxed">{monthlyReport}</p>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-      )}
-
-      {/* Reset All Reports - management only */}
-      {isManagement && (
-      <div className="card-styled rounded-2xl overflow-hidden border-destructive/30">
-        <div className="p-3">
-          <div className="flex items-center gap-2.5 mb-2">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/10">
-              <Trash2 className="h-4 w-4 text-destructive" />
-            </div>
-            <div>
-              <span className="font-semibold text-sm">איפוס כל הדיווחים</span>
-              <p className="text-[10px] text-muted-foreground">מחיקת כל הדיווחים, ביקורים, אירועים והתראות</p>
-            </div>
-          </div>
-          <Button
-            variant="destructive"
-            size="sm"
-            className="w-full gap-1.5 text-xs"
-            onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }}
-            disabled={resetting}
-          >
-            {resetting ? (
-              <><div className="w-3.5 h-3.5 rounded-full border-2 border-destructive-foreground border-t-transparent animate-spin" /> מאפס...</>
-            ) : (
-              <><Trash2 className="h-3.5 w-3.5" /> איפוס המערכת</>
-            )}
-          </Button>
-        </div>
-      </div>
-      )}
-
       {/* Reset Password Dialog */}
       <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
         <DialogContent dir="rtl" className="max-w-xs">
@@ -1100,7 +1184,7 @@ export default function AdminDashboard() {
                 <Select value={editSubject} onValueChange={setEditSubject}>
                   <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {['מתמטיקה','עברית','אנגלית','מדעים','היסטוריה','גיאוגרפיה','חינוך גופני','אמנות','מוזיקה','מחשבים','תנ"ך','ספרות'].map(s => (
+                    {['מתמטיקה','עברית','אנגלית','מדעים','היסטוריה','גיאוגרפיה','חינוך גופני','אמנות','מוזיקה','תנ"ך','ספרות','פסיכולוגיה','כישורי חיים'].map(s => (
                       <SelectItem key={s} value={s}>{s}</SelectItem>
                     ))}
                   </SelectContent>
@@ -1129,7 +1213,7 @@ export default function AdminDashboard() {
                 </div>
               </div>
               <div>
-                <p className="text-xs font-semibold mb-1">השתתפות</p>
+                <p className="text-xs font-semibold mb-1">למידה</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {Object.entries(PARTICIPATION_LABELS).map(([k, v]) => (
                     <button key={k} onClick={() => setEditParticipations(prev => prev.includes(k) ? prev.filter(x => x !== k) : [...prev, k])}
