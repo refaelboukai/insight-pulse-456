@@ -57,74 +57,58 @@ export default function ExceptionalEventForm() {
     if (!validateForm()) return;
 
     setSubmitting(true);
-    const { error } = await supabase.from('exceptional_events').insert({
-      reported_by: user!.id,
-      incident_type: incidentType as IncidentType,
-      description,
-      people_involved: peopleInvolved || null,
-      staff_response: staffResponse || null,
-      followup_required: followupRequired,
-      followup_notes: followupNotes || null,
-    });
-
-    if (error) {
-      toast.error('שגיאה בשמירת האירוע');
-      console.error(error);
-    } else {
-      toast.success('האירוע נשמר בדשבורד בהצלחה ✨');
-      resetForm();
-    }
-    setSubmitting(false);
-  };
-
-  const handleGenerateReport = async () => {
-    if (!validateForm()) return;
-
-    setGeneratingPdf(true);
     try {
-      const blob = await generateEventPdf(getEventData());
-      setPdfBlob(blob);
-      setShowShareOptions(true);
-      toast.success('הדוח נוצר בהצלחה 📄');
-    } catch {
+      // 1. Save to database
+      const { error } = await supabase.from('exceptional_events').insert({
+        reported_by: user!.id,
+        incident_type: incidentType as IncidentType,
+        description,
+        people_involved: peopleInvolved || null,
+        staff_response: staffResponse || null,
+        followup_required: followupRequired,
+        followup_notes: followupNotes || null,
+      });
+
+      if (error) {
+        toast.error('שגיאה בשמירת האירוע');
+        console.error(error);
+        setSubmitting(false);
+        return;
+      }
+
+      toast.success('האירוע נשמר בדשבורד בהצלחה ✨');
+
+      // 2. Generate PDF
+      const eventData = getEventData();
+      const blob = await generateEventPdf(eventData);
+      const typeName = INCIDENT_TYPE_LABELS[eventData.incidentType] || eventData.incidentType;
+      const fileName = `אירוע-חריג-${eventData.date}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+
+      // 3. Share via native share (Android/iOS) or fallback download
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          title: `דיווח אירוע חריג - ${typeName}`,
+          text: `🚨 אירוע חריג: ${typeName}\n${eventData.description}`,
+          files: [file],
+        });
+      } else {
+        // Fallback: download the PDF
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = fileName;
+        a.click();
+        URL.revokeObjectURL(url);
+        toast.info('הדוח הורד — ניתן לשתף דרך וואטסאפ או מייל');
+      }
+
+      resetForm();
+    } catch (err) {
+      console.error(err);
       toast.error('שגיאה ביצירת הדוח');
     }
-    setGeneratingPdf(false);
-  };
-
-  const handleShareWhatsApp = async () => {
-    await shareEventToWhatsApp(getEventData());
-  };
-
-  const handleShareEmail = () => {
-    if (!pdfBlob) return;
-    const data = getEventData();
-    const typeName = INCIDENT_TYPE_LABELS[data.incidentType] || data.incidentType;
-    const subject = encodeURIComponent(`דיווח אירוע חריג - ${typeName}`);
-    const body = encodeURIComponent(
-      `אירוע חריג - ${typeName}\n\nתיאור: ${data.description}\n${data.peopleInvolved ? `מעורבים: ${data.peopleInvolved}\n` : ''}${data.staffResponse ? `תגובת הצוות: ${data.staffResponse}\n` : ''}${data.followupRequired ? `נדרש מעקב: כן\n${data.followupNotes ? `הערות: ${data.followupNotes}\n` : ''}` : ''}\n\nקובץ PDF מצורף`
-    );
-
-    const url = URL.createObjectURL(pdfBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `אירוע-חריג-${data.date}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
-
-    window.open(`mailto:?subject=${subject}&body=${body}`, '_self');
-    toast.info('הקובץ הורד — צרף/י אותו למייל');
-  };
-
-  const handleDownloadPdf = () => {
-    if (!pdfBlob) return;
-    const data = getEventData();
-    const url = URL.createObjectURL(pdfBlob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `אירוע-חריג-${data.date}.pdf`;
-    a.click();
-    URL.revokeObjectURL(url);
+    setSubmitting(false);
   };
 
   return (
