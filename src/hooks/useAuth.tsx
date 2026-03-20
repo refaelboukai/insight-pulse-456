@@ -19,7 +19,6 @@ const STUDENT_ACCOUNT = { email: 'student@school.local', password: 'student555se
 const CODE_MAP: Record<string, { email: string; password: string; name: string; role: AppRole }> = {
   '1001': { email: 'staff@school.local', password: 'staff1001secure!', name: 'צוות חינוכי', role: 'staff' },
   '9020': { email: 'admin@school.local', password: 'admin9020secure!', name: 'מנהל מערכת', role: 'admin' },
-  '555': { email: STUDENT_ACCOUNT.email, password: STUDENT_ACCOUNT.password, name: 'תלמיד/ה', role: 'student' },
 };
 
 const LOCKED_STUDENT_KEY = 'locked_student_id';
