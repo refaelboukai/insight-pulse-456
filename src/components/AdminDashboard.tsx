@@ -15,11 +15,12 @@ import {
 } from '@/lib/constants';
 
 import {
-  AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield,
+  AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield, Download,
   ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { toast } from 'sonner';
+import { exportReportsToExcel } from '@/lib/exportReportsToExcel';
 import type { Database } from '@/integrations/supabase/types';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
@@ -482,6 +483,24 @@ export default function AdminDashboard() {
           </div>
         ))}
       </div>
+
+      {/* Export Excel */}
+      {isManagement && (
+        <Button
+          variant="outline"
+          className="w-full gap-2"
+          onClick={() => {
+            exportReportsToExcel({
+              reports, students, alerts, events,
+              dailyAttendance, supportSessions, supportAssignments,
+            });
+            toast.success('קובץ האקסל הורד בהצלחה');
+          }}
+        >
+          <Download className="h-4 w-4" />
+          הורדת כל הדיווחים לאקסל
+        </Button>
+      )}
 
       {/* Daily Attendance */}
       <div className="card-styled rounded-2xl overflow-hidden">
