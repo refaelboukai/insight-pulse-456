@@ -773,6 +773,30 @@ export default function AdminDashboard() {
         </div>
         {expandedSections.students && (
           <div className="px-3 pb-3">
+            {/* Semester selector for report cards */}
+            <div className="mb-3 p-2 rounded-lg bg-muted/30 border border-border">
+              <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">תעודה לפי תקופה:</p>
+              <div className="grid grid-cols-4 gap-1">
+                {[
+                  { value: 'semester_a', label: 'סמסטר א׳' },
+                  { value: 'semester_b', label: 'סמסטר ב׳' },
+                  { value: 'summer', label: 'קיץ' },
+                  { value: 'all', label: 'שנתי' },
+                ].map(opt => (
+                  <button
+                    key={opt.value}
+                    onClick={() => setReportCardSemester(opt.value)}
+                    className={`text-[10px] py-1.5 px-1 rounded-md border transition-all font-semibold ${
+                      reportCardSemester === opt.value
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'border-border bg-card hover:bg-primary/10'
+                    }`}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
             {(classFilter ? [classFilter] : CLASS_OPTIONS).map(cls => {
               const classStudents = filteredStudents.filter(s => s.class_name === cls);
               return (
