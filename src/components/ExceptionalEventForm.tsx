@@ -169,7 +169,7 @@ export default function ExceptionalEventForm() {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1.5 block text-muted-foreground">סוג אירוע</label>
+            <label className="text-sm font-bold block text-muted-foreground">סוג אירוע</label>
             <Select value={incidentType} onValueChange={v => setIncidentType(v as IncidentType)}>
               <SelectTrigger className="rounded-xl h-11 border-2">
                 <SelectValue placeholder="בחר/י סוג אירוע" />
@@ -183,8 +183,8 @@ export default function ExceptionalEventForm() {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1.5 flex items-center gap-1.5 text-muted-foreground">
-              <MessageCircle className="w-3.5 h-3.5" />
+            <label className="text-sm font-bold mb-1.5 flex items-center gap-1.5 text-muted-foreground">
+              <MessageCircle className="w-4 h-4" />
               תיאור האירוע
             </label>
             <Textarea
@@ -199,8 +199,8 @@ export default function ExceptionalEventForm() {
 
           {/* People involved - structured selection */}
           <div>
-            <label className="text-sm font-medium mb-2 flex items-center gap-1.5 text-muted-foreground">
-              <Users className="w-3.5 h-3.5" />
+            <label className="text-sm font-bold mb-2 flex items-center gap-1.5 text-muted-foreground">
+              <Users className="w-4 h-4" />
               מעורבים
             </label>
 
@@ -283,8 +283,8 @@ export default function ExceptionalEventForm() {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1.5 flex items-center gap-1.5 text-muted-foreground">
-              <Shield className="w-3.5 h-3.5" />
+            <label className="text-sm font-bold mb-1.5 flex items-center gap-1.5 text-muted-foreground">
+              <Shield className="w-4 h-4" />
               תגובת הצוות
             </label>
             <Textarea

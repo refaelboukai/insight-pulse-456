@@ -173,9 +173,9 @@ export default function SupportPlanForm() {
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
       <div className="card-styled rounded-2xl p-3">
-        <p className="text-sm font-semibold mb-2">בחר/י את שמך</p>
+        <p className="text-sm font-bold mb-2">בחר/י את שמך</p>
         <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
-          <SelectTrigger className="h-10 text-sm">
+          <SelectTrigger className="h-11 text-sm">
             <SelectValue placeholder="בחר/י איש צוות" />
           </SelectTrigger>
           <SelectContent>
@@ -203,8 +203,8 @@ export default function SupportPlanForm() {
           >
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="font-semibold text-sm">{studentName(a.student_id)}</p>
-                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                <p className="font-bold text-base">{studentName(a.student_id)}</p>
+                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
                   <Badge variant="outline" className="text-xs">
                     {a.frequency === 'daily' ? 'יומי' : 'שבועי'} · {required} {a.frequency === 'daily' ? 'ביום' : 'בשבוע'}
                   </Badge>
@@ -234,7 +234,7 @@ export default function SupportPlanForm() {
             <div className={`flex items-center justify-between rounded-xl px-3 py-2 ${allDone ? 'bg-success/10 border border-success/30' : 'bg-muted/50 border border-border'}`}>
               <div className="flex items-center gap-2">
                 <CheckCircle2 className={`h-4 w-4 ${allDone ? 'text-success' : 'text-muted-foreground'}`} />
-                <span className={`text-sm font-semibold ${allDone ? 'text-success' : 'text-foreground'}`}>
+                <span className={`text-base font-bold ${allDone ? 'text-success' : 'text-foreground'}`}>
                   {count}/{required}
                 </span>
                 <span className="text-xs text-muted-foreground">בוצעו {a.frequency === 'daily' ? 'היום' : 'השבוע'}</span>

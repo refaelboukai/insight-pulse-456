@@ -151,11 +151,11 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
       {/* Summary */}
-      <div className="flex items-center justify-between rounded-xl px-4 py-3 bg-primary/10 border border-primary/20">
+       <div className="flex items-center justify-between rounded-xl px-4 py-3.5 bg-primary/10 border border-primary/20">
         <p className="text-base font-bold text-primary">
           📅 ביקור סדיר · {new Date().toLocaleDateString('he-IL')}
         </p>
-        <Badge variant="secondary" className="text-sm px-3 py-1">
+        <Badge variant="secondary" className="text-sm px-3 py-1.5 font-bold">
           {presentCount}/{students.length} נוכחים
         </Badge>
       </div>
