@@ -305,9 +305,9 @@ export default function AdminDashboard() {
   const handleGenerateReportCard = async (student: Student) => {
     setGeneratingCard(student.id);
     try {
-      let gradesQuery = supabase.from('student_grades').select('*').eq('student_id', student.id);
+      let gradesQuery = supabase.from('student_grades' as any).select('*').eq('student_id', student.id);
       if (reportCardSemester !== 'all') {
-        gradesQuery = gradesQuery.eq('semester' as any, reportCardSemester);
+        gradesQuery = gradesQuery.eq('semester', reportCardSemester);
       }
       const [{ data: grades }, { data: evals }] = await Promise.all([
         gradesQuery,
