@@ -100,7 +100,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
       attendance: attendance as AttendanceStatus,
       behavior_types: behaviors,
       violence_subtypes: hasViolent ? violenceTypes : [],
-      participation: participation || null,
+      participation: participations,
       comment: hasViolent ? violenceComment : null,
     }).select().single();
 
