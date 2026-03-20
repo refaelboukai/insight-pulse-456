@@ -74,13 +74,21 @@ export default function SupportPlanForm() {
   useEffect(() => {
     if (!selectedStaffId) { setAssignments([]); setCompletions([]); return; }
     const load = async () => {
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Date();
+      const todayStr = today.toISOString().split('T')[0];
+      // Get start of current week (Sunday)
+      const dayOfWeek = today.getDay();
+      const weekStart = new Date(today);
+      weekStart.setDate(today.getDate() - dayOfWeek);
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
       const [assignRes, compRes] = await Promise.all([
         supabase.from('support_assignments').select('*, staff_members(name)')
           .eq('staff_member_id', selectedStaffId)
           .eq('is_active', true) as any,
         supabase.from('support_completions').select('*')
-          .eq('completion_date', today),
+          .gte('completion_date', weekStartStr)
+          .lte('completion_date', todayStr),
       ]);
       if (assignRes.data) setAssignments(assignRes.data as any[]);
       if (compRes.data) setCompletions(compRes.data as any[]);
@@ -93,12 +101,18 @@ export default function SupportPlanForm() {
     return s ? `${s.first_name} ${s.last_name}` : 'לא ידוע';
   };
 
-  const getCompletionCount = (assignmentId: string) => {
-    return completions.filter(c => c.assignment_id === assignmentId && c.is_completed).length;
+  const getCompletionCount = (assignment: Assignment) => {
+    const today = new Date().toISOString().split('T')[0];
+    if (assignment.frequency === 'daily') {
+      return completions.filter(c => c.assignment_id === assignment.id && c.is_completed && c.completion_date === today).length;
+    }
+    // weekly - count all completions this week
+    return completions.filter(c => c.assignment_id === assignment.id && c.is_completed).length;
   };
 
-  const getRequiredCount = (assignment: Assignment) => {
-    return assignment.frequency_count || 1;
+  const getTodayCount = (assignmentId: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    return completions.filter(c => c.assignment_id === assignmentId && c.is_completed && c.completion_date === today).length;
   };
 
   const handleAddCompletion = async (assignmentId: string) => {
@@ -179,8 +193,8 @@ export default function SupportPlanForm() {
       )}
 
       {assignments.map(a => {
-        const count = getCompletionCount(a.id);
-        const required = getRequiredCount(a);
+        const count = getCompletionCount(a);
+        const required = a.frequency_count || 1;
         const allDone = count >= required;
         return (
           <div
@@ -223,7 +237,7 @@ export default function SupportPlanForm() {
                 <span className={`text-sm font-semibold ${allDone ? 'text-success' : 'text-foreground'}`}>
                   {count}/{required}
                 </span>
-                <span className="text-xs text-muted-foreground">בוצעו היום</span>
+                <span className="text-xs text-muted-foreground">בוצעו {a.frequency === 'daily' ? 'היום' : 'השבוע'}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Button
@@ -257,7 +271,7 @@ export default function SupportPlanForm() {
       {selectedStaffId && assignments.length > 0 && (
         <div className="flex items-center justify-between rounded-xl px-3 py-2 bg-primary/5 border border-primary/20">
           <p className="text-xs font-medium text-primary">
-            {assignments.filter(a => getCompletionCount(a.id) >= getRequiredCount(a)).length}/{assignments.length} הושלמו היום
+            {assignments.filter(a => getCompletionCount(a) >= (a.frequency_count || 1)).length}/{assignments.length} הושלמו {assignments.some(a => a.frequency === 'weekly') ? 'השבוע' : 'היום'}
           </p>
         </div>
       )}
