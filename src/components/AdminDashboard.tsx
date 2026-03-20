@@ -18,9 +18,10 @@ import {
 
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield, Download,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
+import { generateEventPdf } from '@/lib/generateEventPdf';
 import { toast } from 'sonner';
 import { exportReportsToExcel } from '@/lib/exportReportsToExcel';
 import type { Database } from '@/integrations/supabase/types';
@@ -826,9 +827,53 @@ export default function AdminDashboard() {
                               {ev.people_involved && (
                                 <p className="text-[10px] text-muted-foreground mt-1">מעורבים: {ev.people_involved}</p>
                               )}
-                              {ev.followup_required && (
-                                <Badge variant="destructive" className="text-[10px] mt-1 px-1.5 py-0">נדרש מעקב</Badge>
-                              )}
+                              <div className="flex items-center justify-between mt-1.5">
+                                {ev.followup_required ? (
+                                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0">נדרש מעקב</Badge>
+                                ) : <span />}
+                                <Button
+                                  size="sm"
+                                  variant="ghost"
+                                  className="h-7 px-2 text-[11px] mr-auto"
+                                  onClick={async () => {
+                                    try {
+                                      const eventData = {
+                                        incidentType: ev.incident_type,
+                                        description: ev.description,
+                                        peopleInvolved: ev.people_involved || '',
+                                        staffResponse: ev.staff_response || '',
+                                        followupRequired: ev.followup_required,
+                                        followupNotes: ev.followup_notes || '',
+                                        date: new Date(ev.created_at).toLocaleDateString('he-IL'),
+                                      };
+                                      const blob = await generateEventPdf(eventData);
+                                      const typeName = INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type;
+                                      const fileName = `אירוע_חריג_${typeName}_${eventData.date}.pdf`;
+                                      const file = new File([blob], fileName, { type: 'application/pdf' });
+                                      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                                        await navigator.share({
+                                          title: `דיווח אירוע חריג - ${typeName}`,
+                                          text: `🚨 אירוע חריג: ${typeName}\n${ev.description}`,
+                                          files: [file],
+                                        });
+                                      } else {
+                                        const url = URL.createObjectURL(blob);
+                                        const a = document.createElement('a');
+                                        a.href = url;
+                                        a.download = fileName;
+                                        a.click();
+                                        URL.revokeObjectURL(url);
+                                        toast.success('הדוח הורד בהצלחה');
+                                      }
+                                    } catch (e: any) {
+                                      if (e?.name !== 'AbortError') toast.error('שגיאה בהפקת הדוח');
+                                    }
+                                  }}
+                                >
+                                  <Share2 className="h-3.5 w-3.5 ml-1" />
+                                  שתף דוח
+                                </Button>
+                              </div>
                             </div>
                           ))}
                         </div>
