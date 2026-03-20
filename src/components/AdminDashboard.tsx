@@ -838,6 +838,7 @@ export default function AdminDashboard() {
   };
 
 
+  return (
     <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
       {/* Top-level Accordion for views */}
       <Accordion type="multiple" dir="rtl" className="space-y-3">
