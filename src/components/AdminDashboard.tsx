@@ -431,11 +431,18 @@ export default function AdminDashboard() {
     const viewAlerts = classFilter ? alerts.filter(a => viewStudentIds.has(a.student_id)) : alerts;
     const viewAttendance = classFilter ? dailyAttendance.filter(a => viewStudentIds.has(a.student_id)) : dailyAttendance;
     const viewAssignments = classFilter ? supportAssignments.filter((sa: any) => viewStudentIds.has(sa.student_id)) : supportAssignments;
+    // Filter events: if class filter, only show events where people_involved mentions a student from that class
+    const viewEvents = classFilter
+      ? events.filter(ev => {
+          if (!ev.people_involved) return false;
+          return viewStudents.some(s => ev.people_involved!.includes(s.first_name) || ev.people_involved!.includes(s.last_name));
+        })
+      : events;
     const unreadAlerts = viewAlerts.filter(a => !a.is_read);
     const avgPerformance = viewReports.filter(r => r.performance_score).length > 0
       ? (viewReports.reduce((s, r) => s + (r.performance_score || 0), 0) / viewReports.filter(r => r.performance_score).length).toFixed(1)
       : '—';
-    return { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, unreadAlerts, avgPerformance };
+    return { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance };
   };
 
   // Render stats grid
