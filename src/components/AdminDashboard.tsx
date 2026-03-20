@@ -90,13 +90,15 @@ export default function AdminDashboard() {
 
   const fetchAll = async () => {
     const today = new Date().toISOString().split('T')[0];
-    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes] = await Promise.all([
+    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes] = await Promise.all([
       supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('students').select('*').order('class_name').order('last_name'),
       supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
       supabase.from('exceptional_events').select('*').order('created_at', { ascending: false }).limit(50),
       supabase.from('daily_attendance').select('*').eq('attendance_date', today),
       supabase.from('support_sessions' as any).select('*').order('created_at', { ascending: false }).limit(100),
+      supabase.from('staff_members').select('*').order('name'),
+      supabase.from('support_assignments').select('*, staff_members(name)').eq('is_active', true),
     ]);
     if (reportsRes.data) setReports(reportsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
@@ -104,10 +106,63 @@ export default function AdminDashboard() {
     if (eventsRes.data) setEvents(eventsRes.data);
     if (attendanceRes.data) setDailyAttendance(attendanceRes.data);
     if (supportRes.data) setSupportSessions(supportRes.data as any[]);
+    if (staffRes.data) setStaffMembers(staffRes.data);
+    if (assignRes.data) setSupportAssignments(assignRes.data as any[]);
     setLoading(false);
   };
 
   useEffect(() => { fetchAll(); }, []);
+
+  // Staff management
+  const handleAddStaff = async () => {
+    if (!newStaffName.trim()) { toast.error('נא להזין שם'); return; }
+    setAddingStaff(true);
+    const { error } = await supabase.from('staff_members').insert({ name: newStaffName.trim() } as any);
+    if (error) { toast.error('שגיאה בהוספה'); console.error(error); }
+    else { toast.success(`${newStaffName} נוסף/ה`); setNewStaffName(''); fetchAll(); }
+    setAddingStaff(false);
+  };
+
+  const handleDeleteStaff = async (id: string) => {
+    const { error } = await supabase.from('staff_members').delete().eq('id', id);
+    if (error) { toast.error('שגיאה במחיקה'); console.error(error); }
+    else { toast.success('נמחק'); fetchAll(); }
+  };
+
+  // Support assignments
+  const handleAddAssignment = async () => {
+    if (!user || !assignStudentId || !assignStaffId || assignSupportTypes.length === 0) {
+      toast.error('נא למלא את כל השדות'); return;
+    }
+    setAddingAssignment(true);
+    const { error } = await supabase.from('support_assignments').insert({
+      student_id: assignStudentId,
+      staff_member_id: assignStaffId,
+      support_types: assignSupportTypes,
+      frequency: assignFrequency,
+      target_date: assignTargetDate || null,
+      notes_for_parents: assignNotesForParents.trim() || null,
+      assigned_by: user.id,
+    } as any);
+    if (error) { toast.error('שגיאה בשיוך'); console.error(error); }
+    else {
+      toast.success('תמיכה שויכה בהצלחה');
+      setShowAddAssignment(false);
+      setAssignStudentId(''); setAssignStaffId(''); setAssignSupportTypes([]); setAssignFrequency('weekly'); setAssignTargetDate(''); setAssignNotesForParents('');
+      fetchAll();
+    }
+    setAddingAssignment(false);
+  };
+
+  const handleDeleteAssignment = async (id: string) => {
+    const { error } = await supabase.from('support_assignments').delete().eq('id', id);
+    if (error) { toast.error('שגיאה במחיקה'); console.error(error); }
+    else { toast.success('שיוך נמחק'); fetchAll(); }
+  };
+
+  const toggleAssignSupportType = (t: string) => {
+    setAssignSupportTypes(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
+  };
 
   const handleAddStudent = async () => {
     if (!newFirstName.trim() || !newLastName.trim() || !newClass) {
