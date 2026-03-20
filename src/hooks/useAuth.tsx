@@ -19,7 +19,6 @@ const STUDENT_ACCOUNT = { email: 'student@school.local', password: 'student555se
 const CODE_MAP: Record<string, { email: string; password: string; name: string; role: AppRole }> = {
   '1001': { email: 'staff@school.local', password: 'staff1001secure!', name: 'צוות חינוכי', role: 'staff' },
   '9020': { email: 'admin@school.local', password: 'admin9020secure!', name: 'מנהל מערכת', role: 'admin' },
-  '555': { email: STUDENT_ACCOUNT.email, password: STUDENT_ACCOUNT.password, name: 'תלמיד/ה', role: 'student' },
 };
 
 const LOCKED_STUDENT_KEY = 'locked_student_id';
@@ -92,40 +91,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!signInError && signInData.user) {
-        // Only student role can be self-assigned (RLS restriction)
-        if (account.role === 'student') {
-          const { data: existingRole } = await supabase.from('user_roles')
-            .select('id').eq('user_id', signInData.user.id).eq('role', 'student' as any).maybeSingle();
-          if (!existingRole) {
-            await supabase.from('user_roles').insert({
-              user_id: signInData.user.id,
-              role: 'student' as any,
-            });
-          }
-        }
-        // Admin/staff roles are pre-seeded in the database
-        if (code === '555') {
-          sessionStorage.removeItem(LOCKED_STUDENT_KEY);
-          setLockedStudentId(null);
-        }
+        // Admin/staff roles are pre-seeded via database trigger
         return { error: null };
       }
 
       if (signInError?.message.includes('Invalid login credentials')) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email: account.email,
           password: account.password,
           options: { data: { full_name: account.name } },
         });
 
         if (signUpError) return { error: 'שגיאה ביצירת חשבון' };
-
-        if (signUpData.user && account.role === 'student') {
-          await supabase.from('user_roles').insert({
-            user_id: signUpData.user.id,
-            role: 'student' as any,
-          });
-        }
+        // Role is auto-assigned via database trigger
 
         const { error: retryError } = await supabase.auth.signInWithPassword({
           email: account.email,
@@ -133,10 +111,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (retryError) return { error: 'שגיאה בכניסה' };
-        if (code === '555') {
-          sessionStorage.removeItem(LOCKED_STUDENT_KEY);
-          setLockedStudentId(null);
-        }
         return { error: null };
       }
 

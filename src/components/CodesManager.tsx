@@ -59,7 +59,6 @@ export default function CodesManager({ students, onRefresh }: Props) {
           {[
             { label: 'מנהל', code: '9020', icon: Shield, color: 'text-primary' },
             { label: 'צוות', code: '1001', icon: Users, color: 'text-muted-foreground' },
-            { label: 'תלמידים (כללי)', code: '555', icon: User, color: 'text-muted-foreground' },
           ].map(item => (
             <div key={item.code} className="flex items-center justify-between p-2.5 rounded-lg border bg-card">
               <div className="flex items-center gap-2">
