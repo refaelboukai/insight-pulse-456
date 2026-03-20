@@ -101,12 +101,18 @@ export default function SupportPlanForm() {
     return s ? `${s.first_name} ${s.last_name}` : 'לא ידוע';
   };
 
-  const getCompletionCount = (assignmentId: string) => {
-    return completions.filter(c => c.assignment_id === assignmentId && c.is_completed).length;
+  const getCompletionCount = (assignment: Assignment) => {
+    const today = new Date().toISOString().split('T')[0];
+    if (assignment.frequency === 'daily') {
+      return completions.filter(c => c.assignment_id === assignment.id && c.is_completed && c.completion_date === today).length;
+    }
+    // weekly - count all completions this week
+    return completions.filter(c => c.assignment_id === assignment.id && c.is_completed).length;
   };
 
-  const getRequiredCount = (assignment: Assignment) => {
-    return assignment.frequency_count || 1;
+  const getTodayCount = (assignmentId: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    return completions.filter(c => c.assignment_id === assignmentId && c.is_completed && c.completion_date === today).length;
   };
 
   const handleAddCompletion = async (assignmentId: string) => {
