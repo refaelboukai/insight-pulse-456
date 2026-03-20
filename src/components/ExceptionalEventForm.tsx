@@ -1,32 +1,69 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
 import { generateEventPdf } from '@/lib/generateEventPdf';
-import { Send, FileWarning, MessageCircle, Users, Shield } from 'lucide-react';
+import { Send, FileWarning, MessageCircle, Users, Shield, X } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type IncidentType = Database['public']['Enums']['incident_type'];
+type Student = Database['public']['Tables']['students']['Row'];
 
 export default function ExceptionalEventForm() {
   const { user } = useAuth();
   const [incidentType, setIncidentType] = useState<IncidentType | ''>('');
   const [description, setDescription] = useState('');
-  const [peopleInvolved, setPeopleInvolved] = useState('');
+  const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
+  const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   const [staffResponse, setStaffResponse] = useState('');
   const [followupRequired, setFollowupRequired] = useState(false);
   const [followupNotes, setFollowupNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
+  const [students, setStudents] = useState<Student[]>([]);
+  const [staffMembers, setStaffMembers] = useState<{ id: string; name: string }[]>([]);
+
+  useEffect(() => {
+    const load = async () => {
+      const [sRes, stRes] = await Promise.all([
+        supabase.from('students').select('*').eq('is_active', true).order('class_name').order('last_name'),
+        supabase.from('staff_members').select('id, name').eq('is_active', true).order('name'),
+      ]);
+      if (sRes.data) setStudents(sRes.data);
+      if (stRes.data) setStaffMembers(stRes.data as any[]);
+    };
+    load();
+  }, []);
+
+  const buildPeopleInvolvedText = () => {
+    const parts: string[] = [];
+    if (selectedStudents.length > 0) {
+      const names = selectedStudents.map(id => {
+        const s = students.find(st => st.id === id);
+        return s ? `${s.first_name} ${s.last_name}` : '';
+      }).filter(Boolean);
+      parts.push(`תלמידים: ${names.join(', ')}`);
+    }
+    if (selectedStaff.length > 0) {
+      const names = selectedStaff.map(id => {
+        const sm = staffMembers.find(s => s.id === id);
+        return sm ? sm.name : '';
+      }).filter(Boolean);
+      parts.push(`צוות: ${names.join(', ')}`);
+    }
+    return parts.join(' | ');
+  };
+
   const getEventData = () => ({
     incidentType,
     description,
-    peopleInvolved,
+    peopleInvolved: buildPeopleInvolvedText(),
     staffResponse,
     followupRequired,
     followupNotes,
@@ -44,10 +81,19 @@ export default function ExceptionalEventForm() {
   const resetForm = () => {
     setIncidentType('');
     setDescription('');
-    setPeopleInvolved('');
+    setSelectedStudents([]);
+    setSelectedStaff([]);
     setStaffResponse('');
     setFollowupRequired(false);
     setFollowupNotes('');
+  };
+
+  const toggleStudent = (id: string) => {
+    setSelectedStudents(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
+  };
+
+  const toggleStaffMember = (id: string) => {
+    setSelectedStaff(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
   const handleReport = async () => {
@@ -55,7 +101,8 @@ export default function ExceptionalEventForm() {
 
     setSubmitting(true);
     try {
-      // 1. Save to database
+      const peopleInvolved = buildPeopleInvolvedText();
+
       const { error } = await supabase.from('exceptional_events').insert({
         reported_by: user!.id,
         incident_type: incidentType as IncidentType,
@@ -75,14 +122,12 @@ export default function ExceptionalEventForm() {
 
       toast.success('האירוע נשמר בדשבורד בהצלחה ✨');
 
-      // 2. Generate PDF
       const eventData = getEventData();
       const blob = await generateEventPdf(eventData);
       const typeName = INCIDENT_TYPE_LABELS[eventData.incidentType] || eventData.incidentType;
       const fileName = `אירוע-חריג-${eventData.date}.pdf`;
       const file = new File([blob], fileName, { type: 'application/pdf' });
 
-      // 3. Share via native share (Android/iOS) or fallback download
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           title: `דיווח אירוע חריג - ${typeName}`,
@@ -90,7 +135,6 @@ export default function ExceptionalEventForm() {
           files: [file],
         });
       } else {
-        // Fallback: download the PDF
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
@@ -107,6 +151,10 @@ export default function ExceptionalEventForm() {
     }
     setSubmitting(false);
   };
+
+  // Group students by class
+  const classTali = students.filter(s => s.class_name === 'טלי');
+  const classEden = students.filter(s => s.class_name === 'עדן');
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
@@ -149,18 +197,89 @@ export default function ExceptionalEventForm() {
             />
           </div>
 
+          {/* People involved - structured selection */}
           <div>
-            <label className="text-sm font-medium mb-1.5 flex items-center gap-1.5 text-muted-foreground">
+            <label className="text-sm font-medium mb-2 flex items-center gap-1.5 text-muted-foreground">
               <Users className="w-3.5 h-3.5" />
               מעורבים
             </label>
-            <Textarea
-              placeholder="שמות המעורבים..."
-              value={peopleInvolved}
-              onChange={e => setPeopleInvolved(e.target.value)}
-              rows={2}
-              className="rounded-xl border-2 resize-none"
-            />
+
+            {/* Selected badges */}
+            {(selectedStudents.length > 0 || selectedStaff.length > 0) && (
+              <div className="flex flex-wrap gap-1.5 mb-3">
+                {selectedStudents.map(id => {
+                  const s = students.find(st => st.id === id);
+                  if (!s) return null;
+                  return (
+                    <Badge key={id} variant="secondary" className="text-xs px-2 py-1 gap-1">
+                      {s.first_name} {s.last_name}
+                      <button onClick={() => toggleStudent(id)} className="hover:text-destructive">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+                {selectedStaff.map(id => {
+                  const sm = staffMembers.find(s => s.id === id);
+                  if (!sm) return null;
+                  return (
+                    <Badge key={id} variant="outline" className="text-xs px-2 py-1 gap-1 border-primary/30 text-primary">
+                      {sm.name}
+                      <button onClick={() => toggleStaffMember(id)} className="hover:text-destructive">
+                        <X className="h-3 w-3" />
+                      </button>
+                    </Badge>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* Students selection */}
+            <div className="space-y-2">
+              <p className="text-xs font-semibold text-muted-foreground">תלמידים מעורבים:</p>
+              {[{ label: 'הכיתה של טלי', students: classTali }, { label: 'הכיתה של עדן', students: classEden }].map(group => (
+                <div key={group.label}>
+                  <p className="text-[10px] text-muted-foreground mb-1">{group.label}</p>
+                  <div className="flex flex-wrap gap-1">
+                    {group.students.map(s => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => toggleStudent(s.id)}
+                        className={`text-[11px] py-1 px-2 rounded-lg border transition-all ${
+                          selectedStudents.includes(s.id)
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
+                        }`}
+                      >
+                        {s.first_name} {s.last_name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Staff selection */}
+            <div className="mt-3">
+              <p className="text-xs font-semibold text-muted-foreground mb-1">צוות מעורב:</p>
+              <div className="flex flex-wrap gap-1">
+                {staffMembers.map(sm => (
+                  <button
+                    key={sm.id}
+                    type="button"
+                    onClick={() => toggleStaffMember(sm.id)}
+                    className={`text-[11px] py-1 px-2 rounded-lg border transition-all ${
+                      selectedStaff.includes(sm.id)
+                        ? 'bg-primary text-primary-foreground border-primary'
+                        : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
+                    }`}
+                  >
+                    {sm.name}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div>

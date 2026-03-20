@@ -431,11 +431,18 @@ export default function AdminDashboard() {
     const viewAlerts = classFilter ? alerts.filter(a => viewStudentIds.has(a.student_id)) : alerts;
     const viewAttendance = classFilter ? dailyAttendance.filter(a => viewStudentIds.has(a.student_id)) : dailyAttendance;
     const viewAssignments = classFilter ? supportAssignments.filter((sa: any) => viewStudentIds.has(sa.student_id)) : supportAssignments;
+    // Filter events: if class filter, only show events where people_involved mentions a student from that class
+    const viewEvents = classFilter
+      ? events.filter(ev => {
+          if (!ev.people_involved) return false;
+          return viewStudents.some(s => ev.people_involved!.includes(s.first_name) || ev.people_involved!.includes(s.last_name));
+        })
+      : events;
     const unreadAlerts = viewAlerts.filter(a => !a.is_read);
     const avgPerformance = viewReports.filter(r => r.performance_score).length > 0
       ? (viewReports.reduce((s, r) => s + (r.performance_score || 0), 0) / viewReports.filter(r => r.performance_score).length).toFixed(1)
       : '—';
-    return { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, unreadAlerts, avgPerformance };
+    return { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance };
   };
 
   // Render stats grid
@@ -753,6 +760,83 @@ export default function AdminDashboard() {
       </div>
     );
   };
+  // Render exceptional events section
+  const renderEvents = (viewEvents: ExceptionalEvent[], sectionPrefix: string) => {
+    if (viewEvents.length === 0) return null;
+    return (
+      <div className="card-styled rounded-2xl overflow-hidden border-accent/20">
+        <SectionHeader title="אירועים חריגים" icon={ShieldAlert} count={viewEvents.length} sectionKey={`${sectionPrefix}_events`} color="text-accent" />
+        {expandedSections[`${sectionPrefix}_events`] && (
+          <div className="px-3 pb-3 space-y-1.5">
+            {viewEvents.slice(0, 5).map(ev => (
+              <div key={ev.id} className="p-2.5 rounded-lg bg-accent/5 border border-accent/10">
+                <div className="flex justify-between items-start gap-2 mb-1">
+                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                    {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
+                  </Badge>
+                  <span className="text-[10px] text-muted-foreground">
+                    {new Date(ev.created_at).toLocaleDateString('he-IL')}
+                  </span>
+                </div>
+                <p className="text-xs line-clamp-2">{ev.description}</p>
+                {ev.people_involved && (
+                  <p className="text-[10px] text-muted-foreground mt-1">מעורבים: {ev.people_involved}</p>
+                )}
+                <div className="flex items-center justify-between mt-1.5">
+                  {ev.followup_required ? (
+                    <Badge variant="destructive" className="text-[10px] px-1.5 py-0">נדרש מעקב</Badge>
+                  ) : <span />}
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-7 px-2 text-[11px] mr-auto"
+                    onClick={async () => {
+                      try {
+                        const eventData = {
+                          incidentType: ev.incident_type,
+                          description: ev.description,
+                          peopleInvolved: ev.people_involved || '',
+                          staffResponse: ev.staff_response || '',
+                          followupRequired: ev.followup_required,
+                          followupNotes: ev.followup_notes || '',
+                          date: new Date(ev.created_at).toLocaleDateString('he-IL'),
+                        };
+                        const blob = await generateEventPdf(eventData);
+                        const typeName = INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type;
+                        const fileName = `אירוע_חריג_${typeName}_${eventData.date}.pdf`;
+                        const file = new File([blob], fileName, { type: 'application/pdf' });
+                        if (navigator.share && navigator.canShare?.({ files: [file] })) {
+                          await navigator.share({
+                            title: `דיווח אירוע חריג - ${typeName}`,
+                            text: `🚨 אירוע חריג: ${typeName}\n${ev.description}`,
+                            files: [file],
+                          });
+                        } else {
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement('a');
+                          a.href = url;
+                          a.download = fileName;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                          toast.success('הדוח הורד בהצלחה');
+                        }
+                      } catch (e: any) {
+                        if (e?.name !== 'AbortError') toast.error('שגיאה בהפקת הדוח');
+                      }
+                    }}
+                  >
+                    <Share2 className="h-3.5 w-3.5 ml-1" />
+                    שתף דוח
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
@@ -773,7 +857,7 @@ export default function AdminDashboard() {
           </AccordionTrigger>
           <AccordionContent className="px-3 pb-4">
             {(() => {
-              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, unreadAlerts, avgPerformance } = getViewData(null);
+              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData(null);
               return (
                 <div className="space-y-3">
                   {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
@@ -807,79 +891,7 @@ export default function AdminDashboard() {
                   {renderAttendance(viewAttendance, viewStudents, 'mgmt')}
                   {renderAlerts(unreadAlerts, 'mgmt')}
 
-                  {/* Exceptional Events */}
-                  {events.length > 0 && (
-                    <div className="card-styled rounded-2xl overflow-hidden border-accent/20">
-                      <SectionHeader title="אירועים חריגים" icon={ShieldAlert} count={events.length} sectionKey="mgmt_events" color="text-accent" />
-                      {expandedSections.mgmt_events && (
-                        <div className="px-3 pb-3 space-y-1.5">
-                          {events.slice(0, 5).map(ev => (
-                            <div key={ev.id} className="p-2.5 rounded-lg bg-accent/5 border border-accent/10">
-                              <div className="flex justify-between items-start gap-2 mb-1">
-                                <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                  {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
-                                </Badge>
-                                <span className="text-[10px] text-muted-foreground">
-                                  {new Date(ev.created_at).toLocaleDateString('he-IL')}
-                                </span>
-                              </div>
-                              <p className="text-xs line-clamp-2">{ev.description}</p>
-                              {ev.people_involved && (
-                                <p className="text-[10px] text-muted-foreground mt-1">מעורבים: {ev.people_involved}</p>
-                              )}
-                              <div className="flex items-center justify-between mt-1.5">
-                                {ev.followup_required ? (
-                                  <Badge variant="destructive" className="text-[10px] px-1.5 py-0">נדרש מעקב</Badge>
-                                ) : <span />}
-                                <Button
-                                  size="sm"
-                                  variant="ghost"
-                                  className="h-7 px-2 text-[11px] mr-auto"
-                                  onClick={async () => {
-                                    try {
-                                      const eventData = {
-                                        incidentType: ev.incident_type,
-                                        description: ev.description,
-                                        peopleInvolved: ev.people_involved || '',
-                                        staffResponse: ev.staff_response || '',
-                                        followupRequired: ev.followup_required,
-                                        followupNotes: ev.followup_notes || '',
-                                        date: new Date(ev.created_at).toLocaleDateString('he-IL'),
-                                      };
-                                      const blob = await generateEventPdf(eventData);
-                                      const typeName = INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type;
-                                      const fileName = `אירוע_חריג_${typeName}_${eventData.date}.pdf`;
-                                      const file = new File([blob], fileName, { type: 'application/pdf' });
-                                      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-                                        await navigator.share({
-                                          title: `דיווח אירוע חריג - ${typeName}`,
-                                          text: `🚨 אירוע חריג: ${typeName}\n${ev.description}`,
-                                          files: [file],
-                                        });
-                                      } else {
-                                        const url = URL.createObjectURL(blob);
-                                        const a = document.createElement('a');
-                                        a.href = url;
-                                        a.download = fileName;
-                                        a.click();
-                                        URL.revokeObjectURL(url);
-                                        toast.success('הדוח הורד בהצלחה');
-                                      }
-                                    } catch (e: any) {
-                                      if (e?.name !== 'AbortError') toast.error('שגיאה בהפקת הדוח');
-                                    }
-                                  }}
-                                >
-                                  <Share2 className="h-3.5 w-3.5 ml-1" />
-                                  שתף דוח
-                                </Button>
-                              </div>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
+                  {renderEvents(events, 'mgmt')}
 
                   {/* Staff Management */}
                   <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
@@ -1029,13 +1041,14 @@ export default function AdminDashboard() {
           </AccordionTrigger>
           <AccordionContent className="px-3 pb-4">
             {(() => {
-              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, unreadAlerts, avgPerformance } = getViewData('טלי');
+              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData('טלי');
               return (
                 <div className="space-y-3">
                   {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
                   {renderAttendance(viewAttendance, viewStudents, 'tali')}
                   {renderAlerts(unreadAlerts, 'tali')}
-                  {renderSupport(viewAssignments, 'tali', false)}
+                  {renderEvents(viewEvents, 'tali')}
+                  {renderSupport(viewAssignments, 'tali', true)}
                   {renderStudents(viewStudents, 'tali', false)}
                   {renderReports(viewReports, 'tali')}
                 </div>
@@ -1059,13 +1072,14 @@ export default function AdminDashboard() {
           </AccordionTrigger>
           <AccordionContent className="px-3 pb-4">
             {(() => {
-              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, unreadAlerts, avgPerformance } = getViewData('עדן');
+              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData('עדן');
               return (
                 <div className="space-y-3">
                   {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
                   {renderAttendance(viewAttendance, viewStudents, 'eden')}
                   {renderAlerts(unreadAlerts, 'eden')}
-                  {renderSupport(viewAssignments, 'eden', false)}
+                  {renderEvents(viewEvents, 'eden')}
+                  {renderSupport(viewAssignments, 'eden', true)}
                   {renderStudents(viewStudents, 'eden', false)}
                   {renderReports(viewReports, 'eden')}
                 </div>
