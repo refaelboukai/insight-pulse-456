@@ -73,6 +73,7 @@ export default function AdminDashboard() {
   const [assignStaffId, setAssignStaffId] = useState('');
   const [assignSupportTypes, setAssignSupportTypes] = useState<string[]>([]);
   const [assignFrequency, setAssignFrequency] = useState('weekly');
+  const [assignFrequencyCount, setAssignFrequencyCount] = useState(1);
   const [assignTargetDate, setAssignTargetDate] = useState('');
   const [assignNotesForParents, setAssignNotesForParents] = useState('');
   const [assignDescription, setAssignDescription] = useState('');
