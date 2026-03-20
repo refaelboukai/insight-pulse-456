@@ -295,11 +295,22 @@ export default function AdminDashboard() {
     }
   };
 
+  const SEMESTER_LABELS: Record<string, string> = {
+    semester_a: 'סמסטר א׳',
+    semester_b: 'סמסטר ב׳',
+    summer: 'סמסטר קיץ',
+    all: 'שנתי מאוחד',
+  };
+
   const handleGenerateReportCard = async (student: Student) => {
     setGeneratingCard(student.id);
     try {
+      let gradesQuery = supabase.from('student_grades').select('*').eq('student_id', student.id);
+      if (reportCardSemester !== 'all') {
+        gradesQuery = gradesQuery.eq('semester' as any, reportCardSemester);
+      }
       const [{ data: grades }, { data: evals }] = await Promise.all([
-        supabase.from('student_grades').select('*').eq('student_id', student.id),
+        gradesQuery,
         supabase.from('student_evaluations' as any).select('*').eq('student_id', student.id).order('created_at', { ascending: false }).limit(1),
       ]);
 
@@ -308,7 +319,8 @@ export default function AdminDashboard() {
       const blob = await generateReportCard({
         studentName: `${student.first_name} ${student.last_name}`,
         className: student.class_name || '',
-        grades: (grades || []).map(g => ({
+        semesterLabel: SEMESTER_LABELS[reportCardSemester] || '',
+        grades: (grades || []).map((g: any) => ({
           subject: g.subject,
           grade: g.grade,
           verbal_evaluation: g.verbal_evaluation,
@@ -334,10 +346,11 @@ export default function AdminDashboard() {
         } : null,
       });
 
+      const semSuffix = reportCardSemester === 'all' ? 'שנתי' : SEMESTER_LABELS[reportCardSemester];
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `תעודה_${student.first_name}_${student.last_name}.pdf`;
+      a.download = `תעודה_${semSuffix}_${student.first_name}_${student.last_name}.pdf`;
       a.click();
       URL.revokeObjectURL(url);
       toast.success(`תעודה הופקה עבור ${student.first_name} ${student.last_name}`);
