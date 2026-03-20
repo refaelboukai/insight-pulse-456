@@ -1143,8 +1143,8 @@ export default function AdminDashboard() {
             <Select value={assignStudentId} onValueChange={setAssignStudentId}>
               <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י תלמיד" /></SelectTrigger>
               <SelectContent>
-                {students.map(s => (
-                  <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name} ({s.class_name})</SelectItem>
+                {(assignClassFilter ? students.filter(s => s.class_name === assignClassFilter) : students).map(s => (
+                  <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}{!assignClassFilter ? ` (${s.class_name})` : ''}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
