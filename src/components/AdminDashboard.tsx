@@ -1101,9 +1101,30 @@ export default function AdminDashboard() {
                   {renderAttendance(viewAttendance, viewStudents, 'eden')}
                   {renderAlerts(unreadAlerts, 'eden')}
                   {renderEvents(viewEvents, 'eden')}
-                  {renderSupport(viewAssignments, 'eden', true)}
+                  {renderSupport(viewAssignments, 'eden', true, 'עדן')}
                   {renderStudents(viewStudents, 'eden', false)}
                   {renderReports(viewReports, 'eden')}
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 text-xs"
+                    onClick={() => {
+                      const classStudentIds = new Set(viewStudents.map(s => s.id));
+                      exportReportsToExcel({
+                        reports: reports.filter(r => classStudentIds.has(r.student_id)),
+                        students: viewStudents,
+                        alerts: alerts.filter(a => classStudentIds.has(a.student_id)),
+                        events: events.filter(ev => ev.people_involved && viewStudents.some(s => ev.people_involved!.includes(s.first_name) || ev.people_involved!.includes(s.last_name))),
+                        dailyAttendance: dailyAttendance.filter(a => classStudentIds.has(a.student_id)),
+                        supportSessions: supportSessions.filter((ss: any) => classStudentIds.has(ss.student_id)),
+                        supportAssignments: supportAssignments.filter((sa: any) => classStudentIds.has(sa.student_id)),
+                      });
+                      toast.success('קובץ אקסל הורד — הכיתה של עדן');
+                    }}
+                  >
+                    <Download className="h-3.5 w-3.5" />
+                    הורדת נתוני הכיתה לאקסל
+                  </Button>
                 </div>
               );
             })()}
