@@ -35,9 +35,9 @@ export const VIOLENCE_LABELS: Record<string, string> = {
 };
 
 export const PARTICIPATION_LABELS: Record<string, string> = {
-  completed_tasks: 'השלים/ה משימות למידה',
   active_participation: 'השתתפות פעילה',
-  no_participation: 'ללא השתתפות',
+  completed_tasks: 'ביצוע משימות',
+  no_participation: 'תפקוד חלקי',
   no_function: 'אין תפקוד לימודי',
 };
 

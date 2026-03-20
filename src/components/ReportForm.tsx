@@ -237,12 +237,12 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
             </div>
           </div>
 
-          {/* Step 4: Participation */}
+          {/* Step 4: Learning */}
           <div className="card-styled rounded-2xl p-3">
-            <p className="text-sm font-semibold mb-2">השתתפות</p>
+            <p className="text-sm font-semibold mb-2">למידה</p>
             <div className="flex flex-wrap gap-1.5">
               {(Object.entries(PARTICIPATION_LABELS) as [ParticipationLevel, string][]).map(([key, label]) => {
-                const isActive = participation === key;
+                const isActive = participations.includes(key);
                 const colorClass = isActive
                   ? key === 'no_function' ? 'bg-destructive/10 text-destructive border-destructive/40'
                     : key === 'no_participation' ? 'bg-[hsl(var(--warning)/0.12)] text-accent border-accent/40'
@@ -251,7 +251,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                 return (
                   <button
                     key={key}
-                    onClick={() => setParticipation(prev => prev === key ? '' : key)}
+                    onClick={() => setParticipations(prev => prev.includes(key) ? prev.filter(p => p !== key) : [...prev, key])}
                     className={`text-sm py-2 px-3 rounded-full border transition-colors ${colorClass}`}
                   >
                     {label}

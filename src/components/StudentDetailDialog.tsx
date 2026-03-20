@@ -369,11 +369,11 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
                             {BEHAVIOR_LABELS[b]}
                           </Badge>
                         ))}
-                        {r.participation && (
-                          <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                            {PARTICIPATION_LABELS[r.participation]}
+                        {r.participation && r.participation.length > 0 && r.participation.map(p => (
+                          <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">
+                            {PARTICIPATION_LABELS[p]}
                           </Badge>
-                        )}
+                        ))}
                         {r.violence_subtypes && r.violence_subtypes.length > 0 && (
                           r.violence_subtypes.map(v => (
                             <Badge key={v} variant="destructive" className="text-[10px] px-1.5 py-0">

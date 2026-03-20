@@ -1132,8 +1132,8 @@ export default function AdminDashboard() {
                 <p className="text-xs font-semibold mb-1">השתתפות</p>
                 <div className="grid grid-cols-2 gap-1.5">
                   {Object.entries(PARTICIPATION_LABELS).map(([k, v]) => (
-                    <button key={k} onClick={() => setEditParticipation(editParticipation === k ? '' : k)}
-                      className={`text-xs py-2 px-2 rounded-lg border transition-all font-medium ${editParticipation === k ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'}`}>
+                    <button key={k} onClick={() => setEditParticipations(prev => prev.includes(k) ? prev.filter(x => x !== k) : [...prev, k])}
+                      className={`text-xs py-2 px-2 rounded-lg border transition-all font-medium ${editParticipations.includes(k) ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'}`}>
                       {v}
                     </button>
                   ))}
