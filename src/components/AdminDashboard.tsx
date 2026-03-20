@@ -5,6 +5,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -15,7 +16,7 @@ import {
 
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { toast } from 'sonner';
@@ -85,6 +86,15 @@ export default function AdminDashboard() {
   const [resetPasswordError, setResetPasswordError] = useState('');
   const [resetting, setResetting] = useState(false);
   const [generatingCard, setGeneratingCard] = useState<string | null>(null);
+
+  // Edit report
+  const [editingReport, setEditingReport] = useState<Report | null>(null);
+  const [editAttendance, setEditAttendance] = useState('');
+  const [editBehaviorTypes, setEditBehaviorTypes] = useState<string[]>([]);
+  const [editParticipation, setEditParticipation] = useState('');
+  const [editComment, setEditComment] = useState('');
+  const [editSubject, setEditSubject] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
@@ -327,6 +337,39 @@ export default function AdminDashboard() {
     }
   };
 
+  const openEditReport = (r: Report) => {
+    setEditingReport(r);
+    setEditAttendance(r.attendance);
+    setEditBehaviorTypes([...(r.behavior_types || [])]);
+    setEditParticipation(r.participation || '');
+    setEditComment(r.comment || '');
+    setEditSubject(r.lesson_subject);
+  };
+
+  const toggleEditBehavior = (b: string) => {
+    setEditBehaviorTypes(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b]);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingReport) return;
+    setSavingEdit(true);
+    const { error } = await supabase.from('lesson_reports').update({
+      attendance: editAttendance as any,
+      behavior_types: editBehaviorTypes as any,
+      participation: (editParticipation || null) as any,
+      comment: editComment.trim() || null,
+      lesson_subject: editSubject,
+    }).eq('id', editingReport.id);
+    if (error) { toast.error('שגיאה בעדכון הדיווח'); console.error(error); }
+    else { toast.success('הדיווח עודכן בהצלחה'); setEditingReport(null); fetchAll(); }
+    setSavingEdit(false);
+  };
+
+  const handleDeleteReport = async (id: string) => {
+    const { error } = await supabase.from('lesson_reports').delete().eq('id', id);
+    if (error) { toast.error('שגיאה במחיקה'); console.error(error); }
+    else { toast.success('הדיווח נמחק'); setEditingReport(null); fetchAll(); }
+  };
 
 
   const studentName = (id: string) => {
@@ -726,9 +769,14 @@ export default function AdminDashboard() {
                     <button onClick={() => { const s = students.find(st => st.id === r.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline text-right">{studentName(r.student_id)}</button>
                     <p className="text-[10px] text-muted-foreground">{r.lesson_subject}</p>
                   </div>
-                  <span className="text-[10px] text-muted-foreground">
-                    {new Date(r.report_date).toLocaleDateString('he-IL')}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(r.report_date).toLocaleDateString('he-IL')}
+                    </span>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditReport(r)}>
+                      <Pencil className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
@@ -913,6 +961,79 @@ export default function AdminDashboard() {
         open={!!selectedStudent}
         onOpenChange={(open) => { if (!open) setSelectedStudent(null); }}
       />
+
+      {/* Edit Report Dialog */}
+      <Dialog open={!!editingReport} onOpenChange={(open) => { if (!open) setEditingReport(null); }}>
+        <DialogContent dir="rtl" className="max-w-sm max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-sm">עריכת דיווח</DialogTitle>
+            <DialogDescription className="text-xs">
+              {editingReport && `${studentName(editingReport.student_id)} — ${new Date(editingReport.report_date).toLocaleDateString('he-IL')}`}
+            </DialogDescription>
+          </DialogHeader>
+          {editingReport && (
+            <div className="space-y-3 pt-1">
+              <div>
+                <p className="text-xs font-semibold mb-1">מקצוע</p>
+                <Select value={editSubject} onValueChange={setEditSubject}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['מתמטיקה','עברית','אנגלית','מדעים','היסטוריה','גיאוגרפיה','חינוך גופני','אמנות','מוזיקה','מחשבים','תנ"ך','ספרות'].map(s => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1">נוכחות</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {Object.entries(ATTENDANCE_LABELS).map(([k, v]) => (
+                    <button key={k} onClick={() => setEditAttendance(k)}
+                      className={`text-xs py-2 px-2 rounded-lg border transition-all font-medium ${editAttendance === k ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'}`}>
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1">התנהגות</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {Object.entries(BEHAVIOR_LABELS).map(([k, v]) => (
+                    <button key={k} onClick={() => toggleEditBehavior(k)}
+                      className={`text-xs py-2 px-2 rounded-lg border transition-all font-medium ${editBehaviorTypes.includes(k) ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'}`}>
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1">השתתפות</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {Object.entries(PARTICIPATION_LABELS).map(([k, v]) => (
+                    <button key={k} onClick={() => setEditParticipation(editParticipation === k ? '' : k)}
+                      className={`text-xs py-2 px-2 rounded-lg border transition-all font-medium ${editParticipation === k ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'}`}>
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1">הערה</p>
+                <Textarea value={editComment} onChange={e => setEditComment(e.target.value)} className="text-sm min-h-[60px]" placeholder="הערה (אופציונלי)" />
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button onClick={handleSaveEdit} disabled={savingEdit} className="flex-1 h-9 text-sm">
+                  {savingEdit ? 'שומר...' : 'שמור שינויים'}
+                </Button>
+                <Button variant="destructive" size="sm" className="h-9 text-sm gap-1" onClick={() => handleDeleteReport(editingReport.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                  מחק
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
