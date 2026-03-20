@@ -18,7 +18,7 @@ import {
 
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield, Download,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { toast } from 'sonner';
