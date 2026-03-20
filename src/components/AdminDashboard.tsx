@@ -471,12 +471,12 @@ export default function AdminDashboard() {
 
       {/* Daily Attendance */}
       <div className="card-styled rounded-2xl overflow-hidden">
-        <SectionHeader title="ביקור סדיר — היום" icon={ClipboardCheck} count={dailyAttendance.filter(a => !a.is_present).length} badge={dailyAttendance.filter(a => !a.is_present).length > 0 ? 'destructive' : undefined} sectionKey="dailyAttendance" />
+        <SectionHeader title="ביקור סדיר — היום" icon={ClipboardCheck} count={filteredAttendance.filter(a => !a.is_present).length} badge={filteredAttendance.filter(a => !a.is_present).length > 0 ? 'destructive' : undefined} sectionKey="dailyAttendance" />
         {expandedSections.dailyAttendance && (
           <div className="px-3 pb-3">
             {(() => {
-              const absentRecords = dailyAttendance.filter(a => !a.is_present);
-              const presentCount = students.length - absentRecords.length;
+              const absentRecords = filteredAttendance.filter(a => !a.is_present);
+              const presentCount = filteredStudents.length - absentRecords.length;
               if (absentRecords.length === 0) {
                 return (
                   <div className="text-center py-4">
