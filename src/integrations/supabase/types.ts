@@ -145,9 +145,7 @@ export type Database = {
           created_at: string
           id: string
           lesson_subject: string
-          participation:
-            | Database["public"]["Enums"]["participation_level"]
-            | null
+          participation: Database["public"]["Enums"]["participation_level"][]
           performance_score: number | null
           report_date: string
           staff_user_id: string
@@ -164,9 +162,7 @@ export type Database = {
           created_at?: string
           id?: string
           lesson_subject: string
-          participation?:
-            | Database["public"]["Enums"]["participation_level"]
-            | null
+          participation?: Database["public"]["Enums"]["participation_level"][]
           performance_score?: number | null
           report_date?: string
           staff_user_id: string
@@ -183,9 +179,7 @@ export type Database = {
           created_at?: string
           id?: string
           lesson_subject?: string
-          participation?:
-            | Database["public"]["Enums"]["participation_level"]
-            | null
+          participation?: Database["public"]["Enums"]["participation_level"][]
           performance_score?: number | null
           report_date?: string
           staff_user_id?: string
