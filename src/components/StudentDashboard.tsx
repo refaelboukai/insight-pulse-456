@@ -242,7 +242,7 @@ export default function StudentDashboard() {
 
       {/* External App Link */}
       <a
-        href="https://reset-calm-zone.lovable.app/"
+        href={`https://reset-calm-zone.lovable.app/?auto_login=${selectedStudent.student_code}`}
         target="_blank"
         rel="noopener noreferrer"
         className="block"
