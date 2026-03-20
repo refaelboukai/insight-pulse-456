@@ -74,7 +74,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
     setAttendance('');
     setBehaviors([]);
     setViolenceTypes([]);
-    setParticipation('');
+    setParticipations([]);
     setViolenceComment('');
   };
 
