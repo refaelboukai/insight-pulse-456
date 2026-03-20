@@ -92,17 +92,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!signInError && signInData.user) {
-        if (account.role === 'admin' || account.role === 'student') {
+        // Only student role can be self-assigned (RLS restriction)
+        if (account.role === 'student') {
           const { data: existingRole } = await supabase.from('user_roles')
-            .select('id').eq('user_id', signInData.user.id).eq('role', account.role as any).maybeSingle();
+            .select('id').eq('user_id', signInData.user.id).eq('role', 'student' as any).maybeSingle();
           if (!existingRole) {
             await supabase.from('user_roles').insert({
               user_id: signInData.user.id,
-              role: account.role as any,
+              role: 'student' as any,
             });
           }
         }
-        // Code 555 = generic student view, no locked student
+        // Admin/staff roles are pre-seeded in the database
         if (code === '555') {
           sessionStorage.removeItem(LOCKED_STUDENT_KEY);
           setLockedStudentId(null);
@@ -119,13 +120,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
         if (signUpError) return { error: 'שגיאה ביצירת חשבון' };
 
-        if (signUpData.user) {
-          if (account.role === 'admin' || account.role === 'student') {
-            await supabase.from('user_roles').insert({
-              user_id: signUpData.user.id,
-              role: account.role as any,
-            });
-          }
+        if (signUpData.user && account.role === 'student') {
+          await supabase.from('user_roles').insert({
+            user_id: signUpData.user.id,
+            role: 'student' as any,
+          });
         }
 
         const { error: retryError } = await supabase.auth.signInWithPassword({
