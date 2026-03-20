@@ -769,9 +769,14 @@ export default function AdminDashboard() {
                     <button onClick={() => { const s = students.find(st => st.id === r.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline text-right">{studentName(r.student_id)}</button>
                     <p className="text-[10px] text-muted-foreground">{r.lesson_subject}</p>
                   </div>
-                  <span className="text-[10px] text-muted-foreground">
-                    {new Date(r.report_date).toLocaleDateString('he-IL')}
-                  </span>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-muted-foreground">
+                      {new Date(r.report_date).toLocaleDateString('he-IL')}
+                    </span>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditReport(r)}>
+                      <Pencil className="h-3 w-3 text-muted-foreground" />
+                    </Button>
+                  </div>
                 </div>
                 <div className="flex flex-wrap gap-1">
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
