@@ -702,7 +702,7 @@ export default function AdminDashboard() {
                   );
                 })}
             </div>
-            <Input value={assignDescription} onChange={e => setAssignDescription(e.target.value)} className="h-10 text-sm" placeholder="תיאור התמיכה (לדוגמה: שיחה אישית, ליווי בהפסקה...)" />
+            <Textarea value={assignDescription} onChange={e => setAssignDescription(e.target.value)} className="text-sm min-h-[70px]" placeholder="תאר/י את התמיכה שצריך לספק (לדוגמה: שיחה אישית, ליווי בהפסקה, תרגול כישורים חברתיים...)" />
             </div>
             <Select value={assignFrequency} onValueChange={setAssignFrequency}>
               <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>
@@ -711,7 +711,10 @@ export default function AdminDashboard() {
                 <SelectItem value="weekly">שבועי</SelectItem>
               </SelectContent>
             </Select>
-            <Input type="date" value={assignTargetDate} onChange={e => setAssignTargetDate(e.target.value)} className="h-10 text-sm" placeholder="תאריך יעד (אופציונלי)" />
+            <div>
+              <p className="text-xs font-semibold mb-1.5">תאריך יעד לבדיקת ביצוע</p>
+              <Input type="date" value={assignTargetDate} onChange={e => setAssignTargetDate(e.target.value)} className="h-10 text-sm" />
+            </div>
             <Input value={assignNotesForParents} onChange={e => setAssignNotesForParents(e.target.value)} className="h-10 text-sm" placeholder="הערה להורים (אופציונלי)" />
             <Button onClick={handleAddAssignment} disabled={addingAssignment} className="w-full h-10 text-sm">
               {addingAssignment ? 'משייך...' : 'שייך תמיכה'}
