@@ -482,7 +482,7 @@ export default function AdminDashboard() {
                   <div className="text-center py-4">
                     <CheckCircle2 className="h-6 w-6 text-success mx-auto mb-1.5" />
                     <p className="text-xs text-success font-medium">כל התלמידים נוכחים היום!</p>
-                    <p className="text-[10px] text-muted-foreground">{presentCount}/{students.length}</p>
+                    <p className="text-[10px] text-muted-foreground">{presentCount}/{filteredStudents.length}</p>
                   </div>
                 );
               }
