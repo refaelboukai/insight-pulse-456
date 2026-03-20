@@ -335,8 +335,10 @@ export type Database = {
           created_at: string
           grade: number | null
           id: string
+          semester: string
           staff_user_id: string
           student_id: string
+          sub_grades: Json | null
           subject: string
           updated_at: string
           verbal_evaluation: string | null
@@ -346,8 +348,10 @@ export type Database = {
           created_at?: string
           grade?: number | null
           id?: string
+          semester?: string
           staff_user_id: string
           student_id: string
+          sub_grades?: Json | null
           subject: string
           updated_at?: string
           verbal_evaluation?: string | null
@@ -357,8 +361,10 @@ export type Database = {
           created_at?: string
           grade?: number | null
           id?: string
+          semester?: string
           staff_user_id?: string
           student_id?: string
+          sub_grades?: Json | null
           subject?: string
           updated_at?: string
           verbal_evaluation?: string | null
