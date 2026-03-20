@@ -337,6 +337,39 @@ export default function AdminDashboard() {
     }
   };
 
+  const openEditReport = (r: Report) => {
+    setEditingReport(r);
+    setEditAttendance(r.attendance);
+    setEditBehaviorTypes([...(r.behavior_types || [])]);
+    setEditParticipation(r.participation || '');
+    setEditComment(r.comment || '');
+    setEditSubject(r.lesson_subject);
+  };
+
+  const toggleEditBehavior = (b: string) => {
+    setEditBehaviorTypes(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b]);
+  };
+
+  const handleSaveEdit = async () => {
+    if (!editingReport) return;
+    setSavingEdit(true);
+    const { error } = await supabase.from('lesson_reports').update({
+      attendance: editAttendance as any,
+      behavior_types: editBehaviorTypes as any,
+      participation: (editParticipation || null) as any,
+      comment: editComment.trim() || null,
+      lesson_subject: editSubject,
+    }).eq('id', editingReport.id);
+    if (error) { toast.error('שגיאה בעדכון הדיווח'); console.error(error); }
+    else { toast.success('הדיווח עודכן בהצלחה'); setEditingReport(null); fetchAll(); }
+    setSavingEdit(false);
+  };
+
+  const handleDeleteReport = async (id: string) => {
+    const { error } = await supabase.from('lesson_reports').delete().eq('id', id);
+    if (error) { toast.error('שגיאה במחיקה'); console.error(error); }
+    else { toast.success('הדיווח נמחק'); setEditingReport(null); fetchAll(); }
+  };
 
 
   const studentName = (id: string) => {
