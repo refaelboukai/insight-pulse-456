@@ -36,8 +36,11 @@ const SUPPORT_LABELS: Record<string, string> = {
 };
 const SUPPORT_TYPES_LIST = ['social', 'emotional', 'academic', 'behavioral'] as const;
 
+type DashboardView = 'management' | 'טלי' | 'עדן';
+
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const [activeView, setActiveView] = useState<DashboardView>('management');
   const [reports, setReports] = useState<Report[]>([]);
   const [students, setStudents] = useState<Student[]>([]);
   const [alerts, setAlerts] = useState<Alert[]>([]);
@@ -48,6 +51,15 @@ export default function AdminDashboard() {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     dailyAttendance: false, alerts: false, events: false, students: false, reports: false, support: false, monthlyReport: false, staffManagement: false,
   });
+
+  // Filtered data based on active view
+  const classFilter = activeView === 'management' ? null : activeView;
+  const filteredStudents = classFilter ? students.filter(s => s.class_name === classFilter) : students;
+  const filteredStudentIds = new Set(filteredStudents.map(s => s.id));
+  const filteredReports = classFilter ? reports.filter(r => filteredStudentIds.has(r.student_id)) : reports;
+  const filteredAlerts = classFilter ? alerts.filter(a => filteredStudentIds.has(a.student_id)) : alerts;
+  const filteredAttendance = classFilter ? dailyAttendance.filter(a => filteredStudentIds.has(a.student_id)) : dailyAttendance;
+  const filteredAssignments = classFilter ? supportAssignments.filter((sa: any) => filteredStudentIds.has(sa.student_id)) : supportAssignments;
 
   // Staff management
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
