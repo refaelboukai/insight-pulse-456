@@ -429,11 +429,33 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
+      {/* View Selector */}
+      <div className="grid grid-cols-3 gap-1.5 p-1 bg-card rounded-xl shadow-soft">
+        {([
+          { key: 'management' as DashboardView, label: 'צוות הנהלה', icon: Shield },
+          { key: 'טלי' as DashboardView, label: 'הכיתה של טלי', icon: Users },
+          { key: 'עדן' as DashboardView, label: 'הכיתה של עדן', icon: Users },
+        ]).map(v => (
+          <button
+            key={v.key}
+            onClick={() => setActiveView(v.key)}
+            className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-lg text-xs font-semibold transition-all ${
+              activeView === v.key
+                ? 'bg-primary text-primary-foreground shadow-sm'
+                : 'text-muted-foreground hover:bg-muted/50'
+            }`}
+          >
+            <v.icon className="h-3.5 w-3.5" />
+            {v.label}
+          </button>
+        ))}
+      </div>
+
       {/* Stats grid */}
       <div className="grid grid-cols-4 gap-2">
         {[
-          { icon: Users, value: students.length, label: 'תלמידים', color: 'bg-primary/10 text-primary' },
-          { icon: FileText, value: reports.length, label: 'דיווחים', color: 'bg-primary/10 text-primary' },
+          { icon: Users, value: filteredStudents.length, label: 'תלמידים', color: 'bg-primary/10 text-primary' },
+          { icon: FileText, value: filteredReports.length, label: 'דיווחים', color: 'bg-primary/10 text-primary' },
           { icon: Bell, value: unreadAlerts.length, label: 'התראות', color: 'bg-accent/10 text-accent' },
           { icon: TrendingUp, value: avgPerformance, label: 'ממוצע', color: 'bg-success/10 text-success' },
         ].map((stat, i) => (
