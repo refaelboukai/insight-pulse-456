@@ -199,8 +199,8 @@ export default function ExceptionalEventForm() {
 
           {/* People involved - structured selection */}
           <div>
-            <label className="text-sm font-medium mb-2 flex items-center gap-1.5 text-muted-foreground">
-              <Users className="w-3.5 h-3.5" />
+            <label className="text-sm font-bold mb-2 flex items-center gap-1.5 text-muted-foreground">
+              <Users className="w-4 h-4" />
               מעורבים
             </label>
 
