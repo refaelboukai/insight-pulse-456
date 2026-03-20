@@ -724,7 +724,8 @@ export default function AdminDashboard() {
       {/* Students */}
       <div className="card-styled rounded-2xl overflow-hidden">
         <div className="flex items-center justify-between px-3 pt-1">
-          <SectionHeader title="תלמידים" icon={Users} count={students.length} sectionKey="students" />
+          <SectionHeader title="תלמידים" icon={Users} count={filteredStudents.length} sectionKey="students" />
+          {isManagement && (
           <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
             <DialogTrigger asChild>
               <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2">
@@ -751,11 +752,12 @@ export default function AdminDashboard() {
               </div>
             </DialogContent>
           </Dialog>
+          )}
         </div>
         {expandedSections.students && (
           <div className="px-3 pb-3">
-            {CLASS_OPTIONS.map(cls => {
-              const classStudents = students.filter(s => s.class_name === cls);
+            {(classFilter ? [classFilter] : CLASS_OPTIONS).map(cls => {
+              const classStudents = filteredStudents.filter(s => s.class_name === cls);
               return (
                 <div key={cls} className="mb-5 last:mb-0">
                   <div className="flex items-center gap-2 mb-2 pb-1.5 border-b-2 border-primary/30">
