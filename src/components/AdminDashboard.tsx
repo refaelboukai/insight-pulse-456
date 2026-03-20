@@ -961,6 +961,79 @@ export default function AdminDashboard() {
         open={!!selectedStudent}
         onOpenChange={(open) => { if (!open) setSelectedStudent(null); }}
       />
+
+      {/* Edit Report Dialog */}
+      <Dialog open={!!editingReport} onOpenChange={(open) => { if (!open) setEditingReport(null); }}>
+        <DialogContent dir="rtl" className="max-w-sm max-h-[85vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-sm">עריכת דיווח</DialogTitle>
+            <DialogDescription className="text-xs">
+              {editingReport && `${studentName(editingReport.student_id)} — ${new Date(editingReport.report_date).toLocaleDateString('he-IL')}`}
+            </DialogDescription>
+          </DialogHeader>
+          {editingReport && (
+            <div className="space-y-3 pt-1">
+              <div>
+                <p className="text-xs font-semibold mb-1">מקצוע</p>
+                <Select value={editSubject} onValueChange={setEditSubject}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                  <SelectContent>
+                    {['מתמטיקה','עברית','אנגלית','מדעים','היסטוריה','גיאוגרפיה','חינוך גופני','אמנות','מוזיקה','מחשבים','תנ"ך','ספרות'].map(s => (
+                      <SelectItem key={s} value={s}>{s}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1">נוכחות</p>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {Object.entries(ATTENDANCE_LABELS).map(([k, v]) => (
+                    <button key={k} onClick={() => setEditAttendance(k)}
+                      className={`text-xs py-2 px-2 rounded-lg border transition-all font-medium ${editAttendance === k ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'}`}>
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1">התנהגות</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {Object.entries(BEHAVIOR_LABELS).map(([k, v]) => (
+                    <button key={k} onClick={() => toggleEditBehavior(k)}
+                      className={`text-xs py-2 px-2 rounded-lg border transition-all font-medium ${editBehaviorTypes.includes(k) ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'}`}>
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1">השתתפות</p>
+                <div className="grid grid-cols-2 gap-1.5">
+                  {Object.entries(PARTICIPATION_LABELS).map(([k, v]) => (
+                    <button key={k} onClick={() => setEditParticipation(editParticipation === k ? '' : k)}
+                      className={`text-xs py-2 px-2 rounded-lg border transition-all font-medium ${editParticipation === k ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:border-primary/30'}`}>
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <p className="text-xs font-semibold mb-1">הערה</p>
+                <Textarea value={editComment} onChange={e => setEditComment(e.target.value)} className="text-sm min-h-[60px]" placeholder="הערה (אופציונלי)" />
+              </div>
+              <div className="flex gap-2 pt-1">
+                <Button onClick={handleSaveEdit} disabled={savingEdit} className="flex-1 h-9 text-sm">
+                  {savingEdit ? 'שומר...' : 'שמור שינויים'}
+                </Button>
+                <Button variant="destructive" size="sm" className="h-9 text-sm gap-1" onClick={() => handleDeleteReport(editingReport.id)}>
+                  <Trash2 className="h-3.5 w-3.5" />
+                  מחק
+                </Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
