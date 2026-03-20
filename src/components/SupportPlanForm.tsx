@@ -237,7 +237,7 @@ export default function SupportPlanForm() {
                 <span className={`text-sm font-semibold ${allDone ? 'text-success' : 'text-foreground'}`}>
                   {count}/{required}
                 </span>
-                <span className="text-xs text-muted-foreground">בוצעו היום</span>
+                <span className="text-xs text-muted-foreground">בוצעו {a.frequency === 'daily' ? 'היום' : 'השבוע'}</span>
               </div>
               <div className="flex items-center gap-1.5">
                 <Button
