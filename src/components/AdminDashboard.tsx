@@ -369,7 +369,7 @@ export default function AdminDashboard() {
     setEditingReport(r);
     setEditAttendance(r.attendance);
     setEditBehaviorTypes([...(r.behavior_types || [])]);
-    setEditParticipation(r.participation || '');
+    setEditParticipations([...(r.participation || [])]);
     setEditComment(r.comment || '');
     setEditSubject(r.lesson_subject);
   };
