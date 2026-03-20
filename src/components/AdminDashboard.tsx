@@ -618,18 +618,20 @@ export default function AdminDashboard() {
       {/* Support Assignments */}
       <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
         <div className="flex items-center justify-between px-3 pt-1">
-          <SectionHeader title="שיוך תמיכות" icon={HeartHandshake} count={supportAssignments.length} sectionKey="support" />
+          <SectionHeader title="שיוך תמיכות" icon={HeartHandshake} count={filteredAssignments.length} sectionKey="support" />
+          {isManagement && (
           <Button size="sm" variant="ghost" className="gap-1 text-xs h-8 ml-2" onClick={() => setShowAddAssignment(true)}>
             <Plus className="h-3.5 w-3.5" />
             שיוך חדש
           </Button>
+          )}
         </div>
         {expandedSections.support && (
           <div className="px-3 pb-3 space-y-1.5">
-            {supportAssignments.length === 0 ? (
-              <p className="text-center text-muted-foreground text-xs py-6">אין שיוכי תמיכה. לחצ/י על ״שיוך חדש״</p>
+            {filteredAssignments.length === 0 ? (
+              <p className="text-center text-muted-foreground text-xs py-6">אין שיוכי תמיכה{isManagement ? '. לחצ/י על ״שיוך חדש״' : ''}</p>
             ) : (
-              supportAssignments.map((sa: any) => (
+              filteredAssignments.map((sa: any) => (
                 <div key={sa.id} className="p-2.5 rounded-lg border bg-card">
                   <div className="flex justify-between items-start mb-1">
                     <div>
