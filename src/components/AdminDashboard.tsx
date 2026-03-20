@@ -62,6 +62,7 @@ export default function AdminDashboard() {
   const [assignFrequency, setAssignFrequency] = useState('weekly');
   const [assignTargetDate, setAssignTargetDate] = useState('');
   const [assignNotesForParents, setAssignNotesForParents] = useState('');
+  const [assignDescription, setAssignDescription] = useState('');
   const [addingAssignment, setAddingAssignment] = useState(false);
 
   // Add student form
@@ -139,6 +140,7 @@ export default function AdminDashboard() {
       student_id: assignStudentId,
       staff_member_id: assignStaffId,
       support_types: assignSupportTypes,
+      support_description: assignDescription.trim() || null,
       frequency: assignFrequency,
       target_date: assignTargetDate || null,
       notes_for_parents: assignNotesForParents.trim() || null,
@@ -148,7 +150,7 @@ export default function AdminDashboard() {
     else {
       toast.success('תמיכה שויכה בהצלחה');
       setShowAddAssignment(false);
-      setAssignStudentId(''); setAssignStaffId(''); setAssignSupportTypes([]); setAssignFrequency('weekly'); setAssignTargetDate(''); setAssignNotesForParents('');
+      setAssignStudentId(''); setAssignStaffId(''); setAssignSupportTypes([]); setAssignFrequency('weekly'); setAssignTargetDate(''); setAssignNotesForParents(''); setAssignDescription('');
       fetchAll();
     }
     setAddingAssignment(false);
@@ -567,7 +569,8 @@ export default function AdminDashboard() {
                       <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">{SUPPORT_LABELS[t] || t}</Badge>
                     ))}
                   </div>
-                  {sa.target_date && <p className="text-[10px] text-muted-foreground mt-1">יעד: {new Date(sa.target_date).toLocaleDateString('he-IL')}</p>}
+                  {sa.support_description && <p className="text-[10px] text-foreground/80 mt-1">📝 {sa.support_description}</p>}
+                  {sa.target_date && <p className="text-[10px] text-muted-foreground mt-0.5">יעד: {new Date(sa.target_date).toLocaleDateString('he-IL')}</p>}
                   {sa.notes_for_parents && <p className="text-[10px] text-muted-foreground mt-0.5">הערה להורים: {sa.notes_for_parents}</p>}
                 </div>
               ))
@@ -617,7 +620,8 @@ export default function AdminDashboard() {
                     </button>
                   );
                 })}
-              </div>
+            </div>
+            <Input value={assignDescription} onChange={e => setAssignDescription(e.target.value)} className="h-10 text-sm" placeholder="תיאור התמיכה (לדוגמה: שיחה אישית, ליווי בהפסקה...)" />
             </div>
             <Select value={assignFrequency} onValueChange={setAssignFrequency}>
               <SelectTrigger className="h-10 text-sm"><SelectValue /></SelectTrigger>

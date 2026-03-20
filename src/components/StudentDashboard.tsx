@@ -213,11 +213,14 @@ export default function StudentDashboard() {
                       </Badge>
                     ))}
                   </div>
-                  {a.target_date && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      תאריך יעד: {new Date(a.target_date).toLocaleDateString('he-IL')}
-                    </p>
-                  )}
+                    {a.support_description && (
+                      <p className="text-xs text-foreground/80 mt-1">📝 {a.support_description}</p>
+                    )}
+                    {a.target_date && (
+                      <p className="text-xs text-muted-foreground mt-1">
+                        תאריך יעד: {new Date(a.target_date).toLocaleDateString('he-IL')}
+                      </p>
+                    )}
                 </div>
               ))
             )}
