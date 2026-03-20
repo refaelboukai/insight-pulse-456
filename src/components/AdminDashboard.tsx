@@ -175,7 +175,7 @@ export default function AdminDashboard() {
     else {
       toast.success('תמיכה שויכה בהצלחה');
       setShowAddAssignment(false);
-      setAssignStudentId(''); setAssignStaffId(''); setAssignSupportTypes([]); setAssignFrequency('weekly'); setAssignTargetDate(''); setAssignNotesForParents(''); setAssignDescription('');
+      setAssignStudentId(''); setAssignStaffId(''); setAssignSupportTypes([]); setAssignFrequency('weekly'); setAssignFrequencyCount(1); setAssignTargetDate(''); setAssignNotesForParents(''); setAssignDescription('');
       fetchAll();
     }
     setAddingAssignment(false);
