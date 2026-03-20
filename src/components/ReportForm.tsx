@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -6,12 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
   SUBJECTS, ATTENDANCE_LABELS, BEHAVIOR_LABELS, VIOLENCE_LABELS,
   PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { AlertTriangle, Send, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { AlertTriangle, Send, CheckCircle2, XCircle, Clock, UserPlus, RotateCcw } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type Student = Database['public']['Tables']['students']['Row'];
@@ -43,6 +46,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
   const [submitting, setSubmitting] = useState(false);
   const [reportedStudentIds, setReportedStudentIds] = useState<Set<string>>(new Set());
   const [lastClassName, setLastClassName] = useState<string | null>(null);
+  const [showPostSubmitDialog, setShowPostSubmitDialog] = useState(false);
   useEffect(() => {
     supabase.from('students').select('*').eq('is_active', true).order('last_name')
       .then(({ data }) => { if (data) setStudents(data); });
@@ -117,19 +121,61 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
         });
       }
       setReportedStudentIds(prev => new Set(prev).add(studentId));
-      toast.success('הדיווח נשמר בהצלחה! ✨');
-      resetForm(true);
+      setShowPostSubmitDialog(true);
     }
     setSubmitting(false);
   };
 
   const selectedStudent = students.find(s => s.id === studentId);
+  const submittedStudent = useMemo(() => {
+    // Keep reference to the student that was just submitted (for dialog)
+    return students.find(s => reportedStudentIds.has(s.id) && s.class_name);
+  }, [reportedStudentIds, students]);
   const classes = [...new Set(students.map(s => s.class_name))].filter(Boolean);
 
-  // If we have a lastClassName from previous report, show that class first
   const sortedClasses = lastClassName
     ? [lastClassName, ...classes.filter(c => c !== lastClassName)]
     : classes;
+
+  // Find the next unreported student in the same class
+  const getNextStudentInClass = () => {
+    const currentStudent = students.find(s => s.id === studentId) || 
+      [...reportedStudentIds].map(id => students.find(s => s.id === id)).filter(Boolean).pop();
+    if (!currentStudent?.class_name) return null;
+    const classStudents = students
+      .filter(s => s.class_name === currentStudent.class_name && !absentStudentIds.has(s.id) && !reportedStudentIds.has(s.id));
+    return classStudents[0] || null;
+  };
+
+  const handleSameStudent = () => {
+    setShowPostSubmitDialog(false);
+    const lastStudentId = [...reportedStudentIds].pop();
+    if (lastStudentId) {
+      // Remove from reported so they can report again for same student
+      setReportedStudentIds(prev => {
+        const next = new Set(prev);
+        next.delete(lastStudentId);
+        return next;
+      });
+      setStudentId(lastStudentId);
+    }
+    setAttendance('');
+    setBehaviors([]);
+    setViolenceTypes([]);
+    setParticipations([]);
+    setViolenceComment('');
+    toast.success('הדיווח נשמר בהצלחה! ✨');
+  };
+
+  const handleNextStudent = () => {
+    setShowPostSubmitDialog(false);
+    const next = getNextStudentInClass();
+    resetForm(true);
+    if (next) {
+      setStudentId(next.id);
+    }
+    toast.success('הדיווח נשמר בהצלחה! ✨');
+  };
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
@@ -335,6 +381,40 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
           </Button>
         </>
       )}
+
+      {/* Post-submit dialog */}
+      <Dialog open={showPostSubmitDialog} onOpenChange={setShowPostSubmitDialog}>
+        <DialogContent className="max-w-xs rounded-2xl p-5 text-center" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center justify-center gap-2">
+              <CheckCircle2 className="h-5 w-5 text-success" />
+              הדיווח נשמר!
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mt-1">
+              מה תרצה לעשות עכשיו?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex flex-col gap-2 mt-3">
+            <Button
+              onClick={handleSameStudent}
+              variant="outline"
+              className="w-full h-11 rounded-xl text-sm font-medium gap-2"
+            >
+              <RotateCcw className="h-4 w-4" />
+              דיווח נוסף לאותו תלמיד
+            </Button>
+            <Button
+              onClick={handleNextStudent}
+              className="w-full h-11 rounded-xl text-sm font-medium btn-primary-gradient border-0 gap-2"
+            >
+              <UserPlus className="h-4 w-4" />
+              {getNextStudentInClass()
+                ? `דיווח ל${getNextStudentInClass()!.first_name} ${getNextStudentInClass()!.last_name}`
+                : 'תלמיד הבא מהכיתה'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
