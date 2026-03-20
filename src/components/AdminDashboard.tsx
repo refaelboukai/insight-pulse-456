@@ -578,7 +578,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Staff Management */}
+      {/* Staff Management - management only */}
+      {isManagement && (
       <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
         <SectionHeader title="ניהול אנשי צוות" icon={UserCog} count={staffMembers.length} sectionKey="staffManagement" />
         {expandedSections.staffManagement && (
