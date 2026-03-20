@@ -613,6 +613,7 @@ export default function AdminDashboard() {
           </div>
         )}
       </div>
+      )}
 
       {/* Support Assignments */}
       <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
