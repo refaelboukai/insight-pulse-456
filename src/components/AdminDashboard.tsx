@@ -97,6 +97,7 @@ export default function AdminDashboard() {
   const [resetPasswordError, setResetPasswordError] = useState('');
   const [resetting, setResetting] = useState(false);
   const [generatingCard, setGeneratingCard] = useState<string | null>(null);
+  const [reportCardSemester, setReportCardSemester] = useState<string>('all');
 
   // Edit report
   const [editingReport, setEditingReport] = useState<Report | null>(null);
