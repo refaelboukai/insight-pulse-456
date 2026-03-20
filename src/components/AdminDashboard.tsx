@@ -388,12 +388,13 @@ export default function AdminDashboard() {
     return s ? `${s.first_name} ${s.last_name}` : 'לא ידוע';
   };
 
-  const unreadAlerts = alerts.filter(a => !a.is_read);
-  const avgPerformance = reports.filter(r => r.performance_score).length > 0
-    ? (reports.reduce((s, r) => s + (r.performance_score || 0), 0) / reports.filter(r => r.performance_score).length).toFixed(1)
+  const unreadAlerts = filteredAlerts.filter(a => !a.is_read);
+  const avgPerformance = filteredReports.filter(r => r.performance_score).length > 0
+    ? (filteredReports.reduce((s, r) => s + (r.performance_score || 0), 0) / filteredReports.filter(r => r.performance_score).length).toFixed(1)
     : '—';
 
-  const recentReports = reports.slice(0, 15);
+  const recentReports = filteredReports.slice(0, 15);
+  const isManagement = activeView === 'management';
 
   if (loading) {
     return (
