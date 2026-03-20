@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -6,12 +6,15 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription,
+} from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
   SUBJECTS, ATTENDANCE_LABELS, BEHAVIOR_LABELS, VIOLENCE_LABELS,
   PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { AlertTriangle, Send, CheckCircle2, XCircle, Clock } from 'lucide-react';
+import { AlertTriangle, Send, CheckCircle2, XCircle, Clock, UserPlus, RotateCcw } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type Student = Database['public']['Tables']['students']['Row'];
