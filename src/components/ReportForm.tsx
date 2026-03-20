@@ -120,8 +120,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
         });
       }
       setReportedStudentIds(prev => new Set(prev).add(studentId));
-      toast.success('הדיווח נשמר בהצלחה! ✨');
-      resetForm(true);
+      setShowPostSubmitDialog(true);
     }
     setSubmitting(false);
   };
