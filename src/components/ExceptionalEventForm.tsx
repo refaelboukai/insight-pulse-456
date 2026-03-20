@@ -183,8 +183,8 @@ export default function ExceptionalEventForm() {
           </div>
 
           <div>
-            <label className="text-sm font-medium mb-1.5 flex items-center gap-1.5 text-muted-foreground">
-              <MessageCircle className="w-3.5 h-3.5" />
+            <label className="text-sm font-bold mb-1.5 flex items-center gap-1.5 text-muted-foreground">
+              <MessageCircle className="w-4 h-4" />
               תיאור האירוע
             </label>
             <Textarea
