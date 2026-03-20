@@ -96,20 +96,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
 
       if (signInError?.message.includes('Invalid login credentials')) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        const { error: signUpError } = await supabase.auth.signUp({
           email: account.email,
           password: account.password,
           options: { data: { full_name: account.name } },
         });
 
         if (signUpError) return { error: 'שגיאה ביצירת חשבון' };
-
-        if (signUpData.user && account.role === 'student') {
-          await supabase.from('user_roles').insert({
-            user_id: signUpData.user.id,
-            role: 'student' as any,
-          });
-        }
+        // Role is auto-assigned via database trigger
 
         const { error: retryError } = await supabase.auth.signInWithPassword({
           email: account.email,
@@ -117,10 +111,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (retryError) return { error: 'שגיאה בכניסה' };
-        if (code === '555') {
-          sessionStorage.removeItem(LOCKED_STUDENT_KEY);
-          setLockedStudentId(null);
-        }
         return { error: null };
       }
 
