@@ -548,8 +548,8 @@ export default function AdminDashboard() {
         </div>
       )}
 
-      {/* Exceptional Events */}
-      {events.length > 0 && (
+      {/* Exceptional Events - management only */}
+      {isManagement && events.length > 0 && (
         <div className="card-styled rounded-2xl overflow-hidden border-accent/20">
           <SectionHeader title="אירועים חריגים" icon={ShieldAlert} count={events.length} sectionKey="events" color="text-accent" />
           {expandedSections.events && (
