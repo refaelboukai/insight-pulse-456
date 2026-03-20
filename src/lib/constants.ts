@@ -8,9 +8,10 @@ export const SUBJECTS = [
   'חינוך גופני',
   'אמנות',
   'מוזיקה',
-  'מחשבים',
   'תנ"ך',
   'ספרות',
+  'פסיכולוגיה',
+  'כישורי חיים',
 ] as const;
 
 export const ATTENDANCE_LABELS: Record<string, string> = {
