@@ -3,10 +3,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { Send, CheckCircle2, Clock, User } from 'lucide-react';
+import { CheckCircle2, Clock, User, Plus, Minus } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type Student = Database['public']['Tables']['students']['Row'];
@@ -29,8 +28,10 @@ interface Assignment {
   staff_member_id: string;
   support_types: string[];
   frequency: string;
+  frequency_count: number;
   target_date: string | null;
   staff_members: { name: string } | null;
+  support_description?: string;
 }
 
 interface Completion {
@@ -49,9 +50,7 @@ export default function SupportPlanForm() {
   const [students, setStudents] = useState<Student[]>([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState<string | null>(null);
-  const [notes, setNotes] = useState<Record<string, string>>({});
 
-  // Load staff members that have assignments
   useEffect(() => {
     const load = async () => {
       const [staffRes, studentsRes] = await Promise.all([
@@ -59,8 +58,6 @@ export default function SupportPlanForm() {
         supabase.from('students').select('*').eq('is_active', true).order('last_name'),
       ]);
       if (studentsRes.data) setStudents(studentsRes.data);
-
-      // Only show staff members that have active assignments
       if (staffRes.data) {
         const { data: assignData } = await supabase
           .from('support_assignments')
@@ -74,7 +71,6 @@ export default function SupportPlanForm() {
     load();
   }, []);
 
-  // Load assignments & completions when staff selected
   useEffect(() => {
     if (!selectedStaffId) { setAssignments([]); setCompletions([]); return; }
     const load = async () => {
@@ -97,40 +93,47 @@ export default function SupportPlanForm() {
     return s ? `${s.first_name} ${s.last_name}` : 'לא ידוע';
   };
 
-  const isCompletedToday = (assignmentId: string) => {
-    return completions.some(c => c.assignment_id === assignmentId && c.is_completed);
+  const getCompletionCount = (assignmentId: string) => {
+    return completions.filter(c => c.assignment_id === assignmentId && c.is_completed).length;
   };
 
-  const handleToggleCompletion = async (assignmentId: string) => {
+  const getRequiredCount = (assignment: Assignment) => {
+    return assignment.frequency_count || 1;
+  };
+
+  const handleAddCompletion = async (assignmentId: string) => {
     if (!user) return;
-    const completed = isCompletedToday(assignmentId);
     setSubmitting(assignmentId);
+    const today = new Date().toISOString().split('T')[0];
+    const { data, error } = await supabase.from('support_completions').insert({
+      assignment_id: assignmentId,
+      completion_date: today,
+      is_completed: true,
+      completed_by: user.id,
+      notes: null,
+    } as any).select().single();
 
-    if (completed) {
-      // Remove completion
-      const comp = completions.find(c => c.assignment_id === assignmentId);
-      if (comp) {
-        await supabase.from('support_completions').delete().eq('id', comp.id);
-        setCompletions(prev => prev.filter(c => c.id !== comp.id));
-      }
-    } else {
-      // Add completion
-      const today = new Date().toISOString().split('T')[0];
-      const { data, error } = await supabase.from('support_completions').insert({
-        assignment_id: assignmentId,
-        completion_date: today,
-        is_completed: true,
-        completed_by: user.id,
-        notes: notes[assignmentId] || null,
-      } as any).select().single();
+    if (error) {
+      console.error(error);
+      toast.error('שגיאה בעדכון');
+    } else if (data) {
+      setCompletions(prev => [...prev, data as any]);
+      toast.success('מופע נוסף בהצלחה');
+    }
+    setSubmitting(null);
+  };
 
-      if (error) {
-        console.error(error);
-        toast.error('שגיאה בעדכון');
-      } else if (data) {
-        setCompletions(prev => [...prev, data as any]);
-        toast.success('עודכן בהצלחה');
-      }
+  const handleRemoveCompletion = async (assignmentId: string) => {
+    if (!user) return;
+    setSubmitting(assignmentId);
+    const assignmentCompletions = completions.filter(
+      c => c.assignment_id === assignmentId && c.is_completed
+    );
+    const lastCompletion = assignmentCompletions[assignmentCompletions.length - 1];
+    if (lastCompletion) {
+      await supabase.from('support_completions').delete().eq('id', lastCompletion.id);
+      setCompletions(prev => prev.filter(c => c.id !== lastCompletion.id));
+      toast.success('מופע הוסר');
     }
     setSubmitting(null);
   };
@@ -155,7 +158,6 @@ export default function SupportPlanForm() {
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
-      {/* Staff member selector */}
       <div className="card-styled rounded-2xl p-3">
         <p className="text-sm font-semibold mb-2">בחר/י את שמך</p>
         <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
@@ -170,7 +172,6 @@ export default function SupportPlanForm() {
         </Select>
       </div>
 
-      {/* Assignments list */}
       {selectedStaffId && assignments.length === 0 && (
         <div className="card-styled rounded-2xl p-6 text-center">
           <p className="text-sm text-muted-foreground">אין תלמידים משויכים</p>
@@ -178,17 +179,21 @@ export default function SupportPlanForm() {
       )}
 
       {assignments.map(a => {
-        const completed = isCompletedToday(a.id);
+        const count = getCompletionCount(a.id);
+        const required = getRequiredCount(a);
+        const allDone = count >= required;
         return (
           <div
             key={a.id}
-            className={`card-styled rounded-2xl p-3 transition-all ${completed ? 'border-success/30 bg-success/5' : ''}`}
+            className={`card-styled rounded-2xl p-3 transition-all ${allDone ? 'border-success/30 bg-success/5' : ''}`}
           >
             <div className="flex items-center justify-between mb-2">
               <div>
                 <p className="font-semibold text-sm">{studentName(a.student_id)}</p>
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <Badge variant="outline" className="text-xs">{a.frequency === 'daily' ? 'יומי' : 'שבועי'}</Badge>
+                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                  <Badge variant="outline" className="text-xs">
+                    {a.frequency === 'daily' ? 'יומי' : 'שבועי'} · {required} {a.frequency === 'daily' ? 'ביום' : 'בשבוע'}
+                  </Badge>
                   {a.target_date && (
                     <span className="text-xs text-muted-foreground flex items-center gap-0.5">
                       <Clock className="h-3 w-3" />
@@ -197,40 +202,62 @@ export default function SupportPlanForm() {
                   )}
                 </div>
               </div>
-              <Button
-                size="sm"
-                variant={completed ? 'default' : 'outline'}
-                className={`gap-1 text-xs h-8 ${completed ? 'bg-success hover:bg-success/90 text-white' : ''}`}
-                disabled={submitting === a.id}
-                onClick={() => handleToggleCompletion(a.id)}
-              >
-                {submitting === a.id ? (
-                  <div className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                ) : (
-                  <CheckCircle2 className="h-3.5 w-3.5" />
-                )}
-                {completed ? 'בוצע ✓' : 'סמן כבוצע'}
-              </Button>
             </div>
-            <div className="flex flex-wrap gap-1">
+
+            <div className="flex flex-wrap gap-1 mb-2">
               {(a.support_types || []).map((t: string) => (
                 <Badge key={t} variant="secondary" className="text-xs px-1.5 py-0">
                   {SUPPORT_TYPE_LABELS[t] || t}
                 </Badge>
               ))}
             </div>
-            {(a as any).support_description && (
-              <p className="text-xs text-foreground/80 mt-1">📝 {(a as any).support_description}</p>
+
+            {a.support_description && (
+              <p className="text-xs text-foreground/80 mb-2">📝 {a.support_description}</p>
             )}
+
+            {/* Completion counter */}
+            <div className={`flex items-center justify-between rounded-xl px-3 py-2 ${allDone ? 'bg-success/10 border border-success/30' : 'bg-muted/50 border border-border'}`}>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className={`h-4 w-4 ${allDone ? 'text-success' : 'text-muted-foreground'}`} />
+                <span className={`text-sm font-semibold ${allDone ? 'text-success' : 'text-foreground'}`}>
+                  {count}/{required}
+                </span>
+                <span className="text-xs text-muted-foreground">בוצעו היום</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <Button
+                  size="icon"
+                  variant="outline"
+                  className="h-8 w-8 rounded-full"
+                  disabled={submitting === a.id || count === 0}
+                  onClick={() => handleRemoveCompletion(a.id)}
+                >
+                  <Minus className="h-3.5 w-3.5" />
+                </Button>
+                <Button
+                  size="icon"
+                  variant={allDone ? 'default' : 'outline'}
+                  className={`h-8 w-8 rounded-full ${allDone ? 'bg-success hover:bg-success/90 text-white' : ''}`}
+                  disabled={submitting === a.id || count >= required}
+                  onClick={() => handleAddCompletion(a.id)}
+                >
+                  {submitting === a.id ? (
+                    <div className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                  ) : (
+                    <Plus className="h-3.5 w-3.5" />
+                  )}
+                </Button>
+              </div>
+            </div>
           </div>
         );
       })}
 
-      {/* Summary */}
       {selectedStaffId && assignments.length > 0 && (
         <div className="flex items-center justify-between rounded-xl px-3 py-2 bg-primary/5 border border-primary/20">
           <p className="text-xs font-medium text-primary">
-            {completions.filter(c => c.is_completed && assignments.some(a => a.id === c.assignment_id)).length}/{assignments.length} בוצעו היום
+            {assignments.filter(a => getCompletionCount(a.id) >= getRequiredCount(a)).length}/{assignments.length} הושלמו היום
           </p>
         </div>
       )}
