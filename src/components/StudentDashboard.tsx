@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
@@ -7,8 +7,9 @@ import StudentScheduleView from '@/components/StudentScheduleView';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Loader2, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { toast } from 'sonner';
 
 type Student = Database['public']['Tables']['students']['Row'];
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
