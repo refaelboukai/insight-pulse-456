@@ -110,8 +110,13 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
 
   const sortedEntries = [...entries].sort((a, b) => {
     const dayDiff = DAYS.indexOf(a.day as any) - DAYS.indexOf(b.day as any);
-    return dayDiff !== 0 ? dayDiff : Number(a.hour) - Number(b.hour);
+    return dayDiff !== 0 ? dayDiff : SLOT_ORDER.indexOf(a.hour) - SLOT_ORDER.indexOf(b.hour);
   });
+
+  const getSlotLabel = (id: string) => {
+    const slot = SCHOOL_SLOTS.find(s => s.id === id);
+    return slot ? `${slot.time}` : id;
+  };
 
   return (
     <>
