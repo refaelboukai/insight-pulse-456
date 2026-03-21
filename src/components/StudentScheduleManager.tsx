@@ -26,7 +26,7 @@ const SCHOOL_SLOTS = [
   { id: '9', label: 'שיעור 9', time: '14:45–15:30' },
 ] as const;
 
-const SLOT_ORDER = SCHOOL_SLOTS.map(s => s.id);
+const SLOT_ORDER: string[] = SCHOOL_SLOTS.map(s => s.id);
 
 interface ScheduleEntry {
   day: string;
