@@ -156,24 +156,6 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* AI Daily Summary - auto displayed */}
-      {reports.length > 0 && (
-        <div className="card-styled rounded-2xl p-4 space-y-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-sm">מכתב מהמחנכת</span>
-          </div>
-          {summaryLoading ? (
-            <div className="flex items-center gap-2 py-3 justify-center">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">כותבת לך סיכום...</span>
-            </div>
-          ) : dailySummary ? (
-            <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{dailySummary}</p>
-          ) : null}
-        </div>
-      )}
-
       {/* Today's Reports */}
       <div className="card-styled rounded-2xl overflow-hidden">
         <SectionHeader title="הדיווחים שלי — היום" icon={FileText} count={reports.length} sectionKey="reports" />
