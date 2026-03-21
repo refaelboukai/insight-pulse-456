@@ -191,24 +191,9 @@ export default function StudentDashboard() {
       {/* AI Summary Display */}
       {dailySummary && (
         <div className="card-styled rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="font-semibold text-sm">סיכום היום</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleSpeech}
-              className="h-7 w-7 p-0"
-              title={isSpeaking ? 'עצור השמעה' : 'השמע סיכום'}
-            >
-              {isSpeaking ? (
-                <VolumeX className="h-4 w-4 text-destructive" />
-              ) : (
-                <Volume2 className="h-4 w-4 text-primary" />
-              )}
-            </Button>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="font-semibold text-sm">סיכום היום</span>
           </div>
           <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{dailySummary}</p>
         </div>
