@@ -61,7 +61,7 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
 
   // New entry form
   const [newDay, setNewDay] = useState<string>(DAYS[0]);
-  const [newHour, setNewHour] = useState<string>('1');
+  const [newHour, setNewHour] = useState<string>(SCHOOL_SLOTS[0].id);
   const [newActivity, setNewActivity] = useState('');
   const [newType, setNewType] = useState<string>('lesson');
 
