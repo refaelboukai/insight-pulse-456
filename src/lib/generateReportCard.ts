@@ -131,9 +131,10 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   const hebrewDate = getHebrewDate();
   const gregorianDate = getGregorianDate();
 
-  const [logoDataUrl, sigDataUrl] = await Promise.all([
+  const [logoDataUrl, sigDataUrl, logo2DataUrl] = await Promise.all([
     preloadImageAsDataUrl(logoSrc),
     preloadImageAsDataUrl(principalSigSrc),
+    preloadImageAsDataUrl(logo2Src),
   ]);
 
   const colors = {
