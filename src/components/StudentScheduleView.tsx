@@ -66,7 +66,7 @@ export default function StudentScheduleView({ studentId }: Props) {
 
   const sortedEntries = [...schedule].sort((a, b) => {
     const dayDiff = DAYS.indexOf(a.day as any) - DAYS.indexOf(b.day as any);
-    return dayDiff !== 0 ? dayDiff : Number(a.hour) - Number(b.hour);
+    return dayDiff !== 0 ? dayDiff : SLOT_ORDER.indexOf(a.hour) - SLOT_ORDER.indexOf(b.hour);
   });
 
   return (
