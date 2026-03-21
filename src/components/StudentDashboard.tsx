@@ -22,47 +22,7 @@ const SEMESTER_LABELS: Record<string, string> = {
   semester_a: 'סמסטר א׳', semester_b: 'סמסטר ב׳', summer: 'סמסטר קיץ',
 };
 
-function computeDailyScore(reports: Report[]) {
-  if (reports.length === 0) return { score: 0, stars: 0, message: '', emoji: '📚' };
-
-  let totalPoints = 0;
-  let maxPoints = 0;
-
-  for (const r of reports) {
-    maxPoints += 3;
-    if (r.attendance === 'full') totalPoints += 3;
-    else if (r.attendance === 'partial') totalPoints += 1;
-
-    maxPoints += 3;
-    const bestBehavior = r.behavior_types?.[0];
-    if (bestBehavior === 'respectful') totalPoints += 3;
-    else if (bestBehavior === 'non_respectful') totalPoints += 1;
-
-    maxPoints += 3;
-    const bestPart = r.participation?.[0];
-    if (bestPart === 'active_participation' || bestPart === 'completed_tasks') totalPoints += 3;
-    else if (bestPart === 'no_participation') totalPoints += 1;
-  }
-
-  const ratio = maxPoints > 0 ? totalPoints / maxPoints : 0;
-  const stars = Math.round(ratio * 5);
-
-  let message = '';
-  let emoji = '📚';
-  if (ratio >= 0.9) { message = 'יום מצוין! אפשר להיות גאה! 🌟'; emoji = '🏆'; }
-  else if (ratio >= 0.7) { message = 'יום טוב מאוד! כל הכבוד! 💪'; emoji = '⭐'; }
-  else if (ratio >= 0.5) { message = 'יום סביר, אפשר לשפר מחר! 🌱'; emoji = '🌤️'; }
-  else if (ratio >= 0.3) { message = 'היה קשה היום, מחר יום חדש! 🌈'; emoji = '💙'; }
-  else { message = 'יום מאתגר, אנחנו מאמינים בך! ❤️'; emoji = '🤗'; }
-
-  return { score: Math.round(ratio * 100), stars, message, emoji };
-}
-
-function getAttendanceVisual(att: string) {
-  if (att === 'full') return { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400', icon: '✅' };
-  if (att === 'partial') return { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', icon: '⏰' };
-  return { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', icon: '❌' };
-}
+// removed score/emoji helpers
 
 export default function StudentDashboard() {
   const { lockedStudentId } = useAuth();
