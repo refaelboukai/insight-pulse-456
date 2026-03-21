@@ -5,6 +5,14 @@ import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'] as const;
 
+const SCHOOL_SLOTS: Record<string, string> = {
+  '1': '08:00–08:50', '2': '08:50–09:40', 'b1': '09:40–10:00',
+  '3': '10:00–10:45', '4': '10:45–11:30', 'b2': '11:30–11:45',
+  '5': '11:45–12:30', '6': '12:30–13:15', 'lunch': '13:15–14:00',
+  '8': '14:00–14:45', '9': '14:45–15:30',
+};
+const SLOT_ORDER = Object.keys(SCHOOL_SLOTS);
+
 const TYPE_LABELS: Record<string, string> = {
   lesson: 'שיעור', therapy: 'טיפול', break: 'הפסקה', other: 'אחר',
 };
