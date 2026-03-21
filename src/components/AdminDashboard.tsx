@@ -951,6 +951,7 @@ export default function AdminDashboard() {
                     )}
                   </div>
 
+                  {renderWeeklySupport(viewStudentIds, viewStudents, 'mgmt')}
                   {renderSupport(viewAssignments, 'mgmt', true)}
                   {renderStudents(viewStudents, 'mgmt', true)}
                   {renderReports(viewReports, 'mgmt')}
