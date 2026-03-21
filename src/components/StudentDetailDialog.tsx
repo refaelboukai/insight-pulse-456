@@ -104,6 +104,11 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
         attendanceQuery = attendanceQuery.gte('attendance_date', fromDate);
         eventsQuery = eventsQuery.gte('created_at', fromDate);
       }
+      if (toDate) {
+        reportsQuery = reportsQuery.lte('report_date', `${toDate}T23:59:59`);
+        attendanceQuery = attendanceQuery.lte('attendance_date', toDate);
+        eventsQuery = eventsQuery.lte('created_at', `${toDate}T23:59:59`);
+      }
 
       const [allReports, allAttendance, allEvents] = await Promise.all([
         reportsQuery, attendanceQuery, eventsQuery,
