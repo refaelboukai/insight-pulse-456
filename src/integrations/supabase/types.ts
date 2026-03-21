@@ -116,6 +116,84 @@ export type Database = {
           },
         ]
       }
+      brain_training_history: {
+        Row: {
+          created_at: string
+          game_type: string
+          id: string
+          level_at_time: number
+          points_earned: number
+          student_id: string | null
+          student_name: string
+          won: boolean
+        }
+        Insert: {
+          created_at?: string
+          game_type: string
+          id?: string
+          level_at_time?: number
+          points_earned?: number
+          student_id?: string | null
+          student_name: string
+          won?: boolean
+        }
+        Update: {
+          created_at?: string
+          game_type?: string
+          id?: string
+          level_at_time?: number
+          points_earned?: number
+          student_id?: string | null
+          student_name?: string
+          won?: boolean
+        }
+        Relationships: []
+      }
+      brain_training_scores: {
+        Row: {
+          consecutive_losses: number
+          consecutive_wins: number
+          created_at: string
+          game_type: string
+          id: string
+          level: number
+          max_level_reached: number
+          score: number
+          student_id: string | null
+          student_name: string
+          total_games_played: number
+          updated_at: string
+        }
+        Insert: {
+          consecutive_losses?: number
+          consecutive_wins?: number
+          created_at?: string
+          game_type: string
+          id?: string
+          level?: number
+          max_level_reached?: number
+          score?: number
+          student_id?: string | null
+          student_name: string
+          total_games_played?: number
+          updated_at?: string
+        }
+        Update: {
+          consecutive_losses?: number
+          consecutive_wins?: number
+          created_at?: string
+          game_type?: string
+          id?: string
+          level?: number
+          max_level_reached?: number
+          score?: number
+          student_id?: string | null
+          student_name?: string
+          total_games_played?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       daily_attendance: {
         Row: {
           absence_reason: Database["public"]["Enums"]["absence_reason"] | null
