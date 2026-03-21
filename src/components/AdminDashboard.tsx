@@ -694,6 +694,13 @@ export default function AdminDashboard() {
                       >
                         <span className="font-semibold text-sm">{s.first_name} {s.last_name}</span>
                       </button>
+                      {showManagement && (
+                        <StudentScheduleManager
+                          student={s}
+                          schedule={studentSchedules.find((sc: any) => sc.student_id === s.id) || null}
+                          onSave={fetchAll}
+                        />
+                      )}
                       <Button
                         size="sm"
                         variant="outline"
