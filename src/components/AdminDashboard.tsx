@@ -3,6 +3,7 @@ import StudentDetailDialog from '@/components/StudentDetailDialog';
 import CodesManager from '@/components/CodesManager';
 import WeeklySupportSummary from '@/components/WeeklySupportSummary';
 import StudentScheduleManager from '@/components/StudentScheduleManager';
+import SmsReminderSection from '@/components/SmsReminderSection';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
@@ -903,26 +904,8 @@ export default function AdminDashboard() {
                     הורדת כל הדיווחים לאקסל
                   </Button>
 
-                  {/* SMS Reminder Button */}
-                  <Button
-                    variant="outline"
-                    className="w-full gap-2"
-                    onClick={() => {
-                      const phones = [
-                        '0507622284', '0507281873', '0502050314', '0528027059',
-                        '0545258258', '0544321341', '0503848498', '0526682028',
-                        '0546908079', '0526521333', '0544916172', '0583258963',
-                        '0547262062', '0509350046', '0527204817', '0523736949',
-                        '0525646610',
-                      ];
-                      const message = 'שלום, תזכורת למלא דיווחים יומיים במערכת InsightPulse. תודה!';
-                      const smsUrl = `sms:${phones.join(',')}?body=${encodeURIComponent(message)}`;
-                      window.open(smsUrl, '_blank');
-                    }}
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    שלח תזכורת SMS לצוות
-                  </Button>
+                  {/* SMS Reminder */}
+                  <SmsReminderSection />
 
                   {/* Codes Manager */}
                   <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
