@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
@@ -7,8 +7,9 @@ import StudentScheduleView from '@/components/StudentScheduleView';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Loader2, Volume2, VolumeX, Sparkles } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { toast } from 'sonner';
 
 type Student = Database['public']['Tables']['students']['Row'];
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
@@ -34,6 +35,9 @@ export default function StudentDashboard() {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     reports: true, grades: false, support: false,
   });
+  const [dailySummary, setDailySummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const isLocked = !!lockedStudentId;
 
@@ -75,6 +79,59 @@ export default function StudentDashboard() {
     fetchData();
   }, [selectedStudentId]);
 
+  const generateSummary = useCallback(async () => {
+    if (!selectedStudent || reports.length === 0) return;
+    setSummaryLoading(true);
+    setDailySummary(null);
+    const normalizedReports = reports.map(r => ({
+      subject: r.lesson_subject,
+      attendance: ATTENDANCE_LABELS[r.attendance] || r.attendance,
+      behavior: r.behavior_types?.map(b => BEHAVIOR_LABELS[b] || b).join(', '),
+      participation: r.participation?.map(p => PARTICIPATION_LABELS[p] || p).join(', '),
+      comment: r.comment || '',
+    }));
+    try {
+      const { data, error } = await supabase.functions.invoke('student-daily-summary', {
+        body: {
+          studentName: `${selectedStudent.first_name} ${selectedStudent.last_name}`,
+          reports: normalizedReports,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+      } else if (data?.summary) {
+        setDailySummary(data.summary);
+      }
+    } catch (e) {
+      toast.error('שגיאה ביצירת הסיכום');
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [selectedStudent, reports]);
+
+  const toggleSpeech = useCallback(() => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    if (!dailySummary) return;
+    const utterance = new SpeechSynthesisUtterance(dailySummary);
+    utterance.lang = 'he-IL';
+    utterance.rate = 0.9;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+  }, [dailySummary, isSpeaking]);
+
+  // Reset summary when student changes
+  useEffect(() => {
+    setDailySummary(null);
+    setIsSpeaking(false);
+    window.speechSynthesis.cancel();
+  }, [selectedStudentId]);
 
   if (loading) {
     return (
@@ -151,8 +208,47 @@ export default function StudentDashboard() {
 
       {/* Reports count */}
       {reports.length > 0 && (
-        <div className="text-center py-2">
+        <div className="text-center py-2 space-y-2">
           <p className="text-sm text-muted-foreground">{reports.length} שיעורים דווחו היום</p>
+          <Button
+            onClick={generateSummary}
+            disabled={summaryLoading}
+            variant="outline"
+            size="sm"
+            className="gap-1.5"
+          >
+            {summaryLoading ? (
+              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> מכין סיכום...</>
+            ) : (
+              <><Sparkles className="h-3.5 w-3.5" /> סיכום היום שלי</>
+            )}
+          </Button>
+        </div>
+      )}
+
+      {/* AI Summary Display */}
+      {dailySummary && (
+        <div className="card-styled rounded-2xl p-4 space-y-2">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              <span className="font-semibold text-sm">סיכום היום</span>
+            </div>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={toggleSpeech}
+              className="h-7 w-7 p-0"
+              title={isSpeaking ? 'עצור השמעה' : 'השמע סיכום'}
+            >
+              {isSpeaking ? (
+                <VolumeX className="h-4 w-4 text-destructive" />
+              ) : (
+                <Volume2 className="h-4 w-4 text-primary" />
+              )}
+            </Button>
+          </div>
+          <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{dailySummary}</p>
         </div>
       )}
 
