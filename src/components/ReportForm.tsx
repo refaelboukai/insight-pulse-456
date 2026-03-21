@@ -167,7 +167,8 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
     setViolenceTypes([]);
     setParticipations([]);
     setViolenceComment('');
-    toast.success('הדיווח נשמר בהצלחה! ✨');
+    setBehaviorComment('');
+    toast.success('הדיווח נשמר בהצלחה!');
   };
 
   const handleNextStudent = () => {
