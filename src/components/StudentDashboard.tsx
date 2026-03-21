@@ -250,6 +250,9 @@ export default function StudentDashboard() {
         )}
       </div>
 
+      {/* Personal Schedule */}
+      <StudentScheduleView studentId={selectedStudent.id} />
+
       {/* External App Link */}
       <a
         href={`https://reset-calm-zone.lovable.app/?auto_login=${selectedStudent.student_code}`}
