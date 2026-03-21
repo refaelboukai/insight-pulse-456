@@ -1,7 +1,6 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import logoSrc from '@/assets/logo.jpeg';
-import logo2Src from '@/assets/logo2.jpeg';
 import principalSigSrc from '@/assets/principal-signature.jpeg';
 
 interface GradeEntry {
@@ -131,10 +130,9 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   const hebrewDate = getHebrewDate();
   const gregorianDate = getGregorianDate();
 
-  const [logoDataUrl, sigDataUrl, logo2DataUrl] = await Promise.all([
+  const [logoDataUrl, sigDataUrl] = await Promise.all([
     preloadImageAsDataUrl(logoSrc),
     preloadImageAsDataUrl(principalSigSrc),
-    preloadImageAsDataUrl(logo2Src),
   ]);
 
   const colors = {
@@ -199,7 +197,6 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   // --- Header block (shared between pages) ---
   const headerHtml = `
     <div style="text-align:center;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid ${colors.accent};position:relative;">
-      <img src="${logo2DataUrl}" style="position:absolute;left:0;top:0;width:90px;height:90px;object-fit:contain;border-radius:6px;" />
       <img src="${logoDataUrl}" style="max-width:100px;height:auto;margin-bottom:6px;" />
       <div style="font-size:20px;font-weight:700;color:${colors.accent};margin-bottom:2px;">בית ספר מרום בית אקשטיין</div>
       <div style="font-size:13px;color:${colors.textLight};font-weight:500;letter-spacing:2px;">תעודת הערכה${data.semesterLabel ? ` — ${data.semesterLabel}` : ''}</div>
