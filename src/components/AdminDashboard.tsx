@@ -1080,7 +1080,7 @@ export default function AdminDashboard() {
                   {renderEvents(viewEvents, 'tali')}
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'tali')}
                   {renderSupport(viewAssignments, 'tali', true, 'טלי')}
-                  {renderStudents(viewStudents, 'tali', false)}
+                  {renderStudents(viewStudents, 'tali', true)}
                   {renderReports(viewReports, 'tali')}
                   <Button
                     variant="outline"
