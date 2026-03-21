@@ -1133,7 +1133,7 @@ export default function AdminDashboard() {
                   {renderEvents(viewEvents, 'eden')}
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'eden')}
                   {renderSupport(viewAssignments, 'eden', true, 'עדן')}
-                  {renderStudents(viewStudents, 'eden', false)}
+                  {renderStudents(viewStudents, 'eden', true)}
                   {renderReports(viewReports, 'eden')}
                   <Button
                     variant="outline"
