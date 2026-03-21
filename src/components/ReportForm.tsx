@@ -53,8 +53,9 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
   }, []);
 
   const toggleBehavior = (b: BehaviorType) => {
-    setBehaviors(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b]);
-    if (b === 'violent' && behaviors.includes('violent')) {
+    // Only allow one behavior selection
+    setBehaviors(prev => prev.includes(b) ? [] : [b]);
+    if (b !== 'violent') {
       setViolenceTypes([]);
     }
   };
