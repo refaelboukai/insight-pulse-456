@@ -286,15 +286,26 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
                 className="hidden"
                 onChange={handleExcelImport}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full h-8 gap-1.5 text-xs"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-3 w-3" />
-                ייבוא מאקסל (עמודות: יום, שעה, פעילות, סוג)
-              </Button>
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-8 gap-1.5 text-xs"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-3 w-3" />
+                  ייבוא מאקסל
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 gap-1 text-xs"
+                  onClick={downloadTemplate}
+                >
+                  <Download className="h-3 w-3" />
+                  תבנית
+                </Button>
+              </div>
             </div>
 
             {sortedEntries.length > 0 ? (
