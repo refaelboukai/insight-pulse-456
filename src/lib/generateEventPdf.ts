@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
 import logoSrc from '@/assets/logo.jpeg';
+import logo2Src from '@/assets/logo2.jpeg';
 
 interface EventData {
   incidentType: string;
@@ -37,7 +38,10 @@ function preloadImageAsDataUrl(src: string): Promise<string> {
 
 export async function generateEventPdf(data: EventData): Promise<Blob> {
   const typeName = INCIDENT_TYPE_LABELS[data.incidentType] || data.incidentType;
-  const logoDataUrl = await preloadImageAsDataUrl(logoSrc);
+  const [logoDataUrl, logo2DataUrl] = await Promise.all([
+    preloadImageAsDataUrl(logoSrc),
+    preloadImageAsDataUrl(logo2Src),
+  ]);
   const timeStr = data.time || new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
   const container = document.createElement('div');
@@ -58,7 +62,8 @@ export async function generateEventPdf(data: EventData): Promise<Blob> {
   }
 
   container.innerHTML = `
-    <div style="text-align:center;margin-bottom:28px;">
+    <div style="text-align:center;margin-bottom:28px;position:relative;">
+      <img src="${logo2DataUrl}" style="position:absolute;left:0;top:0;max-width:80px;height:auto;border-radius:6px;" />
       <img src="${logoDataUrl}" style="max-width:180px;height:auto;margin-bottom:10px;" />
       <div style="font-size:22px;font-weight:bold;color:#1a3a5c;letter-spacing:0.5px;">בית ספר מרום בית אקשטיין</div>
       <div style="width:60px;height:3px;background:linear-gradient(90deg,#3b82f6,#60a5fa);margin:12px auto;border-radius:2px;"></div>

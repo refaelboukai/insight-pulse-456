@@ -866,6 +866,19 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
+      {/* Small reset button top-left */}
+      <div className="flex justify-start">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-[10px] text-muted-foreground hover:text-destructive gap-1 px-2 h-7"
+          onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }}
+          disabled={resetting}
+        >
+          <Trash2 className="h-3 w-3" />
+          {resetting ? 'מאפס...' : 'איפוס מערכת'}
+        </Button>
+      </div>
       {/* Top-level Accordion for views */}
       <Accordion type="multiple" dir="rtl" className="space-y-3">
         {/* Management View */}
@@ -1023,33 +1036,7 @@ export default function AdminDashboard() {
                     )}
                   </div>
 
-                  {/* Reset All Reports */}
-                  <div className="card-styled rounded-2xl overflow-hidden border-destructive/30">
-                    <div className="p-3">
-                      <div className="flex items-center gap-2.5 mb-2">
-                        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-destructive/10">
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </div>
-                        <div>
-                          <span className="font-semibold text-sm">איפוס כל הדיווחים</span>
-                          <p className="text-[10px] text-muted-foreground">מחיקת כל הדיווחים, ביקורים, אירועים והתראות</p>
-                        </div>
-                      </div>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        className="w-full gap-1.5 text-xs"
-                        onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }}
-                        disabled={resetting}
-                      >
-                        {resetting ? (
-                          <><div className="w-3.5 h-3.5 rounded-full border-2 border-destructive-foreground border-t-transparent animate-spin" /> מאפס...</>
-                        ) : (
-                          <><Trash2 className="h-3.5 w-3.5" /> איפוס המערכת</>
-                        )}
-                      </Button>
-                    </div>
-                  </div>
+                  {/* Reset moved to top */}
                 </div>
               );
             })()}
