@@ -7,7 +7,7 @@ import StudentScheduleView from '@/components/StudentScheduleView';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Loader2, Volume2, VolumeX, Sparkles } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Loader2, Sparkles } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
@@ -37,7 +37,6 @@ export default function StudentDashboard() {
   });
   const [dailySummary, setDailySummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const isLocked = !!lockedStudentId;
 
@@ -110,27 +109,9 @@ export default function StudentDashboard() {
     }
   }, [selectedStudent, reports]);
 
-  const toggleSpeech = useCallback(() => {
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
-    }
-    if (!dailySummary) return;
-    const utterance = new SpeechSynthesisUtterance(dailySummary);
-    utterance.lang = 'he-IL';
-    utterance.rate = 0.9;
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
-  }, [dailySummary, isSpeaking]);
-
   // Reset summary when student changes
   useEffect(() => {
     setDailySummary(null);
-    setIsSpeaking(false);
-    window.speechSynthesis.cancel();
   }, [selectedStudentId]);
 
   if (loading) {
@@ -142,30 +123,11 @@ export default function StudentDashboard() {
   }
 
   if (!selectedStudent) {
-    const classes = [...new Set(students.map(s => s.class_name).filter(Boolean))];
     return (
       <div className="space-y-4 max-w-2xl mx-auto animate-fade-in">
-        <div className="text-center mb-4">
-          <h2 className="text-lg font-bold text-foreground">בחר/י את שמך</h2>
-          <p className="text-sm text-muted-foreground">כדי לראות את הדיווחים שלך</p>
-        </div>
-        <div className="card-styled rounded-2xl p-3">
-          {classes.map(cls => (
-            <div key={cls!} className="mb-3 last:mb-0">
-              <p className="text-sm font-bold text-foreground mb-1.5">הכיתה של {cls}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {students.filter(s => s.class_name === cls).map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => setSelectedStudentId(s.id)}
-                    className="text-sm py-2 px-3 rounded-lg border border-border bg-card hover:bg-primary/10 hover:border-primary/30 transition-colors"
-                  >
-                    {s.first_name} {s.last_name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-sm">לא נמצא תלמיד משויך לחשבון שלך.</p>
+          <p className="text-muted-foreground text-xs mt-1">פנה/י למנהל המערכת.</p>
         </div>
       </div>
     );
@@ -229,24 +191,9 @@ export default function StudentDashboard() {
       {/* AI Summary Display */}
       {dailySummary && (
         <div className="card-styled rounded-2xl p-4 space-y-2">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="font-semibold text-sm">סיכום היום</span>
-            </div>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={toggleSpeech}
-              className="h-7 w-7 p-0"
-              title={isSpeaking ? 'עצור השמעה' : 'השמע סיכום'}
-            >
-              {isSpeaking ? (
-                <VolumeX className="h-4 w-4 text-destructive" />
-              ) : (
-                <Volume2 className="h-4 w-4 text-primary" />
-              )}
-            </Button>
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="font-semibold text-sm">סיכום היום</span>
           </div>
           <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{dailySummary}</p>
         </div>
