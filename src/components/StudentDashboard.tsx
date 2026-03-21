@@ -78,36 +78,27 @@ export default function StudentDashboard() {
     fetchData();
   }, [selectedStudentId]);
 
-  // removed dailyScore
-
-  const generateDailySummary = async () => {
+  // Auto-generate daily summary when reports load
+  useEffect(() => {
     if (!selectedStudent || reports.length === 0) return;
+    const normalizedReports = reports.map(r => ({
+      subject: r.lesson_subject,
+      attendance: ATTENDANCE_LABELS[r.attendance] || r.attendance,
+      behavior: r.behavior_types?.map(b => BEHAVIOR_LABELS[b] || b).join(', '),
+      participation: r.participation?.map(p => PARTICIPATION_LABELS[p] || p).join(', '),
+      comment: r.comment || '',
+      time: new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+    }));
     setSummaryLoading(true);
-    try {
-      const normalizedReports = reports.map(r => ({
-        subject: r.lesson_subject,
-        attendance: ATTENDANCE_LABELS[r.attendance] || r.attendance,
-        behavior: r.behavior_types?.map(b => BEHAVIOR_LABELS[b] || b).join(', '),
-        participation: r.participation?.map(p => PARTICIPATION_LABELS[p] || p).join(', '),
-        comment: r.comment || '',
-        time: new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-      }));
-      const { data, error } = await supabase.functions.invoke('student-daily-summary', {
-        body: {
-          studentName: `${selectedStudent.first_name} ${selectedStudent.last_name}`,
-          reports: normalizedReports,
-        },
-      });
-      if (error) throw error;
-      if (data?.error) { toast.error(data.error); return; }
-      setDailySummary(data.summary);
-    } catch (e) {
-      console.error(e);
-      toast.error('שגיאה בהפקת הסיכום');
-    } finally {
-      setSummaryLoading(false);
-    }
-  };
+    supabase.functions.invoke('student-daily-summary', {
+      body: {
+        studentName: `${selectedStudent.first_name} ${selectedStudent.last_name}`,
+        reports: normalizedReports,
+      },
+    }).then(({ data, error }) => {
+      if (!error && data && !data.error) setDailySummary(data.summary);
+    }).finally(() => setSummaryLoading(false));
+  }, [reports, selectedStudent]);
 
   if (loading) {
     return (
