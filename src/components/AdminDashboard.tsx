@@ -3,6 +3,7 @@ import StudentDetailDialog from '@/components/StudentDetailDialog';
 import CodesManager from '@/components/CodesManager';
 import WeeklySupportSummary from '@/components/WeeklySupportSummary';
 import StudentScheduleManager from '@/components/StudentScheduleManager';
+import SmsReminderSection from '@/components/SmsReminderSection';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
