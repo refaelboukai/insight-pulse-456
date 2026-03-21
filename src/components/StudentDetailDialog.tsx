@@ -293,7 +293,7 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
             {generatingSummary ? (
               <><Loader2 className="h-3.5 w-3.5 animate-spin" /> מייצר סיכום...</>
             ) : (
-              <><Sparkles className="h-3.5 w-3.5" /> סיכום {summaryPeriod === '2weeks' ? 'שבועיים' : summaryPeriod === 'month' ? 'חודשי' : 'מלא'}</>
+              <><Sparkles className="h-3.5 w-3.5" /> סיכום {summaryPeriod === 'today' ? 'יומי' : summaryPeriod === 'week' ? 'שבועי' : summaryPeriod === '2weeks' ? 'שבועיים' : summaryPeriod === 'month' ? 'חודשי' : summaryPeriod === 'custom' ? 'מותאם' : 'מלא'}</>
             )}
           </Button>
           {aiSummary && (
