@@ -146,7 +146,21 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
     setNewActivity('');
   };
 
-  const removeEntry = (idx: number) => {
+  const downloadTemplate = () => {
+    const templateData = [
+      { 'יום': 'ראשון', 'שעה': '1', 'פעילות': 'מתמטיקה', 'סוג': 'שיעור' },
+      { 'יום': 'ראשון', 'שעה': '2', 'פעילות': 'עברית', 'סוג': 'שיעור' },
+      { 'יום': 'ראשון', 'שעה': '3', 'פעילות': 'טיפול רגשי', 'סוג': 'טיפול' },
+      { 'יום': 'שני', 'שעה': '1', 'פעילות': 'אנגלית', 'סוג': 'שיעור' },
+      { 'יום': 'שני', 'שעה': '4', 'פעילות': 'מדעים', 'סוג': 'שיעור' },
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    ws['!cols'] = [{ wch: 10 }, { wch: 8 }, { wch: 20 }, { wch: 10 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'מערכת שעות');
+    XLSX.writeFile(wb, `תבנית_מערכת_שעות.xlsx`);
+  };
+
     setEntries(entries.filter((_, i) => i !== idx));
   };
 
