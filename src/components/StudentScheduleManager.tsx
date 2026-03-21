@@ -263,7 +263,26 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
               </div>
             </div>
 
-            {/* Schedule view */}
+            {/* Excel import */}
+            <div className="flex gap-1.5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                className="hidden"
+                onChange={handleExcelImport}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-8 gap-1.5 text-xs"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-3 w-3" />
+                ייבוא מאקסל (עמודות: יום, שעה, פעילות, סוג)
+              </Button>
+            </div>
+
             {sortedEntries.length > 0 ? (
               <div className="space-y-1">
                 <p className="text-xs font-semibold">מערכת נוכחית ({sortedEntries.length} פעילויות)</p>
