@@ -109,27 +109,9 @@ export default function StudentDashboard() {
     }
   }, [selectedStudent, reports]);
 
-  const toggleSpeech = useCallback(() => {
-    if (isSpeaking) {
-      window.speechSynthesis.cancel();
-      setIsSpeaking(false);
-      return;
-    }
-    if (!dailySummary) return;
-    const utterance = new SpeechSynthesisUtterance(dailySummary);
-    utterance.lang = 'he-IL';
-    utterance.rate = 0.9;
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-    window.speechSynthesis.speak(utterance);
-    setIsSpeaking(true);
-  }, [dailySummary, isSpeaking]);
-
   // Reset summary when student changes
   useEffect(() => {
     setDailySummary(null);
-    setIsSpeaking(false);
-    window.speechSynthesis.cancel();
   }, [selectedStudentId]);
 
   if (loading) {
