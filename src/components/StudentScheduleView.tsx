@@ -183,7 +183,7 @@ export default function StudentScheduleView({ studentId }: Props) {
                   </p>
                   {isToday && dayChecked > 0 && (
                     <Badge variant="outline" className="text-[9px] px-1.5 gap-0.5">
-                      <CheckCircle2 className="h-2.5 w-2.5 text-green-500" />
+                      <CheckCircle2 className="h-2.5 w-2.5 text-emerald-500" />
                       {dayChecked}/{dayEntries.length}
                     </Badge>
                   )}
