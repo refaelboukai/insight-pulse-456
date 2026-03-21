@@ -2,7 +2,6 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
 import logoSrc from '@/assets/logo.jpeg';
-import logo2Src from '@/assets/logo2.jpeg';
 
 interface EventData {
   incidentType: string;
