@@ -160,7 +160,7 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
     XLSX.utils.book_append_sheet(wb, ws, 'מערכת שעות');
     XLSX.writeFile(wb, `תבנית_מערכת_שעות.xlsx`);
   };
-
+  const removeEntry = (idx: number) => {
     setEntries(entries.filter((_, i) => i !== idx));
   };
 
