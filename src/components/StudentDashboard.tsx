@@ -7,9 +7,8 @@ import StudentScheduleView from '@/components/StudentScheduleView';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Sparkles, Loader2 } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
-import { toast } from 'sonner';
 
 type Student = Database['public']['Tables']['students']['Row'];
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
@@ -35,8 +34,6 @@ export default function StudentDashboard() {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     reports: true, grades: false, support: false,
   });
-  const [dailySummary, setDailySummary] = useState<string | null>(null);
-  const [summaryLoading, setSummaryLoading] = useState(false);
 
   const isLocked = !!lockedStudentId;
 
@@ -78,27 +75,6 @@ export default function StudentDashboard() {
     fetchData();
   }, [selectedStudentId]);
 
-  // Auto-generate daily summary when reports load
-  useEffect(() => {
-    if (!selectedStudent || reports.length === 0) return;
-    const normalizedReports = reports.map(r => ({
-      subject: r.lesson_subject,
-      attendance: ATTENDANCE_LABELS[r.attendance] || r.attendance,
-      behavior: r.behavior_types?.map(b => BEHAVIOR_LABELS[b] || b).join(', '),
-      participation: r.participation?.map(p => PARTICIPATION_LABELS[p] || p).join(', '),
-      comment: r.comment || '',
-      time: new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-    }));
-    setSummaryLoading(true);
-    supabase.functions.invoke('student-daily-summary', {
-      body: {
-        studentName: `${selectedStudent.first_name} ${selectedStudent.last_name}`,
-        reports: normalizedReports,
-      },
-    }).then(({ data, error }) => {
-      if (!error && data && !data.error) setDailySummary(data.summary);
-    }).finally(() => setSummaryLoading(false));
-  }, [reports, selectedStudent]);
 
   if (loading) {
     return (
@@ -177,24 +153,6 @@ export default function StudentDashboard() {
       {reports.length > 0 && (
         <div className="text-center py-2">
           <p className="text-sm text-muted-foreground">{reports.length} שיעורים דווחו היום</p>
-        </div>
-      )}
-
-      {/* AI Daily Summary - auto displayed */}
-      {reports.length > 0 && (
-        <div className="card-styled rounded-2xl p-4 space-y-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-sm">מכתב מהמחנכת</span>
-          </div>
-          {summaryLoading ? (
-            <div className="flex items-center gap-2 py-3 justify-center">
-              <Loader2 className="h-4 w-4 animate-spin text-primary" />
-              <span className="text-sm text-muted-foreground">כותבת לך סיכום...</span>
-            </div>
-          ) : dailySummary ? (
-            <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{dailySummary}</p>
-          ) : null}
         </div>
       )}
 
