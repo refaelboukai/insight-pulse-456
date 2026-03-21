@@ -14,6 +14,63 @@ export type Database = {
   }
   public: {
     Tables: {
+      activity_logs: {
+        Row: {
+          adult_contact_category: string | null
+          adult_contact_name: string | null
+          created_at: string
+          id: string
+          intensity_label: string | null
+          intensity_score: number | null
+          is_positive_reflection: boolean | null
+          optional_context_text: string | null
+          positive_source: string | null
+          result_after_practice: string | null
+          selected_state: string
+          skill_helpful: boolean | null
+          skill_used: string | null
+          student_id: string
+          student_name: string
+          support_requested: boolean
+        }
+        Insert: {
+          adult_contact_category?: string | null
+          adult_contact_name?: string | null
+          created_at?: string
+          id?: string
+          intensity_label?: string | null
+          intensity_score?: number | null
+          is_positive_reflection?: boolean | null
+          optional_context_text?: string | null
+          positive_source?: string | null
+          result_after_practice?: string | null
+          selected_state: string
+          skill_helpful?: boolean | null
+          skill_used?: string | null
+          student_id: string
+          student_name: string
+          support_requested?: boolean
+        }
+        Update: {
+          adult_contact_category?: string | null
+          adult_contact_name?: string | null
+          created_at?: string
+          id?: string
+          intensity_label?: string | null
+          intensity_score?: number | null
+          is_positive_reflection?: boolean | null
+          optional_context_text?: string | null
+          positive_source?: string | null
+          result_after_practice?: string | null
+          selected_state?: string
+          skill_helpful?: boolean | null
+          skill_used?: string | null
+          student_id?: string
+          student_name?: string
+          support_requested?: boolean
+        }
+        Relationships: []
+      }
       alerts: {
         Row: {
           alert_type: string
@@ -99,6 +156,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      daily_reflections: {
+        Row: {
+          academic_tasks: number
+          behavior: number
+          class_presence: number
+          created_at: string
+          id: string
+          social_interaction: number
+          student_id: string | null
+          student_name: string
+        }
+        Insert: {
+          academic_tasks: number
+          behavior: number
+          class_presence: number
+          created_at?: string
+          id?: string
+          social_interaction: number
+          student_id?: string | null
+          student_name?: string
+        }
+        Update: {
+          academic_tasks?: number
+          behavior?: number
+          class_presence?: number
+          created_at?: string
+          id?: string
+          social_interaction?: number
+          student_id?: string | null
+          student_name?: string
+        }
+        Relationships: []
       }
       exceptional_events: {
         Row: {
