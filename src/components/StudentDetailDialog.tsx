@@ -321,49 +321,6 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
           </div>
         )}
 
-        {/* Date selector */}
-        <div className="space-y-2">
-          <div className="flex flex-wrap gap-1.5">
-            {quickDays.map((d, i) => {
-              const dStr = format(d, 'yyyy-MM-dd');
-              const isActive = dateStr === dStr;
-              return (
-                <button
-                  key={i}
-                  onClick={() => setSelectedDate(d)}
-                  className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${
-                    isActive
-                      ? 'bg-primary text-primary-foreground border-primary'
-                      : 'border-border bg-card hover:border-primary/30'
-                  }`}
-                >
-                  {i === 0 ? 'היום' : i === 1 ? 'אתמול' : format(d, 'dd/MM', { locale: he })}
-                </button>
-              );
-            })}
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" size="sm" className="h-7 text-xs gap-1 rounded-full">
-                  <CalendarIcon className="h-3 w-3" />
-                  תאריך אחר
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="start">
-                <Calendar
-                  mode="single"
-                  selected={selectedDate}
-                  onSelect={(d) => d && setSelectedDate(d)}
-                  disabled={(d) => d > new Date()}
-                  className={cn("p-3 pointer-events-auto")}
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-
-          <p className="text-xs text-muted-foreground">
-            📅 {format(selectedDate, 'EEEE, d בMMMM yyyy', { locale: he })}
-          </p>
-        </div>
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
