@@ -11,7 +11,22 @@ import { Calendar, Plus, Trash2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'] as const;
-const HOURS = Array.from({ length: 8 }, (_, i) => `${i + 1}`);
+
+const SCHOOL_SLOTS = [
+  { id: '1', label: 'שיעור 1', time: '08:00–08:50' },
+  { id: '2', label: 'שיעור 2', time: '08:50–09:40' },
+  { id: 'b1', label: 'הפסקה 1', time: '09:40–10:00' },
+  { id: '3', label: 'שיעור 3', time: '10:00–10:45' },
+  { id: '4', label: 'שיעור 4', time: '10:45–11:30' },
+  { id: 'b2', label: 'הפסקה 2', time: '11:30–11:45' },
+  { id: '5', label: 'שיעור 5', time: '11:45–12:30' },
+  { id: '6', label: 'שיעור 6', time: '12:30–13:15' },
+  { id: 'lunch', label: 'ארוחת צהריים', time: '13:15–14:00' },
+  { id: '8', label: 'שיעור 8', time: '14:00–14:45' },
+  { id: '9', label: 'שיעור 9', time: '14:45–15:30' },
+] as const;
+
+const SLOT_ORDER = SCHOOL_SLOTS.map(s => s.id);
 
 interface ScheduleEntry {
   day: string;
