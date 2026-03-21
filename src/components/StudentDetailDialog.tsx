@@ -137,7 +137,7 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
           studentCode: student.student_code,
           className: student.class_name,
           grade: student.grade,
-          period: summaryPeriod === '2weeks' ? 'שבועיים אחרונים' : summaryPeriod === 'month' ? 'חודש אחרון' : 'כל התקופה',
+          period: summaryPeriod === 'today' ? 'היום' : summaryPeriod === 'week' ? 'שבוע אחרון' : summaryPeriod === '2weeks' ? 'שבועיים אחרונים' : summaryPeriod === 'month' ? 'חודש אחרון' : summaryPeriod === 'custom' ? `תאריכים מותאמים` : 'כל התקופה',
           reports: reportsData,
           attendance: attendanceData,
           events: allEvents.data || [],
