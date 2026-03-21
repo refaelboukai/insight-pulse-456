@@ -301,7 +301,11 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                 return (
                   <button
                     key={key}
-                    onClick={() => setParticipations(prev => prev.includes(key) ? prev.filter(p => p !== key) : [...prev, key])}
+                    onClick={() => setParticipations(prev => {
+                      if (prev.includes(key)) return prev.filter(p => p !== key);
+                      if (prev.length >= 2) return prev; // max 2
+                      return [...prev, key];
+                    })}
                     className={`text-sm py-2 px-3 rounded-full border transition-colors ${colorClass}`}
                   >
                     {label}
