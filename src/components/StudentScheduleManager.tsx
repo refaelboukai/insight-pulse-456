@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -7,8 +7,9 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Plus, Trash2, Save } from 'lucide-react';
+import { Calendar, Plus, Trash2, Save, Upload } from 'lucide-react';
 import { toast } from 'sonner';
+import * as XLSX from 'xlsx';
 
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'] as const;
 
@@ -58,12 +59,84 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
   const [enabled, setEnabled] = useState(schedule?.is_enabled ?? false);
   const [entries, setEntries] = useState<ScheduleEntry[]>(schedule?.schedule_data ?? []);
   const [saving, setSaving] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // New entry form
   const [newDay, setNewDay] = useState<string>(DAYS[0]);
   const [newHour, setNewHour] = useState<string>(SCHOOL_SLOTS[0].id);
   const [newActivity, setNewActivity] = useState('');
   const [newType, setNewType] = useState<string>('lesson');
+
+  const DAY_MAP: Record<string, string> = {
+    'א': 'ראשון', 'ב': 'שני', 'ג': 'שלישי', 'ד': 'רביעי', 'ה': 'חמישי',
+    'ראשון': 'ראשון', 'שני': 'שני', 'שלישי': 'שלישי', 'רביעי': 'רביעי', 'חמישי': 'חמישי',
+    'יום א': 'ראשון', 'יום ב': 'שני', 'יום ג': 'שלישי', 'יום ד': 'רביעי', 'יום ה': 'חמישי',
+  };
+
+  const handleExcelImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (evt) => {
+      try {
+        const wb = XLSX.read(evt.target?.result, { type: 'binary' });
+        const ws = wb.Sheets[wb.SheetNames[0]];
+        const rows: any[] = XLSX.utils.sheet_to_json(ws);
+        
+        const imported: ScheduleEntry[] = [];
+        for (const row of rows) {
+          const dayRaw = String(row['יום'] || row['day'] || '').trim();
+          const hourRaw = String(row['שעה'] || row['hour'] || row['משבצת'] || '').trim();
+          const activity = String(row['פעילות'] || row['activity'] || row['שם'] || '').trim();
+          const typeRaw = String(row['סוג'] || row['type'] || 'שיעור').trim();
+
+          const day = DAY_MAP[dayRaw];
+          let hour: string | undefined;
+          // Match by slot id, label, or number
+          for (const slot of SCHOOL_SLOTS) {
+            if (hourRaw === slot.id || hourRaw === slot.label || hourRaw === slot.time) {
+              hour = slot.id; break;
+            }
+          }
+          if (!hour) {
+            const numMatch = hourRaw.match(/\d+/);
+            if (numMatch && SLOT_ORDER.includes(numMatch[0])) hour = numMatch[0];
+          }
+
+          const TYPE_IMPORT_MAP: Record<string, string> = {
+            'שיעור': 'lesson', 'טיפול': 'therapy', 'הפסקה': 'break', 'אחר': 'other',
+          };
+          const type = TYPE_IMPORT_MAP[typeRaw] || 'lesson';
+
+          if (day && hour && activity) {
+            if (!imported.some(ie => ie.day === day && ie.hour === hour)) {
+              imported.push({ day, hour, activity, type: type as any });
+            }
+          }
+        }
+
+        if (imported.length === 0) {
+          toast.error('לא נמצאו פעילויות. ודא עמודות: יום, שעה, פעילות');
+          return;
+        }
+
+        setEntries(prev => {
+          const merged = [...prev];
+          for (const entry of imported) {
+            const existIdx = merged.findIndex(m => m.day === entry.day && m.hour === entry.hour);
+            if (existIdx >= 0) merged[existIdx] = entry;
+            else merged.push(entry);
+          }
+          return merged;
+        });
+        toast.success(`יובאו ${imported.length} פעילויות מהקובץ`);
+      } catch {
+        toast.error('שגיאה בקריאת הקובץ');
+      }
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    };
+    reader.readAsBinaryString(file);
+  };
 
   const addEntry = () => {
     if (!newActivity.trim()) { toast.error('נא להזין שם פעילות'); return; }
@@ -190,7 +263,26 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
               </div>
             </div>
 
-            {/* Schedule view */}
+            {/* Excel import */}
+            <div className="flex gap-1.5">
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept=".xlsx,.xls,.csv"
+                className="hidden"
+                onChange={handleExcelImport}
+              />
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full h-8 gap-1.5 text-xs"
+                onClick={() => fileInputRef.current?.click()}
+              >
+                <Upload className="h-3 w-3" />
+                ייבוא מאקסל (עמודות: יום, שעה, פעילות, סוג)
+              </Button>
+            </div>
+
             {sortedEntries.length > 0 ? (
               <div className="space-y-1">
                 <p className="text-xs font-semibold">מערכת נוכחית ({sortedEntries.length} פעילויות)</p>
