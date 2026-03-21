@@ -59,7 +59,6 @@ export async function generateEventPdf(data: EventData): Promise<Blob> {
 
   container.innerHTML = `
     <div style="text-align:center;margin-bottom:28px;position:relative;">
-      <img src="${logo2DataUrl}" style="position:absolute;left:0;top:0;width:100px;height:100px;object-fit:contain;border-radius:6px;" />
       <img src="${logoDataUrl}" style="max-width:180px;height:auto;margin-bottom:10px;" />
       <div style="font-size:22px;font-weight:bold;color:#1a3a5c;letter-spacing:0.5px;">בית ספר מרום בית אקשטיין</div>
       <div style="width:60px;height:3px;background:linear-gradient(90deg,#3b82f6,#60a5fa);margin:12px auto;border-radius:2px;"></div>
