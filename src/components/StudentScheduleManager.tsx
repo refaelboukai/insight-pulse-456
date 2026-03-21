@@ -205,7 +205,7 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
                         return (
                           <div key={idx} className={`flex items-center justify-between p-1.5 rounded-md border mb-0.5 ${TYPE_COLORS[entry.type]}`}>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-[10px] px-1.5">{entry.hour}</Badge>
+                              <Badge variant="outline" className="text-[10px] px-1.5 whitespace-nowrap">{getSlotLabel(entry.hour)}</Badge>
                               <span className="text-xs font-medium">{entry.activity}</span>
                               <Badge variant="secondary" className="text-[9px] px-1">{TYPE_LABELS[entry.type]}</Badge>
                             </div>

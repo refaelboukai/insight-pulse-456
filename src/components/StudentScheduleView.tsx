@@ -99,7 +99,7 @@ export default function StudentScheduleView({ studentId }: Props) {
                 <div className="space-y-0.5">
                   {dayEntries.map((entry, i) => (
                     <div key={i} className={`flex items-center gap-2 p-1.5 rounded-md border ${TYPE_COLORS[entry.type] || TYPE_COLORS.other}`}>
-                      <Badge variant="outline" className="text-[10px] px-1.5 shrink-0">{entry.hour}</Badge>
+                      <Badge variant="outline" className="text-[10px] px-1.5 shrink-0 whitespace-nowrap">{SCHOOL_SLOTS[entry.hour] || entry.hour}</Badge>
                       <span className="text-xs font-medium flex-1">{entry.activity}</span>
                       <Badge variant="secondary" className="text-[9px] px-1">{TYPE_LABELS[entry.type] || entry.type}</Badge>
                     </div>
