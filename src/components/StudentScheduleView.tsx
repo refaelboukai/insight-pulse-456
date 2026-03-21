@@ -161,7 +161,7 @@ export default function StudentScheduleView({ studentId }: Props) {
                 />
               </div>
               {allDone && (
-                <p className="text-[11px] text-green-600 font-semibold text-center flex items-center justify-center gap-1">
+                <p className="text-[11px] text-emerald-600 font-semibold text-center flex items-center justify-center gap-1">
                   <Trophy className="h-3.5 w-3.5" />
                   כל הכבוד! השלמת את כל הפעילויות להיום! 🎉
                 </p>
