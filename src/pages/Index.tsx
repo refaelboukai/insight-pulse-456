@@ -1,5 +1,4 @@
-import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import ReportForm from '@/components/ReportForm';
 import ExceptionalEventForm from '@/components/ExceptionalEventForm';
@@ -16,17 +15,9 @@ import logoSrc from '@/assets/logo.jpeg';
 
 export default function Index() {
   const { role, fullName, signOut } = useAuth();
-  const navigate = useNavigate();
   const isAdmin = role === 'admin';
   const isStudent = role === 'student';
   const [absentStudentIds, setAbsentStudentIds] = useState<Set<string>>(new Set());
-
-  // Redirect students to the new portal
-  useEffect(() => {
-    if (isStudent && window.location.pathname === '/') {
-      navigate('/student');
-    }
-  }, [isStudent, navigate]);
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--gradient-warm)' }}>

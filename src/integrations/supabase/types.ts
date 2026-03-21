@@ -14,63 +14,6 @@ export type Database = {
   }
   public: {
     Tables: {
-      activity_logs: {
-        Row: {
-          adult_contact_category: string | null
-          adult_contact_name: string | null
-          created_at: string
-          id: string
-          intensity_label: string | null
-          intensity_score: number | null
-          is_positive_reflection: boolean | null
-          optional_context_text: string | null
-          positive_source: string | null
-          result_after_practice: string | null
-          selected_state: string
-          skill_helpful: boolean | null
-          skill_used: string | null
-          student_id: string
-          student_name: string
-          support_requested: boolean
-        }
-        Insert: {
-          adult_contact_category?: string | null
-          adult_contact_name?: string | null
-          created_at?: string
-          id?: string
-          intensity_label?: string | null
-          intensity_score?: number | null
-          is_positive_reflection?: boolean | null
-          optional_context_text?: string | null
-          positive_source?: string | null
-          result_after_practice?: string | null
-          selected_state: string
-          skill_helpful?: boolean | null
-          skill_used?: string | null
-          student_id: string
-          student_name: string
-          support_requested?: boolean
-        }
-        Update: {
-          adult_contact_category?: string | null
-          adult_contact_name?: string | null
-          created_at?: string
-          id?: string
-          intensity_label?: string | null
-          intensity_score?: number | null
-          is_positive_reflection?: boolean | null
-          optional_context_text?: string | null
-          positive_source?: string | null
-          result_after_practice?: string | null
-          selected_state?: string
-          skill_helpful?: boolean | null
-          skill_used?: string | null
-          student_id?: string
-          student_name?: string
-          support_requested?: boolean
-        }
-        Relationships: []
-      }
       alerts: {
         Row: {
           alert_type: string
@@ -116,84 +59,6 @@ export type Database = {
           },
         ]
       }
-      brain_training_history: {
-        Row: {
-          created_at: string
-          game_type: string
-          id: string
-          level_at_time: number
-          points_earned: number
-          student_id: string | null
-          student_name: string
-          won: boolean
-        }
-        Insert: {
-          created_at?: string
-          game_type: string
-          id?: string
-          level_at_time?: number
-          points_earned?: number
-          student_id?: string | null
-          student_name: string
-          won?: boolean
-        }
-        Update: {
-          created_at?: string
-          game_type?: string
-          id?: string
-          level_at_time?: number
-          points_earned?: number
-          student_id?: string | null
-          student_name?: string
-          won?: boolean
-        }
-        Relationships: []
-      }
-      brain_training_scores: {
-        Row: {
-          consecutive_losses: number
-          consecutive_wins: number
-          created_at: string
-          game_type: string
-          id: string
-          level: number
-          max_level_reached: number
-          score: number
-          student_id: string | null
-          student_name: string
-          total_games_played: number
-          updated_at: string
-        }
-        Insert: {
-          consecutive_losses?: number
-          consecutive_wins?: number
-          created_at?: string
-          game_type: string
-          id?: string
-          level?: number
-          max_level_reached?: number
-          score?: number
-          student_id?: string | null
-          student_name: string
-          total_games_played?: number
-          updated_at?: string
-        }
-        Update: {
-          consecutive_losses?: number
-          consecutive_wins?: number
-          created_at?: string
-          game_type?: string
-          id?: string
-          level?: number
-          max_level_reached?: number
-          score?: number
-          student_id?: string | null
-          student_name?: string
-          total_games_played?: number
-          updated_at?: string
-        }
-        Relationships: []
-      }
       daily_attendance: {
         Row: {
           absence_reason: Database["public"]["Enums"]["absence_reason"] | null
@@ -234,39 +99,6 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
-      }
-      daily_reflections: {
-        Row: {
-          academic_tasks: number
-          behavior: number
-          class_presence: number
-          created_at: string
-          id: string
-          social_interaction: number
-          student_id: string | null
-          student_name: string
-        }
-        Insert: {
-          academic_tasks: number
-          behavior: number
-          class_presence: number
-          created_at?: string
-          id?: string
-          social_interaction: number
-          student_id?: string | null
-          student_name?: string
-        }
-        Update: {
-          academic_tasks?: number
-          behavior?: number
-          class_presence?: number
-          created_at?: string
-          id?: string
-          social_interaction?: number
-          student_id?: string | null
-          student_name?: string
-        }
-        Relationships: []
       }
       exceptional_events: {
         Row: {
