@@ -866,6 +866,19 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
+      {/* Small reset button top-left */}
+      <div className="flex justify-start">
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-[10px] text-muted-foreground hover:text-destructive gap-1 px-2 h-7"
+          onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }}
+          disabled={resetting}
+        >
+          <Trash2 className="h-3 w-3" />
+          {resetting ? 'מאפס...' : 'איפוס מערכת'}
+        </Button>
+      </div>
       {/* Top-level Accordion for views */}
       <Accordion type="multiple" dir="rtl" className="space-y-3">
         {/* Management View */}
