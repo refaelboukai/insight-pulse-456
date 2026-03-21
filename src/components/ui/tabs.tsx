@@ -2,6 +2,7 @@ import * as React from "react";
 import * as TabsPrimitive from "@radix-ui/react-tabs";
 
 import { cn } from "@/lib/utils";
+import { playNavSound } from "@/lib/sounds";
 
 const Tabs = TabsPrimitive.Root;
 
