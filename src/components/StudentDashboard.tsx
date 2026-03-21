@@ -229,104 +229,40 @@ export default function StudentDashboard() {
         {expandedSections.reports && (
           <div className="px-3 pb-3 space-y-2">
             {reports.length === 0 ? (
-              <div className="text-center py-8 space-y-2">
-                <div className="text-4xl">📚</div>
-                <p className="text-sm font-semibold text-foreground">עדיין אין דיווחים להיום</p>
-                <p className="text-xs text-muted-foreground">הדיווחים יופיעו כאן אחרי כל שיעור</p>
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">עדיין אין דיווחים להיום</p>
               </div>
             ) : (
-              reports.map(r => {
-                const attVis = getAttendanceVisual(r.attendance);
-                const isGreat = r.attendance === 'full' && r.behavior_types?.includes('respectful');
-
-                return (
-                  <div
-                    key={r.id}
-                    className={`p-3 rounded-xl border-2 transition-all duration-300 hover:shadow-md ${
-                      isGreat
-                        ? 'border-emerald-200 dark:border-emerald-800 bg-gradient-to-l from-emerald-50/50 to-transparent dark:from-emerald-950/20'
-                        : 'border-border bg-card'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{isGreat ? '🌟' : '📖'}</span>
-                        <p className="font-bold text-sm">{r.lesson_subject}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-1.5 mb-2">
-                      {/* Attendance */}
-                      <div className={`rounded-lg p-2 text-center ${attVis.bg}`}>
-                        <p className="text-base mb-0.5">{attVis.icon}</p>
-                        <p className={`text-[10px] font-bold ${attVis.text}`}>
-                          {ATTENDANCE_LABELS[r.attendance]}
-                        </p>
-                      </div>
-
-                      {/* Behavior */}
-                      <div className={`rounded-lg p-2 text-center ${
-                        r.behavior_types?.includes('respectful')
-                          ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                          : r.behavior_types?.includes('violent')
-                          ? 'bg-red-100 dark:bg-red-900/30'
-                          : 'bg-amber-100 dark:bg-amber-900/30'
-                      }`}>
-                        <p className="text-base mb-0.5">
-                          {r.behavior_types?.includes('respectful') ? '👏' : r.behavior_types?.includes('violent') ? '⚠️' : '💭'}
-                        </p>
-                        <p className={`text-[10px] font-bold ${
-                          r.behavior_types?.includes('respectful')
-                            ? 'text-emerald-700 dark:text-emerald-400'
-                            : r.behavior_types?.includes('violent')
-                            ? 'text-red-700 dark:text-red-400'
-                            : 'text-amber-700 dark:text-amber-400'
-                        }`}>
-                          {r.behavior_types?.map(b => BEHAVIOR_LABELS[b]).join(', ') || '—'}
-                        </p>
-                      </div>
-
-                      {/* Participation */}
-                      <div className={`rounded-lg p-2 text-center ${
-                        r.participation?.some(p => p === 'active_participation' || p === 'completed_tasks')
-                          ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                          : r.participation?.includes('no_function')
-                          ? 'bg-red-100 dark:bg-red-900/30'
-                          : 'bg-amber-100 dark:bg-amber-900/30'
-                      }`}>
-                        <p className="text-base mb-0.5">
-                          {r.participation?.some(p => p === 'active_participation' || p === 'completed_tasks') ? '🚀' : r.participation?.includes('no_function') ? '😔' : '🔄'}
-                        </p>
-                        <p className={`text-[10px] font-bold ${
-                          r.participation?.some(p => p === 'active_participation' || p === 'completed_tasks')
-                            ? 'text-emerald-700 dark:text-emerald-400'
-                            : r.participation?.includes('no_function')
-                            ? 'text-red-700 dark:text-red-400'
-                            : 'text-amber-700 dark:text-amber-400'
-                        }`}>
-                          {r.participation?.map(p => PARTICIPATION_LABELS[p]).join(', ') || '—'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {isGreat && (
-                      <div className="flex items-center gap-1.5 py-1.5 px-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/50">
-                        <ThumbsUp className="h-3 w-3 text-emerald-600" />
-                        <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">שיעור מעולה! המשך/י ככה! 💪</p>
-                      </div>
-                    )}
-
-                    {r.comment && (
-                      <p className="text-xs text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2.5 py-1.5 border">
-                        💬 {r.comment}
-                      </p>
-                    )}
+              reports.map(r => (
+                <div key={r.id} className="p-3 rounded-xl border bg-card">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="font-bold text-sm">{r.lesson_subject}</p>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
-                );
-              })
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="outline" className="text-xs">
+                      {ATTENDANCE_LABELS[r.attendance]}
+                    </Badge>
+                    {r.behavior_types?.map(b => (
+                      <Badge key={b} variant={b === 'respectful' ? 'default' : 'destructive'} className="text-xs">
+                        {BEHAVIOR_LABELS[b]}
+                      </Badge>
+                    ))}
+                    {r.participation?.map(p => (
+                      <Badge key={p} variant="secondary" className="text-xs">
+                        {PARTICIPATION_LABELS[p]}
+                      </Badge>
+                    ))}
+                  </div>
+                  {r.comment && (
+                    <p className="text-xs text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2.5 py-1.5 border">
+                      {r.comment}
+                    </p>
+                  )}
+                </div>
+              ))
             )}
           </div>
         )}
