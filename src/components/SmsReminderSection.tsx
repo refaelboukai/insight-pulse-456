@@ -46,7 +46,7 @@ export default function SmsReminderSection() {
   const sendSms = () => {
     const phones = Array.from(selected);
     if (phones.length === 0) return;
-    const message = 'שלום, תזכורת למלא דיווחים יומיים במערכת InsightPulse. תודה!';
+    const message = 'שלום, תזכורת למלא דיווחים בכל שיעור במערכת בית הספר\nhttps://insight-pulse-456.lovable.app';
     const smsUrl = `sms:${phones.join(',')}?body=${encodeURIComponent(message)}`;
     window.open(smsUrl, '_blank');
   };
