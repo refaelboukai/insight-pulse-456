@@ -75,27 +75,6 @@ export default function StudentDashboard() {
     fetchData();
   }, [selectedStudentId]);
 
-  // Auto-generate daily summary when reports load
-  useEffect(() => {
-    if (!selectedStudent || reports.length === 0) return;
-    const normalizedReports = reports.map(r => ({
-      subject: r.lesson_subject,
-      attendance: ATTENDANCE_LABELS[r.attendance] || r.attendance,
-      behavior: r.behavior_types?.map(b => BEHAVIOR_LABELS[b] || b).join(', '),
-      participation: r.participation?.map(p => PARTICIPATION_LABELS[p] || p).join(', '),
-      comment: r.comment || '',
-      time: new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-    }));
-    setSummaryLoading(true);
-    supabase.functions.invoke('student-daily-summary', {
-      body: {
-        studentName: `${selectedStudent.first_name} ${selectedStudent.last_name}`,
-        reports: normalizedReports,
-      },
-    }).then(({ data, error }) => {
-      if (!error && data && !data.error) setDailySummary(data.summary);
-    }).finally(() => setSummaryLoading(false));
-  }, [reports, selectedStudent]);
 
   if (loading) {
     return (
