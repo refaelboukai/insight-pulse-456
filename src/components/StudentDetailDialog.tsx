@@ -76,13 +76,23 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     try {
       // Calculate date filter based on period
       let fromDate: string | null = null;
+      let toDate: string | null = null;
       const now = new Date();
-      if (summaryPeriod === '2weeks') {
+      if (summaryPeriod === 'today') {
+        fromDate = format(now, 'yyyy-MM-dd');
+        toDate = format(now, 'yyyy-MM-dd');
+      } else if (summaryPeriod === 'week') {
+        const d = new Date(now); d.setDate(d.getDate() - 7);
+        fromDate = format(d, 'yyyy-MM-dd');
+      } else if (summaryPeriod === '2weeks') {
         const d = new Date(now); d.setDate(d.getDate() - 14);
         fromDate = format(d, 'yyyy-MM-dd');
       } else if (summaryPeriod === 'month') {
         const d = new Date(now); d.setMonth(d.getMonth() - 1);
         fromDate = format(d, 'yyyy-MM-dd');
+      } else if (summaryPeriod === 'custom') {
+        if (customFromDate) fromDate = format(customFromDate, 'yyyy-MM-dd');
+        if (customToDate) toDate = format(customToDate, 'yyyy-MM-dd');
       }
 
       let reportsQuery = supabase.from('lesson_reports').select('*').eq('student_id', student.id).order('report_date', { ascending: false });
