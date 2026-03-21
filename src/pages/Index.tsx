@@ -57,6 +57,9 @@ export default function Index() {
           </div>
         )}
 
+        {/* Daily reminder for staff */}
+        {!isAdmin && !isStudent && <DailyReminderBanner />}
+
         {isStudent ? (
           <>
             <div className="text-center mb-4">
