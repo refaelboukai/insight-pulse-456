@@ -220,7 +220,7 @@ export default function StudentScheduleView({ studentId }: Props) {
                           {TYPE_LABELS[entry.type] || entry.type}
                         </Badge>
                         {isChecked && isToday && (
-                          <CheckCircle2 className="h-3.5 w-3.5 text-green-500 shrink-0" />
+                          <CheckCircle2 className="h-3.5 w-3.5 text-emerald-500 shrink-0" />
                         )}
                       </div>
                     );
