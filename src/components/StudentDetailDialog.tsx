@@ -32,7 +32,9 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
   const [loading, setLoading] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [generatingSummary, setGeneratingSummary] = useState(false);
-  const [summaryPeriod, setSummaryPeriod] = useState<'2weeks' | 'month' | 'all'>('all');
+  const [summaryPeriod, setSummaryPeriod] = useState<'today' | 'week' | '2weeks' | 'month' | 'all' | 'custom'>('all');
+  const [customFromDate, setCustomFromDate] = useState<Date | undefined>(undefined);
+  const [customToDate, setCustomToDate] = useState<Date | undefined>(undefined);
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
