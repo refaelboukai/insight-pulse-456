@@ -82,6 +82,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
     setViolenceTypes([]);
     setParticipations([]);
     setViolenceComment('');
+    setBehaviorComment('');
   };
 
   const handleSubmit = async () => {
