@@ -37,7 +37,6 @@ export default function StudentDashboard() {
   });
   const [dailySummary, setDailySummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
-  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const isLocked = !!lockedStudentId;
 
