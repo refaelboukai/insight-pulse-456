@@ -1067,13 +1067,14 @@ export default function AdminDashboard() {
           </AccordionTrigger>
           <AccordionContent className="px-3 pb-4">
             {(() => {
-              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData('טלי');
+              const { viewStudents, viewStudentIds, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData('טלי');
               return (
                 <div className="space-y-3">
                   {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
                   {renderAttendance(viewAttendance, viewStudents, 'tali')}
                   {renderAlerts(unreadAlerts, 'tali')}
                   {renderEvents(viewEvents, 'tali')}
+                  {renderWeeklySupport(viewStudentIds, viewStudents, 'tali')}
                   {renderSupport(viewAssignments, 'tali', true, 'טלי')}
                   {renderStudents(viewStudents, 'tali', false)}
                   {renderReports(viewReports, 'tali')}
