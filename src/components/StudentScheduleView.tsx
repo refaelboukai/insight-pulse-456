@@ -45,37 +45,59 @@ export default function StudentScheduleView({ studentId }: Props) {
   const today = DAYS[new Date().getDay() === 0 ? 0 : new Date().getDay() === 6 ? 4 : new Date().getDay() - 1];
   const todayDate = new Date().toISOString().split('T')[0];
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const [scheduleRes, checkinsRes] = await Promise.all([
-        supabase
-          .from('student_schedules')
-          .select('*')
-          .eq('student_id', studentId)
-          .eq('is_enabled', true)
-          .maybeSingle(),
-        supabase
-          .from('schedule_checkins' as any)
-          .select('day, hour')
-          .eq('student_id', studentId)
-          .eq('checkin_date', todayDate),
-      ]);
+  const fetchData = useCallback(async () => {
+    const [scheduleRes, checkinsRes] = await Promise.all([
+      supabase
+        .from('student_schedules')
+        .select('*')
+        .eq('student_id', studentId)
+        .eq('is_enabled', true)
+        .maybeSingle(),
+      supabase
+        .from('schedule_checkins' as any)
+        .select('day, hour')
+        .eq('student_id', studentId)
+        .eq('checkin_date', todayDate),
+    ]);
 
-      if (scheduleRes.data) {
-        setSchedule((scheduleRes.data as any).schedule_data || []);
-      } else {
-        setSchedule(null);
-      }
+    if (scheduleRes.data) {
+      setSchedule((scheduleRes.data as any).schedule_data || []);
+    } else {
+      setSchedule(null);
+    }
 
-      if (checkinsRes.data) {
-        const set = new Set<string>();
-        (checkinsRes.data as any[]).forEach((c: any) => set.add(`${c.day}|${c.hour}`));
-        setCheckins(set);
-      }
-      setLoading(false);
-    };
-    fetchData();
+    if (checkinsRes.data) {
+      const set = new Set<string>();
+      (checkinsRes.data as any[]).forEach((c: any) => set.add(`${c.day}|${c.hour}`));
+      setCheckins(set);
+    }
+    setLoading(false);
   }, [studentId, todayDate]);
+
+  useEffect(() => {
+    fetchData();
+
+    // Listen for realtime changes to this student's schedule
+    const channel = supabase
+      .channel(`schedule-${studentId}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'student_schedules',
+          filter: `student_id=eq.${studentId}`,
+        },
+        () => {
+          fetchData();
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [studentId, todayDate, fetchData]);
 
   const toggleCheckin = useCallback(async (day: string, hour: string) => {
     const key = `${day}|${hour}`;
