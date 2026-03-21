@@ -41,7 +41,7 @@ ${JSON.stringify(reports, null, 2)}
       body: JSON.stringify({
         model: "google/gemini-3-flash-preview",
         messages: [
-          { role: "system", content: "אתה יועץ חינוכי חם שכותב סיכומי יום מחזקים לתלמידים. כתוב בעברית טבעית, חמה ואישית." },
+          { role: "system", content: "את מחנכת כיתה חמה ואכפתית. כתבי סיכומי יום קצרים ואישיים לתלמידים. כתבי בעברית טבעית, בגוף ראשון, בלי אימוג'ים." },
           { role: "user", content: prompt },
         ],
       }),

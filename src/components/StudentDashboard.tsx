@@ -180,37 +180,21 @@ export default function StudentDashboard() {
         </div>
       )}
 
-      {/* AI Daily Summary */}
+      {/* AI Daily Summary - auto displayed */}
       {reports.length > 0 && (
-        <div className="card-styled rounded-2xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary/10">
-                <Sparkles className="h-4 w-4 text-primary" />
-              </div>
-              <span className="font-semibold text-sm">סיכום היום שלי ✨</span>
-            </div>
-            <Button
-              size="sm"
-              variant={dailySummary ? "outline" : "default"}
-              onClick={generateDailySummary}
-              disabled={summaryLoading}
-              className="text-xs gap-1.5"
-            >
-              {summaryLoading ? (
-                <><Loader2 className="h-3 w-3 animate-spin" /> מכין סיכום...</>
-              ) : dailySummary ? (
-                'סיכום חדש'
-              ) : (
-                '🪄 הפקת סיכום'
-              )}
-            </Button>
+        <div className="card-styled rounded-2xl p-4 space-y-2">
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-primary" />
+            <span className="font-semibold text-sm">מכתב מהמחנכת</span>
           </div>
-          {dailySummary && (
-            <div className="p-3 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 animate-fade-in">
-              <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{dailySummary}</p>
+          {summaryLoading ? (
+            <div className="flex items-center gap-2 py-3 justify-center">
+              <Loader2 className="h-4 w-4 animate-spin text-primary" />
+              <span className="text-sm text-muted-foreground">כותבת לך סיכום...</span>
             </div>
-          )}
+          ) : dailySummary ? (
+            <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{dailySummary}</p>
+          ) : null}
         </div>
       )}
 
