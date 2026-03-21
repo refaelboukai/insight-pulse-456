@@ -43,6 +43,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
   const [violenceTypes, setViolenceTypes] = useState<ViolenceType[]>([]);
   const [participations, setParticipations] = useState<ParticipationLevel[]>([]);
   const [violenceComment, setViolenceComment] = useState('');
+  const [behaviorComment, setBehaviorComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [reportedStudentIds, setReportedStudentIds] = useState<Set<string>>(new Set());
   const [lastClassName, setLastClassName] = useState<string | null>(null);
@@ -53,8 +54,9 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
   }, []);
 
   const toggleBehavior = (b: BehaviorType) => {
-    setBehaviors(prev => prev.includes(b) ? prev.filter(x => x !== b) : [...prev, b]);
-    if (b === 'violent' && behaviors.includes('violent')) {
+    // Only allow one behavior selection
+    setBehaviors(prev => prev.includes(b) ? [] : [b]);
+    if (b !== 'violent') {
       setViolenceTypes([]);
     }
   };
@@ -80,6 +82,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
     setViolenceTypes([]);
     setParticipations([]);
     setViolenceComment('');
+    setBehaviorComment('');
   };
 
   const handleSubmit = async () => {
@@ -105,7 +108,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
       behavior_types: behaviors,
       violence_subtypes: hasViolent ? violenceTypes : [],
       participation: participations,
-      comment: hasViolent ? violenceComment : null,
+      comment: (hasViolent ? violenceComment : behaviorComment) || null,
     }).select().single();
 
     if (error) {
@@ -164,7 +167,8 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
     setViolenceTypes([]);
     setParticipations([]);
     setViolenceComment('');
-    toast.success('הדיווח נשמר בהצלחה! ✨');
+    setBehaviorComment('');
+    toast.success('הדיווח נשמר בהצלחה!');
   };
 
   const handleNextStudent = () => {
@@ -174,7 +178,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
     if (next) {
       setStudentId(next.id);
     }
-    toast.success('הדיווח נשמר בהצלחה! ✨');
+    toast.success('הדיווח נשמר בהצלחה!');
   };
 
   return (
@@ -297,7 +301,11 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                 return (
                   <button
                     key={key}
-                    onClick={() => setParticipations(prev => prev.includes(key) ? prev.filter(p => p !== key) : [...prev, key])}
+                    onClick={() => setParticipations(prev => {
+                      if (prev.includes(key)) return prev.filter(p => p !== key);
+                      if (prev.length >= 2) return prev; // max 2
+                      return [...prev, key];
+                    })}
                     className={`text-sm py-2 px-3 rounded-full border transition-colors ${colorClass}`}
                   >
                     {label}
@@ -365,6 +373,19 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                   onChange={e => setViolenceComment(e.target.value)}
                   rows={2}
                   className="rounded-lg border-destructive/20 resize-none text-xs mt-1.5"
+                />
+              </div>
+            )}
+
+            {/* Behavior comment for non-violent behaviors */}
+            {!hasViolent && behaviors.length > 0 && (
+              <div className="mt-2">
+                <Textarea
+                  placeholder="הערה על ההתנהגות (לא חובה) — למשל: רוב השיעור התנהג יפה ואז הפריע..."
+                  value={behaviorComment}
+                  onChange={e => setBehaviorComment(e.target.value)}
+                  rows={2}
+                  className="rounded-lg resize-none text-xs"
                 />
               </div>
             )}

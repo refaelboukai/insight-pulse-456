@@ -7,7 +7,7 @@ import StudentScheduleView from '@/components/StudentScheduleView';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Clock, XCircle, Star, ThumbsUp, Sparkles, Loader2 } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Sparkles, Loader2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
@@ -22,47 +22,7 @@ const SEMESTER_LABELS: Record<string, string> = {
   semester_a: 'סמסטר א׳', semester_b: 'סמסטר ב׳', summer: 'סמסטר קיץ',
 };
 
-function computeDailyScore(reports: Report[]) {
-  if (reports.length === 0) return { score: 0, stars: 0, message: '', emoji: '📚' };
-
-  let totalPoints = 0;
-  let maxPoints = 0;
-
-  for (const r of reports) {
-    maxPoints += 3;
-    if (r.attendance === 'full') totalPoints += 3;
-    else if (r.attendance === 'partial') totalPoints += 1;
-
-    maxPoints += 3;
-    const bestBehavior = r.behavior_types?.[0];
-    if (bestBehavior === 'respectful') totalPoints += 3;
-    else if (bestBehavior === 'non_respectful') totalPoints += 1;
-
-    maxPoints += 3;
-    const bestPart = r.participation?.[0];
-    if (bestPart === 'active_participation' || bestPart === 'completed_tasks') totalPoints += 3;
-    else if (bestPart === 'no_participation') totalPoints += 1;
-  }
-
-  const ratio = maxPoints > 0 ? totalPoints / maxPoints : 0;
-  const stars = Math.round(ratio * 5);
-
-  let message = '';
-  let emoji = '📚';
-  if (ratio >= 0.9) { message = 'יום מצוין! אפשר להיות גאה! 🌟'; emoji = '🏆'; }
-  else if (ratio >= 0.7) { message = 'יום טוב מאוד! כל הכבוד! 💪'; emoji = '⭐'; }
-  else if (ratio >= 0.5) { message = 'יום סביר, אפשר לשפר מחר! 🌱'; emoji = '🌤️'; }
-  else if (ratio >= 0.3) { message = 'היה קשה היום, מחר יום חדש! 🌈'; emoji = '💙'; }
-  else { message = 'יום מאתגר, אנחנו מאמינים בך! ❤️'; emoji = '🤗'; }
-
-  return { score: Math.round(ratio * 100), stars, message, emoji };
-}
-
-function getAttendanceVisual(att: string) {
-  if (att === 'full') return { bg: 'bg-emerald-100 dark:bg-emerald-900/30', text: 'text-emerald-700 dark:text-emerald-400', icon: '✅' };
-  if (att === 'partial') return { bg: 'bg-amber-100 dark:bg-amber-900/30', text: 'text-amber-700 dark:text-amber-400', icon: '⏰' };
-  return { bg: 'bg-red-100 dark:bg-red-900/30', text: 'text-red-700 dark:text-red-400', icon: '❌' };
-}
+// removed score/emoji helpers
 
 export default function StudentDashboard() {
   const { lockedStudentId } = useAuth();
@@ -118,7 +78,7 @@ export default function StudentDashboard() {
     fetchData();
   }, [selectedStudentId]);
 
-  const dailyScore = useMemo(() => computeDailyScore(reports), [reports]);
+  // removed dailyScore
 
   const generateDailySummary = async () => {
     if (!selectedStudent || reports.length === 0) return;
@@ -222,40 +182,10 @@ export default function StudentDashboard() {
         )}
       </div>
 
-      {/* Daily Score Card */}
+      {/* Reports count */}
       {reports.length > 0 && (
-        <div className={`p-4 text-center space-y-2 rounded-2xl animate-fade-in ${
-          dailyScore.score >= 70
-            ? 'bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/20 border-2 border-emerald-200/50'
-            : dailyScore.score >= 40
-            ? 'bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 border-2 border-amber-200/50'
-            : 'bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 border-2 border-blue-200/50'
-        }`}>
-          <div className="text-3xl mb-1">{dailyScore.emoji}</div>
-          <div className="flex items-center justify-center gap-0.5 mb-1">
-            {[1, 2, 3, 4, 5].map(i => (
-              <Star
-                key={i}
-                className={`h-5 w-5 transition-all duration-300 ${
-                  i <= dailyScore.stars
-                    ? 'text-amber-400 fill-amber-400 scale-110'
-                    : 'text-muted-foreground/20'
-                }`}
-              />
-            ))}
-          </div>
-          <p className="font-bold text-base text-foreground">{dailyScore.message}</p>
-          <div className="flex items-center justify-center gap-3 mt-2">
-            <div className="text-center">
-              <p className="text-2xl font-black text-primary">{dailyScore.score}</p>
-              <p className="text-[10px] text-muted-foreground font-medium">ציון יומי</p>
-            </div>
-            <div className="w-px h-8 bg-border" />
-            <div className="text-center">
-              <p className="text-2xl font-black text-primary">{reports.length}</p>
-              <p className="text-[10px] text-muted-foreground font-medium">שיעורים</p>
-            </div>
-          </div>
+        <div className="text-center py-2">
+          <p className="text-sm text-muted-foreground">{reports.length} שיעורים דווחו היום</p>
         </div>
       )}
 
@@ -299,104 +229,40 @@ export default function StudentDashboard() {
         {expandedSections.reports && (
           <div className="px-3 pb-3 space-y-2">
             {reports.length === 0 ? (
-              <div className="text-center py-8 space-y-2">
-                <div className="text-4xl">📚</div>
-                <p className="text-sm font-semibold text-foreground">עדיין אין דיווחים להיום</p>
-                <p className="text-xs text-muted-foreground">הדיווחים יופיעו כאן אחרי כל שיעור</p>
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">עדיין אין דיווחים להיום</p>
               </div>
             ) : (
-              reports.map(r => {
-                const attVis = getAttendanceVisual(r.attendance);
-                const isGreat = r.attendance === 'full' && r.behavior_types?.includes('respectful');
-
-                return (
-                  <div
-                    key={r.id}
-                    className={`p-3 rounded-xl border-2 transition-all duration-300 hover:shadow-md ${
-                      isGreat
-                        ? 'border-emerald-200 dark:border-emerald-800 bg-gradient-to-l from-emerald-50/50 to-transparent dark:from-emerald-950/20'
-                        : 'border-border bg-card'
-                    }`}
-                  >
-                    <div className="flex justify-between items-center mb-2">
-                      <div className="flex items-center gap-2">
-                        <span className="text-lg">{isGreat ? '🌟' : '📖'}</span>
-                        <p className="font-bold text-sm">{r.lesson_subject}</p>
-                      </div>
-                      <span className="text-xs text-muted-foreground font-mono">
-                        {new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                      </span>
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-1.5 mb-2">
-                      {/* Attendance */}
-                      <div className={`rounded-lg p-2 text-center ${attVis.bg}`}>
-                        <p className="text-base mb-0.5">{attVis.icon}</p>
-                        <p className={`text-[10px] font-bold ${attVis.text}`}>
-                          {ATTENDANCE_LABELS[r.attendance]}
-                        </p>
-                      </div>
-
-                      {/* Behavior */}
-                      <div className={`rounded-lg p-2 text-center ${
-                        r.behavior_types?.includes('respectful')
-                          ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                          : r.behavior_types?.includes('violent')
-                          ? 'bg-red-100 dark:bg-red-900/30'
-                          : 'bg-amber-100 dark:bg-amber-900/30'
-                      }`}>
-                        <p className="text-base mb-0.5">
-                          {r.behavior_types?.includes('respectful') ? '👏' : r.behavior_types?.includes('violent') ? '⚠️' : '💭'}
-                        </p>
-                        <p className={`text-[10px] font-bold ${
-                          r.behavior_types?.includes('respectful')
-                            ? 'text-emerald-700 dark:text-emerald-400'
-                            : r.behavior_types?.includes('violent')
-                            ? 'text-red-700 dark:text-red-400'
-                            : 'text-amber-700 dark:text-amber-400'
-                        }`}>
-                          {r.behavior_types?.map(b => BEHAVIOR_LABELS[b]).join(', ') || '—'}
-                        </p>
-                      </div>
-
-                      {/* Participation */}
-                      <div className={`rounded-lg p-2 text-center ${
-                        r.participation?.some(p => p === 'active_participation' || p === 'completed_tasks')
-                          ? 'bg-emerald-100 dark:bg-emerald-900/30'
-                          : r.participation?.includes('no_function')
-                          ? 'bg-red-100 dark:bg-red-900/30'
-                          : 'bg-amber-100 dark:bg-amber-900/30'
-                      }`}>
-                        <p className="text-base mb-0.5">
-                          {r.participation?.some(p => p === 'active_participation' || p === 'completed_tasks') ? '🚀' : r.participation?.includes('no_function') ? '😔' : '🔄'}
-                        </p>
-                        <p className={`text-[10px] font-bold ${
-                          r.participation?.some(p => p === 'active_participation' || p === 'completed_tasks')
-                            ? 'text-emerald-700 dark:text-emerald-400'
-                            : r.participation?.includes('no_function')
-                            ? 'text-red-700 dark:text-red-400'
-                            : 'text-amber-700 dark:text-amber-400'
-                        }`}>
-                          {r.participation?.map(p => PARTICIPATION_LABELS[p]).join(', ') || '—'}
-                        </p>
-                      </div>
-                    </div>
-
-                    {isGreat && (
-                      <div className="flex items-center gap-1.5 py-1.5 px-2 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200/50">
-                        <ThumbsUp className="h-3 w-3 text-emerald-600" />
-                        <p className="text-[11px] font-semibold text-emerald-700 dark:text-emerald-400">שיעור מעולה! המשך/י ככה! 💪</p>
-                      </div>
-                    )}
-
-                    {r.comment && (
-                      <p className="text-xs text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2.5 py-1.5 border">
-                        💬 {r.comment}
-                      </p>
-                    )}
+              reports.map(r => (
+                <div key={r.id} className="p-3 rounded-xl border bg-card">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="font-bold text-sm">{r.lesson_subject}</p>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                    </span>
                   </div>
-                );
-              })
+                  <div className="flex flex-wrap gap-1.5">
+                    <Badge variant="outline" className="text-xs">
+                      {ATTENDANCE_LABELS[r.attendance]}
+                    </Badge>
+                    {r.behavior_types?.map(b => (
+                      <Badge key={b} variant={b === 'respectful' ? 'default' : 'destructive'} className="text-xs">
+                        {BEHAVIOR_LABELS[b]}
+                      </Badge>
+                    ))}
+                    {r.participation?.map(p => (
+                      <Badge key={p} variant="secondary" className="text-xs">
+                        {PARTICIPATION_LABELS[p]}
+                      </Badge>
+                    ))}
+                  </div>
+                  {r.comment && (
+                    <p className="text-xs text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2.5 py-1.5 border">
+                      {r.comment}
+                    </p>
+                  )}
+                </div>
+              ))
             )}
           </div>
         )}
