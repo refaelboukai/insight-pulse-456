@@ -178,7 +178,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
     if (next) {
       setStudentId(next.id);
     }
-    toast.success('הדיווח נשמר בהצלחה! ✨');
+    toast.success('הדיווח נשמר בהצלחה!');
   };
 
   return (
