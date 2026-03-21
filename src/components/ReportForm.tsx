@@ -43,6 +43,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
   const [violenceTypes, setViolenceTypes] = useState<ViolenceType[]>([]);
   const [participations, setParticipations] = useState<ParticipationLevel[]>([]);
   const [violenceComment, setViolenceComment] = useState('');
+  const [behaviorComment, setBehaviorComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [reportedStudentIds, setReportedStudentIds] = useState<Set<string>>(new Set());
   const [lastClassName, setLastClassName] = useState<string | null>(null);
