@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import logoSrc from '@/assets/logo.jpeg';
+import logo2Src from '@/assets/logo2.jpeg';
 import principalSigSrc from '@/assets/principal-signature.jpeg';
 
 interface GradeEntry {
