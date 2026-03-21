@@ -1154,6 +1154,31 @@ export default function AdminDashboard() {
             })()}
           </AccordionContent>
         </AccordionItem>
+
+        {/* Reset Portal Monitoring */}
+        <AccordionItem value="reset" className="card-styled rounded-2xl overflow-hidden border-none shadow-soft">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 rounded-2xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary/10">
+                <Brain className="h-4.5 w-4.5 text-primary" />
+              </div>
+              <div className="text-right">
+                <span className="font-bold text-sm">פורטל Reset – מעקב</span>
+                <p className="text-[10px] text-muted-foreground">פעילות רגשית, אימון מוח, התבוננות</p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-3 pb-4">
+            <div className="space-y-4">
+              <ResetAlertsView students={students} />
+              <ResetActivityFeed onBack={() => {}} />
+              <ResetChartsView />
+              <ResetBrainTrainingDashboard students={students} />
+              <ResetReflectionsDashboard />
+              <ResetPeriodicReports students={students} />
+            </div>
+          </AccordionContent>
+        </AccordionItem>
       </Accordion>
 
       {/* Add Assignment Dialog */}
