@@ -78,7 +78,7 @@ export default function StudentDashboard() {
     fetchData();
   }, [selectedStudentId]);
 
-  const dailyScore = useMemo(() => computeDailyScore(reports), [reports]);
+  // removed dailyScore
 
   const generateDailySummary = async () => {
     if (!selectedStudent || reports.length === 0) return;
