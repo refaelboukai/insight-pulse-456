@@ -7,8 +7,9 @@ import StudentScheduleView from '@/components/StudentScheduleView';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Clock, XCircle, Star, ThumbsUp } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, CheckCircle2, Clock, XCircle, Star, ThumbsUp, Sparkles, Loader2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import { toast } from 'sonner';
 
 type Student = Database['public']['Tables']['students']['Row'];
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
@@ -74,6 +75,8 @@ export default function StudentDashboard() {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     reports: true, grades: false, support: false,
   });
+  const [dailySummary, setDailySummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
 
   const isLocked = !!lockedStudentId;
 
@@ -116,6 +119,35 @@ export default function StudentDashboard() {
   }, [selectedStudentId]);
 
   const dailyScore = useMemo(() => computeDailyScore(reports), [reports]);
+
+  const generateDailySummary = async () => {
+    if (!selectedStudent || reports.length === 0) return;
+    setSummaryLoading(true);
+    try {
+      const normalizedReports = reports.map(r => ({
+        subject: r.lesson_subject,
+        attendance: ATTENDANCE_LABELS[r.attendance] || r.attendance,
+        behavior: r.behavior_types?.map(b => BEHAVIOR_LABELS[b] || b).join(', '),
+        participation: r.participation?.map(p => PARTICIPATION_LABELS[p] || p).join(', '),
+        comment: r.comment || '',
+        time: new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+      }));
+      const { data, error } = await supabase.functions.invoke('student-daily-summary', {
+        body: {
+          studentName: `${selectedStudent.first_name} ${selectedStudent.last_name}`,
+          reports: normalizedReports,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setDailySummary(data.summary);
+    } catch (e) {
+      console.error(e);
+      toast.error('שגיאה בהפקת הסיכום');
+    } finally {
+      setSummaryLoading(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -224,6 +256,40 @@ export default function StudentDashboard() {
               <p className="text-[10px] text-muted-foreground font-medium">שיעורים</p>
             </div>
           </div>
+        </div>
+      )}
+
+      {/* AI Daily Summary */}
+      {reports.length > 0 && (
+        <div className="card-styled rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary/10">
+                <Sparkles className="h-4 w-4 text-primary" />
+              </div>
+              <span className="font-semibold text-sm">סיכום היום שלי ✨</span>
+            </div>
+            <Button
+              size="sm"
+              variant={dailySummary ? "outline" : "default"}
+              onClick={generateDailySummary}
+              disabled={summaryLoading}
+              className="text-xs gap-1.5"
+            >
+              {summaryLoading ? (
+                <><Loader2 className="h-3 w-3 animate-spin" /> מכין סיכום...</>
+              ) : dailySummary ? (
+                'סיכום חדש'
+              ) : (
+                '🪄 הפקת סיכום'
+              )}
+            </Button>
+          </div>
+          {dailySummary && (
+            <div className="p-3 rounded-xl bg-gradient-to-br from-primary/5 to-primary/10 border border-primary/20 animate-fade-in">
+              <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{dailySummary}</p>
+            </div>
+          )}
         </div>
       )}
 
