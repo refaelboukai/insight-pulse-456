@@ -448,7 +448,7 @@ export default function AdminDashboard() {
     const avgPerformance = viewReports.filter(r => r.performance_score).length > 0
       ? (viewReports.reduce((s, r) => s + (r.performance_score || 0), 0) / viewReports.filter(r => r.performance_score).length).toFixed(1)
       : '—';
-    return { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance };
+    return { viewStudents, viewStudentIds, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance };
   };
 
   // Render stats grid
