@@ -156,7 +156,7 @@ export default function StudentScheduleView({ studentId }: Props) {
               </div>
               <div className="w-full h-2 rounded-full bg-muted overflow-hidden">
                 <div
-                  className={`h-full rounded-full transition-all duration-500 ${allDone ? 'bg-green-500' : 'bg-primary'}`}
+                  className={`h-full rounded-full transition-all duration-500 ${allDone ? 'bg-emerald-500' : 'bg-primary'}`}
                   style={{ width: `${todayProgress}%` }}
                 />
               </div>
