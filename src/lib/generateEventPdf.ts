@@ -38,7 +38,10 @@ function preloadImageAsDataUrl(src: string): Promise<string> {
 
 export async function generateEventPdf(data: EventData): Promise<Blob> {
   const typeName = INCIDENT_TYPE_LABELS[data.incidentType] || data.incidentType;
-  const logoDataUrl = await preloadImageAsDataUrl(logoSrc);
+  const [logoDataUrl, logo2DataUrl] = await Promise.all([
+    preloadImageAsDataUrl(logoSrc),
+    preloadImageAsDataUrl(logo2Src),
+  ]);
   const timeStr = data.time || new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
   const container = document.createElement('div');
