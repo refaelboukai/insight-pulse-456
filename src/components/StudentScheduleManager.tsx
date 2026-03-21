@@ -165,7 +165,7 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
                 <Select value={newHour} onValueChange={setNewHour}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {HOURS.map(h => <SelectItem key={h} value={h}>שעה {h}</SelectItem>)}
+                    {SCHOOL_SLOTS.map(s => <SelectItem key={s.id} value={s.id}>{s.label} ({s.time})</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Select value={newType} onValueChange={setNewType}>
