@@ -6,6 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
 import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
 import { generateEventPdf } from '@/lib/generateEventPdf';
@@ -60,15 +61,19 @@ export default function ExceptionalEventForm() {
     return parts.join(' | ');
   };
 
-  const getEventData = () => ({
-    incidentType,
-    description,
-    peopleInvolved: buildPeopleInvolvedText(),
-    staffResponse,
-    followupRequired,
-    followupNotes,
-    date: new Date().toLocaleDateString('he-IL'),
-  });
+  const getEventData = () => {
+    const now = new Date();
+    return {
+      incidentType,
+      description,
+      peopleInvolved: buildPeopleInvolvedText(),
+      staffResponse,
+      followupRequired,
+      followupNotes,
+      date: now.toLocaleDateString('he-IL'),
+      time: now.toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+    };
+  };
 
   const validateForm = () => {
     if (!incidentType || !description || !user) {
@@ -131,7 +136,7 @@ export default function ExceptionalEventForm() {
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({
           title: `דיווח אירוע חריג - ${typeName}`,
-          text: `🚨 אירוע חריג: ${typeName}\n${eventData.description}`,
+          text: `אירוע חריג: ${typeName}\n${eventData.description}`,
           files: [file],
         });
       } else {
@@ -152,9 +157,12 @@ export default function ExceptionalEventForm() {
     setSubmitting(false);
   };
 
-  // Group students by class
   const classTali = students.filter(s => s.class_name === 'טלי');
   const classEden = students.filter(s => s.class_name === 'עדן');
+
+  const selectedStudentCount = (group: Student[]) =>
+    group.filter(s => selectedStudents.includes(s.id)).length;
+  const selectedStaffCount = staffMembers.filter(sm => selectedStaff.includes(sm.id)).length;
 
   return (
     <div className="max-w-2xl mx-auto space-y-4">
@@ -197,7 +205,7 @@ export default function ExceptionalEventForm() {
             />
           </div>
 
-          {/* People involved - structured selection */}
+          {/* People involved - accordion selection */}
           <div>
             <label className="text-sm font-bold mb-2 flex items-center gap-1.5 text-muted-foreground">
               <Users className="w-4 h-4" />
@@ -211,7 +219,7 @@ export default function ExceptionalEventForm() {
                   const s = students.find(st => st.id === id);
                   if (!s) return null;
                   return (
-                    <Badge key={id} variant="secondary" className="text-xs px-2 py-1 gap-1">
+                    <Badge key={id} variant="secondary" className="text-sm px-2.5 py-1 gap-1">
                       {s.first_name} {s.last_name}
                       <button onClick={() => toggleStudent(id)} className="hover:text-destructive">
                         <X className="h-3 w-3" />
@@ -223,7 +231,7 @@ export default function ExceptionalEventForm() {
                   const sm = staffMembers.find(s => s.id === id);
                   if (!sm) return null;
                   return (
-                    <Badge key={id} variant="outline" className="text-xs px-2 py-1 gap-1 border-primary/30 text-primary">
+                    <Badge key={id} variant="outline" className="text-sm px-2.5 py-1 gap-1 border-primary/30 text-primary">
                       {sm.name}
                       <button onClick={() => toggleStaffMember(id)} className="hover:text-destructive">
                         <X className="h-3 w-3" />
@@ -234,19 +242,24 @@ export default function ExceptionalEventForm() {
               </div>
             )}
 
-            {/* Students selection */}
-            <div className="space-y-2">
-              <p className="text-xs font-semibold text-muted-foreground">תלמידים מעורבים:</p>
-              {[{ label: 'הכיתה של טלי', students: classTali }, { label: 'הכיתה של עדן', students: classEden }].map(group => (
-                <div key={group.label}>
-                  <p className="text-[10px] text-muted-foreground mb-1">{group.label}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {group.students.map(s => (
+            <Accordion type="multiple" className="rounded-xl border-2 overflow-hidden">
+              <AccordionItem value="eden" className="border-b">
+                <AccordionTrigger className="px-4 py-3 text-sm font-semibold hover:no-underline">
+                  <span className="flex items-center gap-2">
+                    הכיתה של עדן
+                    {selectedStudentCount(classEden) > 0 && (
+                      <Badge variant="secondary" className="text-xs">{selectedStudentCount(classEden)}</Badge>
+                    )}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-3">
+                  <div className="flex flex-wrap gap-1.5">
+                    {classEden.map(s => (
                       <button
                         key={s.id}
                         type="button"
                         onClick={() => toggleStudent(s.id)}
-                        className={`text-[11px] py-1 px-2 rounded-lg border transition-all ${
+                        className={`text-sm py-1.5 px-3 rounded-lg border transition-all ${
                           selectedStudents.includes(s.id)
                             ? 'bg-primary text-primary-foreground border-primary'
                             : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
@@ -256,30 +269,67 @@ export default function ExceptionalEventForm() {
                       </button>
                     ))}
                   </div>
-                </div>
-              ))}
-            </div>
+                </AccordionContent>
+              </AccordionItem>
 
-            {/* Staff selection */}
-            <div className="mt-3">
-              <p className="text-xs font-semibold text-muted-foreground mb-1">צוות מעורב:</p>
-              <div className="flex flex-wrap gap-1">
-                {staffMembers.map(sm => (
-                  <button
-                    key={sm.id}
-                    type="button"
-                    onClick={() => toggleStaffMember(sm.id)}
-                    className={`text-[11px] py-1 px-2 rounded-lg border transition-all ${
-                      selectedStaff.includes(sm.id)
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
-                    }`}
-                  >
-                    {sm.name}
-                  </button>
-                ))}
-              </div>
-            </div>
+              <AccordionItem value="tali" className="border-b">
+                <AccordionTrigger className="px-4 py-3 text-sm font-semibold hover:no-underline">
+                  <span className="flex items-center gap-2">
+                    הכיתה של טלי
+                    {selectedStudentCount(classTali) > 0 && (
+                      <Badge variant="secondary" className="text-xs">{selectedStudentCount(classTali)}</Badge>
+                    )}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-3">
+                  <div className="flex flex-wrap gap-1.5">
+                    {classTali.map(s => (
+                      <button
+                        key={s.id}
+                        type="button"
+                        onClick={() => toggleStudent(s.id)}
+                        className={`text-sm py-1.5 px-3 rounded-lg border transition-all ${
+                          selectedStudents.includes(s.id)
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
+                        }`}
+                      >
+                        {s.first_name} {s.last_name}
+                      </button>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="staff" className="border-0">
+                <AccordionTrigger className="px-4 py-3 text-sm font-semibold hover:no-underline">
+                  <span className="flex items-center gap-2">
+                    צוות מעורב
+                    {selectedStaffCount > 0 && (
+                      <Badge variant="secondary" className="text-xs">{selectedStaffCount}</Badge>
+                    )}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-3">
+                  <div className="flex flex-wrap gap-1.5">
+                    {staffMembers.map(sm => (
+                      <button
+                        key={sm.id}
+                        type="button"
+                        onClick={() => toggleStaffMember(sm.id)}
+                        className={`text-sm py-1.5 px-3 rounded-lg border transition-all ${
+                          selectedStaff.includes(sm.id)
+                            ? 'bg-primary text-primary-foreground border-primary'
+                            : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
+                        }`}
+                      >
+                        {sm.name}
+                      </button>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
           </div>
 
           <div>
@@ -315,14 +365,14 @@ export default function ExceptionalEventForm() {
           )}
 
           <Button
-              onClick={handleReport}
-              disabled={submitting}
-              className="w-full h-12 text-base font-semibold rounded-xl border-0"
-              style={{ background: 'var(--gradient-accent)' }}
-            >
-              <Send className="ml-2 h-4 w-4" />
-              {submitting ? 'שומר...' : 'דיווח'}
-            </Button>
+            onClick={handleReport}
+            disabled={submitting}
+            className="w-full h-12 text-base font-semibold rounded-xl border-0"
+            style={{ background: 'var(--gradient-accent)' }}
+          >
+            <Send className="ml-2 h-4 w-4" />
+            {submitting ? 'שומר...' : 'דיווח'}
+          </Button>
         </div>
       </div>
     </div>
