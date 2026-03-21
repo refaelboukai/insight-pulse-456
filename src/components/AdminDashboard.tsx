@@ -106,7 +106,7 @@ export default function AdminDashboard() {
 
   const fetchAll = async () => {
     const today = new Date().toISOString().split('T')[0];
-    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes] = await Promise.all([
+    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes] = await Promise.all([
       supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('students').select('*').order('class_name').order('last_name'),
       supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
@@ -115,6 +115,7 @@ export default function AdminDashboard() {
       supabase.from('support_sessions' as any).select('*').order('created_at', { ascending: false }).limit(100),
       supabase.from('staff_members').select('*').order('name'),
       supabase.from('support_assignments').select('*, staff_members(name)').eq('is_active', true),
+      supabase.from('student_schedules' as any).select('*'),
     ]);
     if (reportsRes.data) setReports(reportsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
@@ -124,6 +125,7 @@ export default function AdminDashboard() {
     if (supportRes.data) setSupportSessions(supportRes.data as any[]);
     if (staffRes.data) setStaffMembers(staffRes.data);
     if (assignRes.data) setSupportAssignments(assignRes.data as any[]);
+    if (schedulesRes.data) setStudentSchedules(schedulesRes.data as any[]);
     setLoading(false);
   };
 
