@@ -7,7 +7,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Calendar, Plus, Trash2, Save, Upload } from 'lucide-react';
+import { Calendar, Plus, Trash2, Save, Upload, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 
@@ -146,6 +146,20 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
     setNewActivity('');
   };
 
+  const downloadTemplate = () => {
+    const templateData = [
+      { 'יום': 'ראשון', 'שעה': '1', 'פעילות': 'מתמטיקה', 'סוג': 'שיעור' },
+      { 'יום': 'ראשון', 'שעה': '2', 'פעילות': 'עברית', 'סוג': 'שיעור' },
+      { 'יום': 'ראשון', 'שעה': '3', 'פעילות': 'טיפול רגשי', 'סוג': 'טיפול' },
+      { 'יום': 'שני', 'שעה': '1', 'פעילות': 'אנגלית', 'סוג': 'שיעור' },
+      { 'יום': 'שני', 'שעה': '4', 'פעילות': 'מדעים', 'סוג': 'שיעור' },
+    ];
+    const ws = XLSX.utils.json_to_sheet(templateData);
+    ws['!cols'] = [{ wch: 10 }, { wch: 8 }, { wch: 20 }, { wch: 10 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'מערכת שעות');
+    XLSX.writeFile(wb, `תבנית_מערכת_שעות.xlsx`);
+  };
   const removeEntry = (idx: number) => {
     setEntries(entries.filter((_, i) => i !== idx));
   };
@@ -272,15 +286,26 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
                 className="hidden"
                 onChange={handleExcelImport}
               />
-              <Button
-                variant="outline"
-                size="sm"
-                className="w-full h-8 gap-1.5 text-xs"
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="h-3 w-3" />
-                ייבוא מאקסל (עמודות: יום, שעה, פעילות, סוג)
-              </Button>
+              <div className="flex gap-1.5">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex-1 h-8 gap-1.5 text-xs"
+                  onClick={() => fileInputRef.current?.click()}
+                >
+                  <Upload className="h-3 w-3" />
+                  ייבוא מאקסל
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  className="h-8 gap-1 text-xs"
+                  onClick={downloadTemplate}
+                >
+                  <Download className="h-3 w-3" />
+                  תבנית
+                </Button>
+              </div>
             </div>
 
             {sortedEntries.length > 0 ? (
