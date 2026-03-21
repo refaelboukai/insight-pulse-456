@@ -4,6 +4,12 @@ import CodesManager from '@/components/CodesManager';
 import WeeklySupportSummary from '@/components/WeeklySupportSummary';
 import StudentScheduleManager from '@/components/StudentScheduleManager';
 import SmsReminderSection from '@/components/SmsReminderSection';
+import ResetActivityFeed from '@/components/dashboard/ResetActivityFeed';
+import ResetAlertsView from '@/components/dashboard/ResetAlertsView';
+import ResetChartsView from '@/components/dashboard/ResetChartsView';
+import ResetReflectionsDashboard from '@/components/dashboard/ResetReflectionsDashboard';
+import ResetBrainTrainingDashboard from '@/components/dashboard/ResetBrainTrainingDashboard';
+import ResetPeriodicReports from '@/components/dashboard/ResetPeriodicReports';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +27,7 @@ import {
 
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield, Download,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare, Brain,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { generateEventPdf } from '@/lib/generateEventPdf';
@@ -1146,6 +1152,31 @@ export default function AdminDashboard() {
                 </div>
               );
             })()}
+          </AccordionContent>
+        </AccordionItem>
+
+        {/* Reset Portal Monitoring */}
+        <AccordionItem value="reset" className="card-styled rounded-2xl overflow-hidden border-none shadow-soft">
+          <AccordionTrigger className="px-4 py-3 hover:no-underline hover:bg-muted/30 rounded-2xl">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-lg flex items-center justify-center bg-primary/10">
+                <Brain className="h-4.5 w-4.5 text-primary" />
+              </div>
+              <div className="text-right">
+                <span className="font-bold text-sm">פורטל Reset – מעקב</span>
+                <p className="text-[10px] text-muted-foreground">פעילות רגשית, אימון מוח, התבוננות</p>
+              </div>
+            </div>
+          </AccordionTrigger>
+          <AccordionContent className="px-3 pb-4">
+            <div className="space-y-4">
+              <ResetAlertsView students={students} />
+              <ResetActivityFeed onBack={() => {}} />
+              <ResetChartsView />
+              <ResetBrainTrainingDashboard students={students} />
+              <ResetReflectionsDashboard />
+              <ResetPeriodicReports students={students} />
+            </div>
           </AccordionContent>
         </AccordionItem>
       </Accordion>
