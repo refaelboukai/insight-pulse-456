@@ -35,6 +35,9 @@ export default function StudentDashboard() {
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     reports: true, grades: false, support: false,
   });
+  const [dailySummary, setDailySummary] = useState<string | null>(null);
+  const [summaryLoading, setSummaryLoading] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const isLocked = !!lockedStudentId;
 
