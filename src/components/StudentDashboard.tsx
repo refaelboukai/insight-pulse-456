@@ -79,6 +79,59 @@ export default function StudentDashboard() {
     fetchData();
   }, [selectedStudentId]);
 
+  const generateSummary = useCallback(async () => {
+    if (!selectedStudent || reports.length === 0) return;
+    setSummaryLoading(true);
+    setDailySummary(null);
+    const normalizedReports = reports.map(r => ({
+      subject: r.lesson_subject,
+      attendance: ATTENDANCE_LABELS[r.attendance] || r.attendance,
+      behavior: r.behavior_types?.map(b => BEHAVIOR_LABELS[b] || b).join(', '),
+      participation: r.participation?.map(p => PARTICIPATION_LABELS[p] || p).join(', '),
+      comment: r.comment || '',
+    }));
+    try {
+      const { data, error } = await supabase.functions.invoke('student-daily-summary', {
+        body: {
+          studentName: `${selectedStudent.first_name} ${selectedStudent.last_name}`,
+          reports: normalizedReports,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+      } else if (data?.summary) {
+        setDailySummary(data.summary);
+      }
+    } catch (e) {
+      toast.error('שגיאה ביצירת הסיכום');
+    } finally {
+      setSummaryLoading(false);
+    }
+  }, [selectedStudent, reports]);
+
+  const toggleSpeech = useCallback(() => {
+    if (isSpeaking) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+      return;
+    }
+    if (!dailySummary) return;
+    const utterance = new SpeechSynthesisUtterance(dailySummary);
+    utterance.lang = 'he-IL';
+    utterance.rate = 0.9;
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
+  }, [dailySummary, isSpeaking]);
+
+  // Reset summary when student changes
+  useEffect(() => {
+    setDailySummary(null);
+    setIsSpeaking(false);
+    window.speechSynthesis.cancel();
+  }, [selectedStudentId]);
 
   if (loading) {
     return (
