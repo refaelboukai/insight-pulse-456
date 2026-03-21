@@ -199,7 +199,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   // --- Header block (shared between pages) ---
   const headerHtml = `
     <div style="text-align:center;margin-bottom:24px;padding-bottom:14px;border-bottom:2px solid ${colors.accent};position:relative;">
-      <img src="${logo2DataUrl}" style="position:absolute;left:0;top:0;max-width:70px;height:auto;border-radius:6px;" />
+      <img src="${logo2DataUrl}" style="position:absolute;left:0;top:0;width:90px;height:90px;object-fit:contain;border-radius:6px;" />
       <img src="${logoDataUrl}" style="max-width:100px;height:auto;margin-bottom:6px;" />
       <div style="font-size:20px;font-weight:700;color:${colors.accent};margin-bottom:2px;">בית ספר מרום בית אקשטיין</div>
       <div style="font-size:13px;color:${colors.textLight};font-weight:500;letter-spacing:2px;">תעודת הערכה${data.semesterLabel ? ` — ${data.semesterLabel}` : ''}</div>
