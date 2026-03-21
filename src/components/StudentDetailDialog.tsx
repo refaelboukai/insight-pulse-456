@@ -32,7 +32,9 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
   const [loading, setLoading] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [generatingSummary, setGeneratingSummary] = useState(false);
-  const [summaryPeriod, setSummaryPeriod] = useState<'2weeks' | 'month' | 'all'>('all');
+  const [summaryPeriod, setSummaryPeriod] = useState<'today' | 'week' | '2weeks' | 'month' | 'all' | 'custom'>('all');
+  const [customFromDate, setCustomFromDate] = useState<Date | undefined>(undefined);
+  const [customToDate, setCustomToDate] = useState<Date | undefined>(undefined);
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
@@ -74,13 +76,23 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     try {
       // Calculate date filter based on period
       let fromDate: string | null = null;
+      let toDate: string | null = null;
       const now = new Date();
-      if (summaryPeriod === '2weeks') {
+      if (summaryPeriod === 'today') {
+        fromDate = format(now, 'yyyy-MM-dd');
+        toDate = format(now, 'yyyy-MM-dd');
+      } else if (summaryPeriod === 'week') {
+        const d = new Date(now); d.setDate(d.getDate() - 7);
+        fromDate = format(d, 'yyyy-MM-dd');
+      } else if (summaryPeriod === '2weeks') {
         const d = new Date(now); d.setDate(d.getDate() - 14);
         fromDate = format(d, 'yyyy-MM-dd');
       } else if (summaryPeriod === 'month') {
         const d = new Date(now); d.setMonth(d.getMonth() - 1);
         fromDate = format(d, 'yyyy-MM-dd');
+      } else if (summaryPeriod === 'custom') {
+        if (customFromDate) fromDate = format(customFromDate, 'yyyy-MM-dd');
+        if (customToDate) toDate = format(customToDate, 'yyyy-MM-dd');
       }
 
       let reportsQuery = supabase.from('lesson_reports').select('*').eq('student_id', student.id).order('report_date', { ascending: false });
@@ -91,6 +103,11 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
         reportsQuery = reportsQuery.gte('report_date', fromDate);
         attendanceQuery = attendanceQuery.gte('attendance_date', fromDate);
         eventsQuery = eventsQuery.gte('created_at', fromDate);
+      }
+      if (toDate) {
+        reportsQuery = reportsQuery.lte('report_date', `${toDate}T23:59:59`);
+        attendanceQuery = attendanceQuery.lte('attendance_date', toDate);
+        eventsQuery = eventsQuery.lte('created_at', `${toDate}T23:59:59`);
       }
 
       const [allReports, allAttendance, allEvents] = await Promise.all([
@@ -120,7 +137,7 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
           studentCode: student.student_code,
           className: student.class_name,
           grade: student.grade,
-          period: summaryPeriod === '2weeks' ? 'שבועיים אחרונים' : summaryPeriod === 'month' ? 'חודש אחרון' : 'כל התקופה',
+          period: summaryPeriod === 'today' ? 'היום' : summaryPeriod === 'week' ? 'שבוע אחרון' : summaryPeriod === '2weeks' ? 'שבועיים אחרונים' : summaryPeriod === 'month' ? 'חודש אחרון' : summaryPeriod === 'custom' ? `תאריכים מותאמים` : 'כל התקופה',
           reports: reportsData,
           attendance: attendanceData,
           events: allEvents.data || [],
@@ -200,24 +217,69 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
         </DialogHeader>
 
         {/* Period Selection */}
-        <div className="flex gap-1.5">
-          {([
-            { key: '2weeks' as const, label: 'שבועיים' },
-            { key: 'month' as const, label: 'חודש' },
-            { key: 'all' as const, label: 'הכל' },
-          ]).map(p => (
-            <button
-              key={p.key}
-              onClick={() => { setSummaryPeriod(p.key); setAiSummary(null); }}
-              className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${
-                summaryPeriod === p.key
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'border-border bg-card hover:border-primary/30'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-1.5">
+            {([
+              { key: 'today' as const, label: 'היום' },
+              { key: 'week' as const, label: 'שבוע' },
+              { key: '2weeks' as const, label: 'שבועיים' },
+              { key: 'month' as const, label: 'חודש' },
+              { key: 'all' as const, label: 'הכל' },
+              { key: 'custom' as const, label: 'תאריך מותאם' },
+            ]).map(p => (
+              <button
+                key={p.key}
+                onClick={() => { setSummaryPeriod(p.key); setAiSummary(null); }}
+                className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${
+                  summaryPeriod === p.key
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'border-border bg-card hover:border-primary/30'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {summaryPeriod === 'custom' && (
+            <div className="flex gap-2 items-center flex-wrap">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                    <CalendarIcon className="h-3 w-3" />
+                    {customFromDate ? format(customFromDate, 'dd/MM/yyyy') : 'מתאריך'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customFromDate}
+                    onSelect={setCustomFromDate}
+                    disabled={(d) => d > new Date()}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              <span className="text-xs text-muted-foreground">עד</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                    <CalendarIcon className="h-3 w-3" />
+                    {customToDate ? format(customToDate, 'dd/MM/yyyy') : 'עד תאריך'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customToDate}
+                    onSelect={setCustomToDate}
+                    disabled={(d) => d > new Date()}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
         </div>
 
         {/* AI Summary Button */}
@@ -231,7 +293,7 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
             {generatingSummary ? (
               <><Loader2 className="h-3.5 w-3.5 animate-spin" /> מייצר סיכום...</>
             ) : (
-              <><Sparkles className="h-3.5 w-3.5" /> סיכום {summaryPeriod === '2weeks' ? 'שבועיים' : summaryPeriod === 'month' ? 'חודשי' : 'מלא'}</>
+              <><Sparkles className="h-3.5 w-3.5" /> סיכום {summaryPeriod === 'today' ? 'יומי' : summaryPeriod === 'week' ? 'שבועי' : summaryPeriod === '2weeks' ? 'שבועיים' : summaryPeriod === 'month' ? 'חודשי' : summaryPeriod === 'custom' ? 'מותאם' : 'מלא'}</>
             )}
           </Button>
           {aiSummary && (
