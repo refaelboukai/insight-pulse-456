@@ -182,40 +182,10 @@ export default function StudentDashboard() {
         )}
       </div>
 
-      {/* Daily Score Card */}
+      {/* Reports count */}
       {reports.length > 0 && (
-        <div className={`p-4 text-center space-y-2 rounded-2xl animate-fade-in ${
-          dailyScore.score >= 70
-            ? 'bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-950/30 dark:to-emerald-900/20 border-2 border-emerald-200/50'
-            : dailyScore.score >= 40
-            ? 'bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/30 dark:to-amber-900/20 border-2 border-amber-200/50'
-            : 'bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 border-2 border-blue-200/50'
-        }`}>
-          <div className="text-3xl mb-1">{dailyScore.emoji}</div>
-          <div className="flex items-center justify-center gap-0.5 mb-1">
-            {[1, 2, 3, 4, 5].map(i => (
-              <Star
-                key={i}
-                className={`h-5 w-5 transition-all duration-300 ${
-                  i <= dailyScore.stars
-                    ? 'text-amber-400 fill-amber-400 scale-110'
-                    : 'text-muted-foreground/20'
-                }`}
-              />
-            ))}
-          </div>
-          <p className="font-bold text-base text-foreground">{dailyScore.message}</p>
-          <div className="flex items-center justify-center gap-3 mt-2">
-            <div className="text-center">
-              <p className="text-2xl font-black text-primary">{dailyScore.score}</p>
-              <p className="text-[10px] text-muted-foreground font-medium">ציון יומי</p>
-            </div>
-            <div className="w-px h-8 bg-border" />
-            <div className="text-center">
-              <p className="text-2xl font-black text-primary">{reports.length}</p>
-              <p className="text-[10px] text-muted-foreground font-medium">שיעורים</p>
-            </div>
-          </div>
+        <div className="text-center py-2">
+          <p className="text-sm text-muted-foreground">{reports.length} שיעורים דווחו היום</p>
         </div>
       )}
 
