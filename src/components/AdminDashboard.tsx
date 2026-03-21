@@ -59,6 +59,7 @@ export default function AdminDashboard() {
   // Support assignments
   const [supportAssignments, setSupportAssignments] = useState<any[]>([]);
   const [studentSchedules, setStudentSchedules] = useState<any[]>([]);
+  const [showAddAssignment, setShowAddAssignment] = useState(false);
   const [assignClassFilter, setAssignClassFilter] = useState<string | null>(null);
   const [assignStudentId, setAssignStudentId] = useState('');
   const [assignStaffId, setAssignStaffId] = useState('');
