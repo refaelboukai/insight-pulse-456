@@ -222,6 +222,44 @@ export type Database = {
         }
         Relationships: []
       }
+      schedule_checkins: {
+        Row: {
+          checkin_date: string
+          created_at: string
+          day: string
+          hour: string
+          id: string
+          is_checked: boolean
+          student_id: string
+        }
+        Insert: {
+          checkin_date?: string
+          created_at?: string
+          day: string
+          hour: string
+          id?: string
+          is_checked?: boolean
+          student_id: string
+        }
+        Update: {
+          checkin_date?: string
+          created_at?: string
+          day?: string
+          hour?: string
+          id?: string
+          is_checked?: boolean
+          student_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_checkins_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       staff_members: {
         Row: {
           created_at: string
