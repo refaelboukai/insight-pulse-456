@@ -11,7 +11,22 @@ import { Calendar, Plus, Trash2, Save } from 'lucide-react';
 import { toast } from 'sonner';
 
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'] as const;
-const HOURS = Array.from({ length: 8 }, (_, i) => `${i + 1}`);
+
+const SCHOOL_SLOTS = [
+  { id: '1', label: 'שיעור 1', time: '08:00–08:50' },
+  { id: '2', label: 'שיעור 2', time: '08:50–09:40' },
+  { id: 'b1', label: 'הפסקה 1', time: '09:40–10:00' },
+  { id: '3', label: 'שיעור 3', time: '10:00–10:45' },
+  { id: '4', label: 'שיעור 4', time: '10:45–11:30' },
+  { id: 'b2', label: 'הפסקה 2', time: '11:30–11:45' },
+  { id: '5', label: 'שיעור 5', time: '11:45–12:30' },
+  { id: '6', label: 'שיעור 6', time: '12:30–13:15' },
+  { id: 'lunch', label: 'ארוחת צהריים', time: '13:15–14:00' },
+  { id: '8', label: 'שיעור 8', time: '14:00–14:45' },
+  { id: '9', label: 'שיעור 9', time: '14:45–15:30' },
+] as const;
+
+const SLOT_ORDER: string[] = SCHOOL_SLOTS.map(s => s.id);
 
 interface ScheduleEntry {
   day: string;
@@ -46,7 +61,7 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
 
   // New entry form
   const [newDay, setNewDay] = useState<string>(DAYS[0]);
-  const [newHour, setNewHour] = useState<string>('1');
+  const [newHour, setNewHour] = useState<string>(SCHOOL_SLOTS[0].id);
   const [newActivity, setNewActivity] = useState('');
   const [newType, setNewType] = useState<string>('lesson');
 
@@ -95,8 +110,13 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
 
   const sortedEntries = [...entries].sort((a, b) => {
     const dayDiff = DAYS.indexOf(a.day as any) - DAYS.indexOf(b.day as any);
-    return dayDiff !== 0 ? dayDiff : Number(a.hour) - Number(b.hour);
+    return dayDiff !== 0 ? dayDiff : SLOT_ORDER.indexOf(a.hour) - SLOT_ORDER.indexOf(b.hour);
   });
+
+  const getSlotLabel = (id: string) => {
+    const slot = SCHOOL_SLOTS.find(s => s.id === id);
+    return slot ? `${slot.time}` : id;
+  };
 
   return (
     <>
@@ -145,7 +165,7 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
                 <Select value={newHour} onValueChange={setNewHour}>
                   <SelectTrigger className="h-8 text-xs"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {HOURS.map(h => <SelectItem key={h} value={h}>שעה {h}</SelectItem>)}
+                    {SCHOOL_SLOTS.map(s => <SelectItem key={s.id} value={s.id}>{s.label} ({s.time})</SelectItem>)}
                   </SelectContent>
                 </Select>
                 <Select value={newType} onValueChange={setNewType}>
@@ -185,7 +205,7 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
                         return (
                           <div key={idx} className={`flex items-center justify-between p-1.5 rounded-md border mb-0.5 ${TYPE_COLORS[entry.type]}`}>
                             <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-[10px] px-1.5">{entry.hour}</Badge>
+                              <Badge variant="outline" className="text-[10px] px-1.5 whitespace-nowrap">{getSlotLabel(entry.hour)}</Badge>
                               <span className="text-xs font-medium">{entry.activity}</span>
                               <Badge variant="secondary" className="text-[9px] px-1">{TYPE_LABELS[entry.type]}</Badge>
                             </div>

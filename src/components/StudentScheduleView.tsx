@@ -5,6 +5,14 @@ import { Calendar, ChevronDown, ChevronUp } from 'lucide-react';
 
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'] as const;
 
+const SCHOOL_SLOTS: Record<string, string> = {
+  '1': '08:00–08:50', '2': '08:50–09:40', 'b1': '09:40–10:00',
+  '3': '10:00–10:45', '4': '10:45–11:30', 'b2': '11:30–11:45',
+  '5': '11:45–12:30', '6': '12:30–13:15', 'lunch': '13:15–14:00',
+  '8': '14:00–14:45', '9': '14:45–15:30',
+};
+const SLOT_ORDER = Object.keys(SCHOOL_SLOTS);
+
 const TYPE_LABELS: Record<string, string> = {
   lesson: 'שיעור', therapy: 'טיפול', break: 'הפסקה', other: 'אחר',
 };
@@ -58,7 +66,7 @@ export default function StudentScheduleView({ studentId }: Props) {
 
   const sortedEntries = [...schedule].sort((a, b) => {
     const dayDiff = DAYS.indexOf(a.day as any) - DAYS.indexOf(b.day as any);
-    return dayDiff !== 0 ? dayDiff : Number(a.hour) - Number(b.hour);
+    return dayDiff !== 0 ? dayDiff : SLOT_ORDER.indexOf(a.hour) - SLOT_ORDER.indexOf(b.hour);
   });
 
   return (
@@ -91,7 +99,7 @@ export default function StudentScheduleView({ studentId }: Props) {
                 <div className="space-y-0.5">
                   {dayEntries.map((entry, i) => (
                     <div key={i} className={`flex items-center gap-2 p-1.5 rounded-md border ${TYPE_COLORS[entry.type] || TYPE_COLORS.other}`}>
-                      <Badge variant="outline" className="text-[10px] px-1.5 shrink-0">{entry.hour}</Badge>
+                      <Badge variant="outline" className="text-[10px] px-1.5 shrink-0 whitespace-nowrap">{SCHOOL_SLOTS[entry.hour] || entry.hour}</Badge>
                       <span className="text-xs font-medium flex-1">{entry.activity}</span>
                       <Badge variant="secondary" className="text-[9px] px-1">{TYPE_LABELS[entry.type] || entry.type}</Badge>
                     </div>
