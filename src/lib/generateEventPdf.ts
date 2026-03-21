@@ -11,6 +11,7 @@ interface EventData {
   followupRequired: boolean;
   followupNotes: string;
   date: string;
+  time?: string;
 }
 
 /** Preload an image and return a data-URL so html2canvas never needs a network fetch */
@@ -26,7 +27,7 @@ function preloadImageAsDataUrl(src: string): Promise<string> {
         c.getContext('2d')!.drawImage(img, 0, 0);
         resolve(c.toDataURL('image/jpeg'));
       } catch {
-        resolve(src); // fallback to original
+        resolve(src);
       }
     };
     img.onerror = () => resolve(src);
@@ -36,9 +37,8 @@ function preloadImageAsDataUrl(src: string): Promise<string> {
 
 export async function generateEventPdf(data: EventData): Promise<Blob> {
   const typeName = INCIDENT_TYPE_LABELS[data.incidentType] || data.incidentType;
-
-  // Preload logo as data-URL to avoid CORS / loading issues with html2canvas
   const logoDataUrl = await preloadImageAsDataUrl(logoSrc);
+  const timeStr = data.time || new Date().toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' });
 
   const container = document.createElement('div');
   container.style.cssText =
@@ -47,6 +47,7 @@ export async function generateEventPdf(data: EventData): Promise<Blob> {
   const rows = [
     { label: 'סוג אירוע', value: typeName },
     { label: 'תאריך', value: data.date },
+    { label: 'שעת דיווח', value: timeStr },
     { label: 'תיאור האירוע', value: data.description },
   ];
   if (data.peopleInvolved) rows.push({ label: 'מעורבים', value: data.peopleInvolved });
@@ -57,31 +58,27 @@ export async function generateEventPdf(data: EventData): Promise<Blob> {
   }
 
   container.innerHTML = `
-    <div style="text-align:center;margin-bottom:24px;">
-      <img src="${logoDataUrl}" style="max-width:200px;height:auto;margin-bottom:12px;" />
-      <div style="font-size:28px;font-weight:bold;color:#1a1a1a;">🚨 דיווח אירוע חריג</div>
-      <div style="font-size:13px;color:#888;margin-top:6px;">בית אקשטיין</div>
+    <div style="text-align:center;margin-bottom:28px;">
+      <img src="${logoDataUrl}" style="max-width:180px;height:auto;margin-bottom:10px;" />
+      <div style="font-size:22px;font-weight:bold;color:#1a3a5c;letter-spacing:0.5px;">בית ספר מרום בית אקשטיין</div>
+      <div style="width:60px;height:3px;background:linear-gradient(90deg,#3b82f6,#60a5fa);margin:12px auto;border-radius:2px;"></div>
+      <div style="font-size:18px;font-weight:600;color:#334155;">דיווח אירוע חריג</div>
     </div>
-    <div style="border:2px solid #e5e5e5;border-radius:12px;overflow:hidden;">
+    <div style="border:1.5px solid #e2e8f0;border-radius:10px;overflow:hidden;">
       ${rows
         .map(
           (r, i) => `
-        <div style="display:flex;padding:14px 18px;${i % 2 === 0 ? 'background:#f9f9f9;' : 'background:white;'}border-bottom:1px solid #eee;">
-          <div style="min-width:120px;font-weight:bold;color:#444;font-size:14px;">${r.label}</div>
-          <div style="flex:1;color:#1a1a1a;font-size:14px;white-space:pre-wrap;">${r.value}</div>
+        <div style="display:flex;padding:14px 20px;${i % 2 === 0 ? 'background:#f8fafc;' : 'background:white;'}${i < rows.length - 1 ? 'border-bottom:1px solid #e2e8f0;' : ''}">
+          <div style="min-width:110px;font-weight:700;color:#475569;font-size:13px;">${r.label}</div>
+          <div style="flex:1;color:#1e293b;font-size:13px;white-space:pre-wrap;line-height:1.6;">${r.value}</div>
         </div>
       `
         )
         .join('')}
     </div>
-    <div style="text-align:center;margin-top:30px;color:#bbb;font-size:11px;">
-      נוצר אוטומטית • ${data.date}
-    </div>
   `;
 
   document.body.appendChild(container);
-
-  // Wait a tick for the browser to lay out + render the image
   await new Promise((r) => setTimeout(r, 100));
 
   try {
