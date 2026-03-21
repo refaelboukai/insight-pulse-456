@@ -217,24 +217,69 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
         </DialogHeader>
 
         {/* Period Selection */}
-        <div className="flex gap-1.5">
-          {([
-            { key: '2weeks' as const, label: 'שבועיים' },
-            { key: 'month' as const, label: 'חודש' },
-            { key: 'all' as const, label: 'הכל' },
-          ]).map(p => (
-            <button
-              key={p.key}
-              onClick={() => { setSummaryPeriod(p.key); setAiSummary(null); }}
-              className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${
-                summaryPeriod === p.key
-                  ? 'bg-primary text-primary-foreground border-primary'
-                  : 'border-border bg-card hover:border-primary/30'
-              }`}
-            >
-              {p.label}
-            </button>
-          ))}
+        <div className="space-y-2">
+          <div className="flex flex-wrap gap-1.5">
+            {([
+              { key: 'today' as const, label: 'היום' },
+              { key: 'week' as const, label: 'שבוע' },
+              { key: '2weeks' as const, label: 'שבועיים' },
+              { key: 'month' as const, label: 'חודש' },
+              { key: 'all' as const, label: 'הכל' },
+              { key: 'custom' as const, label: 'תאריך מותאם' },
+            ]).map(p => (
+              <button
+                key={p.key}
+                onClick={() => { setSummaryPeriod(p.key); setAiSummary(null); }}
+                className={`text-xs py-1.5 px-3 rounded-full border transition-colors ${
+                  summaryPeriod === p.key
+                    ? 'bg-primary text-primary-foreground border-primary'
+                    : 'border-border bg-card hover:border-primary/30'
+                }`}
+              >
+                {p.label}
+              </button>
+            ))}
+          </div>
+
+          {summaryPeriod === 'custom' && (
+            <div className="flex gap-2 items-center flex-wrap">
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                    <CalendarIcon className="h-3 w-3" />
+                    {customFromDate ? format(customFromDate, 'dd/MM/yyyy') : 'מתאריך'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customFromDate}
+                    onSelect={setCustomFromDate}
+                    disabled={(d) => d > new Date()}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+              <span className="text-xs text-muted-foreground">עד</span>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button variant="outline" size="sm" className="h-7 text-xs gap-1">
+                    <CalendarIcon className="h-3 w-3" />
+                    {customToDate ? format(customToDate, 'dd/MM/yyyy') : 'עד תאריך'}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={customToDate}
+                    onSelect={setCustomToDate}
+                    disabled={(d) => d > new Date()}
+                    className={cn("p-3 pointer-events-auto")}
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+          )}
         </div>
 
         {/* AI Summary Button */}
