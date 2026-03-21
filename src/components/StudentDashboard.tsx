@@ -123,30 +123,11 @@ export default function StudentDashboard() {
   }
 
   if (!selectedStudent) {
-    const classes = [...new Set(students.map(s => s.class_name).filter(Boolean))];
     return (
       <div className="space-y-4 max-w-2xl mx-auto animate-fade-in">
-        <div className="text-center mb-4">
-          <h2 className="text-lg font-bold text-foreground">בחר/י את שמך</h2>
-          <p className="text-sm text-muted-foreground">כדי לראות את הדיווחים שלך</p>
-        </div>
-        <div className="card-styled rounded-2xl p-3">
-          {classes.map(cls => (
-            <div key={cls!} className="mb-3 last:mb-0">
-              <p className="text-sm font-bold text-foreground mb-1.5">הכיתה של {cls}</p>
-              <div className="flex flex-wrap gap-1.5">
-                {students.filter(s => s.class_name === cls).map(s => (
-                  <button
-                    key={s.id}
-                    onClick={() => setSelectedStudentId(s.id)}
-                    className="text-sm py-2 px-3 rounded-lg border border-border bg-card hover:bg-primary/10 hover:border-primary/30 transition-colors"
-                  >
-                    {s.first_name} {s.last_name}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-sm">לא נמצא תלמיד משויך לחשבון שלך.</p>
+          <p className="text-muted-foreground text-xs mt-1">פנה/י למנהל המערכת.</p>
         </div>
       </div>
     );
