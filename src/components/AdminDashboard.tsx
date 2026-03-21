@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import StudentDetailDialog from '@/components/StudentDetailDialog';
 import CodesManager from '@/components/CodesManager';
+import WeeklySupportSummary from '@/components/WeeklySupportSummary';
+import StudentScheduleManager from '@/components/StudentScheduleManager';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
@@ -18,7 +20,7 @@ import {
 
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield, Download,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { generateEventPdf } from '@/lib/generateEventPdf';
@@ -56,6 +58,7 @@ export default function AdminDashboard() {
 
   // Support assignments
   const [supportAssignments, setSupportAssignments] = useState<any[]>([]);
+  const [studentSchedules, setStudentSchedules] = useState<any[]>([]);
   const [showAddAssignment, setShowAddAssignment] = useState(false);
   const [assignClassFilter, setAssignClassFilter] = useState<string | null>(null);
   const [assignStudentId, setAssignStudentId] = useState('');
@@ -104,7 +107,7 @@ export default function AdminDashboard() {
 
   const fetchAll = async () => {
     const today = new Date().toISOString().split('T')[0];
-    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes] = await Promise.all([
+    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes] = await Promise.all([
       supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
       supabase.from('students').select('*').order('class_name').order('last_name'),
       supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
@@ -113,6 +116,7 @@ export default function AdminDashboard() {
       supabase.from('support_sessions' as any).select('*').order('created_at', { ascending: false }).limit(100),
       supabase.from('staff_members').select('*').order('name'),
       supabase.from('support_assignments').select('*, staff_members(name)').eq('is_active', true),
+      supabase.from('student_schedules' as any).select('*'),
     ]);
     if (reportsRes.data) setReports(reportsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
@@ -122,6 +126,7 @@ export default function AdminDashboard() {
     if (supportRes.data) setSupportSessions(supportRes.data as any[]);
     if (staffRes.data) setStaffMembers(staffRes.data);
     if (assignRes.data) setSupportAssignments(assignRes.data as any[]);
+    if (schedulesRes.data) setStudentSchedules(schedulesRes.data as any[]);
     setLoading(false);
   };
 
@@ -443,7 +448,7 @@ export default function AdminDashboard() {
     const avgPerformance = viewReports.filter(r => r.performance_score).length > 0
       ? (viewReports.reduce((s, r) => s + (r.performance_score || 0), 0) / viewReports.filter(r => r.performance_score).length).toFixed(1)
       : '—';
-    return { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance };
+    return { viewStudents, viewStudentIds, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance };
   };
 
   // Render stats grid
@@ -599,6 +604,18 @@ export default function AdminDashboard() {
     </div>
   );
 
+  // Render weekly support summary
+  const renderWeeklySupport = (viewStudentIds: Set<string>, viewStudents: Student[], sectionPrefix: string) => (
+    <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+      <SectionHeader title="תמיכות שבוצעו השבוע" icon={CheckCircle2} sectionKey={`${sectionPrefix}_weeklySupport`} />
+      {expandedSections[`${sectionPrefix}_weeklySupport`] && (
+        <div className="px-3 pb-3">
+          <WeeklySupportSummary studentIds={viewStudentIds} students={viewStudents} staffMembers={staffMembers} />
+        </div>
+      )}
+    </div>
+  );
+
   // Render students list
   const renderStudents = (viewStudents: Student[], sectionPrefix: string, showManagement: boolean) => (
     <div className="card-styled rounded-2xl overflow-hidden">
@@ -677,6 +694,13 @@ export default function AdminDashboard() {
                       >
                         <span className="font-semibold text-sm">{s.first_name} {s.last_name}</span>
                       </button>
+                      {showManagement && (
+                        <StudentScheduleManager
+                          student={s}
+                          schedule={studentSchedules.find((sc: any) => sc.student_id === s.id) || null}
+                          onSave={fetchAll}
+                        />
+                      )}
                       <Button
                         size="sm"
                         variant="outline"
@@ -858,7 +882,7 @@ export default function AdminDashboard() {
           </AccordionTrigger>
           <AccordionContent className="px-3 pb-4">
             {(() => {
-              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData(null);
+              const { viewStudents, viewStudentIds, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData(null);
               return (
                 <div className="space-y-3">
                   {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
@@ -927,6 +951,7 @@ export default function AdminDashboard() {
                     )}
                   </div>
 
+                  {renderWeeklySupport(viewStudentIds, viewStudents, 'mgmt')}
                   {renderSupport(viewAssignments, 'mgmt', true)}
                   {renderStudents(viewStudents, 'mgmt', true)}
                   {renderReports(viewReports, 'mgmt')}
@@ -1042,13 +1067,14 @@ export default function AdminDashboard() {
           </AccordionTrigger>
           <AccordionContent className="px-3 pb-4">
             {(() => {
-              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData('טלי');
+              const { viewStudents, viewStudentIds, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData('טלי');
               return (
                 <div className="space-y-3">
                   {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
                   {renderAttendance(viewAttendance, viewStudents, 'tali')}
                   {renderAlerts(unreadAlerts, 'tali')}
                   {renderEvents(viewEvents, 'tali')}
+                  {renderWeeklySupport(viewStudentIds, viewStudents, 'tali')}
                   {renderSupport(viewAssignments, 'tali', true, 'טלי')}
                   {renderStudents(viewStudents, 'tali', false)}
                   {renderReports(viewReports, 'tali')}
@@ -1094,13 +1120,14 @@ export default function AdminDashboard() {
           </AccordionTrigger>
           <AccordionContent className="px-3 pb-4">
             {(() => {
-              const { viewStudents, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData('עדן');
+              const { viewStudents, viewStudentIds, viewReports, viewAlerts, viewAttendance, viewAssignments, viewEvents, unreadAlerts, avgPerformance } = getViewData('עדן');
               return (
                 <div className="space-y-3">
                   {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
                   {renderAttendance(viewAttendance, viewStudents, 'eden')}
                   {renderAlerts(unreadAlerts, 'eden')}
                   {renderEvents(viewEvents, 'eden')}
+                  {renderWeeklySupport(viewStudentIds, viewStudents, 'eden')}
                   {renderSupport(viewAssignments, 'eden', true, 'עדן')}
                   {renderStudents(viewStudents, 'eden', false)}
                   {renderReports(viewReports, 'eden')}

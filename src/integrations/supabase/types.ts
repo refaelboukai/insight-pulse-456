@@ -373,6 +373,44 @@ export type Database = {
           },
         ]
       }
+      student_schedules: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          is_enabled: boolean
+          schedule_data: Json
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          is_enabled?: boolean
+          schedule_data?: Json
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          is_enabled?: boolean
+          schedule_data?: Json
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_schedules_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       students: {
         Row: {
           address: string | null

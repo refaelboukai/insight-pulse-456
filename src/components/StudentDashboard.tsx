@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import StudentScheduleView from '@/components/StudentScheduleView';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
@@ -248,6 +249,9 @@ export default function StudentDashboard() {
           </div>
         )}
       </div>
+
+      {/* Personal Schedule */}
+      <StudentScheduleView studentId={selectedStudent.id} />
 
       {/* External App Link */}
       <a

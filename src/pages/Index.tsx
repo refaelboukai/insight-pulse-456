@@ -7,6 +7,7 @@ import AdminDashboard from '@/components/AdminDashboard';
 import SupportPlanForm from '@/components/SupportPlanForm';
 import GradesForm from '@/components/GradesForm';
 import StudentDashboard from '@/components/StudentDashboard';
+import DailyReminderBanner from '@/components/DailyReminderBanner';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User } from 'lucide-react';
@@ -55,6 +56,9 @@ export default function Index() {
             <p className="text-sm text-muted-foreground">מערכת דיווח חינוכית</p>
           </div>
         )}
+
+        {/* Daily reminder for staff */}
+        {!isAdmin && !isStudent && <DailyReminderBanner />}
 
         {isStudent ? (
           <>
