@@ -604,6 +604,18 @@ export default function AdminDashboard() {
     </div>
   );
 
+  // Render weekly support summary
+  const renderWeeklySupport = (viewStudentIds: Set<string>, viewStudents: Student[], sectionPrefix: string) => (
+    <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+      <SectionHeader title="תמיכות שבוצעו השבוע" icon={CheckCircle2} sectionKey={`${sectionPrefix}_weeklySupport`} />
+      {expandedSections[`${sectionPrefix}_weeklySupport`] && (
+        <div className="px-3 pb-3">
+          <WeeklySupportSummary studentIds={viewStudentIds} students={viewStudents} staffMembers={staffMembers} />
+        </div>
+      )}
+    </div>
+  );
+
   // Render students list
   const renderStudents = (viewStudents: Student[], sectionPrefix: string, showManagement: boolean) => (
     <div className="card-styled rounded-2xl overflow-hidden">
