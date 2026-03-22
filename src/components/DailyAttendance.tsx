@@ -46,6 +46,7 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
   const [attendance, setAttendance] = useState<Map<string, AttendanceRecord>>(new Map());
   const [loading, setLoading] = useState(true);
   const [expandedClasses, setExpandedClasses] = useState<Record<string, boolean>>({});
+  const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
   const [longAbsentStudents, setLongAbsentStudents] = useState<LongAbsentStudent[]>([]);
   const [followups, setFollowups] = useState<Map<string, FollowupRecord>>(new Map());
   const [longAbsentExpanded, setLongAbsentExpanded] = useState(false);
