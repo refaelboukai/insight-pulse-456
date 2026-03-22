@@ -173,13 +173,12 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
     onAttendanceChange?.(absentIds);
   };
 
-  const togglePresence = async (studentId: string) => {
-    if (!user) return;
+  const handleStudentClick = (studentId: string) => {
     const current = attendance.get(studentId);
-    const wasPresent = current?.is_present ?? true;
-    const newPresent = !wasPresent;
+    const isPresent = !current || current.is_present;
 
-    if (!newPresent) {
+    if (isPresent) {
+      // Mark as absent and expand
       const newMap = new Map(attendance);
       newMap.set(studentId, {
         student_id: studentId,
@@ -188,9 +187,19 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
       });
       setAttendance(newMap);
       notifyAbsent(newMap);
-      return;
+      setExpandedStudents(prev => { const n = new Set(prev); n.add(studentId); return n; });
+    } else {
+      // Already absent - just toggle expand/collapse
+      setExpandedStudents(prev => {
+        const n = new Set(prev);
+        if (n.has(studentId)) n.delete(studentId); else n.add(studentId);
+        return n;
+      });
     }
+  };
 
+  const markPresent = async (studentId: string) => {
+    if (!user) return;
     const newMap = new Map(attendance);
     newMap.set(studentId, {
       student_id: studentId,
@@ -199,6 +208,7 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
     });
     setAttendance(newMap);
     notifyAbsent(newMap);
+    setExpandedStudents(prev => { const n = new Set(prev); n.delete(studentId); return n; });
 
     const { error } = await supabase.from('daily_attendance').upsert({
       student_id: studentId,
