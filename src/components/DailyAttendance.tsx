@@ -224,6 +224,9 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
     if (error) {
       toast.error('שגיאה בשמירת נוכחות');
       console.error(error);
+    } else {
+      // Reload long-absent list since marking present may break the chain
+      if (students.length > 0) await loadLongAbsentStudents(students);
     }
   };
 
