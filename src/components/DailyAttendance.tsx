@@ -96,16 +96,16 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
   };
 
   const loadLongAbsentStudents = async (allStudents: Student[]) => {
-    // Check last 7 days of attendance for consecutive absences
-    const sevenDaysAgo = new Date();
-    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-    const fromDate = sevenDaysAgo.toISOString().split('T')[0];
+    // Check last 14 days of attendance for consecutive absences
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const fromDate = fourteenDaysAgo.toISOString().split('T')[0];
 
+    // Fetch ALL attendance records (both present and absent) to properly detect breaks
     const { data: recentAttendance } = await supabase
       .from('daily_attendance')
       .select('*')
       .gte('attendance_date', fromDate)
-      .eq('is_present', false)
       .order('attendance_date', { ascending: false });
 
     if (!recentAttendance) return;
@@ -121,6 +121,8 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
       let lastReason = '';
 
       for (const rec of studentRecords) {
+        // If student is marked present, the chain breaks
+        if (rec.is_present) break;
         if (LONG_ABSENT_REASONS.includes(rec.absence_reason as any)) {
           consecutive++;
           if (!lastReason) lastReason = rec.absence_reason || '';
