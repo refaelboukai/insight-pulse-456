@@ -284,7 +284,7 @@ export default function AdminDashboard() {
         supabase.from('brain_training_history' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
         supabase.from('schedule_checkins' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
       ]);
-      const errors = [r1, r2, r3, r4, r5, r6].filter(r => r.error);
+      const errors = results.filter(r => r.error);
       if (errors.length > 0) {
         console.error('Reset errors:', errors.map(e => e.error));
         toast.error('שגיאה באיפוס חלק מהנתונים');
