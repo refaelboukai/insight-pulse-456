@@ -132,6 +132,7 @@ export default function AdminDashboard() {
     if (staffRes.data) setStaffMembers(staffRes.data);
     if (assignRes.data) setSupportAssignments(assignRes.data as any[]);
     if (schedulesRes.data) setStudentSchedules(schedulesRes.data as any[]);
+    if (studentsRes.data) loadLongAbsent(studentsRes.data);
     setLoading(false);
   };
 
