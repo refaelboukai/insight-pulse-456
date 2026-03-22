@@ -295,7 +295,7 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
       console.error(error);
     } else {
       const newFollowups = new Map(followups);
-      newFollowups.set(studentId, record as FollowupRecord);
+      newFollowups.set(studentId, { ...record, notes: existing?.notes || null } as FollowupRecord);
       setFollowups(newFollowups);
       toast.success('מעקב עודכן');
     }
