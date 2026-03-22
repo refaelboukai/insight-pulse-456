@@ -72,5 +72,17 @@ export const ABSENCE_REASON_LABELS: Record<string, string> = {
   medical_checkup: 'בדיקות רפואיות',
   emotional_difficulty: 'קושי תפקודי - רגשי',
   school_suspension: 'הרחקה מבית הספר',
+  home_learning: 'למידה מהבית (שעות חולים)',
+  hospitalization: 'מסגרת אישפוז',
+  balance_home: 'בית מאזן',
+  medical_suspension: 'הרחקה רפואית',
   other: 'אחר',
 };
+
+// Reasons that trigger "long-absent" tracking after 5 consecutive days
+export const LONG_ABSENT_REASONS = [
+  'home_learning',
+  'hospitalization',
+  'balance_home',
+  'medical_suspension',
+] as const;
