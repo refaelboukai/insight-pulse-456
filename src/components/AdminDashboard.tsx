@@ -1042,6 +1042,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {renderAttendance(viewAttendance, viewStudents, 'mgmt')}
+                  {renderLongAbsent(null, 'mgmt')}
                   {renderAlerts(unreadAlerts, 'mgmt')}
 
                   {renderEvents(events, 'mgmt')}
