@@ -929,6 +929,51 @@ export default function AdminDashboard() {
     );
   };
 
+  // Render long-absent students tracking
+  const renderLongAbsent = (classFilter: string | null, sectionPrefix: string) => {
+    const filtered = classFilter
+      ? longAbsentStudents.filter(la => la.student.class_name === classFilter)
+      : longAbsentStudents;
+    
+    if (filtered.length === 0) return null;
+
+    return (
+      <div className="card-styled rounded-2xl overflow-hidden border-amber-500/30 border-2">
+        <SectionHeader title="תלמידים שלא מגיעים לבית הספר" icon={AlertTriangle} count={filtered.length} badge="destructive" sectionKey={`${sectionPrefix}_longAbsent`} />
+        {expandedSections[`${sectionPrefix}_longAbsent`] && (
+          <div className="px-3 pb-3 space-y-2">
+            <p className="text-xs text-muted-foreground">5+ ימי היעדרות רצופים — למעקב קשר טלפוני, ביקורי בית ושליחת חומרים</p>
+            {filtered.map(({ student, consecutiveDays, reason }) => {
+              const followup = longAbsentFollowups.get(student.id);
+              return (
+                <div key={student.id} className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm">{student.first_name} {student.last_name}</span>
+                    <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">{consecutiveDays} ימים — {reason}</Badge>
+                  </div>
+                  <div className="flex gap-3 text-xs">
+                    <span className="flex items-center gap-1">
+                      {followup?.phone_contact ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                      קשר טלפוני
+                    </span>
+                    <span className="flex items-center gap-1">
+                      {followup?.home_visit ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                      ביקור בית
+                    </span>
+                    <span className="flex items-center gap-1">
+                      {followup?.materials_sent ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                      שליחת חומרים
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
