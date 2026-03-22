@@ -135,6 +135,60 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
+  const loadLongAbsent = async (allStudents: Student[]) => {
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const fromDate = fourteenDaysAgo.toISOString().split('T')[0];
+
+    const { data: recentAttendance } = await supabase
+      .from('daily_attendance')
+      .select('*')
+      .gte('attendance_date', fromDate)
+      .order('attendance_date', { ascending: false });
+
+    if (!recentAttendance) return;
+
+    const result: { student: Student; consecutiveDays: number; reason: string }[] = [];
+    for (const student of allStudents) {
+      const records = recentAttendance
+        .filter((r: any) => r.student_id === student.id)
+        .sort((a: any, b: any) => new Date(b.attendance_date).getTime() - new Date(a.attendance_date).getTime());
+
+      let consecutive = 0;
+      let lastReason = '';
+      for (const rec of records) {
+        if (rec.is_present) break;
+        if (LONG_ABSENT_REASONS.includes(rec.absence_reason as any)) {
+          consecutive++;
+          if (!lastReason) lastReason = rec.absence_reason || '';
+        } else break;
+      }
+      if (consecutive >= 5) {
+        result.push({ student, consecutiveDays: consecutive, reason: ABSENCE_REASON_LABELS[lastReason] || lastReason });
+      }
+    }
+    setLongAbsentStudents(result);
+
+    if (result.length > 0) {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - dayOfWeek);
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      const { data: followupData } = await supabase
+        .from('absent_student_followups')
+        .select('*')
+        .gte('week_start', weekStartStr);
+      
+      if (followupData) {
+        const map = new Map<string, any>();
+        followupData.forEach((f: any) => map.set(f.student_id, f));
+        setLongAbsentFollowups(map);
+      }
+    }
+  };
+
   useEffect(() => { fetchAll(); }, []);
 
   // Staff management
