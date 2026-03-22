@@ -1229,6 +1229,7 @@ export default function AdminDashboard() {
                 <div className="space-y-3">
                   {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
                   {renderAttendance(viewAttendance, viewStudents, 'eden')}
+                  {renderLongAbsent('עדן', 'eden')}
                   {renderAlerts(unreadAlerts, 'eden')}
                   {renderEvents(viewEvents, 'eden')}
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'eden')}
