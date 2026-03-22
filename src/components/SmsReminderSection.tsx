@@ -47,8 +47,13 @@ export default function SmsReminderSection() {
     const phones = Array.from(selected);
     if (phones.length === 0) return;
     const message = 'שלום, תזכורת למלא דיווחים בכל שיעור במערכת בית הספר\nhttps://insight-pulse-456.lovable.app';
-    const smsUrl = `sms:${phones.join(',')}?body=${encodeURIComponent(message)}`;
-    window.open(smsUrl, '_blank');
+    const encoded = encodeURIComponent(message);
+    // Open SMS for each recipient individually since multi-recipient sms: URI is unreliable
+    phones.forEach((phone, i) => {
+      setTimeout(() => {
+        window.open(`sms:${phone}?body=${encoded}`, '_blank');
+      }, i * 600);
+    });
   };
 
   if (!open) {
