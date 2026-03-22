@@ -380,10 +380,12 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
                   const isAbsent = rec && !rec.is_present;
                   const needsReason = isAbsent && !rec?.absence_reason;
 
+                  const isStudentExpanded = isAbsent && expandedStudents.has(s.id);
+
                   return (
                     <div key={s.id}>
                       <button
-                        onClick={() => togglePresence(s.id)}
+                        onClick={() => handleStudentClick(s.id)}
                         className={`w-full flex items-center justify-between py-3 px-4 rounded-xl border-2 transition-all ${
                           isPresent
                             ? 'border-success/30 bg-success/5 text-foreground'
@@ -406,11 +408,19 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
                         </span>
                       </button>
 
-                      {isAbsent && (
+                      {isAbsent && isStudentExpanded && (
                         <div className="mt-2 mr-3 animate-fade-in">
-                          <p className={`text-sm font-semibold mb-1.5 ${needsReason ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {needsReason ? '⚠️ חובה לבחור סיבת היעדרות:' : 'סיבת היעדרות:'}
-                          </p>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <p className={`text-sm font-semibold ${needsReason ? 'text-destructive' : 'text-muted-foreground'}`}>
+                              {needsReason ? '⚠️ חובה לבחור סיבת היעדרות:' : 'סיבת היעדרות:'}
+                            </p>
+                            <button
+                              onClick={() => markPresent(s.id)}
+                              className="text-xs text-success font-semibold flex items-center gap-1 hover:underline"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" /> סמן כנוכח/ת
+                            </button>
+                          </div>
                           <div className="flex flex-wrap gap-1.5">
                             {Object.entries(ABSENCE_REASON_LABELS).map(([key, label]) => (
                               <button
@@ -426,7 +436,6 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
                               </button>
                             ))}
                           </div>
-                          {/* Free text input when "other" is selected */}
                           {rec?.absence_reason === 'other' && (
                             <div className="mt-2">
                               <Input
