@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS, INCIDENT_TYPE_LABELS,
-  SEVERITY_LABELS, ABSENCE_REASON_LABELS,
+  SEVERITY_LABELS, ABSENCE_REASON_LABELS, LONG_ABSENT_REASONS,
 } from '@/lib/constants';
 
 import {
