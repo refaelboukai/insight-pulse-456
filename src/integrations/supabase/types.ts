@@ -14,6 +14,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      absent_student_followups: {
+        Row: {
+          created_at: string
+          home_visit: boolean
+          id: string
+          materials_sent: boolean
+          notes: string | null
+          phone_contact: boolean
+          recorded_by: string
+          student_id: string
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          created_at?: string
+          home_visit?: boolean
+          id?: string
+          materials_sent?: boolean
+          notes?: string | null
+          phone_contact?: boolean
+          recorded_by: string
+          student_id: string
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          created_at?: string
+          home_visit?: boolean
+          id?: string
+          materials_sent?: boolean
+          notes?: string | null
+          phone_contact?: boolean
+          recorded_by?: string
+          student_id?: string
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "absent_student_followups_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       activity_logs: {
         Row: {
           adult_contact_category: string | null
@@ -201,6 +248,7 @@ export type Database = {
           created_at: string
           id: string
           is_present: boolean
+          other_reason_text: string | null
           recorded_by: string
           student_id: string
           updated_at: string
@@ -211,6 +259,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_present?: boolean
+          other_reason_text?: string | null
           recorded_by: string
           student_id: string
           updated_at?: string
@@ -221,6 +270,7 @@ export type Database = {
           created_at?: string
           id?: string
           is_present?: boolean
+          other_reason_text?: string | null
           recorded_by?: string
           student_id?: string
           updated_at?: string
@@ -865,6 +915,10 @@ export type Database = {
         | "emotional_difficulty"
         | "school_suspension"
         | "other"
+        | "home_learning"
+        | "hospitalization"
+        | "balance_home"
+        | "medical_suspension"
       app_role: "admin" | "staff" | "student"
       attendance_status: "full" | "partial" | "absent"
       behavior_type: "respectful" | "non_respectful" | "disruptive" | "violent"
@@ -1011,6 +1065,10 @@ export const Constants = {
         "emotional_difficulty",
         "school_suspension",
         "other",
+        "home_learning",
+        "hospitalization",
+        "balance_home",
+        "medical_suspension",
       ],
       app_role: ["admin", "staff", "student"],
       attendance_status: ["full", "partial", "absent"],
