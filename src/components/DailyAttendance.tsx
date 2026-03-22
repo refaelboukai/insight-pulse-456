@@ -46,6 +46,7 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
   const [attendance, setAttendance] = useState<Map<string, AttendanceRecord>>(new Map());
   const [loading, setLoading] = useState(true);
   const [expandedClasses, setExpandedClasses] = useState<Record<string, boolean>>({});
+  const [expandedStudents, setExpandedStudents] = useState<Set<string>>(new Set());
   const [longAbsentStudents, setLongAbsentStudents] = useState<LongAbsentStudent[]>([]);
   const [followups, setFollowups] = useState<Map<string, FollowupRecord>>(new Map());
   const [longAbsentExpanded, setLongAbsentExpanded] = useState(false);
@@ -172,13 +173,12 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
     onAttendanceChange?.(absentIds);
   };
 
-  const togglePresence = async (studentId: string) => {
-    if (!user) return;
+  const handleStudentClick = (studentId: string) => {
     const current = attendance.get(studentId);
-    const wasPresent = current?.is_present ?? true;
-    const newPresent = !wasPresent;
+    const isPresent = !current || current.is_present;
 
-    if (!newPresent) {
+    if (isPresent) {
+      // Mark as absent and expand
       const newMap = new Map(attendance);
       newMap.set(studentId, {
         student_id: studentId,
@@ -187,9 +187,19 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
       });
       setAttendance(newMap);
       notifyAbsent(newMap);
-      return;
+      setExpandedStudents(prev => { const n = new Set(prev); n.add(studentId); return n; });
+    } else {
+      // Already absent - just toggle expand/collapse
+      setExpandedStudents(prev => {
+        const n = new Set(prev);
+        if (n.has(studentId)) n.delete(studentId); else n.add(studentId);
+        return n;
+      });
     }
+  };
 
+  const markPresent = async (studentId: string) => {
+    if (!user) return;
     const newMap = new Map(attendance);
     newMap.set(studentId, {
       student_id: studentId,
@@ -198,6 +208,7 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
     });
     setAttendance(newMap);
     notifyAbsent(newMap);
+    setExpandedStudents(prev => { const n = new Set(prev); n.delete(studentId); return n; });
 
     const { error } = await supabase.from('daily_attendance').upsert({
       student_id: studentId,
@@ -369,10 +380,12 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
                   const isAbsent = rec && !rec.is_present;
                   const needsReason = isAbsent && !rec?.absence_reason;
 
+                  const isStudentExpanded = isAbsent && expandedStudents.has(s.id);
+
                   return (
                     <div key={s.id}>
                       <button
-                        onClick={() => togglePresence(s.id)}
+                        onClick={() => handleStudentClick(s.id)}
                         className={`w-full flex items-center justify-between py-3 px-4 rounded-xl border-2 transition-all ${
                           isPresent
                             ? 'border-success/30 bg-success/5 text-foreground'
@@ -395,11 +408,19 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
                         </span>
                       </button>
 
-                      {isAbsent && (
+                      {isAbsent && isStudentExpanded && (
                         <div className="mt-2 mr-3 animate-fade-in">
-                          <p className={`text-sm font-semibold mb-1.5 ${needsReason ? 'text-destructive' : 'text-muted-foreground'}`}>
-                            {needsReason ? '⚠️ חובה לבחור סיבת היעדרות:' : 'סיבת היעדרות:'}
-                          </p>
+                          <div className="flex items-center justify-between mb-1.5">
+                            <p className={`text-sm font-semibold ${needsReason ? 'text-destructive' : 'text-muted-foreground'}`}>
+                              {needsReason ? '⚠️ חובה לבחור סיבת היעדרות:' : 'סיבת היעדרות:'}
+                            </p>
+                            <button
+                              onClick={() => markPresent(s.id)}
+                              className="text-xs text-success font-semibold flex items-center gap-1 hover:underline"
+                            >
+                              <CheckCircle2 className="h-3.5 w-3.5" /> סמן כנוכח/ת
+                            </button>
+                          </div>
                           <div className="flex flex-wrap gap-1.5">
                             {Object.entries(ABSENCE_REASON_LABELS).map(([key, label]) => (
                               <button
@@ -415,7 +436,6 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
                               </button>
                             ))}
                           </div>
-                          {/* Free text input when "other" is selected */}
                           {rec?.absence_reason === 'other' && (
                             <div className="mt-2">
                               <Input
