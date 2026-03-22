@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS, INCIDENT_TYPE_LABELS,
-  SEVERITY_LABELS, ABSENCE_REASON_LABELS,
+  SEVERITY_LABELS, ABSENCE_REASON_LABELS, LONG_ABSENT_REASONS,
 } from '@/lib/constants';
 
 import {
@@ -103,6 +103,10 @@ export default function AdminDashboard() {
   const [editSubject, setEditSubject] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
+  // Long-absent students
+  const [longAbsentStudents, setLongAbsentStudents] = useState<{ student: Student; consecutiveDays: number; reason: string }[]>([]);
+  const [longAbsentFollowups, setLongAbsentFollowups] = useState<Map<string, any>>(new Map());
+
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
@@ -128,7 +132,62 @@ export default function AdminDashboard() {
     if (staffRes.data) setStaffMembers(staffRes.data);
     if (assignRes.data) setSupportAssignments(assignRes.data as any[]);
     if (schedulesRes.data) setStudentSchedules(schedulesRes.data as any[]);
+    if (studentsRes.data) loadLongAbsent(studentsRes.data);
     setLoading(false);
+  };
+
+  const loadLongAbsent = async (allStudents: Student[]) => {
+    const fourteenDaysAgo = new Date();
+    fourteenDaysAgo.setDate(fourteenDaysAgo.getDate() - 14);
+    const fromDate = fourteenDaysAgo.toISOString().split('T')[0];
+
+    const { data: recentAttendance } = await supabase
+      .from('daily_attendance')
+      .select('*')
+      .gte('attendance_date', fromDate)
+      .order('attendance_date', { ascending: false });
+
+    if (!recentAttendance) return;
+
+    const result: { student: Student; consecutiveDays: number; reason: string }[] = [];
+    for (const student of allStudents) {
+      const records = recentAttendance
+        .filter((r: any) => r.student_id === student.id)
+        .sort((a: any, b: any) => new Date(b.attendance_date).getTime() - new Date(a.attendance_date).getTime());
+
+      let consecutive = 0;
+      let lastReason = '';
+      for (const rec of records) {
+        if (rec.is_present) break;
+        if (LONG_ABSENT_REASONS.includes(rec.absence_reason as any)) {
+          consecutive++;
+          if (!lastReason) lastReason = rec.absence_reason || '';
+        } else break;
+      }
+      if (consecutive >= 5) {
+        result.push({ student, consecutiveDays: consecutive, reason: ABSENCE_REASON_LABELS[lastReason] || lastReason });
+      }
+    }
+    setLongAbsentStudents(result);
+
+    if (result.length > 0) {
+      const now = new Date();
+      const dayOfWeek = now.getDay();
+      const weekStart = new Date(now);
+      weekStart.setDate(now.getDate() - dayOfWeek);
+      const weekStartStr = weekStart.toISOString().split('T')[0];
+
+      const { data: followupData } = await supabase
+        .from('absent_student_followups')
+        .select('*')
+        .gte('week_start', weekStartStr);
+      
+      if (followupData) {
+        const map = new Map<string, any>();
+        followupData.forEach((f: any) => map.set(f.student_id, f));
+        setLongAbsentFollowups(map);
+      }
+    }
   };
 
   useEffect(() => { fetchAll(); }, []);
@@ -870,6 +929,51 @@ export default function AdminDashboard() {
     );
   };
 
+  // Render long-absent students tracking
+  const renderLongAbsent = (classFilter: string | null, sectionPrefix: string) => {
+    const filtered = classFilter
+      ? longAbsentStudents.filter(la => la.student.class_name === classFilter)
+      : longAbsentStudents;
+    
+    if (filtered.length === 0) return null;
+
+    return (
+      <div className="card-styled rounded-2xl overflow-hidden border-amber-500/30 border-2">
+        <SectionHeader title="תלמידים שלא מגיעים לבית הספר" icon={AlertTriangle} count={filtered.length} badge="destructive" sectionKey={`${sectionPrefix}_longAbsent`} />
+        {expandedSections[`${sectionPrefix}_longAbsent`] && (
+          <div className="px-3 pb-3 space-y-2">
+            <p className="text-xs text-muted-foreground">5+ ימי היעדרות רצופים — למעקב קשר טלפוני, ביקורי בית ושליחת חומרים</p>
+            {filtered.map(({ student, consecutiveDays, reason }) => {
+              const followup = longAbsentFollowups.get(student.id);
+              return (
+                <div key={student.id} className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-sm">{student.first_name} {student.last_name}</span>
+                    <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">{consecutiveDays} ימים — {reason}</Badge>
+                  </div>
+                  <div className="flex gap-3 text-xs">
+                    <span className="flex items-center gap-1">
+                      {followup?.phone_contact ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                      קשר טלפוני
+                    </span>
+                    <span className="flex items-center gap-1">
+                      {followup?.home_visit ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                      ביקור בית
+                    </span>
+                    <span className="flex items-center gap-1">
+                      {followup?.materials_sent ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />}
+                      שליחת חומרים
+                    </span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+    );
+  };
+
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
@@ -938,6 +1042,7 @@ export default function AdminDashboard() {
                   </div>
 
                   {renderAttendance(viewAttendance, viewStudents, 'mgmt')}
+                  {renderLongAbsent(null, 'mgmt')}
                   {renderAlerts(unreadAlerts, 'mgmt')}
 
                   {renderEvents(events, 'mgmt')}
@@ -1070,6 +1175,7 @@ export default function AdminDashboard() {
                 <div className="space-y-3">
                   {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
                   {renderAttendance(viewAttendance, viewStudents, 'tali')}
+                  {renderLongAbsent('טלי', 'tali')}
                   {renderAlerts(unreadAlerts, 'tali')}
                   {renderEvents(viewEvents, 'tali')}
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'tali')}
@@ -1123,6 +1229,7 @@ export default function AdminDashboard() {
                 <div className="space-y-3">
                   {renderStats(viewStudents, viewReports, unreadAlerts, avgPerformance)}
                   {renderAttendance(viewAttendance, viewStudents, 'eden')}
+                  {renderLongAbsent('עדן', 'eden')}
                   {renderAlerts(unreadAlerts, 'eden')}
                   {renderEvents(viewEvents, 'eden')}
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'eden')}
