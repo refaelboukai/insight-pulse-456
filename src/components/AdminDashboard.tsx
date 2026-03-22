@@ -103,6 +103,10 @@ export default function AdminDashboard() {
   const [editSubject, setEditSubject] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
 
+  // Long-absent students
+  const [longAbsentStudents, setLongAbsentStudents] = useState<{ student: Student; consecutiveDays: number; reason: string }[]>([]);
+  const [longAbsentFollowups, setLongAbsentFollowups] = useState<Map<string, any>>(new Map());
+
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
