@@ -309,26 +309,7 @@ export default function StudentDashboard() {
       {/* Personal Schedule */}
       <StudentScheduleView studentId={selectedStudent.id} />
 
-      {/* External App Link */}
-      <a
-        href={`https://reset-calm-zone.lovable.app/?auto_login=${selectedStudent.student_code}`}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="block"
-      >
-        <div className="card-styled rounded-2xl p-4 flex items-center justify-between hover:bg-primary/5 transition-colors cursor-pointer border-primary/20">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary/10">
-              <ExternalLink className="h-4 w-4 text-primary" />
-            </div>
-            <div>
-              <p className="font-semibold text-sm">אזור הרגעה</p>
-              <p className="text-xs text-muted-foreground">מעבר לאפליקציית Reset Calm Zone</p>
-            </div>
-          </div>
-          <ExternalLink className="h-4 w-4 text-muted-foreground" />
-        </div>
-      </a>
+      {/* Reset link removed - now available as a tab */}
     </div>
   );
 }
