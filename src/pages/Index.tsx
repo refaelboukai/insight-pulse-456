@@ -10,7 +10,7 @@ import StudentDashboard from '@/components/StudentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, Leaf } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 export default function Index() {
