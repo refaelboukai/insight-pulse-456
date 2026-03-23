@@ -8,9 +8,10 @@ import SupportPlanForm from '@/components/SupportPlanForm';
 import GradesForm from '@/components/GradesForm';
 import StudentDashboard from '@/components/StudentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
+import ResetCalmZone from '@/components/ResetCalmZone';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, Leaf } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 export default function Index() {
@@ -61,13 +62,24 @@ export default function Index() {
         {!isAdmin && !isStudent && <DailyReminderBanner />}
 
         {isStudent ? (
-          <>
-            <div className="text-center mb-4">
-              <h2 className="text-lg font-bold text-foreground">פורטל תלמידים</h2>
-              <p className="text-sm text-muted-foreground">צפייה בדיווחים, ציונים ותכנית תמיכה</p>
-            </div>
-            <StudentDashboard />
-          </>
+          <Tabs defaultValue="dashboard" dir="rtl">
+            <TabsList className="grid w-full grid-cols-2 mb-4 h-11 p-1 rounded-xl shadow-soft bg-card">
+              <TabsTrigger value="dashboard" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold">
+                <User className="h-3.5 w-3.5" />
+                הפורטל שלי
+              </TabsTrigger>
+              <TabsTrigger value="reset" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold">
+                <Leaf className="h-3.5 w-3.5" />
+                אזור הרגעה
+              </TabsTrigger>
+            </TabsList>
+            <TabsContent value="dashboard" className="animate-fade-in mt-0">
+              <StudentDashboard />
+            </TabsContent>
+            <TabsContent value="reset" className="animate-fade-in mt-0">
+              <ResetCalmZone />
+            </TabsContent>
+          </Tabs>
         ) : isAdmin ? (
           <AdminDashboard />
         ) : (
