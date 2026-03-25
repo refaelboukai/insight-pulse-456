@@ -129,6 +129,7 @@ export default function PedagogyForm() {
       subject_id: selectedSubjectId,
       sub_subject: selectedSubSubject || null,
       month: selectedMonth,
+      school_year: selectedYear,
       learning_style: goal.learning_style || null,
       current_status: goal.current_status || null,
       learning_goals: goal.learning_goals || null,
