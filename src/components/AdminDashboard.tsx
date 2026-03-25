@@ -1322,6 +1322,7 @@ export default function AdminDashboard() {
                   {renderSupport(viewAssignments, 'tali', true, 'טלי')}
                   {renderStudents(viewStudents, 'tali', true)}
                   {renderReports(viewReports, 'tali')}
+                  {renderStudentReflections(viewStudentIds, 'tali')}
                   <Button
                     variant="outline"
                     size="sm"
