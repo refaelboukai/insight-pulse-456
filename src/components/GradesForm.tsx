@@ -91,6 +91,7 @@ export default function GradesForm() {
     if (!selectedStudentId) return;
     supabase.from('student_evaluations' as any).select('*')
       .eq('student_id', selectedStudentId)
+      .eq('school_year', selectedYear)
       .order('created_at', { ascending: false })
       .limit(1)
       .then(({ data }: any) => {
