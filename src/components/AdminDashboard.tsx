@@ -58,6 +58,8 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState<ExceptionalEvent[]>([]);
   const [dailyAttendance, setDailyAttendance] = useState<any[]>([]);
   const [supportSessions, setSupportSessions] = useState<any[]>([]);
+  const [dailyReflections, setDailyReflections] = useState<any[]>([]);
+  const [studentInsights, setStudentInsights] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
