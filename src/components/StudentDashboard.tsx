@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StudentScheduleView from '@/components/StudentScheduleView';
+import LearningStyleQuestionnaire from '@/components/LearningStyleQuestionnaire';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays, Brain } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
