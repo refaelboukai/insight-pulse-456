@@ -274,6 +274,7 @@ export default function GradesForm() {
         .select('id')
         .eq('student_id', selectedStudentId)
         .eq('staff_user_id', user!.id)
+        .eq('school_year', selectedYear)
         .order('created_at', { ascending: false })
         .limit(1);
 
