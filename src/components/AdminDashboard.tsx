@@ -1223,6 +1223,7 @@ export default function AdminDashboard() {
                   {renderSupport(viewAssignments, 'mgmt', true)}
                   {renderStudents(viewStudents, 'mgmt', true)}
                   {renderReports(viewReports, 'mgmt')}
+                  {renderStudentReflections(viewStudentIds, 'mgmt')}
 
                   {/* Monthly Report */}
                   <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
