@@ -112,7 +112,7 @@ export default function GradesForm() {
           setEvalSaved(false);
         }
       });
-  }, [selectedStudentId]);
+  }, [selectedStudentId, selectedYear]);
 
   const handleSelectStudent = (id: string) => {
     setSelectedStudentId(id);
