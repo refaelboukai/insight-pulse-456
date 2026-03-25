@@ -189,8 +189,17 @@ export default function StudentDashboard() {
           </button>
         )}
       </div>
+      {/* Year selector */}
+      <div className="flex items-center justify-center gap-2">
+        <span className="text-xs text-muted-foreground">שנת לימודים:</span>
+        <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <SelectTrigger className="h-8 text-xs w-32"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'].map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Reports count */}
       {reports.length > 0 && (
         <div className="text-center py-2 space-y-2">
           <p className="text-sm text-muted-foreground">{reports.length} שיעורים דווחו היום</p>
