@@ -65,7 +65,7 @@ export default function GradesForm() {
   const [enhancing, setEnhancing] = useState(false);
   const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set());
   const [expandedClass, setExpandedClass] = useState<string | null>(null);
-
+  const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
   // Personal note state
   const [personalNote, setPersonalNote] = useState('');
   const [personalNoteEnhanced, setPersonalNoteEnhanced] = useState('');
