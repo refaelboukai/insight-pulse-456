@@ -47,6 +47,7 @@ export default function PedagogyForm() {
   const [goal, setGoal] = useState<Partial<PedagogicalGoal>>({});
   const [existingGoalId, setExistingGoalId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
 
   // Exam schedule
   const [exams, setExams] = useState<ExamEntry[]>([]);
