@@ -146,10 +146,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Now authenticated — look up student by code
+    // Strip any non-alphanumeric characters (backticks, quotes, etc.)
+    const sanitizedCode = code.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
     const { data: student } = await supabase
       .from('students')
       .select('id, first_name, last_name')
-      .eq('student_code', code.toUpperCase().trim())
+      .eq('student_code', sanitizedCode)
       .maybeSingle();
 
     if (!student) {
