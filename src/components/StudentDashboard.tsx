@@ -62,7 +62,7 @@ export default function StudentDashboard() {
     if (!selectedStudentId) return;
     const fetchData = async () => {
       const today = new Date().toISOString().split('T')[0];
-      const [reportsRes, gradesRes, assignRes] = await Promise.all([
+      const [reportsRes, gradesRes, assignRes, pedRes, examRes, subjRes] = await Promise.all([
         supabase.from('lesson_reports').select('*')
           .eq('student_id', selectedStudentId)
           .gte('report_date', `${today}T00:00:00`)
@@ -73,10 +73,25 @@ export default function StudentDashboard() {
         supabase.from('support_assignments').select('*, staff_members(name)')
           .eq('student_id', selectedStudentId)
           .eq('is_active', true),
+        supabase.from('pedagogical_goals').select('*')
+          .eq('student_id', selectedStudentId)
+          .order('month'),
+        supabase.from('exam_schedule').select('*')
+          .eq('student_id', selectedStudentId)
+          .gte('exam_date', today)
+          .order('exam_date'),
+        supabase.from('managed_subjects').select('id, name').eq('is_active', true),
       ]);
       if (reportsRes.data) setReports(reportsRes.data);
       if (gradesRes.data) setGrades(gradesRes.data);
       if (assignRes.data) setAssignments(assignRes.data as any[]);
+      if (pedRes.data) setPedagogyGoals(pedRes.data as any[]);
+      if (examRes.data) setExamSchedule(examRes.data as any[]);
+      if (subjRes.data) {
+        const map: Record<string, string> = {};
+        (subjRes.data as any[]).forEach((s: any) => { map[s.id] = s.name; });
+        setManagedSubjects(map);
+      }
     };
     fetchData();
   }, [selectedStudentId]);
