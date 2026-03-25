@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import StudentScheduleView from '@/components/StudentScheduleView';
@@ -10,7 +11,7 @@ import LearningStyleQuestionnaire from '@/components/LearningStyleQuestionnaire'
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, TrendingUp } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, TrendingUp, Heart, Brain } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 

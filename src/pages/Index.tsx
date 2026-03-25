@@ -64,13 +64,13 @@ export default function Index() {
 
         {isStudent ? (
           <Tabs defaultValue="dashboard" dir="rtl">
-            <TabsList className="grid w-full grid-cols-2 mb-4 h-11 p-1 rounded-xl shadow-soft bg-card">
-              <TabsTrigger value="dashboard" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold">
-                <User className="h-3.5 w-3.5" />
+            <TabsList className="grid w-full grid-cols-2 mb-4 h-12 p-1.5 rounded-2xl shadow-soft bg-card border border-border">
+              <TabsTrigger value="dashboard" className="gap-1.5 rounded-xl text-xs font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-primary/5">
+                <User className="h-4 w-4" />
                 הפורטל שלי
               </TabsTrigger>
-              <TabsTrigger value="reset" className="gap-1.5 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold">
-                <Leaf className="h-3.5 w-3.5" />
+              <TabsTrigger value="reset" className="gap-1.5 rounded-xl text-xs font-bold transition-all duration-200 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-accent/5">
+                <Leaf className="h-4 w-4" />
                 אזור הרגעה
               </TabsTrigger>
             </TabsList>
