@@ -295,7 +295,7 @@ export default function StudentDashboard() {
         </Select>
       </div>
 
-      {/* Learning Style Questionnaire */}
+      {/* Learning Style Questionnaire - only show if not completed */}
       {showLearningStyle && !learningStyleCompleted && (
         <LearningStyleQuestionnaire
           studentId={selectedStudentId}
@@ -305,9 +305,48 @@ export default function StudentDashboard() {
           }}
         />
       )}
-      {learningStyleCompleted && (
-        <LearningStyleQuestionnaire studentId={selectedStudentId} />
-      )}
+
+      {/* Daily Reminders */}
+      <div className="card-styled rounded-2xl p-4 space-y-3">
+        <div className="flex items-center gap-2.5 mb-1">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'hsl(var(--accent) / 0.12)' }}>
+            <CalendarDays className="h-4 w-4 text-accent" />
+          </div>
+          <span className="font-semibold text-sm">תזכורות להיום</span>
+        </div>
+        <label className="flex items-center gap-3 p-3 rounded-xl border bg-card hover:shadow-sm transition-shadow cursor-pointer group">
+          <Checkbox
+            checked={dailyChecks.regulation}
+            onCheckedChange={(checked) => {
+              const updated = { ...dailyChecks, regulation: !!checked };
+              setDailyChecks(updated);
+              const today = new Date().toISOString().split('T')[0];
+              localStorage.setItem(`daily-checks-${today}`, JSON.stringify(updated));
+            }}
+          />
+          <div className="flex items-center gap-2 flex-1">
+            <Heart className="h-4 w-4 text-pink-400" />
+            <span className="text-sm font-medium group-hover:text-foreground transition-colors">תרגול מיומנויות ויסות רגשי</span>
+          </div>
+          {dailyChecks.regulation && <Badge variant="default" className="text-[10px] px-2 py-0 rounded-full bg-primary/80">בוצע ✓</Badge>}
+        </label>
+        <label className="flex items-center gap-3 p-3 rounded-xl border bg-card hover:shadow-sm transition-shadow cursor-pointer group">
+          <Checkbox
+            checked={dailyChecks.brain}
+            onCheckedChange={(checked) => {
+              const updated = { ...dailyChecks, brain: !!checked };
+              setDailyChecks(updated);
+              const today = new Date().toISOString().split('T')[0];
+              localStorage.setItem(`daily-checks-${today}`, JSON.stringify(updated));
+            }}
+          />
+          <div className="flex items-center gap-2 flex-1">
+            <Brain className="h-4 w-4 text-purple-400" />
+            <span className="text-sm font-medium group-hover:text-foreground transition-colors">תרגול אימוני מוח</span>
+          </div>
+          {dailyChecks.brain && <Badge variant="default" className="text-[10px] px-2 py-0 rounded-full bg-primary/80">בוצע ✓</Badge>}
+        </label>
+      </div>
 
       {/* AI Summary Section */}
       {reports.length > 0 && (
