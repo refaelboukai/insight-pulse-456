@@ -36,6 +36,14 @@ type Alert = Database['public']['Tables']['alerts']['Row'];
 type ExceptionalEvent = Database['public']['Tables']['exceptional_events']['Row'];
 
 const CLASS_OPTIONS = ['טלי', 'עדן'];
+const SCHOOL_YEARS = ['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'];
+
+// Map Hebrew school year to Gregorian date range (Sept–Aug)
+const getYearDateRange = (year: string): { from: string; to: string } => {
+  const map: Record<string, number> = { 'תשפ"ו': 2025, 'תשפ"ז': 2026, 'תשפ"ח': 2027, 'תשפ"ט': 2028 };
+  const startYear = map[year] || 2025;
+  return { from: `${startYear}-09-01`, to: `${startYear + 1}-08-31` };
+};
 
 const SUPPORT_LABELS: Record<string, string> = {
   social: 'חברתית', emotional: 'רגשית', academic: 'לימודית', behavioral: 'התנהגותית',
