@@ -262,6 +262,7 @@ export default function GradesForm() {
       const payload: any = {
         student_id: selectedStudentId,
         staff_user_id: user!.id,
+        school_year: selectedYear,
         personal_note: personalNoteEnhanced.trim() || personalNote.trim() || null,
       };
       ALL_TEAM_KEYS.forEach(key => {
