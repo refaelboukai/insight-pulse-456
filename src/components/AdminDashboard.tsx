@@ -160,6 +160,8 @@ export default function AdminDashboard() {
     if (staffRes.data) setStaffMembers(staffRes.data);
     if (assignRes.data) setSupportAssignments(assignRes.data as any[]);
     if (schedulesRes.data) setStudentSchedules(schedulesRes.data as any[]);
+    if (reflectionsRes.data) setDailyReflections(reflectionsRes.data as any[]);
+    if (insightsRes.data) setStudentInsights(insightsRes.data as any[]);
     if (studentsRes.data) loadLongAbsent(studentsRes.data);
     setLoading(false);
   };
