@@ -167,6 +167,7 @@ export default function PedagogyForm() {
       sub_subject: selectedSubSubject || null,
       exam_date: newExamDate,
       exam_description: newExamDesc || null,
+      school_year: selectedYear,
       created_by: user.id,
     });
     if (error) {
