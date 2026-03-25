@@ -97,7 +97,7 @@ export default function StudentDashboard() {
       }
     };
     fetchData();
-  }, [selectedStudentId]);
+  }, [selectedStudentId, selectedYear]);
 
   const generateSummary = useCallback(async () => {
     if (!selectedStudent || reports.length === 0) return;
