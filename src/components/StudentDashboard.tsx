@@ -35,7 +35,7 @@ export default function StudentDashboard() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    reports: true, grades: false, support: false, pedagogy: false, exams: false,
+    reports: true, grades: false, support: false, pedagogy: false, exams: false, learningStyle: false,
   });
   const [pedagogyGoals, setPedagogyGoals] = useState<any[]>([]);
   const [examSchedule, setExamSchedule] = useState<any[]>([]);
@@ -43,6 +43,8 @@ export default function StudentDashboard() {
   const [selectedYear, setSelectedYear] = useState('תשפ"ו');
   const [dailySummary, setDailySummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [showLearningStyle, setShowLearningStyle] = useState(false);
+  const [learningStyleCompleted, setLearningStyleCompleted] = useState(false);
 
   const isLocked = !!lockedStudentId;
 
