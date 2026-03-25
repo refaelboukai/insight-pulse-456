@@ -376,23 +376,34 @@ export default function GradesForm() {
         </div>
       </div>
 
-      {/* Semester selector */}
-      <div className="card-styled rounded-2xl p-3">
-        <label className="text-xs font-semibold mb-2 block">בחר/י סמסטר</label>
-        <div className="grid grid-cols-3 gap-1.5">
-          {SEMESTER_OPTIONS.map(sem => (
-            <button
-              key={sem.value}
-              onClick={() => setSemester(sem.value)}
-              className={`text-xs py-2.5 px-2 rounded-lg border transition-all font-semibold ${
-                semester === sem.value
-                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                  : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
-              }`}
-            >
-              {sem.label}
-            </button>
-          ))}
+      {/* Year + Semester selector */}
+      <div className="card-styled rounded-2xl p-3 space-y-3">
+        <div>
+          <label className="text-xs font-semibold mb-2 block">שנת לימודים</label>
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-xs font-semibold mb-2 block">בחר/י סמסטר</label>
+          <div className="grid grid-cols-3 gap-1.5">
+            {SEMESTER_OPTIONS.map(sem => (
+              <button
+                key={sem.value}
+                onClick={() => setSemester(sem.value)}
+                className={`text-xs py-2.5 px-2 rounded-lg border transition-all font-semibold ${
+                  semester === sem.value
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
+                }`}
+              >
+                {sem.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
