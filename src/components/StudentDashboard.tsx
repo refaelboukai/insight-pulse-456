@@ -33,8 +33,11 @@ export default function StudentDashboard() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    reports: true, grades: false, support: false,
+    reports: true, grades: false, support: false, pedagogy: false, exams: false,
   });
+  const [pedagogyGoals, setPedagogyGoals] = useState<any[]>([]);
+  const [examSchedule, setExamSchedule] = useState<any[]>([]);
+  const [managedSubjects, setManagedSubjects] = useState<Record<string, string>>({});
   const [dailySummary, setDailySummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
 
