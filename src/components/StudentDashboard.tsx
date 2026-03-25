@@ -70,16 +70,18 @@ export default function StudentDashboard() {
           .lte('report_date', `${today}T23:59:59`)
           .order('created_at', { ascending: false }),
         supabase.from('student_grades').select('*')
-          .eq('student_id', selectedStudentId),
+          .eq('student_id', selectedStudentId)
+          .eq('school_year', selectedYear),
         supabase.from('support_assignments').select('*, staff_members(name)')
           .eq('student_id', selectedStudentId)
           .eq('is_active', true),
         supabase.from('pedagogical_goals').select('*')
           .eq('student_id', selectedStudentId)
+          .eq('school_year', selectedYear)
           .order('month'),
         supabase.from('exam_schedule').select('*')
           .eq('student_id', selectedStudentId)
-          .gte('exam_date', today)
+          .eq('school_year', selectedYear)
           .order('exam_date'),
         supabase.from('managed_subjects').select('id, name').eq('is_active', true),
       ]);
