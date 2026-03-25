@@ -121,14 +121,24 @@ export default function AdminDashboard() {
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
   const fetchAll = async () => {
+    const { from: yearFrom, to: yearTo } = getYearDateRange(selectedYear);
     const today = new Date().toISOString().split('T')[0];
     const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes] = await Promise.all([
-      supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
+      supabase.from('lesson_reports').select('*')
+        .gte('report_date', `${yearFrom}T00:00:00`).lte('report_date', `${yearTo}T23:59:59`)
+        .order('created_at', { ascending: false }).limit(1000),
       supabase.from('students').select('*').order('class_name').order('last_name'),
-      supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
-      supabase.from('exceptional_events').select('*').order('created_at', { ascending: false }).limit(50),
-      supabase.from('daily_attendance').select('*').eq('attendance_date', today),
-      supabase.from('support_sessions' as any).select('*').order('created_at', { ascending: false }).limit(100),
+      supabase.from('alerts').select('*')
+        .gte('created_at', `${yearFrom}T00:00:00`).lte('created_at', `${yearTo}T23:59:59`)
+        .order('created_at', { ascending: false }).limit(500),
+      supabase.from('exceptional_events').select('*')
+        .gte('created_at', `${yearFrom}T00:00:00`).lte('created_at', `${yearTo}T23:59:59`)
+        .order('created_at', { ascending: false }).limit(200),
+      supabase.from('daily_attendance').select('*')
+        .gte('attendance_date', yearFrom).lte('attendance_date', yearTo),
+      supabase.from('support_sessions' as any).select('*')
+        .gte('session_date', yearFrom).lte('session_date', yearTo)
+        .order('created_at', { ascending: false }).limit(500),
       supabase.from('staff_members').select('*').order('name'),
       supabase.from('support_assignments').select('*, staff_members(name)').eq('is_active', true),
       supabase.from('student_schedules' as any).select('*'),
