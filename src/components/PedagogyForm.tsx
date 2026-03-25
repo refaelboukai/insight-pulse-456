@@ -75,7 +75,8 @@ export default function PedagogyForm() {
       .select('*')
       .eq('student_id', selectedStudentId)
       .eq('subject_id', selectedSubjectId)
-      .eq('month', selectedMonth);
+      .eq('month', selectedMonth)
+      .eq('school_year', selectedYear);
 
     if (selectedSubSubject) {
       query.eq('sub_subject', selectedSubSubject);
@@ -91,7 +92,7 @@ export default function PedagogyForm() {
       setGoal({});
       setExistingGoalId(null);
     }
-  }, [selectedStudentId, selectedSubjectId, selectedSubSubject, selectedMonth]);
+  }, [selectedStudentId, selectedSubjectId, selectedSubSubject, selectedMonth, selectedYear]);
 
   const loadExams = useCallback(async () => {
     if (!selectedStudentId || !selectedSubjectId) return;
