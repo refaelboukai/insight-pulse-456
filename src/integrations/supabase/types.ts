@@ -325,6 +325,7 @@ export type Database = {
           exam_date: string
           exam_description: string | null
           id: string
+          school_year: string
           student_id: string
           sub_subject: string | null
           subject_id: string
@@ -335,6 +336,7 @@ export type Database = {
           exam_date: string
           exam_description?: string | null
           id?: string
+          school_year?: string
           student_id: string
           sub_subject?: string | null
           subject_id: string
@@ -345,6 +347,7 @@ export type Database = {
           exam_date?: string
           exam_description?: string | null
           id?: string
+          school_year?: string
           student_id?: string
           sub_subject?: string | null
           subject_id?: string
@@ -501,6 +504,7 @@ export type Database = {
           learning_style: string | null
           measurement_methods: string | null
           month: string
+          school_year: string
           staff_user_id: string
           student_id: string
           sub_subject: string | null
@@ -519,6 +523,7 @@ export type Database = {
           learning_style?: string | null
           measurement_methods?: string | null
           month: string
+          school_year?: string
           staff_user_id: string
           student_id: string
           sub_subject?: string | null
@@ -537,6 +542,7 @@ export type Database = {
           learning_style?: string | null
           measurement_methods?: string | null
           month?: string
+          school_year?: string
           staff_user_id?: string
           student_id?: string
           sub_subject?: string | null

@@ -27,6 +27,7 @@ type ExamEntry = {
 };
 
 const CLASS_OPTIONS = ['טלי', 'עדן'];
+const SCHOOL_YEARS = ['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'];
 const MONTHS = [
   'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר',
   'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
@@ -46,6 +47,7 @@ export default function PedagogyForm() {
   const [goal, setGoal] = useState<Partial<PedagogicalGoal>>({});
   const [existingGoalId, setExistingGoalId] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
+  const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
 
   // Exam schedule
   const [exams, setExams] = useState<ExamEntry[]>([]);
@@ -73,7 +75,8 @@ export default function PedagogyForm() {
       .select('*')
       .eq('student_id', selectedStudentId)
       .eq('subject_id', selectedSubjectId)
-      .eq('month', selectedMonth);
+      .eq('month', selectedMonth)
+      .eq('school_year', selectedYear);
 
     if (selectedSubSubject) {
       query.eq('sub_subject', selectedSubSubject);
@@ -89,7 +92,7 @@ export default function PedagogyForm() {
       setGoal({});
       setExistingGoalId(null);
     }
-  }, [selectedStudentId, selectedSubjectId, selectedSubSubject, selectedMonth]);
+  }, [selectedStudentId, selectedSubjectId, selectedSubSubject, selectedMonth, selectedYear]);
 
   const loadExams = useCallback(async () => {
     if (!selectedStudentId || !selectedSubjectId) return;
@@ -97,6 +100,7 @@ export default function PedagogyForm() {
       .select('*')
       .eq('student_id', selectedStudentId)
       .eq('subject_id', selectedSubjectId)
+      .eq('school_year', selectedYear)
       .order('exam_date');
 
     if (selectedSubSubject) {
@@ -107,7 +111,7 @@ export default function PedagogyForm() {
 
     const { data } = await query;
     if (data) setExams(data as ExamEntry[]);
-  }, [selectedStudentId, selectedSubjectId, selectedSubSubject]);
+  }, [selectedStudentId, selectedSubjectId, selectedSubSubject, selectedYear]);
 
   useEffect(() => {
     loadGoal();
@@ -125,6 +129,7 @@ export default function PedagogyForm() {
       subject_id: selectedSubjectId,
       sub_subject: selectedSubSubject || null,
       month: selectedMonth,
+      school_year: selectedYear,
       learning_style: goal.learning_style || null,
       current_status: goal.current_status || null,
       learning_goals: goal.learning_goals || null,
@@ -162,6 +167,7 @@ export default function PedagogyForm() {
       sub_subject: selectedSubSubject || null,
       exam_date: newExamDate,
       exam_description: newExamDesc || null,
+      school_year: selectedYear,
       created_by: user.id,
     });
     if (error) {
@@ -196,8 +202,17 @@ export default function PedagogyForm() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Student selection */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Year + Student selection */}
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <Label className="text-xs mb-1 block">שנת לימודים</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <Label className="text-xs mb-1 block">כיתה</Label>
             <Select value={selectedClass || ''} onValueChange={v => { setSelectedClass(v || null); setSelectedStudentId(''); }}>
