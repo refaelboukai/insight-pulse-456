@@ -100,6 +100,7 @@ export default function PedagogyForm() {
       .select('*')
       .eq('student_id', selectedStudentId)
       .eq('subject_id', selectedSubjectId)
+      .eq('school_year', selectedYear)
       .order('exam_date');
 
     if (selectedSubSubject) {
@@ -110,7 +111,7 @@ export default function PedagogyForm() {
 
     const { data } = await query;
     if (data) setExams(data as ExamEntry[]);
-  }, [selectedStudentId, selectedSubjectId, selectedSubSubject]);
+  }, [selectedStudentId, selectedSubjectId, selectedSubSubject, selectedYear]);
 
   useEffect(() => {
     loadGoal();
