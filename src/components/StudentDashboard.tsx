@@ -4,6 +4,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Textarea } from '@/components/ui/textarea';
+import { Slider } from '@/components/ui/slider';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
 import StudentScheduleView from '@/components/StudentScheduleView';
@@ -11,7 +13,7 @@ import LearningStyleQuestionnaire from '@/components/LearningStyleQuestionnaire'
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, TrendingUp, Heart, Brain } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
@@ -63,6 +65,12 @@ export default function StudentDashboard() {
     const saved = localStorage.getItem(`daily-checks-${today}`);
     return saved ? JSON.parse(saved) : { regulation: false, brain: false };
   });
+  const [insightText, setInsightText] = useState('');
+  const [insightSaving, setInsightSaving] = useState(false);
+  const [insightSaved, setInsightSaved] = useState(false);
+  const [dailyReflection, setDailyReflection] = useState({ class_presence: 3, behavior: 3, social_interaction: 3, academic_tasks: 3 });
+  const [reflectionSaving, setReflectionSaving] = useState(false);
+  const [reflectionSaved, setReflectionSaved] = useState(false);
 
   const isLocked = !!lockedStudentId;
 
@@ -134,6 +142,25 @@ export default function StudentDashboard() {
         const map: Record<string, string> = {};
         (subjRes.data as any[]).forEach((s: any) => { map[s.id] = s.name; });
         setManagedSubjects(map);
+      }
+      // Load today's reflection
+      const todayStart = `${today}T00:00:00`;
+      const todayEnd = `${today}T23:59:59`;
+      const reflRes = await supabase.from('daily_reflections').select('*')
+        .eq('student_id', selectedStudentId)
+        .gte('created_at', todayStart).lte('created_at', todayEnd)
+        .maybeSingle();
+      if (reflRes.data) {
+        setDailyReflection({
+          class_presence: reflRes.data.class_presence,
+          behavior: reflRes.data.behavior,
+          social_interaction: reflRes.data.social_interaction,
+          academic_tasks: reflRes.data.academic_tasks,
+        });
+        setReflectionSaved(true);
+      } else {
+        setDailyReflection({ class_presence: 3, behavior: 3, social_interaction: 3, academic_tasks: 3 });
+        setReflectionSaved(false);
       }
     };
     fetchData();
@@ -259,30 +286,6 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="card-styled rounded-xl p-3 text-center">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-1.5">
-            <FileText className="h-4 w-4 text-primary" />
-          </div>
-          <p className="text-lg font-bold text-foreground">{totalReports}</p>
-          <p className="text-[10px] text-muted-foreground">דיווחים היום</p>
-        </div>
-        <div className="card-styled rounded-xl p-3 text-center">
-          <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center mx-auto mb-1.5" style={{ background: 'hsl(var(--success) / 0.1)' }}>
-            <TrendingUp className="h-4 w-4" style={{ color: 'hsl(var(--success))' }} />
-          </div>
-          <p className="text-lg font-bold text-foreground">{positiveReports}</p>
-          <p className="text-[10px] text-muted-foreground">חיוביים</p>
-        </div>
-        <div className="card-styled rounded-xl p-3 text-center">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5" style={{ background: 'hsl(var(--accent) / 0.1)' }}>
-            <GraduationCap className="h-4 w-4 text-accent" />
-          </div>
-          <p className="text-lg font-bold text-foreground">{grades.length}</p>
-          <p className="text-[10px] text-muted-foreground">ציונים</p>
-        </div>
-      </div>
 
       {/* Year selector */}
       <div className="flex items-center justify-center gap-2">
@@ -325,7 +328,7 @@ export default function StudentDashboard() {
             }}
           />
           <div className="flex items-center gap-2 flex-1">
-            <Heart className="h-4 w-4 text-pink-400" />
+            <Heart className="h-4 w-4 text-destructive/60" />
             <span className="text-sm font-medium group-hover:text-foreground transition-colors">תרגול מיומנויות ויסות רגשי</span>
           </div>
           {dailyChecks.regulation && <Badge variant="default" className="text-[10px] px-2 py-0 rounded-full bg-primary/80">בוצע ✓</Badge>}
@@ -341,11 +344,121 @@ export default function StudentDashboard() {
             }}
           />
           <div className="flex items-center gap-2 flex-1">
-            <Brain className="h-4 w-4 text-purple-400" />
+            <Brain className="h-4 w-4 text-primary/60" />
             <span className="text-sm font-medium group-hover:text-foreground transition-colors">תרגול אימוני מוח</span>
           </div>
           {dailyChecks.brain && <Badge variant="default" className="text-[10px] px-2 py-0 rounded-full bg-primary/80">בוצע ✓</Badge>}
         </label>
+        <a
+          href="#"
+          onClick={(e) => {
+            e.preventDefault();
+            // Switch to the reset/calm zone tab
+            const resetTab = document.querySelector('[data-value="reset"]') as HTMLButtonElement | null;
+            if (resetTab) resetTab.click();
+          }}
+          className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-accent/40 bg-accent/5 hover:bg-accent/10 transition-colors cursor-pointer group"
+        >
+          <div className="flex items-center gap-2 flex-1">
+            <Leaf className="h-4 w-4 text-accent" />
+            <span className="text-sm font-medium text-accent group-hover:text-accent/80 transition-colors">מעבר לאזור ההרגעה 🧘</span>
+          </div>
+        </a>
+      </div>
+
+      {/* היום שלי - Daily Reflection */}
+      <div className="card-styled rounded-2xl p-4 space-y-4">
+        <div className="flex items-center gap-2.5 mb-1">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
+            <Smile className="h-4 w-4 text-primary" />
+          </div>
+          <span className="font-semibold text-sm">היום שלי</span>
+          {reflectionSaved && <Badge variant="secondary" className="text-[10px] px-2 py-0 rounded-full mr-auto">נשמר ✓</Badge>}
+        </div>
+        {[
+          { key: 'class_presence', label: 'נוכחות בכיתה', emoji: '🏫' },
+          { key: 'behavior', label: 'התנהגות', emoji: '⭐' },
+          { key: 'social_interaction', label: 'אינטראקציה חברתית', emoji: '🤝' },
+          { key: 'academic_tasks', label: 'משימות לימודיות', emoji: '📚' },
+        ].map(item => (
+          <div key={item.key} className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium">{item.emoji} {item.label}</span>
+              <span className="text-xs text-muted-foreground">{dailyReflection[item.key as keyof typeof dailyReflection]}/5</span>
+            </div>
+            <Slider
+              value={[dailyReflection[item.key as keyof typeof dailyReflection]]}
+              onValueChange={([v]) => setDailyReflection(prev => ({ ...prev, [item.key]: v }))}
+              min={1}
+              max={5}
+              step={1}
+              className="w-full"
+              disabled={reflectionSaved}
+            />
+          </div>
+        ))}
+        {!reflectionSaved && (
+          <Button
+            size="sm"
+            className="w-full btn-primary-gradient text-primary-foreground rounded-lg h-9"
+            disabled={reflectionSaving}
+            onClick={async () => {
+              if (!selectedStudentId || !selectedStudent) return;
+              setReflectionSaving(true);
+              const { error } = await supabase.from('daily_reflections').insert({
+                student_id: selectedStudentId,
+                student_name: `${selectedStudent.first_name} ${selectedStudent.last_name}`,
+                ...dailyReflection,
+              });
+              setReflectionSaving(false);
+              if (error) { toast.error('שגיאה בשמירה'); return; }
+              setReflectionSaved(true);
+              toast.success('היום שלי נשמר בהצלחה!');
+            }}
+          >
+            {reflectionSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'שמור את היום שלי'}
+          </Button>
+        )}
+      </div>
+
+      {/* Student Insights - Free text */}
+      <div className="card-styled rounded-2xl p-4 space-y-3">
+        <div className="flex items-center gap-2.5 mb-1">
+          <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center">
+            <PenLine className="h-4 w-4 text-accent" />
+          </div>
+          <span className="font-semibold text-sm">תובנות שלי על היום</span>
+        </div>
+        <Textarea
+          value={insightText}
+          onChange={(e) => setInsightText(e.target.value)}
+          placeholder="כתוב/י כאן מה עבר עליך היום, מה למדת על עצמך, מה הרגשת..."
+          className="min-h-[100px] rounded-xl border-muted text-sm resize-none"
+          disabled={insightSaved}
+        />
+        {!insightSaved ? (
+          <Button
+            size="sm"
+            className="w-full btn-primary-gradient text-primary-foreground rounded-lg h-9"
+            disabled={insightSaving || !insightText.trim()}
+            onClick={async () => {
+              if (!selectedStudentId || !selectedStudent) return;
+              setInsightSaving(true);
+              const { error } = await (supabase.from as any)('student_insights').insert({
+                student_id: selectedStudentId,
+                content: insightText.trim(),
+              });
+              setInsightSaving(false);
+              if (error) { toast.error('שגיאה בשמירה'); return; }
+              setInsightSaved(true);
+              toast.success('התובנה נשמרה!');
+            }}
+          >
+            {insightSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'שמור תובנה'}
+          </Button>
+        ) : (
+          <p className="text-xs text-center text-muted-foreground">✓ התובנה נשמרה להיום</p>
+        )}
       </div>
 
       {/* AI Summary Section */}

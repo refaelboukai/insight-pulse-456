@@ -64,13 +64,13 @@ export default function Index() {
 
         {isStudent ? (
           <Tabs defaultValue="dashboard" dir="rtl">
-            <TabsList className="grid w-full grid-cols-2 mb-4 h-12 p-1.5 rounded-2xl shadow-soft bg-card border border-border">
-              <TabsTrigger value="dashboard" className="gap-1.5 rounded-xl text-xs font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-primary/5">
-                <User className="h-4 w-4" />
+            <TabsList className="grid w-full grid-cols-2 mb-4 h-14 p-2 rounded-2xl shadow-soft bg-card border border-border">
+              <TabsTrigger value="dashboard" className="gap-2 rounded-xl text-sm font-bold transition-all duration-200 h-10 data-[state=active]:bg-[hsl(160,45%,45%)] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-[hsl(160,45%,45%,0.08)]">
+                <User className="h-5 w-5" />
                 הפורטל שלי
               </TabsTrigger>
-              <TabsTrigger value="reset" className="gap-1.5 rounded-xl text-xs font-bold transition-all duration-200 data-[state=active]:bg-accent data-[state=active]:text-accent-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-accent/5">
-                <Leaf className="h-4 w-4" />
+              <TabsTrigger value="reset" className="gap-2 rounded-xl text-sm font-bold transition-all duration-200 h-10 data-[state=active]:bg-[hsl(30,85%,60%)] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-[hsl(30,85%,60%,0.08)]">
+                <Leaf className="h-5 w-5" />
                 אזור הרגעה
               </TabsTrigger>
             </TabsList>
