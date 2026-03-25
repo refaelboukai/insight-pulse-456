@@ -1377,6 +1377,7 @@ export default function AdminDashboard() {
                   {renderSupport(viewAssignments, 'eden', true, 'עדן')}
                   {renderStudents(viewStudents, 'eden', true)}
                   {renderReports(viewReports, 'eden')}
+                  {renderStudentReflections(viewStudentIds, 'eden')}
                   <Button
                     variant="outline"
                     size="sm"
