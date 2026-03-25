@@ -234,6 +234,7 @@ export default function GradesForm() {
       staff_user_id: user!.id,
       subject,
       semester,
+      school_year: selectedYear,
       grade: totalGrade,
       sub_grades: subGradesData.length > 0 ? subGradesData : null,
       verbal_evaluation: verbalEvaluation.trim() || null,
