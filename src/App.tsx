@@ -58,18 +58,21 @@ function AuthGate() {
         <Route path="/reset" element={<ResetHome />} />
         <Route path="/reset/home" element={<ResetHome />} />
         <Route path="/reset/quick-check" element={<QuickCheck />} />
-        <Route path="/reset/intensity" element={<IntensityScreen />} />
-        <Route path="/reset/skill-recommendation" element={<SkillRecommendation />} />
+        <Route path="/reset/intensity/:stateId" element={<IntensityScreen />} />
+        <Route path="/reset/recommendation/:stateId/:intensity" element={<SkillRecommendation />} />
         <Route path="/reset/breathing" element={<BreathingExercise />} />
         <Route path="/reset/grounding" element={<GroundingExercise />} />
-        <Route path="/reset/practice" element={<PracticeMode />} />
-        <Route path="/reset/writing" element={<WritingMode />} />
+        <Route path="/reset/practice/:skillId/:stateId/:intensity" element={<PracticeMode />} />
+        <Route path="/reset/writing/:skillId" element={<WritingMode />} />
+        <Route path="/reset/writing/:skillId/:stateId/:intensity" element={<WritingMode />} />
         <Route path="/reset/post-practice" element={<PostPractice />} />
-        <Route path="/reset/calm" element={<CalmMode />} />
-        <Route path="/reset/positive" element={<PositiveFlow />} />
+        <Route path="/reset/calm-mode" element={<CalmMode />} />
+        <Route path="/reset/positive-flow" element={<PositiveFlow />} />
+        <Route path="/reset/skills" element={<SkillsLibrary />} />
         <Route path="/reset/skills-library" element={<SkillsLibrary />} />
         <Route path="/reset/contact" element={<ContactAdult />} />
         <Route path="/reset/history" element={<ToolsHistory />} />
+        <Route path="/reset/daily-reflection" element={<DailyReflection />} />
         <Route path="/reset/reflection" element={<DailyReflection />} />
         <Route path="/reset/brain-training" element={<BrainTraining />} />
         <Route path="/reset/reminders" element={<SelfReminders />} />
