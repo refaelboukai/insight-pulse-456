@@ -988,9 +988,9 @@ export default function AdminDashboard() {
   };
 
   // Render student reflections & insights
-  const renderStudentReflections = (viewStudentIds: string[], sectionPrefix: string) => {
-    const viewReflections = dailyReflections.filter(r => r.student_id && viewStudentIds.includes(r.student_id));
-    const viewInsights = studentInsights.filter(i => viewStudentIds.includes(i.student_id));
+  const renderStudentReflections = (viewStudentIds: Set<string>, sectionPrefix: string) => {
+    const viewReflections = dailyReflections.filter(r => r.student_id && viewStudentIds.has(r.student_id));
+    const viewInsights = studentInsights.filter(i => viewStudentIds.has(i.student_id));
     const totalCount = viewReflections.length + viewInsights.length;
     if (totalCount === 0) return null;
 
