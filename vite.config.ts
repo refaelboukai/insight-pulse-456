@@ -22,11 +22,10 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
         navigateFallbackDenylist: [/^\/~oauth/],
         // Clean old caches on update
-      cleanupOutdatedCaches: true,
-        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
-      // Skip waiting so new SW activates immediately
-      skipWaiting: true,
-      clientsClaim: true,
+        cleanupOutdatedCaches: true,
+        // Skip waiting so new SW activates immediately
+        skipWaiting: true,
+        clientsClaim: true,
       },
       manifest: {
         name: "MAROM - מרום",

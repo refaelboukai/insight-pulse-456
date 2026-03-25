@@ -4,30 +4,9 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/hooks/useAuth";
-import { ResetAppProvider } from "@/reset-zone/contexts/AppContext";
 import Index from "./pages/Index";
 import Login from "./pages/Login";
 import NotFound from "./pages/NotFound";
-
-// Reset Zone pages
-import ResetHome from "@/reset-zone/pages/Home";
-import QuickCheck from "@/reset-zone/pages/QuickCheck";
-import IntensityScreen from "@/reset-zone/pages/IntensityScreen";
-import SkillRecommendation from "@/reset-zone/pages/SkillRecommendation";
-import BreathingExercise from "@/reset-zone/pages/BreathingExercise";
-import GroundingExercise from "@/reset-zone/pages/GroundingExercise";
-import PracticeMode from "@/reset-zone/pages/PracticeMode";
-import WritingMode from "@/reset-zone/pages/WritingMode";
-import PostPractice from "@/reset-zone/pages/PostPractice";
-import CalmMode from "@/reset-zone/pages/CalmMode";
-import PositiveFlow from "@/reset-zone/pages/PositiveFlow";
-import SkillsLibrary from "@/reset-zone/pages/SkillsLibrary";
-import ContactAdult from "@/reset-zone/pages/ContactAdult";
-import ToolsHistory from "@/reset-zone/pages/ToolsHistory";
-import DailyReflection from "@/reset-zone/pages/DailyReflection";
-import BrainTraining from "@/reset-zone/pages/BrainTraining";
-import SelfReminders from "@/reset-zone/pages/SelfReminders";
-import InfoTips from "@/reset-zone/pages/InfoTips";
 
 const queryClient = new QueryClient();
 
@@ -50,37 +29,10 @@ function AuthGate() {
   if (!user) return <Login />;
 
   return (
-    <ResetAppProvider>
-      <Routes>
-        <Route path="/" element={<Index />} />
-        
-        {/* Reset Zone routes */}
-        <Route path="/reset" element={<ResetHome />} />
-        <Route path="/reset/home" element={<ResetHome />} />
-        <Route path="/reset/quick-check" element={<QuickCheck />} />
-        <Route path="/reset/intensity/:stateId" element={<IntensityScreen />} />
-        <Route path="/reset/recommendation/:stateId/:intensity" element={<SkillRecommendation />} />
-        <Route path="/reset/breathing" element={<BreathingExercise />} />
-        <Route path="/reset/grounding" element={<GroundingExercise />} />
-        <Route path="/reset/practice/:skillId/:stateId/:intensity" element={<PracticeMode />} />
-        <Route path="/reset/writing/:skillId" element={<WritingMode />} />
-        <Route path="/reset/writing/:skillId/:stateId/:intensity" element={<WritingMode />} />
-        <Route path="/reset/post-practice" element={<PostPractice />} />
-        <Route path="/reset/calm-mode" element={<CalmMode />} />
-        <Route path="/reset/positive-flow" element={<PositiveFlow />} />
-        <Route path="/reset/skills" element={<SkillsLibrary />} />
-        <Route path="/reset/skills-library" element={<SkillsLibrary />} />
-        <Route path="/reset/contact" element={<ContactAdult />} />
-        <Route path="/reset/history" element={<ToolsHistory />} />
-        <Route path="/reset/daily-reflection" element={<DailyReflection />} />
-        <Route path="/reset/reflection" element={<DailyReflection />} />
-        <Route path="/reset/brain-training" element={<BrainTraining />} />
-        <Route path="/reset/reminders" element={<SelfReminders />} />
-        <Route path="/reset/info" element={<InfoTips />} />
-        
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </ResetAppProvider>
+    <Routes>
+      <Route path="/" element={<Index />} />
+      <Route path="*" element={<NotFound />} />
+    </Routes>
   );
 }
 
