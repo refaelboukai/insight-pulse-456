@@ -58,6 +58,8 @@ export default function AdminDashboard() {
   const [events, setEvents] = useState<ExceptionalEvent[]>([]);
   const [dailyAttendance, setDailyAttendance] = useState<any[]>([]);
   const [supportSessions, setSupportSessions] = useState<any[]>([]);
+  const [dailyReflections, setDailyReflections] = useState<any[]>([]);
+  const [studentInsights, setStudentInsights] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
@@ -123,7 +125,7 @@ export default function AdminDashboard() {
   const fetchAll = async () => {
     const { from: yearFrom, to: yearTo } = getYearDateRange(selectedYear);
     const today = new Date().toISOString().split('T')[0];
-    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes] = await Promise.all([
+    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes, reflectionsRes, insightsRes] = await Promise.all([
       supabase.from('lesson_reports').select('*')
         .gte('report_date', `${yearFrom}T00:00:00`).lte('report_date', `${yearTo}T23:59:59`)
         .order('created_at', { ascending: false }).limit(1000),
@@ -142,6 +144,12 @@ export default function AdminDashboard() {
       supabase.from('staff_members').select('*').order('name'),
       supabase.from('support_assignments').select('*, staff_members(name)').eq('is_active', true),
       supabase.from('student_schedules' as any).select('*'),
+      supabase.from('daily_reflections').select('*')
+        .gte('created_at', `${yearFrom}T00:00:00`).lte('created_at', `${yearTo}T23:59:59`)
+        .order('created_at', { ascending: false }).limit(500),
+      supabase.from('student_insights').select('*')
+        .gte('created_at', `${yearFrom}T00:00:00`).lte('created_at', `${yearTo}T23:59:59`)
+        .order('created_at', { ascending: false }).limit(500),
     ]);
     if (reportsRes.data) setReports(reportsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
@@ -152,6 +160,8 @@ export default function AdminDashboard() {
     if (staffRes.data) setStaffMembers(staffRes.data);
     if (assignRes.data) setSupportAssignments(assignRes.data as any[]);
     if (schedulesRes.data) setStudentSchedules(schedulesRes.data as any[]);
+    if (reflectionsRes.data) setDailyReflections(reflectionsRes.data as any[]);
+    if (insightsRes.data) setStudentInsights(insightsRes.data as any[]);
     if (studentsRes.data) loadLongAbsent(studentsRes.data);
     setLoading(false);
   };
@@ -970,7 +980,76 @@ export default function AdminDashboard() {
     );
   };
 
-  // Render long-absent students tracking
+  const REFLECTION_LABELS: Record<string, string> = {
+    class_presence: 'נוכחות בשיעור',
+    behavior: 'התנהגות',
+    social_interaction: 'אינטראקציה חברתית',
+    academic_tasks: 'משימות לימודיות',
+  };
+
+  // Render student reflections & insights
+  const renderStudentReflections = (viewStudentIds: Set<string>, sectionPrefix: string) => {
+    const viewReflections = dailyReflections.filter(r => r.student_id && viewStudentIds.has(r.student_id));
+    const viewInsights = studentInsights.filter(i => viewStudentIds.has(i.student_id));
+    const totalCount = viewReflections.length + viewInsights.length;
+    if (totalCount === 0) return null;
+
+    const getStudentName = (studentId: string) => {
+      const s = students.find(st => st.id === studentId);
+      return s ? `${s.first_name} ${s.last_name}` : 'לא ידוע';
+    };
+
+    return (
+      <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+        <SectionHeader title="תובנות ודיווחי היום שלי" icon={MessageSquare} count={totalCount} sectionKey={`${sectionPrefix}_reflections`} />
+        {expandedSections[`${sectionPrefix}_reflections`] && (
+          <div className="px-3 pb-3 space-y-3">
+            {viewReflections.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">דיווחי ״היום שלי״ (אחרונים)</p>
+                <div className="space-y-2">
+                  {viewReflections.slice(0, 10).map((r: any) => (
+                    <div key={r.id} className="bg-muted/40 rounded-xl p-3 space-y-1">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium">{r.student_name || getStudentName(r.student_id)}</span>
+                        <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString('he-IL')}</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-1.5">
+                        {Object.entries(REFLECTION_LABELS).map(([key, label]) => (
+                          <div key={key} className="flex items-center justify-between bg-background/60 rounded-lg px-2 py-1">
+                            <span className="text-xs text-muted-foreground">{label}</span>
+                            <span className="text-xs font-bold">{r[key]}/5</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {viewInsights.length > 0 && (
+              <div>
+                <p className="text-xs font-semibold text-muted-foreground mb-2">תובנות תלמידים</p>
+                <div className="space-y-2">
+                  {viewInsights.slice(0, 15).map((insight: any) => (
+                    <div key={insight.id} className="bg-muted/40 rounded-xl p-3">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-medium">{getStudentName(insight.student_id)}</span>
+                        <span className="text-xs text-muted-foreground">{new Date(insight.created_at).toLocaleDateString('he-IL')}</span>
+                      </div>
+                      <p className="text-sm text-foreground/80">{insight.content}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    );
+  };
+
+
   const renderLongAbsent = (classFilter: string | null, sectionPrefix: string) => {
     const filtered = classFilter
       ? longAbsentStudents.filter(la => la.student.class_name === classFilter)
@@ -1144,6 +1223,7 @@ export default function AdminDashboard() {
                   {renderSupport(viewAssignments, 'mgmt', true)}
                   {renderStudents(viewStudents, 'mgmt', true)}
                   {renderReports(viewReports, 'mgmt')}
+                  {renderStudentReflections(viewStudentIds, 'mgmt')}
 
                   {/* Monthly Report */}
                   <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
@@ -1242,6 +1322,7 @@ export default function AdminDashboard() {
                   {renderSupport(viewAssignments, 'tali', true, 'טלי')}
                   {renderStudents(viewStudents, 'tali', true)}
                   {renderReports(viewReports, 'tali')}
+                  {renderStudentReflections(viewStudentIds, 'tali')}
                   <Button
                     variant="outline"
                     size="sm"
@@ -1296,6 +1377,7 @@ export default function AdminDashboard() {
                   {renderSupport(viewAssignments, 'eden', true, 'עדן')}
                   {renderStudents(viewStudents, 'eden', true)}
                   {renderReports(viewReports, 'eden')}
+                  {renderStudentReflections(viewStudentIds, 'eden')}
                   <Button
                     variant="outline"
                     size="sm"
