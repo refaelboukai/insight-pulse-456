@@ -61,6 +61,25 @@ export default function StudentDashboard() {
     }
   }, [lockedStudentId]);
 
+  // Check learning style completion
+  useEffect(() => {
+    if (!selectedStudentId) return;
+    supabase
+      .from('learning_style_profiles')
+      .select('is_completed, is_visible')
+      .eq('student_id', selectedStudentId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.is_completed) {
+          setLearningStyleCompleted(true);
+          setShowLearningStyle(false);
+        } else {
+          setLearningStyleCompleted(false);
+          setShowLearningStyle(true);
+        }
+      });
+  }, [selectedStudentId]);
+
   const selectedStudent = students.find(s => s.id === selectedStudentId);
 
   useEffect(() => {
