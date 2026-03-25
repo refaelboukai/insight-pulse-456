@@ -36,6 +36,14 @@ type Alert = Database['public']['Tables']['alerts']['Row'];
 type ExceptionalEvent = Database['public']['Tables']['exceptional_events']['Row'];
 
 const CLASS_OPTIONS = ['טלי', 'עדן'];
+const SCHOOL_YEARS = ['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'];
+
+// Map Hebrew school year to Gregorian date range (Sept–Aug)
+const getYearDateRange = (year: string): { from: string; to: string } => {
+  const map: Record<string, number> = { 'תשפ"ו': 2025, 'תשפ"ז': 2026, 'תשפ"ח': 2027, 'תשפ"ט': 2028 };
+  const startYear = map[year] || 2025;
+  return { from: `${startYear}-09-01`, to: `${startYear + 1}-08-31` };
+};
 
 const SUPPORT_LABELS: Record<string, string> = {
   social: 'חברתית', emotional: 'רגשית', academic: 'לימודית', behavioral: 'התנהגותית',
@@ -52,6 +60,7 @@ export default function AdminDashboard() {
   const [supportSessions, setSupportSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
 
   // Staff management
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
@@ -112,14 +121,24 @@ export default function AdminDashboard() {
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
   const fetchAll = async () => {
+    const { from: yearFrom, to: yearTo } = getYearDateRange(selectedYear);
     const today = new Date().toISOString().split('T')[0];
     const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes] = await Promise.all([
-      supabase.from('lesson_reports').select('*').order('created_at', { ascending: false }).limit(500),
+      supabase.from('lesson_reports').select('*')
+        .gte('report_date', `${yearFrom}T00:00:00`).lte('report_date', `${yearTo}T23:59:59`)
+        .order('created_at', { ascending: false }).limit(1000),
       supabase.from('students').select('*').order('class_name').order('last_name'),
-      supabase.from('alerts').select('*').order('created_at', { ascending: false }).limit(100),
-      supabase.from('exceptional_events').select('*').order('created_at', { ascending: false }).limit(50),
-      supabase.from('daily_attendance').select('*').eq('attendance_date', today),
-      supabase.from('support_sessions' as any).select('*').order('created_at', { ascending: false }).limit(100),
+      supabase.from('alerts').select('*')
+        .gte('created_at', `${yearFrom}T00:00:00`).lte('created_at', `${yearTo}T23:59:59`)
+        .order('created_at', { ascending: false }).limit(500),
+      supabase.from('exceptional_events').select('*')
+        .gte('created_at', `${yearFrom}T00:00:00`).lte('created_at', `${yearTo}T23:59:59`)
+        .order('created_at', { ascending: false }).limit(200),
+      supabase.from('daily_attendance').select('*')
+        .gte('attendance_date', yearFrom).lte('attendance_date', yearTo),
+      supabase.from('support_sessions' as any).select('*')
+        .gte('session_date', yearFrom).lte('session_date', yearTo)
+        .order('created_at', { ascending: false }).limit(500),
       supabase.from('staff_members').select('*').order('name'),
       supabase.from('support_assignments').select('*, staff_members(name)').eq('is_active', true),
       supabase.from('student_schedules' as any).select('*'),
@@ -191,7 +210,7 @@ export default function AdminDashboard() {
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchAll(); }, [selectedYear]);
 
   // Staff management
   const handleAddStaff = async () => {
@@ -978,8 +997,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
-      {/* Small reset button top-left */}
-      <div className="flex justify-start">
+      {/* Year selector + reset */}
+      <div className="flex items-center justify-between">
         <Button
           variant="ghost"
           size="sm"
@@ -990,6 +1009,15 @@ export default function AdminDashboard() {
           <Trash2 className="h-3 w-3" />
           {resetting ? 'מאפס...' : 'איפוס מערכת'}
         </Button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">שנת לימודים:</span>
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="h-8 text-xs w-28"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       {/* Top-level Accordion for views */}
       <Accordion type="multiple" dir="rtl" className="space-y-3">
