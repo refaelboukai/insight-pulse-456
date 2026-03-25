@@ -202,8 +202,17 @@ export default function PedagogyForm() {
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Student selection */}
-        <div className="grid grid-cols-2 gap-3">
+        {/* Year + Student selection */}
+        <div className="grid grid-cols-3 gap-3">
+          <div>
+            <Label className="text-xs mb-1 block">שנת לימודים</Label>
+            <Select value={selectedYear} onValueChange={setSelectedYear}>
+              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+              <SelectContent>
+                {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
           <div>
             <Label className="text-xs mb-1 block">כיתה</Label>
             <Select value={selectedClass || ''} onValueChange={v => { setSelectedClass(v || null); setSelectedStudentId(''); }}>
