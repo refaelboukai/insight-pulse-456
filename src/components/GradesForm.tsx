@@ -311,6 +311,14 @@ export default function GradesForm() {
           <h3 className="font-bold text-sm">ציונים והערכות</h3>
           <p className="text-xs text-muted-foreground">בחר/י תלמיד/ה להזנת ציון והערכה</p>
         </div>
+        <div className="flex justify-center">
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="h-9 text-sm w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
 
         {CLASS_OPTIONS.map(cls => {
           const classStudents = students.filter(s => s.class_name === cls);
