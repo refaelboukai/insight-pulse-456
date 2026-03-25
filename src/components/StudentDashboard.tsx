@@ -143,6 +143,25 @@ export default function StudentDashboard() {
         (subjRes.data as any[]).forEach((s: any) => { map[s.id] = s.name; });
         setManagedSubjects(map);
       }
+      // Load today's reflection
+      const todayStart = `${today}T00:00:00`;
+      const todayEnd = `${today}T23:59:59`;
+      const reflRes = await supabase.from('daily_reflections').select('*')
+        .eq('student_id', selectedStudentId)
+        .gte('created_at', todayStart).lte('created_at', todayEnd)
+        .maybeSingle();
+      if (reflRes.data) {
+        setDailyReflection({
+          class_presence: reflRes.data.class_presence,
+          behavior: reflRes.data.behavior,
+          social_interaction: reflRes.data.social_interaction,
+          academic_tasks: reflRes.data.academic_tasks,
+        });
+        setReflectionSaved(true);
+      } else {
+        setDailyReflection({ class_presence: 3, behavior: 3, social_interaction: 3, academic_tasks: 3 });
+        setReflectionSaved(false);
+      }
     };
     fetchData();
   }, [selectedStudentId, selectedYear]);
