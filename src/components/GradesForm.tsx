@@ -21,6 +21,7 @@ type Student = {
 type SubGrade = { grade: string; weight: string };
 
 const CLASS_OPTIONS = ['טלי', 'עדן'];
+const SCHOOL_YEARS = ['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'];
 
 const SEMESTER_OPTIONS = [
   { value: 'semester_a', label: 'סמסטר א׳' },
