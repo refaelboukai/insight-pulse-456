@@ -997,8 +997,8 @@ export default function AdminDashboard() {
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
-      {/* Small reset button top-left */}
-      <div className="flex justify-start">
+      {/* Year selector + reset */}
+      <div className="flex items-center justify-between">
         <Button
           variant="ghost"
           size="sm"
@@ -1009,6 +1009,15 @@ export default function AdminDashboard() {
           <Trash2 className="h-3 w-3" />
           {resetting ? 'מאפס...' : 'איפוס מערכת'}
         </Button>
+        <div className="flex items-center gap-2">
+          <span className="text-xs text-muted-foreground">שנת לימודים:</span>
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="h-8 text-xs w-28"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
       {/* Top-level Accordion for views */}
       <Accordion type="multiple" dir="rtl" className="space-y-3">
