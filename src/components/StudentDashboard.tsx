@@ -444,7 +444,7 @@ export default function StudentDashboard() {
             onClick={async () => {
               if (!selectedStudentId || !selectedStudent) return;
               setInsightSaving(true);
-              const { error } = await supabase.from('student_insights').insert({
+              const { error } = await (supabase.from as any)('student_insights').insert({
                 student_id: selectedStudentId,
                 content: insightText.trim(),
               });
