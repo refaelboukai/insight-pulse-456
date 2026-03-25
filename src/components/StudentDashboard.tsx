@@ -288,6 +288,55 @@ export default function StudentDashboard() {
         )}
       </div>
 
+      {/* Pedagogical Goals */}
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <SectionHeader title="יעדים פדגוגיים" icon={BookOpen} count={pedagogyGoals.length} sectionKey="pedagogy" />
+        {expandedSections.pedagogy && (
+          <div className="px-3 pb-3 space-y-1.5">
+            {pedagogyGoals.length === 0 ? (
+              <p className="text-center text-muted-foreground text-sm py-6">אין יעדים פדגוגיים עדיין</p>
+            ) : (
+              pedagogyGoals.map((g: any) => (
+                <div key={g.id} className="p-2.5 rounded-lg border bg-card space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="font-medium text-sm">{managedSubjects[g.subject_id] || 'מקצוע'}{g.sub_subject ? ` (${g.sub_subject})` : ''}</span>
+                    <Badge variant="secondary" className="text-xs">{g.month}</Badge>
+                  </div>
+                  {g.learning_goals && <p className="text-xs text-foreground/80">🎯 {g.learning_goals}</p>}
+                  {g.current_status && <p className="text-xs text-muted-foreground">מצב נוכחי: {g.current_status}</p>}
+                  {g.what_was_done && <p className="text-xs text-muted-foreground">✅ {g.what_was_done}</p>}
+                  {g.teacher_notes && <p className="text-xs text-muted-foreground">📝 {g.teacher_notes}</p>}
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
+      {/* Exam Schedule */}
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <SectionHeader title="לוח מבחנים" icon={CalendarDays} count={examSchedule.length} sectionKey="exams" />
+        {expandedSections.exams && (
+          <div className="px-3 pb-3 space-y-1.5">
+            {examSchedule.length === 0 ? (
+              <p className="text-center text-muted-foreground text-sm py-6">אין מבחנים קרובים</p>
+            ) : (
+              examSchedule.map((e: any) => (
+                <div key={e.id} className="p-2.5 rounded-lg border bg-card flex items-center justify-between">
+                  <div>
+                    <span className="font-medium text-sm">{managedSubjects[e.subject_id] || 'מקצוע'}{e.sub_subject ? ` (${e.sub_subject})` : ''}</span>
+                    {e.exam_description && <span className="text-xs text-muted-foreground mr-2">- {e.exam_description}</span>}
+                  </div>
+                  <Badge variant="outline" className="text-xs">
+                    {new Date(e.exam_date).toLocaleDateString('he-IL')}
+                  </Badge>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+      </div>
+
       {/* Support Plan */}
       <div className="card-styled rounded-2xl overflow-hidden">
         <SectionHeader title="תכנית התמיכה שלי" icon={HeartHandshake} count={assignments.length} sectionKey="support" />
