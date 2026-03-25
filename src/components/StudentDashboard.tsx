@@ -58,6 +58,11 @@ export default function StudentDashboard() {
   const [summaryLoading, setSummaryLoading] = useState(false);
   const [showLearningStyle, setShowLearningStyle] = useState(false);
   const [learningStyleCompleted, setLearningStyleCompleted] = useState(false);
+  const [dailyChecks, setDailyChecks] = useState<Record<string, boolean>>(() => {
+    const today = new Date().toISOString().split('T')[0];
+    const saved = localStorage.getItem(`daily-checks-${today}`);
+    return saved ? JSON.parse(saved) : { regulation: false, brain: false };
+  });
 
   const isLocked = !!lockedStudentId;
 
