@@ -60,6 +60,7 @@ export default function AdminDashboard() {
   const [supportSessions, setSupportSessions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
 
   // Staff management
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
