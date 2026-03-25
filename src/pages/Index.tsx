@@ -6,12 +6,13 @@ import DailyAttendance from '@/components/DailyAttendance';
 import AdminDashboard from '@/components/AdminDashboard';
 import SupportPlanForm from '@/components/SupportPlanForm';
 import GradesForm from '@/components/GradesForm';
+import PedagogyForm from '@/components/PedagogyForm';
 import StudentDashboard from '@/components/StudentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
 import ResetCalmZone from '@/components/ResetCalmZone';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, Leaf } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, Leaf, BookOpen } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 export default function Index() {
@@ -84,24 +85,28 @@ export default function Index() {
           <AdminDashboard />
         ) : (
           <Tabs defaultValue="attendance" dir="rtl">
-            <TabsList className="grid w-full grid-cols-5 mb-4 h-12 p-1 rounded-xl shadow-soft bg-card">
-              <TabsTrigger value="attendance" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold px-1">
+            <TabsList className="grid w-full grid-cols-6 mb-4 h-12 p-1 rounded-xl shadow-soft bg-card">
+              <TabsTrigger value="attendance" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
                 <ClipboardCheck className="h-3.5 w-3.5" />
                 ביקור
               </TabsTrigger>
-              <TabsTrigger value="report" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold px-1">
+              <TabsTrigger value="report" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
                 <FileText className="h-3.5 w-3.5" />
                 דיווח
               </TabsTrigger>
-              <TabsTrigger value="grades" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold px-1">
+              <TabsTrigger value="pedagogy" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
+                <BookOpen className="h-3.5 w-3.5" />
+                פדגוגיה
+              </TabsTrigger>
+              <TabsTrigger value="grades" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
                 <GraduationCap className="h-3.5 w-3.5" />
                 ציונים
               </TabsTrigger>
-              <TabsTrigger value="support" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold px-1">
+              <TabsTrigger value="support" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
                 <HeartHandshake className="h-3.5 w-3.5" />
                 תמיכה
               </TabsTrigger>
-              <TabsTrigger value="event" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-xs font-semibold px-1">
+              <TabsTrigger value="event" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
                 <AlertTriangle className="h-3.5 w-3.5" />
                 אירוע
               </TabsTrigger>
@@ -111,6 +116,9 @@ export default function Index() {
             </TabsContent>
             <TabsContent value="report" className="animate-fade-in mt-0">
               <ReportForm absentStudentIds={absentStudentIds} />
+            </TabsContent>
+            <TabsContent value="pedagogy" className="animate-fade-in mt-0">
+              <PedagogyForm />
             </TabsContent>
             <TabsContent value="grades" className="animate-fade-in mt-0">
               <GradesForm />

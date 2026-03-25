@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import StudentDetailDialog from '@/components/StudentDetailDialog';
 import CodesManager from '@/components/CodesManager';
+import SubjectManager from '@/components/SubjectManager';
 import WeeklySupportSummary from '@/components/WeeklySupportSummary';
 import StudentScheduleManager from '@/components/StudentScheduleManager';
 import SmsReminderSection from '@/components/SmsReminderSection';
@@ -1037,6 +1038,16 @@ export default function AdminDashboard() {
                     {expandedSections.mgmt_codes && (
                       <div className="px-3 pb-3">
                         <CodesManager students={students} onRefresh={fetchAll} />
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Subject Management */}
+                  <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+                    <SectionHeader title="ניהול מקצועות" icon={GraduationCap} sectionKey="mgmt_subjects" />
+                    {expandedSections.mgmt_subjects && (
+                      <div className="px-3 pb-3">
+                        <SubjectManager />
                       </div>
                     )}
                   </div>
