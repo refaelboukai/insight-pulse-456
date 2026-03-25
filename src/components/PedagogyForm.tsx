@@ -238,6 +238,15 @@ export default function PedagogyForm() {
 
         {selectedStudentId && (
           <>
+            {/* Learning Style Profile */}
+            <LearningStyleResults
+              studentId={selectedStudentId}
+              studentName={filteredStudents.find(s => s.id === selectedStudentId)
+                ? `${filteredStudents.find(s => s.id === selectedStudentId)!.first_name} ${filteredStudents.find(s => s.id === selectedStudentId)!.last_name}`
+                : ''}
+              isEditable={true}
+            />
+
             {/* Subject + month selection */}
             <div className="grid grid-cols-3 gap-3">
               <div>
