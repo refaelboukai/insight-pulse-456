@@ -259,30 +259,6 @@ export default function StudentDashboard() {
         </div>
       </div>
 
-      {/* Quick Stats Row */}
-      <div className="grid grid-cols-3 gap-2.5">
-        <div className="card-styled rounded-xl p-3 text-center">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-1.5">
-            <FileText className="h-4 w-4 text-primary" />
-          </div>
-          <p className="text-lg font-bold text-foreground">{totalReports}</p>
-          <p className="text-[10px] text-muted-foreground">דיווחים היום</p>
-        </div>
-        <div className="card-styled rounded-xl p-3 text-center">
-          <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center mx-auto mb-1.5" style={{ background: 'hsl(var(--success) / 0.1)' }}>
-            <TrendingUp className="h-4 w-4" style={{ color: 'hsl(var(--success))' }} />
-          </div>
-          <p className="text-lg font-bold text-foreground">{positiveReports}</p>
-          <p className="text-[10px] text-muted-foreground">חיוביים</p>
-        </div>
-        <div className="card-styled rounded-xl p-3 text-center">
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5" style={{ background: 'hsl(var(--accent) / 0.1)' }}>
-            <GraduationCap className="h-4 w-4 text-accent" />
-          </div>
-          <p className="text-lg font-bold text-foreground">{grades.length}</p>
-          <p className="text-[10px] text-muted-foreground">ציונים</p>
-        </div>
-      </div>
 
       {/* Year selector */}
       <div className="flex items-center justify-center gap-2">
