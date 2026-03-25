@@ -9,8 +9,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { BookOpen, Save, Plus, Trash2, CalendarDays } from 'lucide-react';
+import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain } from 'lucide-react';
 import { format } from 'date-fns';
+import LearningStyleResults from '@/components/LearningStyleResults';
 
 type Student = { id: string; first_name: string; last_name: string; class_name: string | null; is_active: boolean };
 type ManagedSubject = { id: string; name: string; has_sub_subjects: boolean; sub_subjects: string[]; is_active: boolean };
@@ -237,6 +238,15 @@ export default function PedagogyForm() {
 
         {selectedStudentId && (
           <>
+            {/* Learning Style Profile */}
+            <LearningStyleResults
+              studentId={selectedStudentId}
+              studentName={filteredStudents.find(s => s.id === selectedStudentId)
+                ? `${filteredStudents.find(s => s.id === selectedStudentId)!.first_name} ${filteredStudents.find(s => s.id === selectedStudentId)!.last_name}`
+                : ''}
+              isEditable={true}
+            />
+
             {/* Subject + month selection */}
             <div className="grid grid-cols-3 gap-3">
               <div>

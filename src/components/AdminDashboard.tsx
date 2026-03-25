@@ -22,7 +22,7 @@ import {
 
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield, Download,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare, Brain, RotateCcw,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { generateEventPdf } from '@/lib/generateEventPdf';
@@ -782,11 +782,32 @@ export default function AdminDashboard() {
                         <span className="font-semibold text-sm">{s.first_name} {s.last_name}</span>
                       </button>
                       {showManagement && (
-                        <StudentScheduleManager
-                          student={s}
-                          schedule={studentSchedules.find((sc: any) => sc.student_id === s.id) || null}
-                          onSave={fetchAll}
-                        />
+                        <>
+                          <StudentScheduleManager
+                            student={s}
+                            schedule={studentSchedules.find((sc: any) => sc.student_id === s.id) || null}
+                            onSave={fetchAll}
+                          />
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-center h-8 w-8 p-0"
+                            title="פתח מחדש שאלון סגנון למידה"
+                            onClick={async () => {
+                              const { error } = await supabase
+                                .from('learning_style_profiles')
+                                .delete()
+                                .eq('student_id', s.id);
+                              if (error && error.code !== 'PGRST116') {
+                                toast.error('שגיאה באיפוס השאלון');
+                              } else {
+                                toast.success(`שאלון סגנון הלמידה של ${s.first_name} אופס`);
+                              }
+                            }}
+                          >
+                            <Brain className="h-3.5 w-3.5 text-primary" />
+                          </Button>
+                        </>
                       )}
                       <Button
                         size="sm"

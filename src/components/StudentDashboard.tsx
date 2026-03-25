@@ -5,10 +5,11 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StudentScheduleView from '@/components/StudentScheduleView';
+import LearningStyleQuestionnaire from '@/components/LearningStyleQuestionnaire';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays, Brain } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
@@ -34,7 +35,7 @@ export default function StudentDashboard() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
-    reports: true, grades: false, support: false, pedagogy: false, exams: false,
+    reports: true, grades: false, support: false, pedagogy: false, exams: false, learningStyle: false,
   });
   const [pedagogyGoals, setPedagogyGoals] = useState<any[]>([]);
   const [examSchedule, setExamSchedule] = useState<any[]>([]);
@@ -42,6 +43,8 @@ export default function StudentDashboard() {
   const [selectedYear, setSelectedYear] = useState('תשפ"ו');
   const [dailySummary, setDailySummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
+  const [showLearningStyle, setShowLearningStyle] = useState(false);
+  const [learningStyleCompleted, setLearningStyleCompleted] = useState(false);
 
   const isLocked = !!lockedStudentId;
 
@@ -57,6 +60,25 @@ export default function StudentDashboard() {
         .then(({ data }) => { if (data) setStudents(data); setLoading(false); });
     }
   }, [lockedStudentId]);
+
+  // Check learning style completion
+  useEffect(() => {
+    if (!selectedStudentId) return;
+    supabase
+      .from('learning_style_profiles')
+      .select('is_completed, is_visible')
+      .eq('student_id', selectedStudentId)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data?.is_completed) {
+          setLearningStyleCompleted(true);
+          setShowLearningStyle(false);
+        } else {
+          setLearningStyleCompleted(false);
+          setShowLearningStyle(true);
+        }
+      });
+  }, [selectedStudentId]);
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
 
@@ -199,6 +221,24 @@ export default function StudentDashboard() {
           </SelectContent>
         </Select>
       </div>
+
+      {/* Learning Style Questionnaire - show if not completed */}
+      {showLearningStyle && !learningStyleCompleted && (
+        <LearningStyleQuestionnaire
+          studentId={selectedStudentId}
+          onComplete={() => {
+            setLearningStyleCompleted(true);
+            setShowLearningStyle(false);
+          }}
+        />
+      )}
+
+      {/* Learning Style Results - show if completed */}
+      {learningStyleCompleted && (
+        <LearningStyleQuestionnaire
+          studentId={selectedStudentId}
+        />
+      )}
 
       {reports.length > 0 && (
         <div className="text-center py-2 space-y-2">

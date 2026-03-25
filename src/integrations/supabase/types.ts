@@ -405,6 +405,47 @@ export type Database = {
         }
         Relationships: []
       }
+      learning_style_profiles: {
+        Row: {
+          created_at: string
+          id: string
+          is_completed: boolean
+          is_visible: boolean
+          responses: Json
+          results: Json
+          student_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          is_visible?: boolean
+          responses?: Json
+          results?: Json
+          student_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_completed?: boolean
+          is_visible?: boolean
+          responses?: Json
+          results?: Json
+          student_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "learning_style_profiles_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: true
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       lesson_reports: {
         Row: {
           attendance: Database["public"]["Enums"]["attendance_status"]
