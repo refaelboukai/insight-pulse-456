@@ -6,6 +6,7 @@ import DailyAttendance from '@/components/DailyAttendance';
 import AdminDashboard from '@/components/AdminDashboard';
 import SupportPlanForm from '@/components/SupportPlanForm';
 import GradesForm from '@/components/GradesForm';
+import PedagogyForm from '@/components/PedagogyForm';
 import StudentDashboard from '@/components/StudentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
 import ResetCalmZone from '@/components/ResetCalmZone';
