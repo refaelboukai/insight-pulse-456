@@ -21,6 +21,7 @@ type Student = {
 type SubGrade = { grade: string; weight: string };
 
 const CLASS_OPTIONS = ['טלי', 'עדן'];
+const SCHOOL_YEARS = ['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'];
 
 const SEMESTER_OPTIONS = [
   { value: 'semester_a', label: 'סמסטר א׳' },
@@ -64,7 +65,7 @@ export default function GradesForm() {
   const [enhancing, setEnhancing] = useState(false);
   const [submittedIds, setSubmittedIds] = useState<Set<string>>(new Set());
   const [expandedClass, setExpandedClass] = useState<string | null>(null);
-
+  const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
   // Personal note state
   const [personalNote, setPersonalNote] = useState('');
   const [personalNoteEnhanced, setPersonalNoteEnhanced] = useState('');
@@ -90,6 +91,7 @@ export default function GradesForm() {
     if (!selectedStudentId) return;
     supabase.from('student_evaluations' as any).select('*')
       .eq('student_id', selectedStudentId)
+      .eq('school_year', selectedYear)
       .order('created_at', { ascending: false })
       .limit(1)
       .then(({ data }: any) => {
@@ -110,7 +112,7 @@ export default function GradesForm() {
           setEvalSaved(false);
         }
       });
-  }, [selectedStudentId]);
+  }, [selectedStudentId, selectedYear]);
 
   const handleSelectStudent = (id: string) => {
     setSelectedStudentId(id);
@@ -232,6 +234,7 @@ export default function GradesForm() {
       staff_user_id: user!.id,
       subject,
       semester,
+      school_year: selectedYear,
       grade: totalGrade,
       sub_grades: subGradesData.length > 0 ? subGradesData : null,
       verbal_evaluation: verbalEvaluation.trim() || null,
@@ -259,6 +262,7 @@ export default function GradesForm() {
       const payload: any = {
         student_id: selectedStudentId,
         staff_user_id: user!.id,
+        school_year: selectedYear,
         personal_note: personalNoteEnhanced.trim() || personalNote.trim() || null,
       };
       ALL_TEAM_KEYS.forEach(key => {
@@ -270,6 +274,7 @@ export default function GradesForm() {
         .select('id')
         .eq('student_id', selectedStudentId)
         .eq('staff_user_id', user!.id)
+        .eq('school_year', selectedYear)
         .order('created_at', { ascending: false })
         .limit(1);
 
@@ -305,6 +310,14 @@ export default function GradesForm() {
           <GraduationCap className="h-6 w-6 mx-auto text-primary mb-1" />
           <h3 className="font-bold text-sm">ציונים והערכות</h3>
           <p className="text-xs text-muted-foreground">בחר/י תלמיד/ה להזנת ציון והערכה</p>
+        </div>
+        <div className="flex justify-center">
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="h-9 text-sm w-40"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
 
         {CLASS_OPTIONS.map(cls => {
@@ -363,23 +376,34 @@ export default function GradesForm() {
         </div>
       </div>
 
-      {/* Semester selector */}
-      <div className="card-styled rounded-2xl p-3">
-        <label className="text-xs font-semibold mb-2 block">בחר/י סמסטר</label>
-        <div className="grid grid-cols-3 gap-1.5">
-          {SEMESTER_OPTIONS.map(sem => (
-            <button
-              key={sem.value}
-              onClick={() => setSemester(sem.value)}
-              className={`text-xs py-2.5 px-2 rounded-lg border transition-all font-semibold ${
-                semester === sem.value
-                  ? 'bg-primary text-primary-foreground border-primary shadow-sm'
-                  : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
-              }`}
-            >
-              {sem.label}
-            </button>
-          ))}
+      {/* Year + Semester selector */}
+      <div className="card-styled rounded-2xl p-3 space-y-3">
+        <div>
+          <label className="text-xs font-semibold mb-2 block">שנת לימודים</label>
+          <Select value={selectedYear} onValueChange={setSelectedYear}>
+            <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        </div>
+        <div>
+          <label className="text-xs font-semibold mb-2 block">בחר/י סמסטר</label>
+          <div className="grid grid-cols-3 gap-1.5">
+            {SEMESTER_OPTIONS.map(sem => (
+              <button
+                key={sem.value}
+                onClick={() => setSemester(sem.value)}
+                className={`text-xs py-2.5 px-2 rounded-lg border transition-all font-semibold ${
+                  semester === sem.value
+                    ? 'bg-primary text-primary-foreground border-primary shadow-sm'
+                    : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
+                }`}
+              >
+                {sem.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 

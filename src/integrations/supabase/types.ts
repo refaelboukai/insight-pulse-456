@@ -670,6 +670,7 @@ export type Database = {
           perseverance: string | null
           personal_note: string | null
           problem_solving: string | null
+          school_year: string
           self_efficacy: string | null
           staff_user_id: string
           student_id: string
@@ -693,6 +694,7 @@ export type Database = {
           perseverance?: string | null
           personal_note?: string | null
           problem_solving?: string | null
+          school_year?: string
           self_efficacy?: string | null
           staff_user_id: string
           student_id: string
@@ -716,6 +718,7 @@ export type Database = {
           perseverance?: string | null
           personal_note?: string | null
           problem_solving?: string | null
+          school_year?: string
           self_efficacy?: string | null
           staff_user_id?: string
           student_id?: string
@@ -738,6 +741,7 @@ export type Database = {
           created_at: string
           grade: number | null
           id: string
+          school_year: string
           semester: string
           staff_user_id: string
           student_id: string
@@ -751,6 +755,7 @@ export type Database = {
           created_at?: string
           grade?: number | null
           id?: string
+          school_year?: string
           semester?: string
           staff_user_id: string
           student_id: string
@@ -764,6 +769,7 @@ export type Database = {
           created_at?: string
           grade?: number | null
           id?: string
+          school_year?: string
           semester?: string
           staff_user_id?: string
           student_id?: string

@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import StudentScheduleView from '@/components/StudentScheduleView';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
@@ -38,6 +39,7 @@ export default function StudentDashboard() {
   const [pedagogyGoals, setPedagogyGoals] = useState<any[]>([]);
   const [examSchedule, setExamSchedule] = useState<any[]>([]);
   const [managedSubjects, setManagedSubjects] = useState<Record<string, string>>({});
+  const [selectedYear, setSelectedYear] = useState('תשפ"ו');
   const [dailySummary, setDailySummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
 
@@ -69,16 +71,18 @@ export default function StudentDashboard() {
           .lte('report_date', `${today}T23:59:59`)
           .order('created_at', { ascending: false }),
         supabase.from('student_grades').select('*')
-          .eq('student_id', selectedStudentId),
+          .eq('student_id', selectedStudentId)
+          .eq('school_year', selectedYear),
         supabase.from('support_assignments').select('*, staff_members(name)')
           .eq('student_id', selectedStudentId)
           .eq('is_active', true),
         supabase.from('pedagogical_goals').select('*')
           .eq('student_id', selectedStudentId)
+          .eq('school_year', selectedYear)
           .order('month'),
         supabase.from('exam_schedule').select('*')
           .eq('student_id', selectedStudentId)
-          .gte('exam_date', today)
+          .eq('school_year', selectedYear)
           .order('exam_date'),
         supabase.from('managed_subjects').select('id, name').eq('is_active', true),
       ]);
@@ -94,7 +98,7 @@ export default function StudentDashboard() {
       }
     };
     fetchData();
-  }, [selectedStudentId]);
+  }, [selectedStudentId, selectedYear]);
 
   const generateSummary = useCallback(async () => {
     if (!selectedStudent || reports.length === 0) return;
@@ -185,8 +189,17 @@ export default function StudentDashboard() {
           </button>
         )}
       </div>
+      {/* Year selector */}
+      <div className="flex items-center justify-center gap-2">
+        <span className="text-xs text-muted-foreground">שנת לימודים:</span>
+        <Select value={selectedYear} onValueChange={setSelectedYear}>
+          <SelectTrigger className="h-8 text-xs w-32"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'].map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </div>
 
-      {/* Reports count */}
       {reports.length > 0 && (
         <div className="text-center py-2 space-y-2">
           <p className="text-sm text-muted-foreground">{reports.length} שיעורים דווחו היום</p>
