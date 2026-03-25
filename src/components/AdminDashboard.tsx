@@ -210,7 +210,7 @@ export default function AdminDashboard() {
     }
   };
 
-  useEffect(() => { fetchAll(); }, []);
+  useEffect(() => { fetchAll(); }, [selectedYear]);
 
   // Staff management
   const handleAddStaff = async () => {
