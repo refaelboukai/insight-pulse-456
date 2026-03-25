@@ -1042,6 +1042,16 @@ export default function AdminDashboard() {
                     )}
                   </div>
 
+                  {/* Subject Management */}
+                  <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+                    <SectionHeader title="ניהול מקצועות" icon={GraduationCap} sectionKey="mgmt_subjects" />
+                    {expandedSections.mgmt_subjects && (
+                      <div className="px-3 pb-3">
+                        <SubjectManager />
+                      </div>
+                    )}
+                  </div>
+
                   {renderAttendance(viewAttendance, viewStudents, 'mgmt')}
                   {renderLongAbsent(null, 'mgmt')}
                   {renderAlerts(unreadAlerts, 'mgmt')}
