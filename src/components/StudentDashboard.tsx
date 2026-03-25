@@ -38,6 +38,7 @@ export default function StudentDashboard() {
   const [pedagogyGoals, setPedagogyGoals] = useState<any[]>([]);
   const [examSchedule, setExamSchedule] = useState<any[]>([]);
   const [managedSubjects, setManagedSubjects] = useState<Record<string, string>>({});
+  const [selectedYear, setSelectedYear] = useState('תשפ"ו');
   const [dailySummary, setDailySummary] = useState<string | null>(null);
   const [summaryLoading, setSummaryLoading] = useState(false);
 
