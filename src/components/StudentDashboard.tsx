@@ -222,6 +222,24 @@ export default function StudentDashboard() {
         </Select>
       </div>
 
+      {/* Learning Style Questionnaire - show if not completed */}
+      {showLearningStyle && !learningStyleCompleted && (
+        <LearningStyleQuestionnaire
+          studentId={selectedStudentId}
+          onComplete={() => {
+            setLearningStyleCompleted(true);
+            setShowLearningStyle(false);
+          }}
+        />
+      )}
+
+      {/* Learning Style Results - show if completed */}
+      {learningStyleCompleted && (
+        <LearningStyleQuestionnaire
+          studentId={selectedStudentId}
+        />
+      )}
+
       {reports.length > 0 && (
         <div className="text-center py-2 space-y-2">
           <p className="text-sm text-muted-foreground">{reports.length} שיעורים דווחו היום</p>
