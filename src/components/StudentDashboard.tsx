@@ -4,12 +4,13 @@ import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Progress } from '@/components/ui/progress';
 import StudentScheduleView from '@/components/StudentScheduleView';
 import LearningStyleQuestionnaire from '@/components/LearningStyleQuestionnaire';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ExternalLink, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays, Brain } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, TrendingUp } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
@@ -24,7 +25,18 @@ const SEMESTER_LABELS: Record<string, string> = {
   semester_a: 'סמסטר א׳', semester_b: 'סמסטר ב׳', summer: 'סמסטר קיץ',
 };
 
-// removed score/emoji helpers
+function getGreeting(): { text: string; icon: React.ElementType } {
+  const h = new Date().getHours();
+  if (h < 12) return { text: 'בוקר טוב', icon: Sun };
+  if (h < 17) return { text: 'צהריים טובים', icon: CloudSun };
+  return { text: 'ערב טוב', icon: Moon };
+}
+
+function getTodayHebrew(): string {
+  const days = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי', 'שישי', 'שבת'];
+  const d = new Date();
+  return `יום ${days[d.getDay()]}, ${d.toLocaleDateString('he-IL', { day: 'numeric', month: 'long' })}`;
+}
 
 export default function StudentDashboard() {
   const { lockedStudentId } = useAuth();
@@ -61,7 +73,6 @@ export default function StudentDashboard() {
     }
   }, [lockedStudentId]);
 
-  // Check learning style completion
   useEffect(() => {
     if (!selectedStudentId) return;
     supabase
@@ -153,7 +164,6 @@ export default function StudentDashboard() {
     }
   }, [selectedStudent, reports]);
 
-  // Reset summary when student changes
   useEffect(() => {
     setDailySummary(null);
   }, [selectedStudentId]);
@@ -177,52 +187,109 @@ export default function StudentDashboard() {
     );
   }
 
-  const SectionHeader = ({ title, icon: Icon, count, sectionKey }: {
-    title: string; icon: React.ElementType; count?: number; sectionKey: string;
+  const greeting = getGreeting();
+  const GreetingIcon = greeting.icon;
+  const todayStr = getTodayHebrew();
+
+  // Quick stats
+  const positiveReports = reports.filter(r => r.behavior_types?.includes('respectful')).length;
+  const totalReports = reports.length;
+
+  const SectionHeader = ({ title, icon: Icon, count, sectionKey, color }: {
+    title: string; icon: React.ElementType; count?: number; sectionKey: string; color?: string;
   }) => (
     <button
       onClick={() => toggleSection(sectionKey)}
-      className="w-full flex items-center justify-between p-3 hover:bg-muted/50 rounded-xl transition-colors"
+      className="w-full flex items-center justify-between p-3.5 hover:bg-muted/50 rounded-xl transition-all duration-200"
     >
-      <div className="flex items-center gap-2.5">
-        <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary/10">
-          <Icon className="h-4 w-4 text-primary" />
+      <div className="flex items-center gap-3">
+        <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${color || 'bg-primary/10'}`}>
+          <Icon className={`h-4.5 w-4.5 ${color ? 'text-white' : 'text-primary'}`} />
         </div>
-        <span className="font-semibold text-sm">{title}</span>
-        {count !== undefined && (
-          <Badge variant="secondary" className="text-xs rounded-full px-2">{count}</Badge>
-        )}
+        <div className="text-right">
+          <span className="font-semibold text-sm block">{title}</span>
+          {count !== undefined && (
+            <span className="text-[10px] text-muted-foreground">{count} פריטים</span>
+          )}
+        </div>
       </div>
-      {expandedSections[sectionKey] ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+      <div className={`w-6 h-6 rounded-full flex items-center justify-center transition-colors ${expandedSections[sectionKey] ? 'bg-primary/10' : 'bg-muted'}`}>
+        {expandedSections[sectionKey] ? <ChevronUp className="h-3.5 w-3.5 text-primary" /> : <ChevronDown className="h-3.5 w-3.5 text-muted-foreground" />}
+      </div>
     </button>
   );
 
   return (
-    <div className="space-y-3 max-w-2xl mx-auto animate-fade-in">
-      {/* Student header */}
-      <div className="rounded-xl px-3 py-2 flex items-center justify-between" style={{ background: 'var(--gradient-primary)' }}>
-        <p className="font-semibold text-primary-foreground text-sm">
-          {selectedStudent.first_name} {selectedStudent.last_name}
-          <span className="text-primary-foreground/60 font-normal mr-2 text-xs">הכיתה של {selectedStudent.class_name}</span>
-        </p>
-        {!isLocked && (
-          <button onClick={() => setSelectedStudentId('')} className="text-primary-foreground/70 hover:text-primary-foreground text-xs underline">
-            החלף
-          </button>
-        )}
+    <div className="space-y-4 max-w-2xl mx-auto animate-fade-in">
+      {/* Welcome Hero Card */}
+      <div className="relative overflow-hidden rounded-2xl p-5" style={{ background: 'var(--gradient-primary)' }}>
+        {/* Decorative circles */}
+        <div className="absolute top-0 left-0 w-24 h-24 rounded-full opacity-10 bg-white -translate-x-8 -translate-y-8" />
+        <div className="absolute bottom-0 right-0 w-32 h-32 rounded-full opacity-10 bg-white translate-x-10 translate-y-10" />
+        
+        <div className="relative z-10">
+          <div className="flex items-center gap-2 mb-1">
+            <GreetingIcon className="h-5 w-5 text-primary-foreground/80" />
+            <span className="text-primary-foreground/70 text-sm">{greeting.text}</span>
+          </div>
+          <h2 className="text-xl font-bold text-primary-foreground mb-1">
+            {selectedStudent.first_name} {selectedStudent.last_name}
+          </h2>
+          <div className="flex items-center gap-2 text-primary-foreground/60 text-xs">
+            <Calendar className="h-3.5 w-3.5" />
+            <span>{todayStr}</span>
+            {selectedStudent.class_name && (
+              <>
+                <span className="mx-1">·</span>
+                <span>כיתה {selectedStudent.class_name}</span>
+              </>
+            )}
+          </div>
+          {!isLocked && (
+            <button onClick={() => setSelectedStudentId('')} className="mt-2 text-primary-foreground/70 hover:text-primary-foreground text-xs underline">
+              החלף תלמיד
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Quick Stats Row */}
+      <div className="grid grid-cols-3 gap-2.5">
+        <div className="card-styled rounded-xl p-3 text-center">
+          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center mx-auto mb-1.5">
+            <FileText className="h-4 w-4 text-primary" />
+          </div>
+          <p className="text-lg font-bold text-foreground">{totalReports}</p>
+          <p className="text-[10px] text-muted-foreground">דיווחים היום</p>
+        </div>
+        <div className="card-styled rounded-xl p-3 text-center">
+          <div className="w-8 h-8 rounded-lg bg-success/10 flex items-center justify-center mx-auto mb-1.5" style={{ background: 'hsl(var(--success) / 0.1)' }}>
+            <TrendingUp className="h-4 w-4" style={{ color: 'hsl(var(--success))' }} />
+          </div>
+          <p className="text-lg font-bold text-foreground">{positiveReports}</p>
+          <p className="text-[10px] text-muted-foreground">חיוביים</p>
+        </div>
+        <div className="card-styled rounded-xl p-3 text-center">
+          <div className="w-8 h-8 rounded-lg flex items-center justify-center mx-auto mb-1.5" style={{ background: 'hsl(var(--accent) / 0.1)' }}>
+            <GraduationCap className="h-4 w-4 text-accent" />
+          </div>
+          <p className="text-lg font-bold text-foreground">{grades.length}</p>
+          <p className="text-[10px] text-muted-foreground">ציונים</p>
+        </div>
+      </div>
+
       {/* Year selector */}
       <div className="flex items-center justify-center gap-2">
         <span className="text-xs text-muted-foreground">שנת לימודים:</span>
         <Select value={selectedYear} onValueChange={setSelectedYear}>
-          <SelectTrigger className="h-8 text-xs w-32"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-8 text-xs w-32 rounded-lg"><SelectValue /></SelectTrigger>
           <SelectContent>
             {['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'].map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
           </SelectContent>
         </Select>
       </div>
 
-      {/* Learning Style Questionnaire - show if not completed */}
+      {/* Learning Style Questionnaire */}
       {showLearningStyle && !learningStyleCompleted && (
         <LearningStyleQuestionnaire
           studentId={selectedStudentId}
@@ -232,79 +299,80 @@ export default function StudentDashboard() {
           }}
         />
       )}
-
-      {/* Learning Style Results - show if completed */}
       {learningStyleCompleted && (
-        <LearningStyleQuestionnaire
-          studentId={selectedStudentId}
-        />
+        <LearningStyleQuestionnaire studentId={selectedStudentId} />
       )}
 
+      {/* AI Summary Section */}
       {reports.length > 0 && (
-        <div className="text-center py-2 space-y-2">
-          <p className="text-sm text-muted-foreground">{reports.length} שיעורים דווחו היום</p>
-          <Button
-            onClick={generateSummary}
-            disabled={summaryLoading}
-            variant="outline"
-            size="sm"
-            className="gap-1.5"
-          >
-            {summaryLoading ? (
-              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> מכין סיכום...</>
-            ) : (
-              <><Sparkles className="h-3.5 w-3.5" /> סיכום היום שלי</>
-            )}
-          </Button>
-        </div>
-      )}
-
-      {/* AI Summary Display */}
-      {dailySummary && (
-        <div className="card-styled rounded-2xl p-4 space-y-2">
-          <div className="flex items-center gap-2">
-            <Sparkles className="h-4 w-4 text-primary" />
-            <span className="font-semibold text-sm">סיכום היום</span>
+        <div className="card-styled rounded-2xl p-4 space-y-3">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-lg bg-accent/10 flex items-center justify-center" style={{ background: 'hsl(var(--accent) / 0.12)' }}>
+                <Sparkles className="h-4 w-4 text-accent" />
+              </div>
+              <span className="font-semibold text-sm">סיכום יומי חכם</span>
+            </div>
+            <Button
+              onClick={generateSummary}
+              disabled={summaryLoading}
+              size="sm"
+              className="gap-1.5 btn-primary-gradient text-primary-foreground text-xs rounded-lg h-8 px-3"
+            >
+              {summaryLoading ? (
+                <><Loader2 className="h-3 w-3 animate-spin" /> מכין...</>
+              ) : (
+                <>צור סיכום</>
+              )}
+            </Button>
           </div>
-          <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{dailySummary}</p>
+          {dailySummary && (
+            <div className="rounded-xl p-3.5 border bg-muted/30">
+              <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{dailySummary}</p>
+            </div>
+          )}
         </div>
       )}
 
       {/* Today's Reports */}
       <div className="card-styled rounded-2xl overflow-hidden">
-        <SectionHeader title="הדיווחים שלי — היום" icon={FileText} count={reports.length} sectionKey="reports" />
+        <SectionHeader title="הדיווחים שלי — היום" icon={FileText} count={reports.length} sectionKey="reports" color="bg-primary" />
         {expandedSections.reports && (
           <div className="px-3 pb-3 space-y-2">
             {reports.length === 0 ? (
               <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                  <FileText className="h-5 w-5 text-muted-foreground" />
+                </div>
                 <p className="text-sm text-muted-foreground">עדיין אין דיווחים להיום</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">הדיווחים יופיעו כאן במהלך היום</p>
               </div>
             ) : (
               reports.map(r => (
-                <div key={r.id} className="p-3 rounded-xl border bg-card">
-                  <div className="flex justify-between items-center mb-2">
+                <div key={r.id} className="p-3.5 rounded-xl border bg-card hover:shadow-sm transition-shadow">
+                  <div className="flex justify-between items-center mb-2.5">
                     <p className="font-bold text-sm">{r.lesson_subject}</p>
-                    <span className="text-xs text-muted-foreground">
+                    <span className="text-xs text-muted-foreground bg-muted rounded-md px-2 py-0.5">
                       {new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
                     </span>
                   </div>
                   <div className="flex flex-wrap gap-1.5">
-                    <Badge variant="outline" className="text-xs">
+                    <Badge variant="outline" className="text-xs rounded-md">
                       {ATTENDANCE_LABELS[r.attendance]}
                     </Badge>
                     {r.behavior_types?.map(b => (
-                      <Badge key={b} variant={b === 'respectful' ? 'default' : 'destructive'} className="text-xs">
+                      <Badge key={b} variant={b === 'respectful' ? 'default' : 'destructive'} className="text-xs rounded-md">
                         {BEHAVIOR_LABELS[b]}
                       </Badge>
                     ))}
                     {r.participation?.map(p => (
-                      <Badge key={p} variant="secondary" className="text-xs">
+                      <Badge key={p} variant="secondary" className="text-xs rounded-md">
                         {PARTICIPATION_LABELS[p]}
                       </Badge>
                     ))}
                   </div>
                   {r.comment && (
-                    <p className="text-xs text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2.5 py-1.5 border">
+                    <p className="text-xs text-muted-foreground mt-2 bg-muted/50 rounded-lg px-3 py-2 border leading-relaxed">
                       {r.comment}
                     </p>
                   )}
@@ -317,23 +385,35 @@ export default function StudentDashboard() {
 
       {/* Grades */}
       <div className="card-styled rounded-2xl overflow-hidden">
-        <SectionHeader title="הציונים שלי" icon={GraduationCap} count={grades.length} sectionKey="grades" />
+        <SectionHeader title="הציונים שלי" icon={GraduationCap} count={grades.length} sectionKey="grades" color="bg-accent" />
         {expandedSections.grades && (
           <div className="px-3 pb-3 space-y-1.5">
             {grades.length === 0 ? (
-              <p className="text-center text-muted-foreground text-sm py-6">אין ציונים עדיין</p>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                  <GraduationCap className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">אין ציונים עדיין</p>
+              </div>
             ) : (
               grades.map(g => (
-                <div key={g.id} className="p-2.5 rounded-lg border bg-card flex items-center justify-between">
+                <div key={g.id} className="p-3 rounded-xl border bg-card flex items-center justify-between hover:shadow-sm transition-shadow">
                   <div>
                     <span className="font-medium text-sm">{g.subject}</span>
                     <span className="text-[10px] text-muted-foreground mr-1.5">
                       {SEMESTER_LABELS[g.semester] || g.semester}
                     </span>
                   </div>
-                  <Badge variant="default" className="text-sm px-3 py-0.5">
-                    {g.grade ?? '—'}
-                  </Badge>
+                  <div className="flex items-center gap-2">
+                    {g.grade !== null && (
+                      <div className="w-16">
+                        <Progress value={g.grade} className="h-1.5 rounded-full" />
+                      </div>
+                    )}
+                    <Badge variant="default" className="text-sm px-3 py-0.5 rounded-lg min-w-[40px] text-center">
+                      {g.grade ?? '—'}
+                    </Badge>
+                  </div>
                 </div>
               ))
             )}
@@ -347,13 +427,18 @@ export default function StudentDashboard() {
         {expandedSections.pedagogy && (
           <div className="px-3 pb-3 space-y-1.5">
             {pedagogyGoals.length === 0 ? (
-              <p className="text-center text-muted-foreground text-sm py-6">אין יעדים פדגוגיים עדיין</p>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                  <BookOpen className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">אין יעדים פדגוגיים עדיין</p>
+              </div>
             ) : (
               pedagogyGoals.map((g: any) => (
-                <div key={g.id} className="p-2.5 rounded-lg border bg-card space-y-1">
+                <div key={g.id} className="p-3 rounded-xl border bg-card space-y-1.5 hover:shadow-sm transition-shadow">
                   <div className="flex items-center justify-between">
                     <span className="font-medium text-sm">{managedSubjects[g.subject_id] || 'מקצוע'}{g.sub_subject ? ` (${g.sub_subject})` : ''}</span>
-                    <Badge variant="secondary" className="text-xs">{g.month}</Badge>
+                    <Badge variant="secondary" className="text-xs rounded-md">{g.month}</Badge>
                   </div>
                   {g.learning_goals && <p className="text-xs text-foreground/80">🎯 {g.learning_goals}</p>}
                   {g.current_status && <p className="text-xs text-muted-foreground">מצב נוכחי: {g.current_status}</p>}
@@ -372,15 +457,20 @@ export default function StudentDashboard() {
         {expandedSections.exams && (
           <div className="px-3 pb-3 space-y-1.5">
             {examSchedule.length === 0 ? (
-              <p className="text-center text-muted-foreground text-sm py-6">אין מבחנים קרובים</p>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                  <CalendarDays className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">אין מבחנים קרובים</p>
+              </div>
             ) : (
               examSchedule.map((e: any) => (
-                <div key={e.id} className="p-2.5 rounded-lg border bg-card flex items-center justify-between">
+                <div key={e.id} className="p-3 rounded-xl border bg-card flex items-center justify-between hover:shadow-sm transition-shadow">
                   <div>
                     <span className="font-medium text-sm">{managedSubjects[e.subject_id] || 'מקצוע'}{e.sub_subject ? ` (${e.sub_subject})` : ''}</span>
                     {e.exam_description && <span className="text-xs text-muted-foreground mr-2">- {e.exam_description}</span>}
                   </div>
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="outline" className="text-xs rounded-md">
                     {new Date(e.exam_date).toLocaleDateString('he-IL')}
                   </Badge>
                 </div>
@@ -396,23 +486,28 @@ export default function StudentDashboard() {
         {expandedSections.support && (
           <div className="px-3 pb-3 space-y-1.5">
             {assignments.length === 0 ? (
-              <p className="text-center text-muted-foreground text-sm py-6">אין תכנית תמיכה מוגדרת</p>
+              <div className="text-center py-8">
+                <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3">
+                  <HeartHandshake className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm text-muted-foreground">אין תכנית תמיכה מוגדרת</p>
+              </div>
             ) : (
               assignments.map((a: any) => (
-                <div key={a.id} className="p-2.5 rounded-lg border bg-card">
-                  <div className="flex justify-between items-start mb-1">
+                <div key={a.id} className="p-3 rounded-xl border bg-card hover:shadow-sm transition-shadow">
+                  <div className="flex justify-between items-start mb-1.5">
                     <span className="font-medium text-sm">{a.staff_members?.name || 'לא ידוע'}</span>
-                    <Badge variant="outline" className="text-xs">{a.frequency === 'daily' ? 'יומי' : 'שבועי'}</Badge>
+                    <Badge variant="outline" className="text-xs rounded-md">{a.frequency === 'daily' ? 'יומי' : 'שבועי'}</Badge>
                   </div>
                   <div className="flex flex-wrap gap-1">
                     {(a.support_types || []).map((t: string) => (
-                      <Badge key={t} variant="secondary" className="text-xs px-1.5 py-0">
+                      <Badge key={t} variant="secondary" className="text-xs px-1.5 py-0 rounded-md">
                         {SUPPORT_LABELS[t] || t}
                       </Badge>
                     ))}
                   </div>
                   {a.support_description && (
-                    <p className="text-xs text-foreground/80 mt-1">📝 {a.support_description}</p>
+                    <p className="text-xs text-foreground/80 mt-1.5">📝 {a.support_description}</p>
                   )}
                   {a.target_date && (
                     <p className="text-xs text-muted-foreground mt-1">
@@ -428,8 +523,6 @@ export default function StudentDashboard() {
 
       {/* Personal Schedule */}
       <StudentScheduleView studentId={selectedStudent.id} />
-
-      {/* Reset link removed - now available as a tab */}
     </div>
   );
 }
