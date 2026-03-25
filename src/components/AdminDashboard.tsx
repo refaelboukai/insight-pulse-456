@@ -125,7 +125,7 @@ export default function AdminDashboard() {
   const fetchAll = async () => {
     const { from: yearFrom, to: yearTo } = getYearDateRange(selectedYear);
     const today = new Date().toISOString().split('T')[0];
-    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes] = await Promise.all([
+    const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes, reflectionsRes, insightsRes] = await Promise.all([
       supabase.from('lesson_reports').select('*')
         .gte('report_date', `${yearFrom}T00:00:00`).lte('report_date', `${yearTo}T23:59:59`)
         .order('created_at', { ascending: false }).limit(1000),
@@ -144,6 +144,12 @@ export default function AdminDashboard() {
       supabase.from('staff_members').select('*').order('name'),
       supabase.from('support_assignments').select('*, staff_members(name)').eq('is_active', true),
       supabase.from('student_schedules' as any).select('*'),
+      supabase.from('daily_reflections').select('*')
+        .gte('created_at', `${yearFrom}T00:00:00`).lte('created_at', `${yearTo}T23:59:59`)
+        .order('created_at', { ascending: false }).limit(500),
+      supabase.from('student_insights').select('*')
+        .gte('created_at', `${yearFrom}T00:00:00`).lte('created_at', `${yearTo}T23:59:59`)
+        .order('created_at', { ascending: false }).limit(500),
     ]);
     if (reportsRes.data) setReports(reportsRes.data);
     if (studentsRes.data) setStudents(studentsRes.data);
