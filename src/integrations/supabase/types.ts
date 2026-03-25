@@ -318,6 +318,54 @@ export type Database = {
         }
         Relationships: []
       }
+      exam_schedule: {
+        Row: {
+          created_at: string
+          created_by: string
+          exam_date: string
+          exam_description: string | null
+          id: string
+          student_id: string
+          sub_subject: string | null
+          subject_id: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          exam_date: string
+          exam_description?: string | null
+          id?: string
+          student_id: string
+          sub_subject?: string | null
+          subject_id: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          exam_date?: string
+          exam_description?: string | null
+          id?: string
+          student_id?: string
+          sub_subject?: string | null
+          subject_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "exam_schedule_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "exam_schedule_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "managed_subjects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       exceptional_events: {
         Row: {
           created_at: string
@@ -412,6 +460,105 @@ export type Database = {
             columns: ["student_id"]
             isOneToOne: false
             referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      managed_subjects: {
+        Row: {
+          created_at: string
+          has_sub_subjects: boolean
+          id: string
+          is_active: boolean
+          name: string
+          sub_subjects: string[]
+        }
+        Insert: {
+          created_at?: string
+          has_sub_subjects?: boolean
+          id?: string
+          is_active?: boolean
+          name: string
+          sub_subjects?: string[]
+        }
+        Update: {
+          created_at?: string
+          has_sub_subjects?: boolean
+          id?: string
+          is_active?: boolean
+          name?: string
+          sub_subjects?: string[]
+        }
+        Relationships: []
+      }
+      pedagogical_goals: {
+        Row: {
+          admin_notes: string | null
+          created_at: string
+          current_status: string | null
+          id: string
+          learning_goals: string | null
+          learning_style: string | null
+          measurement_methods: string | null
+          month: string
+          staff_user_id: string
+          student_id: string
+          sub_subject: string | null
+          subject_id: string
+          teacher_notes: string | null
+          updated_at: string
+          what_was_done: string | null
+          what_was_not_done: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string
+          current_status?: string | null
+          id?: string
+          learning_goals?: string | null
+          learning_style?: string | null
+          measurement_methods?: string | null
+          month: string
+          staff_user_id: string
+          student_id: string
+          sub_subject?: string | null
+          subject_id: string
+          teacher_notes?: string | null
+          updated_at?: string
+          what_was_done?: string | null
+          what_was_not_done?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string
+          current_status?: string | null
+          id?: string
+          learning_goals?: string | null
+          learning_style?: string | null
+          measurement_methods?: string | null
+          month?: string
+          staff_user_id?: string
+          student_id?: string
+          sub_subject?: string | null
+          subject_id?: string
+          teacher_notes?: string | null
+          updated_at?: string
+          what_was_done?: string | null
+          what_was_not_done?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pedagogical_goals_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pedagogical_goals_subject_id_fkey"
+            columns: ["subject_id"]
+            isOneToOne: false
+            referencedRelation: "managed_subjects"
             referencedColumns: ["id"]
           },
         ]
