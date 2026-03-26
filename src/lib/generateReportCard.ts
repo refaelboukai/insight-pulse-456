@@ -46,7 +46,6 @@ function getHebrewDate(): string {
     const formatter = new Intl.DateTimeFormat('he-u-ca-hebrew-nu-hebr', {
       day: 'numeric',
       month: 'long',
-      year: 'numeric',
     });
     return formatter.format(now);
   } catch {
