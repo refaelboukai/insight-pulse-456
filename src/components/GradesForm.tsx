@@ -510,6 +510,24 @@ export default function GradesForm() {
         )}
       </div>
 
+      {/* ===== Social-Emotional Summary ===== */}
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <div className="p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <Users2 className="h-4 w-4 text-emerald-500" />
+            <span className="text-sm font-semibold">סיכום חברתי ורגשי מתוך שאלונים</span>
+          </div>
+          <Textarea
+            placeholder="הדבק/י כאן סיכום חברתי ורגשי מתוך שאלונים מקצועיים..."
+            value={socialEmotionalSummary}
+            onChange={e => { setSocialEmotionalSummary(e.target.value); setEvalSaved(false); }}
+            className="min-h-[120px] text-sm"
+            maxLength={5000}
+          />
+          <p className="text-[10px] text-muted-foreground">סיכום זה יוצג בתעודה. ניתן להדביק טקסט מתוך שאלונים שמולאו.</p>
+        </div>
+      </div>
+
       {/* ===== Accordion: דיווחי מורים מקצועיים ===== */}
       <div className="card-styled rounded-2xl overflow-hidden">
         <button
