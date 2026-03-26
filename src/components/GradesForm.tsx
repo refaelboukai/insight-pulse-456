@@ -72,6 +72,8 @@ export default function GradesForm() {
   const [enhancingNote, setEnhancingNote] = useState(false);
   // Social-emotional summary
   const [socialEmotionalSummary, setSocialEmotionalSummary] = useState('');
+  const [socialEmotionalEnhanced, setSocialEmotionalEnhanced] = useState('');
+  const [enhancingSocial, setEnhancingSocial] = useState(false);
 
   // Team evaluation state
   const [teamRatings, setTeamRatings] = useState<Record<string, string>>({});
