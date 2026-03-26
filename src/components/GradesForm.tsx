@@ -583,6 +583,21 @@ export default function GradesForm() {
             </div>
           )}
           <p className="text-[10px] text-muted-foreground">סיכום זה יוצג בתעודה. ניתן להדביק טקסט מתוך שאלונים שמולאו.</p>
+          <Button
+            onClick={handleSaveEvaluation}
+            disabled={savingEval || evalSaved}
+            variant={evalSaved ? 'outline' : 'default'}
+            size="sm"
+            className="w-full gap-1.5"
+          >
+            {savingEval ? (
+              <><div className="w-4 h-4 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> שומר...</>
+            ) : evalSaved ? (
+              <><CheckCircle2 className="h-4 w-4 text-green-500" /> נשמר בהצלחה</>
+            ) : (
+              <><Send className="h-4 w-4" /> שמירת סיכום חברתי ורגשי</>
+            )}
+          </Button>
         </div>
       </div>
 
