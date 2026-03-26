@@ -28,6 +28,13 @@ interface TeamEvaluation {
   self_efficacy?: string | null;
 }
 
+interface ReflectionSummary {
+  class_presence: number;
+  behavior: number;
+  social_interaction: number;
+  academic_tasks: number;
+}
+
 interface ReportCardData {
   studentName: string;
   className: string;
@@ -37,6 +44,7 @@ interface ReportCardData {
   principalName?: string;
   teacherName?: string;
   semesterLabel?: string;
+  reflectionSummary?: ReflectionSummary | null;
 }
 
 function getHebrewDate(): string {
