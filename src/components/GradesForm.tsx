@@ -214,6 +214,34 @@ export default function GradesForm() {
     }
   };
 
+  const handleEnhanceSocialEmotional = async () => {
+    if (!socialEmotionalSummary.trim()) {
+      toast.error('נא לכתוב סיכום חברתי ורגשי לפני שיפור');
+      return;
+    }
+    setEnhancingSocial(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('rephrase-evaluation', {
+        body: {
+          evaluation: socialEmotionalSummary,
+          studentName: selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : '',
+          subject: 'סיכום חברתי ורגשי',
+        },
+      });
+      if (error) throw error;
+      if (data?.enhanced) {
+        setSocialEmotionalEnhanced(data.enhanced);
+        setEvalSaved(false);
+        toast.success('הניסוח שופר בהצלחה!');
+      }
+    } catch (e: any) {
+      console.error('Enhance social-emotional error:', e);
+      toast.error(e?.message || 'שגיאה בשיפור הניסוח');
+    } finally {
+      setEnhancingSocial(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedStudentId || !subject) {
       toast.error('נא לבחור תלמיד/ה ומקצוע');
