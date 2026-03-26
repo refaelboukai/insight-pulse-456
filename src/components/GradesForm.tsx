@@ -115,6 +115,7 @@ export default function GradesForm() {
           setPersonalNote('');
           setPersonalNoteEnhanced('');
           setSocialEmotionalSummary('');
+          setSocialEmotionalEnhanced('');
           setTeamRatings({});
           setEvalSaved(false);
         }
