@@ -1622,6 +1622,7 @@ export default function AdminDashboard() {
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'eden')}
                   {renderSupport(viewAssignments, 'eden', true, 'עדן')}
                   {renderStudents(viewStudents, 'eden', true)}
+                  {renderReportCards(viewStudents, 'eden')}
                   {renderReports(viewReports, 'eden')}
                   {renderStudentReflections(viewStudentIds, 'eden')}
                   <Button
