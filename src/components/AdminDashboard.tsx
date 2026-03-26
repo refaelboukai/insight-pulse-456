@@ -119,6 +119,12 @@ export default function AdminDashboard() {
   const [longAbsentStudents, setLongAbsentStudents] = useState<{ student: Student; consecutiveDays: number; reason: string }[]>([]);
   const [longAbsentFollowups, setLongAbsentFollowups] = useState<Map<string, any>>(new Map());
 
+  // Reflection summary state
+  const [reflectionSummaryMode, setReflectionSummaryMode] = useState<Record<string, string>>({});
+  const [reflectionCustomFrom, setReflectionCustomFrom] = useState<Record<string, string>>({});
+  const [reflectionCustomTo, setReflectionCustomTo] = useState<Record<string, string>>({});
+  const [reflectionVisibility, setReflectionVisibility] = useState<Record<string, boolean>>({});
+
   const toggleSection = (key: string) =>
     setExpandedSections(prev => ({ ...prev, [key]: !prev[key] }));
 
