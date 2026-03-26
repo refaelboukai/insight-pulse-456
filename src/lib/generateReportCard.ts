@@ -45,6 +45,7 @@ interface ReportCardData {
   teacherName?: string;
   semesterLabel?: string;
   reflectionSummary?: ReflectionSummary | null;
+  socialEmotionalSummary?: string | null;
 }
 
 function getHebrewDate(): string {

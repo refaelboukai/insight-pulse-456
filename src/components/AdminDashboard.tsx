@@ -458,6 +458,7 @@ export default function AdminDashboard() {
           self_efficacy: latestEval.self_efficacy,
         } : null,
         reflectionSummary,
+        socialEmotionalSummary: latestEval?.social_emotional_summary || null,
       });
 
       const semSuffix = reportCardSemester === 'all' ? 'שנתי' : SEMESTER_LABELS[reportCardSemester];
