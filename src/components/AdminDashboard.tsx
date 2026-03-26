@@ -416,6 +416,19 @@ export default function AdminDashboard() {
 
       const latestEval = (evals as any)?.[0] || null;
 
+      // Build reflection summary if visible
+      const isVisible = reflectionVisibility[student.id] !== false;
+      let reflectionSummary = null;
+      if (isVisible) {
+        const mode = reflectionSummaryMode[student.id] || 'year';
+        const customFrom = reflectionCustomFrom[student.id] || '';
+        const customTo = reflectionCustomTo[student.id] || '';
+        const summary = computeReflectionSummary(student.id, mode, customFrom, customTo);
+        if (summary) {
+          reflectionSummary = summary.averages;
+        }
+      }
+
       const blob = await generateReportCard({
         studentName: `${student.first_name} ${student.last_name}`,
         className: student.class_name || '',
@@ -444,6 +457,7 @@ export default function AdminDashboard() {
           cognitive_flexibility: latestEval.cognitive_flexibility,
           self_efficacy: latestEval.self_efficacy,
         } : null,
+        reflectionSummary,
       });
 
       const semSuffix = reportCardSemester === 'all' ? 'שנתי' : SEMESTER_LABELS[reportCardSemester];
@@ -755,31 +769,6 @@ export default function AdminDashboard() {
       </div>
       {expandedSections[`${sectionPrefix}_students`] && (
         <div className="px-3 pb-3">
-          {showManagement && (
-            <div className="mb-3 p-2 rounded-lg bg-muted/30 border border-border">
-              <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">תעודה לפי תקופה:</p>
-              <div className="grid grid-cols-4 gap-1">
-                {[
-                  { value: 'semester_a', label: 'סמסטר א׳' },
-                  { value: 'semester_b', label: 'סמסטר ב׳' },
-                  { value: 'summer', label: 'קיץ' },
-                  { value: 'all', label: 'שנתי' },
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setReportCardSemester(opt.value)}
-                    className={`text-[10px] py-1.5 px-1 rounded-md border transition-all font-semibold ${
-                      reportCardSemester === opt.value
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border bg-card hover:bg-primary/10'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
           {(sectionPrefix === 'mgmt' ? CLASS_OPTIONS : [sectionPrefix === 'tali' ? 'טלי' : 'עדן']).map(cls => {
             const classStudents = viewStudents.filter(s => s.class_name === cls);
             return (
@@ -825,22 +814,83 @@ export default function AdminDashboard() {
                           </Button>
                         </>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="self-center h-8 px-2 gap-1 text-[10px] border-primary/30 hover:bg-primary/10"
-                        disabled={generatingCard === s.id}
-                        onClick={() => handleGenerateReportCard(s)}
-                      >
-                        {generatingCard === s.id ? (
-                          <div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                        ) : (
-                          <GraduationCap className="h-3.5 w-3.5" />
-                        )}
-                        תעודה
-                      </Button>
                     </div>
                   ))}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </div>
+  );
+
+  // Render report cards section (separate from students)
+  const renderReportCards = (viewStudents: Student[], sectionPrefix: string) => (
+    <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
+      <SectionHeader title="הפקת תעודות" icon={GraduationCap} count={viewStudents.length} sectionKey={`${sectionPrefix}_reportCards`} />
+      {expandedSections[`${sectionPrefix}_reportCards`] && (
+        <div className="px-3 pb-3">
+          <div className="mb-3 p-2 rounded-lg bg-muted/30 border border-border">
+            <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">תעודה לפי תקופה:</p>
+            <div className="grid grid-cols-4 gap-1">
+              {[
+                { value: 'semester_a', label: 'סמסטר א׳' },
+                { value: 'semester_b', label: 'סמסטר ב׳' },
+                { value: 'summer', label: 'קיץ' },
+                { value: 'all', label: 'שנתי' },
+              ].map(opt => (
+                <button
+                  key={opt.value}
+                  onClick={() => setReportCardSemester(opt.value)}
+                  className={`text-[10px] py-1.5 px-1 rounded-md border transition-all font-semibold ${
+                    reportCardSemester === opt.value
+                      ? 'bg-primary text-primary-foreground border-primary'
+                      : 'border-border bg-card hover:bg-primary/10'
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
+          </div>
+          {(sectionPrefix === 'mgmt' ? CLASS_OPTIONS : [sectionPrefix === 'tali' ? 'טלי' : 'עדן']).map(cls => {
+            const classStudents = viewStudents.filter(s => s.class_name === cls);
+            return (
+              <div key={cls} className="mb-4 last:mb-0">
+                <div className="flex items-center gap-2 mb-2 pb-1.5 border-b border-primary/20">
+                  <span className="text-sm font-bold text-primary">🏫 {cls}</span>
+                  <Badge variant="secondary" className="text-[10px] px-1.5">{classStudents.length}</Badge>
+                </div>
+                <div className="space-y-1">
+                  {classStudents.map(s => {
+                    const isVisible = reflectionVisibility[s.id] !== false;
+                    const hasReflections = dailyReflections.some(r => r.student_id === s.id);
+                    return (
+                      <div key={s.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
+                        <span className="text-xs font-medium">{s.first_name} {s.last_name}</span>
+                        <div className="flex items-center gap-2">
+                          {hasReflections && isVisible && (
+                            <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">📊 כולל הערכה עצמית</span>
+                          )}
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 px-2 gap-1 text-[10px] border-primary/30 hover:bg-primary/10"
+                            disabled={generatingCard === s.id}
+                            onClick={() => handleGenerateReportCard(s)}
+                          >
+                            {generatingCard === s.id ? (
+                              <div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                            ) : (
+                              <GraduationCap className="h-3.5 w-3.5" />
+                            )}
+                            הפק תעודה
+                          </Button>
+                        </div>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             );
@@ -1416,6 +1466,7 @@ export default function AdminDashboard() {
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'mgmt')}
                   {renderSupport(viewAssignments, 'mgmt', true)}
                   {renderStudents(viewStudents, 'mgmt', true)}
+                  {renderReportCards(viewStudents, 'mgmt')}
                   {renderReports(viewReports, 'mgmt')}
                   {renderStudentReflections(viewStudentIds, 'mgmt')}
 
@@ -1515,6 +1566,7 @@ export default function AdminDashboard() {
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'tali')}
                   {renderSupport(viewAssignments, 'tali', true, 'טלי')}
                   {renderStudents(viewStudents, 'tali', true)}
+                  {renderReportCards(viewStudents, 'tali')}
                   {renderReports(viewReports, 'tali')}
                   {renderStudentReflections(viewStudentIds, 'tali')}
                   <Button
@@ -1570,6 +1622,7 @@ export default function AdminDashboard() {
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'eden')}
                   {renderSupport(viewAssignments, 'eden', true, 'עדן')}
                   {renderStudents(viewStudents, 'eden', true)}
+                  {renderReportCards(viewStudents, 'eden')}
                   {renderReports(viewReports, 'eden')}
                   {renderStudentReflections(viewStudentIds, 'eden')}
                   <Button
