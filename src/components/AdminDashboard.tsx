@@ -416,6 +416,19 @@ export default function AdminDashboard() {
 
       const latestEval = (evals as any)?.[0] || null;
 
+      // Build reflection summary if visible
+      const isVisible = reflectionVisibility[student.id] !== false;
+      let reflectionSummary = null;
+      if (isVisible) {
+        const mode = reflectionSummaryMode[student.id] || 'year';
+        const customFrom = reflectionCustomFrom[student.id] || '';
+        const customTo = reflectionCustomTo[student.id] || '';
+        const summary = computeReflectionSummary(student.id, mode, customFrom, customTo);
+        if (summary) {
+          reflectionSummary = summary.averages;
+        }
+      }
+
       const blob = await generateReportCard({
         studentName: `${student.first_name} ${student.last_name}`,
         className: student.class_name || '',
@@ -444,6 +457,7 @@ export default function AdminDashboard() {
           cognitive_flexibility: latestEval.cognitive_flexibility,
           self_efficacy: latestEval.self_efficacy,
         } : null,
+        reflectionSummary,
       });
 
       const semSuffix = reportCardSemester === 'all' ? 'שנתי' : SEMESTER_LABELS[reportCardSemester];
