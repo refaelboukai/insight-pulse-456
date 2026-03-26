@@ -13,7 +13,8 @@ import LearningStyleQuestionnaire from '@/components/LearningStyleQuestionnaire'
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile, Star } from 'lucide-react';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 
@@ -376,25 +377,43 @@ export default function StudentDashboard() {
           {reflectionSaved && <Badge variant="secondary" className="text-[10px] px-2 py-0 rounded-full mr-auto">נשמר ✓</Badge>}
         </div>
         {[
-          { key: 'class_presence', label: 'נוכחות בכיתה', emoji: '🏫' },
-          { key: 'behavior', label: 'התנהגות', emoji: '⭐' },
-          { key: 'social_interaction', label: 'אינטראקציה חברתית', emoji: '🤝' },
-          { key: 'academic_tasks', label: 'משימות לימודיות', emoji: '📚' },
+          { key: 'class_presence', label: 'נוכחות בכיתה', emoji: '🏫', descriptions: ['לא הייתי', 'הייתי קצת', 'הייתי חצי מהזמן', 'הייתי רוב הזמן', 'הייתי כל הזמן'] },
+          { key: 'behavior', label: 'התנהגות', emoji: '⭐', descriptions: ['קשה מאוד', 'קשה', 'בסדר', 'טוב', 'מצוין'] },
+          { key: 'social_interaction', label: 'אינטראקציה חברתית', emoji: '🤝', descriptions: ['לא דיברתי עם אף אחד', 'דיברתי מעט', 'הייתי בקשר עם חברים', 'שיתפתי פעולה טוב', 'יזמתי ועזרתי לאחרים'] },
+          { key: 'academic_tasks', label: 'משימות לימודיות', emoji: '📚', descriptions: ['לא עשיתי כלום', 'עשיתי מעט', 'עשיתי חלק', 'עשיתי רוב המשימות', 'השלמתי הכל'] },
         ].map(item => (
           <div key={item.key} className="space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-xs font-medium">{item.emoji} {item.label}</span>
               <span className="text-xs text-muted-foreground">{dailyReflection[item.key as keyof typeof dailyReflection]}/5</span>
             </div>
-            <Slider
-              value={[dailyReflection[item.key as keyof typeof dailyReflection]]}
-              onValueChange={([v]) => setDailyReflection(prev => ({ ...prev, [item.key]: v }))}
-              min={1}
-              max={5}
-              step={1}
-              className="w-full"
-              disabled={reflectionSaved}
-            />
+            <TooltipProvider delayDuration={0}>
+              <div className="flex gap-1 justify-center">
+                {[1, 2, 3, 4, 5].map(star => {
+                  const currentVal = dailyReflection[item.key as keyof typeof dailyReflection];
+                  const isFilled = star <= currentVal;
+                  return (
+                    <Tooltip key={star}>
+                      <TooltipTrigger asChild>
+                        <button
+                          type="button"
+                          disabled={reflectionSaved}
+                          onClick={() => setDailyReflection(prev => ({ ...prev, [item.key]: star }))}
+                          className="p-1 transition-transform hover:scale-125 disabled:opacity-70 disabled:hover:scale-100"
+                        >
+                          <Star
+                            className={`h-7 w-7 transition-colors ${isFilled ? 'fill-yellow-400 text-yellow-400' : 'fill-none text-muted-foreground/40'}`}
+                          />
+                        </button>
+                      </TooltipTrigger>
+                      <TooltipContent side="top" className="text-xs max-w-[150px] text-center">
+                        {item.descriptions[star - 1]}
+                      </TooltipContent>
+                    </Tooltip>
+                  );
+                })}
+              </div>
+            </TooltipProvider>
           </div>
         ))}
         {!reflectionSaved && (
