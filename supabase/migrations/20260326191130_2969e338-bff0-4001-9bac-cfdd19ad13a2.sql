@@ -1,0 +1,1 @@
+ALTER TABLE public.student_evaluations ADD COLUMN social_emotional_summary text DEFAULT NULL;

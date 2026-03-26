@@ -70,6 +70,8 @@ export default function GradesForm() {
   const [personalNote, setPersonalNote] = useState('');
   const [personalNoteEnhanced, setPersonalNoteEnhanced] = useState('');
   const [enhancingNote, setEnhancingNote] = useState(false);
+  // Social-emotional summary
+  const [socialEmotionalSummary, setSocialEmotionalSummary] = useState('');
 
   // Team evaluation state
   const [teamRatings, setTeamRatings] = useState<Record<string, string>>({});
@@ -99,6 +101,7 @@ export default function GradesForm() {
           const eval_ = data[0];
           setPersonalNote(eval_.personal_note || '');
           setPersonalNoteEnhanced('');
+          setSocialEmotionalSummary(eval_.social_emotional_summary || '');
           const ratings: Record<string, string> = {};
           ALL_TEAM_KEYS.forEach(key => {
             if (eval_[key]) ratings[key] = eval_[key];
@@ -108,6 +111,7 @@ export default function GradesForm() {
         } else {
           setPersonalNote('');
           setPersonalNoteEnhanced('');
+          setSocialEmotionalSummary('');
           setTeamRatings({});
           setEvalSaved(false);
         }
@@ -264,6 +268,7 @@ export default function GradesForm() {
         staff_user_id: user!.id,
         school_year: selectedYear,
         personal_note: personalNoteEnhanced.trim() || personalNote.trim() || null,
+        social_emotional_summary: socialEmotionalSummary.trim() || null,
       };
       ALL_TEAM_KEYS.forEach(key => {
         payload[key] = teamRatings[key] || null;
@@ -503,6 +508,24 @@ export default function GradesForm() {
             </Button>
           </div>
         )}
+      </div>
+
+      {/* ===== Social-Emotional Summary ===== */}
+      <div className="card-styled rounded-2xl overflow-hidden">
+        <div className="p-3 space-y-2">
+          <div className="flex items-center gap-2">
+            <Users2 className="h-4 w-4 text-emerald-500" />
+            <span className="text-sm font-semibold">סיכום חברתי ורגשי מתוך שאלונים</span>
+          </div>
+          <Textarea
+            placeholder="הדבק/י כאן סיכום חברתי ורגשי מתוך שאלונים מקצועיים..."
+            value={socialEmotionalSummary}
+            onChange={e => { setSocialEmotionalSummary(e.target.value); setEvalSaved(false); }}
+            className="min-h-[120px] text-sm"
+            maxLength={5000}
+          />
+          <p className="text-[10px] text-muted-foreground">סיכום זה יוצג בתעודה. ניתן להדביק טקסט מתוך שאלונים שמולאו.</p>
+        </div>
       </div>
 
       {/* ===== Accordion: דיווחי מורים מקצועיים ===== */}

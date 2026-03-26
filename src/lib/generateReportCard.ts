@@ -45,6 +45,7 @@ interface ReportCardData {
   teacherName?: string;
   semesterLabel?: string;
   reflectionSummary?: ReflectionSummary | null;
+  socialEmotionalSummary?: string | null;
 }
 
 function getHebrewDate(): string {
@@ -259,19 +260,23 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </div>
   ` : '';
 
-  // --- PAGE 1: Teacher (מחנכת) section ---
-  const page1Html = `
-    <div style="padding:36px 40px 28px;">
-      ${headerHtml}
-      <div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:16px;text-align:center;letter-spacing:1px;">📝 דיווח מחנכ/ת</div>
-      ${personalNoteHtml}
-      ${teamTableHtml}
-      ${reflectionHtml}
-      ${!personalNoteHtml && !teamTableHtml && !reflectionHtml ? `<div style="padding:30px;text-align:center;color:${colors.textLight};font-size:12px;">לא הוזנה הערכת מחנכ/ת</div>` : ''}
+  // --- Social-emotional summary block ---
+  const socialEmotionalHtml = data.socialEmotionalSummary ? `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:${colors.sectionTitle};margin-bottom:8px;border-bottom:1px solid ${colors.headerBorder};padding-bottom:4px;">סיכום חברתי ורגשי מתוך שאלונים</div>
+      <div style="font-size:11px;color:${colors.text};line-height:1.9;white-space:pre-wrap;padding:12px 14px;border:1px solid ${colors.noteBorder};border-radius:4px;background:${colors.noteBg};">${data.socialEmotionalSummary}</div>
     </div>
-  `;
+  ` : '';
 
-  // --- PAGE 2: Grades + Signatures ---
+  // --- Build pages dynamically to avoid cutting content ---
+  // Each content section is rendered individually, measured, and placed on pages
+
+  const A4_HEIGHT_PX = 842; // A4 at 595px width ≈ 842px height
+  const PAGE_PADDING_TOP = 36;
+  const PAGE_PADDING_BOTTOM = 28;
+  const USABLE_HEIGHT = A4_HEIGHT_PX - PAGE_PADDING_TOP - PAGE_PADDING_BOTTOM;
+
+  // --- Grade blocks ---
   const gradeBlocks = data.grades.map((g, i) => `
     <div style="display:flex;border-bottom:1px solid ${colors.tableBorder};background:${i % 2 === 0 ? colors.tableAltRow : colors.white};">
       <div style="padding:8px 14px;font-weight:600;font-size:11px;color:${colors.text};width:80px;flex-shrink:0;border-left:1px solid ${colors.tableBorder};">${g.subject}</div>
@@ -279,20 +284,6 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
       <div style="padding:8px 14px;font-size:11px;color:${colors.text};line-height:1.7;white-space:pre-wrap;flex:1;">${g.ai_enhanced_evaluation || g.verbal_evaluation || '—'}</div>
     </div>
   `).join('');
-
-  const gradesBlockHtml = `
-    <div style="margin-bottom:20px;">
-      <div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:12px;text-align:center;letter-spacing:1px;">📚 ציונים והערכות מקצועיות</div>
-      <div style="border:1px solid ${colors.tableBorder};">
-        <div style="display:flex;background:${colors.tableHeaderBg};border-bottom:1px solid ${colors.headerBorder};">
-          <div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};width:80px;flex-shrink:0;border-left:1px solid ${colors.headerBorder};">מקצוע</div>
-          <div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};width:45px;flex-shrink:0;text-align:center;border-left:1px solid ${colors.headerBorder};">ציון</div>
-          <div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};flex:1;">הערכה מילולית</div>
-        </div>
-        ${gradeBlocks || `<div style="padding:16px;text-align:center;color:${colors.textLight};font-size:11px;">אין ציונים להצגה</div>`}
-      </div>
-    </div>
-  `;
 
   const signatureLine = (label: string) => `
     <div style="display:flex;flex-direction:column;align-items:center;width:100px;">
@@ -315,50 +306,109 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </div>
   `;
 
-  const page2Html = `
-    <div style="padding:36px 40px 28px;">
-      ${headerHtml}
-      ${gradesBlockHtml}
-      ${signaturesHtml}
-    </div>
-  `;
+  // Content sections for page 1 area (educator report)
+  const page1Sections = [
+    `<div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:16px;text-align:center;letter-spacing:1px;">📝 דיווח מחנכ/ת</div>`,
+    personalNoteHtml,
+    teamTableHtml,
+    socialEmotionalHtml,
+    reflectionHtml,
+  ].filter(Boolean);
 
-  // Render both pages to canvases
-  const [canvas1, canvas2] = await Promise.all([
-    renderPageToCanvas(page1Html),
-    renderPageToCanvas(page2Html),
-  ]);
+  if (page1Sections.length === 0) {
+    page1Sections.push(`<div style="padding:30px;text-align:center;color:${colors.textLight};font-size:12px;">לא הוזנה הערכת מחנכ/ת</div>`);
+  }
+
+  // Content sections for page 2 area (grades + signatures)
+  const gradesTitle = `<div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:12px;text-align:center;letter-spacing:1px;">📚 ציונים והערכות מקצועיות</div>`;
+
+  // Measure a section's height
+  async function measureHeight(html: string): Promise<number> {
+    const container = document.createElement('div');
+    container.style.cssText = 'position:fixed;left:-9999px;top:0;width:595px;padding:0 40px;background:white;font-family:Arial,sans-serif;direction:rtl;z-index:-1;';
+    container.innerHTML = html;
+    document.body.appendChild(container);
+    await new Promise(r => setTimeout(r, 50));
+    const h = container.offsetHeight;
+    document.body.removeChild(container);
+    return h;
+  }
+
+  // Distribute sections across pages with header
+  async function buildPages(sections: string[]): Promise<string[]> {
+    const pages: string[] = [];
+    let currentSections: string[] = [];
+    let currentHeight = 0;
+
+    // Measure header height once
+    const headerHeight = await measureHeight(headerHtml);
+
+    for (const section of sections) {
+      const sectionHeight = await measureHeight(section);
+      if (currentSections.length > 0 && currentHeight + sectionHeight > USABLE_HEIGHT) {
+        // Flush current page
+        pages.push(`<div style="padding:${PAGE_PADDING_TOP}px 40px ${PAGE_PADDING_BOTTOM}px;">${headerHtml}${currentSections.join('')}</div>`);
+        currentSections = [];
+        currentHeight = headerHeight;
+      }
+      if (currentSections.length === 0) {
+        currentHeight = headerHeight;
+      }
+      currentSections.push(section);
+      currentHeight += sectionHeight;
+    }
+    if (currentSections.length > 0) {
+      pages.push(`<div style="padding:${PAGE_PADDING_TOP}px 40px ${PAGE_PADDING_BOTTOM}px;">${headerHtml}${currentSections.join('')}</div>`);
+    }
+    return pages;
+  }
+
+  // Build educator pages
+  const educatorPages = await buildPages(page1Sections);
+
+  // Build grades page sections
+  const gradesSections: string[] = [gradesTitle];
+
+  // Split grades into individual rows to avoid cutting
+  if (data.grades.length > 0) {
+    const tableStart = `<div style="border:1px solid ${colors.tableBorder};"><div style="display:flex;background:${colors.tableHeaderBg};border-bottom:1px solid ${colors.headerBorder};"><div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};width:80px;flex-shrink:0;border-left:1px solid ${colors.headerBorder};">מקצוע</div><div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};width:45px;flex-shrink:0;text-align:center;border-left:1px solid ${colors.headerBorder};">ציון</div><div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};flex:1;">הערכה מילולית</div></div>${gradeBlocks}</div>`;
+    gradesSections.push(tableStart);
+  } else {
+    gradesSections.push(`<div style="border:1px solid ${colors.tableBorder};padding:16px;text-align:center;color:${colors.textLight};font-size:11px;">אין ציונים להצגה</div>`);
+  }
+
+  gradesSections.push(signaturesHtml);
+
+  const gradesPages = await buildPages(gradesSections);
+
+  // Render all pages
+  const allPageHtmls = [...educatorPages, ...gradesPages];
+  const canvases = await Promise.all(allPageHtmls.map(html => renderPageToCanvas(html)));
 
   const pdf = new jsPDF('p', 'mm', 'a4');
   const pdfWidth = pdf.internal.pageSize.getWidth();
   const pdfPageHeight = pdf.internal.pageSize.getHeight();
 
-  // Add page 1
-  const img1Height = (canvas1.height * pdfWidth) / canvas1.width;
-  let heightLeft = img1Height;
-  let position = 0;
-  pdf.addImage(canvas1.toDataURL('image/png'), 'PNG', 0, position, pdfWidth, img1Height);
-  heightLeft -= pdfPageHeight;
-  while (heightLeft > 0) {
-    position -= pdfPageHeight;
-    pdf.addPage();
-    pdf.addImage(canvas1.toDataURL('image/png'), 'PNG', 0, position, pdfWidth, img1Height);
-    heightLeft -= pdfPageHeight;
-  }
-
-  // Add page 2
-  pdf.addPage();
-  const img2Height = (canvas2.height * pdfWidth) / canvas2.width;
-  heightLeft = img2Height;
-  position = 0;
-  pdf.addImage(canvas2.toDataURL('image/png'), 'PNG', 0, position, pdfWidth, img2Height);
-  heightLeft -= pdfPageHeight;
-  while (heightLeft > 0) {
-    position -= pdfPageHeight;
-    pdf.addPage();
-    pdf.addImage(canvas2.toDataURL('image/png'), 'PNG', 0, position, pdfWidth, img2Height);
-    heightLeft -= pdfPageHeight;
-  }
+  canvases.forEach((canvas, idx) => {
+    if (idx > 0) pdf.addPage();
+    const imgHeight = (canvas.height * pdfWidth) / canvas.width;
+    // Scale to fit single page if possible
+    if (imgHeight <= pdfPageHeight) {
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 0, pdfWidth, imgHeight);
+    } else {
+      // Overflow: paginate
+      let heightLeft = imgHeight;
+      let position = 0;
+      pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, pdfWidth, imgHeight);
+      heightLeft -= pdfPageHeight;
+      while (heightLeft > 0) {
+        position -= pdfPageHeight;
+        pdf.addPage();
+        pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, position, pdfWidth, imgHeight);
+        heightLeft -= pdfPageHeight;
+      }
+    }
+  });
 
   return pdf.output('blob');
 }

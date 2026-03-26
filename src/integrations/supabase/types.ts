@@ -713,6 +713,7 @@ export type Database = {
           problem_solving: string | null
           school_year: string
           self_efficacy: string | null
+          social_emotional_summary: string | null
           staff_user_id: string
           student_id: string
           studentship: string | null
@@ -737,6 +738,7 @@ export type Database = {
           problem_solving?: string | null
           school_year?: string
           self_efficacy?: string | null
+          social_emotional_summary?: string | null
           staff_user_id: string
           student_id: string
           studentship?: string | null
@@ -761,6 +763,7 @@ export type Database = {
           problem_solving?: string | null
           school_year?: string
           self_efficacy?: string | null
+          social_emotional_summary?: string | null
           staff_user_id?: string
           student_id?: string
           studentship?: string | null
