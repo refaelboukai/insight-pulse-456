@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -15,6 +15,36 @@ export default function Login() {
   const [saveCode, setSaveCode] = useState(!!savedCode);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [autoLogging, setAutoLogging] = useState(!!savedCode);
+
+  // Auto-login if saved code exists
+  useEffect(() => {
+    if (savedCode && autoLogging) {
+      (async () => {
+        setLoading(true);
+        const { error } = await loginWithCode(savedCode);
+        if (error) {
+          setAutoLogging(false);
+          setError(error);
+        }
+        setLoading(false);
+      })();
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Show nothing while auto-logging in
+  if (autoLogging && loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center p-4" style={{ background: 'var(--gradient-warm)' }}>
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 mx-auto flex items-center justify-center animate-pulse">
+            <div className="w-6 h-6 rounded-full bg-primary/30" />
+          </div>
+          <p className="text-muted-foreground text-sm">מתחבר אוטומטית...</p>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
