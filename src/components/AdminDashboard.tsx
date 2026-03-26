@@ -1566,6 +1566,7 @@ export default function AdminDashboard() {
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'tali')}
                   {renderSupport(viewAssignments, 'tali', true, 'טלי')}
                   {renderStudents(viewStudents, 'tali', true)}
+                  {renderReportCards(viewStudents, 'tali')}
                   {renderReports(viewReports, 'tali')}
                   {renderStudentReflections(viewStudentIds, 'tali')}
                   <Button
