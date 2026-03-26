@@ -1466,6 +1466,7 @@ export default function AdminDashboard() {
                   {renderWeeklySupport(viewStudentIds, viewStudents, 'mgmt')}
                   {renderSupport(viewAssignments, 'mgmt', true)}
                   {renderStudents(viewStudents, 'mgmt', true)}
+                  {renderReportCards(viewStudents, 'mgmt')}
                   {renderReports(viewReports, 'mgmt')}
                   {renderStudentReflections(viewStudentIds, 'mgmt')}
 
