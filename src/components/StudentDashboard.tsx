@@ -349,21 +349,6 @@ export default function StudentDashboard() {
           </div>
           {dailyChecks.brain && <Badge variant="default" className="text-[10px] px-2 py-0 rounded-full bg-primary/80">בוצע ✓</Badge>}
         </label>
-        <a
-          href="#"
-          onClick={(e) => {
-            e.preventDefault();
-            // Switch to the reset/calm zone tab
-            const resetTab = document.querySelector('[data-value="reset"]') as HTMLButtonElement | null;
-            if (resetTab) resetTab.click();
-          }}
-          className="flex items-center gap-3 p-3 rounded-xl border border-dashed border-accent/40 bg-accent/5 hover:bg-accent/10 transition-colors cursor-pointer group"
-        >
-          <div className="flex items-center gap-2 flex-1">
-            <Leaf className="h-4 w-4 text-accent" />
-            <span className="text-sm font-medium text-accent group-hover:text-accent/80 transition-colors">מעבר לאזור ההרגעה 🧘</span>
-          </div>
-        </a>
       </div>
 
       {/* היום שלי - Daily Reflection */}
