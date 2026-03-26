@@ -556,6 +556,32 @@ export default function GradesForm() {
             className="min-h-[120px] text-sm"
             maxLength={5000}
           />
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs w-full"
+            onClick={handleEnhanceSocialEmotional}
+            disabled={enhancingSocial || !socialEmotionalSummary.trim()}
+          >
+            {enhancingSocial ? (
+              <><div className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" /> משפר ניסוח...</>
+            ) : (
+              <><Sparkles className="h-3.5 w-3.5" /> שיפור ניסוח עם AI</>
+            )}
+          </Button>
+          {socialEmotionalEnhanced && (
+            <div className="mt-2 space-y-1.5 p-2.5 rounded-lg bg-muted/50 border border-border">
+              <div className="flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-primary" />
+                <span className="text-sm font-semibold text-primary">ניסוח משופר</span>
+              </div>
+              <Textarea
+                value={socialEmotionalEnhanced}
+                onChange={e => { setSocialEmotionalEnhanced(e.target.value); setEvalSaved(false); }}
+                className="min-h-[100px] text-sm"
+              />
+            </div>
+          )}
           <p className="text-[10px] text-muted-foreground">סיכום זה יוצג בתעודה. ניתן להדביק טקסט מתוך שאלונים שמולאו.</p>
         </div>
       </div>
