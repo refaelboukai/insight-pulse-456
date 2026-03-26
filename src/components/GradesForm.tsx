@@ -70,6 +70,8 @@ export default function GradesForm() {
   const [personalNote, setPersonalNote] = useState('');
   const [personalNoteEnhanced, setPersonalNoteEnhanced] = useState('');
   const [enhancingNote, setEnhancingNote] = useState(false);
+  // Social-emotional summary
+  const [socialEmotionalSummary, setSocialEmotionalSummary] = useState('');
 
   // Team evaluation state
   const [teamRatings, setTeamRatings] = useState<Record<string, string>>({});
