@@ -101,6 +101,7 @@ export default function GradesForm() {
           const eval_ = data[0];
           setPersonalNote(eval_.personal_note || '');
           setPersonalNoteEnhanced('');
+          setSocialEmotionalSummary(eval_.social_emotional_summary || '');
           const ratings: Record<string, string> = {};
           ALL_TEAM_KEYS.forEach(key => {
             if (eval_[key]) ratings[key] = eval_[key];
@@ -110,6 +111,7 @@ export default function GradesForm() {
         } else {
           setPersonalNote('');
           setPersonalNoteEnhanced('');
+          setSocialEmotionalSummary('');
           setTeamRatings({});
           setEvalSaved(false);
         }
