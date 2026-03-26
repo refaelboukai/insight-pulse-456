@@ -1000,11 +1000,6 @@ export default function AdminDashboard() {
     academic_tasks: ['לא עשיתי כלום', 'עשיתי מעט', 'עשיתי חלק', 'עשיתי רוב המשימות', 'השלמתי הכל'],
   };
 
-  // State for reflection summaries per student
-  const [reflectionSummaryMode, setReflectionSummaryMode] = useState<Record<string, string>>({});
-  const [reflectionCustomFrom, setReflectionCustomFrom] = useState<Record<string, string>>({});
-  const [reflectionCustomTo, setReflectionCustomTo] = useState<Record<string, string>>({});
-  const [reflectionVisibility, setReflectionVisibility] = useState<Record<string, boolean>>({});
 
   const getReflectionDateRange = (mode: string, customFrom?: string, customTo?: string) => {
     const now = new Date();
