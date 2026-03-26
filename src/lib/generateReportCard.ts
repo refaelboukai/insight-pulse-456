@@ -225,6 +225,40 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </div>
   `;
 
+  // --- Reflection summary block ---
+  const REFL_LABELS: Record<string, string> = {
+    class_presence: 'נוכחות בשיעור',
+    behavior: 'התנהגות',
+    social_interaction: 'אינטראקציה חברתית',
+    academic_tasks: 'משימות לימודיות',
+  };
+  const reflSummary = data.reflectionSummary;
+  const reflectionHtml = reflSummary ? `
+    <div style="margin-bottom:20px;">
+      <div style="font-size:12px;font-weight:700;color:${colors.sectionTitle};margin-bottom:8px;border-bottom:1px solid ${colors.headerBorder};padding-bottom:4px;">הערכה עצמית של התלמיד/ה</div>
+      <table style="width:100%;border-collapse:collapse;border:1px solid ${colors.tableBorder};">
+        <thead>
+          <tr style="background:${colors.tableHeaderBg};">
+            <th style="padding:7px 16px;font-size:11px;text-align:right;font-weight:600;color:${colors.sectionTitle};border-bottom:1px solid ${colors.headerBorder};">תחום</th>
+            <th style="padding:7px 16px;font-size:11px;text-align:center;font-weight:600;color:${colors.sectionTitle};border-bottom:1px solid ${colors.headerBorder};width:80px;">ממוצע</th>
+            <th style="padding:7px 16px;font-size:11px;text-align:center;font-weight:600;color:${colors.sectionTitle};border-bottom:1px solid ${colors.headerBorder};width:120px;">כוכבים</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${Object.entries(REFL_LABELS).map(([key, label]) => {
+            const val = reflSummary[key as keyof ReflectionSummary];
+            const stars = '★'.repeat(Math.round(val)) + '☆'.repeat(5 - Math.round(val));
+            return `<tr>
+              <td style="padding:7px 16px;border-bottom:1px solid ${colors.tableBorder};font-size:11px;color:${colors.text};">${label}</td>
+              <td style="padding:7px 16px;border-bottom:1px solid ${colors.tableBorder};font-size:11px;color:${colors.text};text-align:center;font-weight:600;">${val}</td>
+              <td style="padding:7px 16px;border-bottom:1px solid ${colors.tableBorder};font-size:13px;color:${colors.accent};text-align:center;letter-spacing:2px;">${stars}</td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    </div>
+  ` : '';
+
   // --- PAGE 1: Teacher (מחנכת) section ---
   const page1Html = `
     <div style="padding:36px 40px 28px;">
@@ -232,7 +266,8 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
       <div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:16px;text-align:center;letter-spacing:1px;">📝 דיווח מחנכ/ת</div>
       ${personalNoteHtml}
       ${teamTableHtml}
-      ${!personalNoteHtml && !teamTableHtml ? `<div style="padding:30px;text-align:center;color:${colors.textLight};font-size:12px;">לא הוזנה הערכת מחנכ/ת</div>` : ''}
+      ${reflectionHtml}
+      ${!personalNoteHtml && !teamTableHtml && !reflectionHtml ? `<div style="padding:30px;text-align:center;color:${colors.textLight};font-size:12px;">לא הוזנה הערכת מחנכ/ת</div>` : ''}
     </div>
   `;
 
