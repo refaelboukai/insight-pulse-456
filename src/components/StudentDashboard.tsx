@@ -381,41 +381,49 @@ export default function StudentDashboard() {
           { key: 'behavior', label: 'התנהגות', emoji: '⭐', descriptions: ['קשה מאוד', 'קשה', 'בסדר', 'טוב', 'מצוין'] },
           { key: 'social_interaction', label: 'אינטראקציה חברתית', emoji: '🤝', descriptions: ['לא דיברתי עם אף אחד', 'דיברתי מעט', 'הייתי בקשר עם חברים', 'שיתפתי פעולה טוב', 'יזמתי ועזרתי לאחרים'] },
           { key: 'academic_tasks', label: 'משימות לימודיות', emoji: '📚', descriptions: ['לא עשיתי כלום', 'עשיתי מעט', 'עשיתי חלק', 'עשיתי רוב המשימות', 'השלמתי הכל'] },
-        ].map(item => (
-          <div key={item.key} className="space-y-1.5">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">{item.emoji} {item.label}</span>
-              <span className="text-xs text-muted-foreground">{dailyReflection[item.key as keyof typeof dailyReflection]}/5</span>
-            </div>
-            <TooltipProvider delayDuration={0}>
-              <div className="flex gap-1 justify-center">
-                {[1, 2, 3, 4, 5].map(star => {
-                  const currentVal = dailyReflection[item.key as keyof typeof dailyReflection];
-                  const isFilled = star <= currentVal;
-                  return (
-                    <Tooltip key={star}>
-                      <TooltipTrigger asChild>
-                        <button
-                          type="button"
-                          disabled={reflectionSaved}
-                          onClick={() => setDailyReflection(prev => ({ ...prev, [item.key]: star }))}
-                          className="p-1 transition-transform hover:scale-125 disabled:opacity-70 disabled:hover:scale-100"
-                        >
-                          <Star
-                            className={`h-7 w-7 transition-colors ${isFilled ? 'fill-yellow-400 text-yellow-400' : 'fill-none text-muted-foreground/40'}`}
-                          />
-                        </button>
-                      </TooltipTrigger>
-                      <TooltipContent side="top" className="text-xs max-w-[150px] text-center">
-                        {item.descriptions[star - 1]}
-                      </TooltipContent>
-                    </Tooltip>
-                  );
-                })}
+        ].map(item => {
+          const currentVal = dailyReflection[item.key as keyof typeof dailyReflection];
+          return (
+            <div key={item.key} className="rounded-xl border border-border/50 bg-muted/30 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-semibold text-foreground/80">{item.emoji} {item.label}</span>
+                <span className="text-[10px] text-muted-foreground font-medium bg-background px-2 py-0.5 rounded-full">
+                  {item.descriptions[currentVal - 1]}
+                </span>
               </div>
-            </TooltipProvider>
-          </div>
-        ))}
+              <TooltipProvider delayDuration={0}>
+                <div className="flex gap-2 justify-center py-1">
+                  {[1, 2, 3, 4, 5].map(star => {
+                    const isFilled = star <= currentVal;
+                    return (
+                      <Tooltip key={star}>
+                        <TooltipTrigger asChild>
+                          <button
+                            type="button"
+                            disabled={reflectionSaved}
+                            onClick={() => setDailyReflection(prev => ({ ...prev, [item.key]: star }))}
+                            className="p-0.5 transition-all duration-200 hover:scale-110 disabled:opacity-60 disabled:hover:scale-100"
+                          >
+                            <Star
+                              className={`h-6 w-6 transition-all duration-200 ${
+                                isFilled
+                                  ? 'fill-primary/80 text-primary drop-shadow-sm'
+                                  : 'fill-none text-border hover:text-primary/30'
+                              }`}
+                            />
+                          </button>
+                        </TooltipTrigger>
+                        <TooltipContent side="top" className="text-[11px] max-w-[160px] text-center font-medium">
+                          {item.descriptions[star - 1]}
+                        </TooltipContent>
+                      </Tooltip>
+                    );
+                  })}
+                </div>
+              </TooltipProvider>
+            </div>
+          );
+        })}
         {!reflectionSaved && (
           <Button
             size="sm"
