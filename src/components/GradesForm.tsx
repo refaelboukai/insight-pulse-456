@@ -72,6 +72,8 @@ export default function GradesForm() {
   const [enhancingNote, setEnhancingNote] = useState(false);
   // Social-emotional summary
   const [socialEmotionalSummary, setSocialEmotionalSummary] = useState('');
+  const [socialEmotionalEnhanced, setSocialEmotionalEnhanced] = useState('');
+  const [enhancingSocial, setEnhancingSocial] = useState(false);
 
   // Team evaluation state
   const [teamRatings, setTeamRatings] = useState<Record<string, string>>({});
@@ -102,6 +104,7 @@ export default function GradesForm() {
           setPersonalNote(eval_.personal_note || '');
           setPersonalNoteEnhanced('');
           setSocialEmotionalSummary(eval_.social_emotional_summary || '');
+          setSocialEmotionalEnhanced('');
           const ratings: Record<string, string> = {};
           ALL_TEAM_KEYS.forEach(key => {
             if (eval_[key]) ratings[key] = eval_[key];
@@ -112,6 +115,7 @@ export default function GradesForm() {
           setPersonalNote('');
           setPersonalNoteEnhanced('');
           setSocialEmotionalSummary('');
+          setSocialEmotionalEnhanced('');
           setTeamRatings({});
           setEvalSaved(false);
         }
@@ -210,6 +214,34 @@ export default function GradesForm() {
     }
   };
 
+  const handleEnhanceSocialEmotional = async () => {
+    if (!socialEmotionalSummary.trim()) {
+      toast.error('נא לכתוב סיכום חברתי ורגשי לפני שיפור');
+      return;
+    }
+    setEnhancingSocial(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('rephrase-evaluation', {
+        body: {
+          evaluation: socialEmotionalSummary,
+          studentName: selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : '',
+          subject: 'סיכום חברתי ורגשי',
+        },
+      });
+      if (error) throw error;
+      if (data?.enhanced) {
+        setSocialEmotionalEnhanced(data.enhanced);
+        setEvalSaved(false);
+        toast.success('הניסוח שופר בהצלחה!');
+      }
+    } catch (e: any) {
+      console.error('Enhance social-emotional error:', e);
+      toast.error(e?.message || 'שגיאה בשיפור הניסוח');
+    } finally {
+      setEnhancingSocial(false);
+    }
+  };
+
   const handleSubmit = async () => {
     if (!selectedStudentId || !subject) {
       toast.error('נא לבחור תלמיד/ה ומקצוע');
@@ -268,7 +300,7 @@ export default function GradesForm() {
         staff_user_id: user!.id,
         school_year: selectedYear,
         personal_note: personalNoteEnhanced.trim() || personalNote.trim() || null,
-        social_emotional_summary: socialEmotionalSummary.trim() || null,
+        social_emotional_summary: socialEmotionalEnhanced.trim() || socialEmotionalSummary.trim() || null,
       };
       ALL_TEAM_KEYS.forEach(key => {
         payload[key] = teamRatings[key] || null;
@@ -524,6 +556,32 @@ export default function GradesForm() {
             className="min-h-[120px] text-sm"
             maxLength={5000}
           />
+          <Button
+            variant="outline"
+            size="sm"
+            className="gap-1.5 text-xs w-full"
+            onClick={handleEnhanceSocialEmotional}
+            disabled={enhancingSocial || !socialEmotionalSummary.trim()}
+          >
+            {enhancingSocial ? (
+              <><div className="w-3.5 h-3.5 rounded-full border-2 border-primary border-t-transparent animate-spin" /> משפר ניסוח...</>
+            ) : (
+              <><Sparkles className="h-3.5 w-3.5" /> שיפור ניסוח עם AI</>
+            )}
+          </Button>
+          {socialEmotionalEnhanced && (
+            <div className="mt-2 space-y-1.5 p-2.5 rounded-lg bg-muted/50 border border-border">
+              <div className="flex items-center gap-1">
+                <Sparkles className="h-3 w-3 text-primary" />
+                <span className="text-sm font-semibold text-primary">ניסוח משופר</span>
+              </div>
+              <Textarea
+                value={socialEmotionalEnhanced}
+                onChange={e => { setSocialEmotionalEnhanced(e.target.value); setEvalSaved(false); }}
+                className="min-h-[100px] text-sm"
+              />
+            </div>
+          )}
           <p className="text-[10px] text-muted-foreground">סיכום זה יוצג בתעודה. ניתן להדביק טקסט מתוך שאלונים שמולאו.</p>
         </div>
       </div>
