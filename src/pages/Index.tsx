@@ -12,7 +12,7 @@ import DailyReminderBanner from '@/components/DailyReminderBanner';
 
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, Leaf, BookOpen } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 export default function Index() {
