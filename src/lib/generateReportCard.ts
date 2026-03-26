@@ -276,15 +276,6 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   const PAGE_PADDING_BOTTOM = 28;
   const USABLE_HEIGHT = A4_HEIGHT_PX - PAGE_PADDING_TOP - PAGE_PADDING_BOTTOM;
 
-  // --- Grade blocks ---
-  const gradeBlocks = data.grades.map((g, i) => `
-    <div style="display:flex;border-bottom:1px solid ${colors.tableBorder};background:${i % 2 === 0 ? colors.tableAltRow : colors.white};">
-      <div style="padding:8px 14px;font-weight:600;font-size:11px;color:${colors.text};width:80px;flex-shrink:0;border-left:1px solid ${colors.tableBorder};">${g.subject}</div>
-      <div style="padding:8px 14px;font-size:13px;color:${colors.accent};text-align:center;width:45px;flex-shrink:0;font-weight:700;border-left:1px solid ${colors.tableBorder};">${g.grade ?? '—'}</div>
-      <div style="padding:8px 14px;font-size:11px;color:${colors.text};line-height:1.7;white-space:pre-wrap;flex:1;">${g.ai_enhanced_evaluation || g.verbal_evaluation || '—'}</div>
-    </div>
-  `).join('');
-
   const signatureLine = (label: string) => `
     <div style="display:flex;flex-direction:column;align-items:center;width:100px;">
       <div style="width:80px;border-bottom:1px solid ${colors.headerBorder};margin-bottom:6px;height:28px;"></div>
@@ -366,13 +357,18 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   // Build educator pages
   const educatorPages = await buildPages(page1Sections);
 
-  // Build grades page sections
+  // Build grades page sections - split each grade row individually to avoid cutting
   const gradesSections: string[] = [gradesTitle];
 
-  // Split grades into individual rows to avoid cutting
+  const gradeTableHeader = `<div style="border:1px solid ${colors.tableBorder};border-bottom:none;"><div style="display:flex;background:${colors.tableHeaderBg};border-bottom:1px solid ${colors.headerBorder};"><div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};width:80px;flex-shrink:0;border-left:1px solid ${colors.headerBorder};">מקצוע</div><div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};width:45px;flex-shrink:0;text-align:center;border-left:1px solid ${colors.headerBorder};">ציון</div><div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};flex:1;">הערכה מילולית</div></div></div>`;
+
   if (data.grades.length > 0) {
-    const tableStart = `<div style="border:1px solid ${colors.tableBorder};"><div style="display:flex;background:${colors.tableHeaderBg};border-bottom:1px solid ${colors.headerBorder};"><div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};width:80px;flex-shrink:0;border-left:1px solid ${colors.headerBorder};">מקצוע</div><div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};width:45px;flex-shrink:0;text-align:center;border-left:1px solid ${colors.headerBorder};">ציון</div><div style="padding:8px 14px;font-size:11px;font-weight:600;color:${colors.sectionTitle};flex:1;">הערכה מילולית</div></div>${gradeBlocks}</div>`;
-    gradesSections.push(tableStart);
+    gradesSections.push(gradeTableHeader);
+    data.grades.forEach((g, i) => {
+      const isLast = i === data.grades.length - 1;
+      const rowHtml = `<div style="border-left:1px solid ${colors.tableBorder};border-right:1px solid ${colors.tableBorder};${isLast ? `border-bottom:1px solid ${colors.tableBorder};` : ''}"><div style="display:flex;border-bottom:1px solid ${colors.tableBorder};background:${i % 2 === 0 ? colors.tableAltRow : colors.white};"><div style="padding:8px 14px;font-weight:600;font-size:11px;color:${colors.text};width:80px;flex-shrink:0;border-left:1px solid ${colors.tableBorder};">${g.subject}</div><div style="padding:8px 14px;font-size:13px;color:${colors.accent};text-align:center;width:45px;flex-shrink:0;font-weight:700;border-left:1px solid ${colors.tableBorder};">${g.grade ?? '—'}</div><div style="padding:8px 14px;font-size:11px;color:${colors.text};line-height:1.7;white-space:pre-wrap;flex:1;">${g.ai_enhanced_evaluation || g.verbal_evaluation || '—'}</div></div></div>`;
+      gradesSections.push(rowHtml);
+    });
   } else {
     gradesSections.push(`<div style="border:1px solid ${colors.tableBorder};padding:16px;text-align:center;color:${colors.textLight};font-size:11px;">אין ציונים להצגה</div>`);
   }
