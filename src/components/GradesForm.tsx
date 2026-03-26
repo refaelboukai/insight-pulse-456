@@ -268,6 +268,7 @@ export default function GradesForm() {
         staff_user_id: user!.id,
         school_year: selectedYear,
         personal_note: personalNoteEnhanced.trim() || personalNote.trim() || null,
+        social_emotional_summary: socialEmotionalSummary.trim() || null,
       };
       ALL_TEAM_KEYS.forEach(key => {
         payload[key] = teamRatings[key] || null;
