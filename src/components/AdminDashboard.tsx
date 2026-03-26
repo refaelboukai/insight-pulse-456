@@ -769,31 +769,6 @@ export default function AdminDashboard() {
       </div>
       {expandedSections[`${sectionPrefix}_students`] && (
         <div className="px-3 pb-3">
-          {showManagement && (
-            <div className="mb-3 p-2 rounded-lg bg-muted/30 border border-border">
-              <p className="text-[10px] font-semibold text-muted-foreground mb-1.5">תעודה לפי תקופה:</p>
-              <div className="grid grid-cols-4 gap-1">
-                {[
-                  { value: 'semester_a', label: 'סמסטר א׳' },
-                  { value: 'semester_b', label: 'סמסטר ב׳' },
-                  { value: 'summer', label: 'קיץ' },
-                  { value: 'all', label: 'שנתי' },
-                ].map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => setReportCardSemester(opt.value)}
-                    className={`text-[10px] py-1.5 px-1 rounded-md border transition-all font-semibold ${
-                      reportCardSemester === opt.value
-                        ? 'bg-primary text-primary-foreground border-primary'
-                        : 'border-border bg-card hover:bg-primary/10'
-                    }`}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
           {(sectionPrefix === 'mgmt' ? CLASS_OPTIONS : [sectionPrefix === 'tali' ? 'טלי' : 'עדן']).map(cls => {
             const classStudents = viewStudents.filter(s => s.class_name === cls);
             return (
@@ -839,20 +814,6 @@ export default function AdminDashboard() {
                           </Button>
                         </>
                       )}
-                      <Button
-                        size="sm"
-                        variant="outline"
-                        className="self-center h-8 px-2 gap-1 text-[10px] border-primary/30 hover:bg-primary/10"
-                        disabled={generatingCard === s.id}
-                        onClick={() => handleGenerateReportCard(s)}
-                      >
-                        {generatingCard === s.id ? (
-                          <div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                        ) : (
-                          <GraduationCap className="h-3.5 w-3.5" />
-                        )}
-                        תעודה
-                      </Button>
                     </div>
                   ))}
                 </div>
