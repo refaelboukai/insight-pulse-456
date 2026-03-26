@@ -987,6 +987,104 @@ export default function AdminDashboard() {
     academic_tasks: 'משימות לימודיות',
   };
 
+  const REFLECTION_STAR_LABELS: Record<string, string[]> = {
+    class_presence: ['לא הייתי', 'הייתי קצת', 'הייתי חצי מהזמן', 'הייתי רוב הזמן', 'הייתי כל הזמן'],
+    behavior: ['קשה מאוד', 'קשה', 'בסדר', 'טוב', 'מצוין'],
+    social_interaction: ['לא דיברתי עם אף אחד', 'דיברתי מעט', 'הייתי בקשר עם חברים', 'שיתפתי פעולה טוב', 'יזמתי ועזרתי לאחרים'],
+    academic_tasks: ['לא עשיתי כלום', 'עשיתי מעט', 'עשיתי חלק', 'עשיתי רוב המשימות', 'השלמתי הכל'],
+  };
+
+  // State for reflection summaries per student
+  const [reflectionSummaryMode, setReflectionSummaryMode] = useState<Record<string, string>>({});
+  const [reflectionCustomFrom, setReflectionCustomFrom] = useState<Record<string, string>>({});
+  const [reflectionCustomTo, setReflectionCustomTo] = useState<Record<string, string>>({});
+  const [reflectionVisibility, setReflectionVisibility] = useState<Record<string, boolean>>({});
+
+  const getReflectionDateRange = (mode: string, customFrom?: string, customTo?: string) => {
+    const now = new Date();
+    let from: Date, to: Date;
+    switch (mode) {
+      case 'week': {
+        from = new Date(now);
+        from.setDate(now.getDate() - 7);
+        to = now;
+        break;
+      }
+      case 'month': {
+        from = new Date(now.getFullYear(), now.getMonth(), 1);
+        to = now;
+        break;
+      }
+      case 'year': {
+        const { from: yf, to: yt } = getYearDateRange(selectedYear);
+        from = new Date(yf);
+        to = new Date(yt);
+        break;
+      }
+      case 'custom': {
+        from = customFrom ? new Date(customFrom) : new Date(now.getFullYear(), now.getMonth(), 1);
+        to = customTo ? new Date(customTo) : now;
+        break;
+      }
+      default: {
+        from = new Date(now);
+        from.setDate(now.getDate() - 7);
+        to = now;
+      }
+    }
+    return { from, to };
+  };
+
+  const computeReflectionSummary = (studentId: string, mode: string, customFrom?: string, customTo?: string) => {
+    const { from, to } = getReflectionDateRange(mode, customFrom, customTo);
+    const filtered = dailyReflections.filter(r => {
+      if (r.student_id !== studentId) return false;
+      const d = new Date(r.created_at);
+      return d >= from && d <= to;
+    });
+    if (filtered.length === 0) return null;
+
+    const sums = { class_presence: 0, behavior: 0, social_interaction: 0, academic_tasks: 0 };
+    filtered.forEach(r => {
+      sums.class_presence += r.class_presence || 0;
+      sums.behavior += r.behavior || 0;
+      sums.social_interaction += r.social_interaction || 0;
+      sums.academic_tasks += r.academic_tasks || 0;
+    });
+    const count = filtered.length;
+    return {
+      count,
+      averages: {
+        class_presence: +(sums.class_presence / count).toFixed(1),
+        behavior: +(sums.behavior / count).toFixed(1),
+        social_interaction: +(sums.social_interaction / count).toFixed(1),
+        academic_tasks: +(sums.academic_tasks / count).toFixed(1),
+      },
+      from,
+      to,
+    };
+  };
+
+  const getModeLabel = (mode: string) => {
+    switch (mode) {
+      case 'week': return 'שבועי';
+      case 'month': return 'חודשי';
+      case 'year': return 'שנתי';
+      case 'custom': return 'מותאם אישית';
+      default: return 'שבועי';
+    }
+  };
+
+  const renderStars = (value: number, max: number = 5) => {
+    return (
+      <div className="flex gap-0.5">
+        {Array.from({ length: max }, (_, i) => (
+          <span key={i} className={`text-xs ${i < Math.round(value) ? 'text-primary' : 'text-muted-foreground/30'}`}>★</span>
+        ))}
+      </div>
+    );
+  };
+
   // Render student reflections & insights
   const renderStudentReflections = (viewStudentIds: Set<string>, sectionPrefix: string) => {
     const viewReflections = dailyReflections.filter(r => r.student_id && viewStudentIds.has(r.student_id));
@@ -999,50 +1097,145 @@ export default function AdminDashboard() {
       return s ? `${s.first_name} ${s.last_name}` : 'לא ידוע';
     };
 
+    // Group reflections by student
+    const studentIdsWithReflections = [...new Set(viewReflections.map(r => r.student_id))];
+
     return (
       <div className="card-styled rounded-2xl overflow-hidden border-primary/20">
         <SectionHeader title="תובנות ודיווחי היום שלי" icon={MessageSquare} count={totalCount} sectionKey={`${sectionPrefix}_reflections`} />
         {expandedSections[`${sectionPrefix}_reflections`] && (
-          <div className="px-3 pb-3 space-y-3">
-            {viewReflections.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-2">דיווחי ״היום שלי״ (אחרונים)</p>
-                <div className="space-y-2">
-                  {viewReflections.slice(0, 10).map((r: any) => (
-                    <div key={r.id} className="bg-muted/40 rounded-xl p-3 space-y-1">
+          <div className="px-3 pb-3 space-y-4">
+            {/* Per-student summaries */}
+            {studentIdsWithReflections.map(studentId => {
+              const mode = reflectionSummaryMode[studentId] || 'week';
+              const customFrom = reflectionCustomFrom[studentId] || '';
+              const customTo = reflectionCustomTo[studentId] || '';
+              const summary = computeReflectionSummary(studentId, mode, customFrom, customTo);
+              const isVisible = reflectionVisibility[studentId] !== false; // default visible
+              const studentReflections = viewReflections.filter(r => r.student_id === studentId);
+              const studentInsightsFiltered = viewInsights.filter(i => i.student_id === studentId);
+
+              return (
+                <div key={studentId} className="border border-border/50 rounded-xl overflow-hidden">
+                  {/* Student header */}
+                  <div className="bg-muted/30 p-3 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold">{getStudentName(studentId)}</span>
+                      <Badge variant="secondary" className="text-[10px] px-1.5">{studentReflections.length} דיווחים</Badge>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setReflectionVisibility(prev => ({ ...prev, [studentId]: !isVisible }))}
+                        className={`text-[10px] px-2 py-1 rounded-full border transition-colors ${isVisible ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-muted border-border text-muted-foreground'}`}
+                      >
+                        {isVisible ? '👁 גלוי בתעודה' : '🔒 נסתר מתעודה'}
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* Summary mode selector */}
+                  <div className="px-3 pt-3 flex flex-wrap items-center gap-2">
+                    <span className="text-[10px] text-muted-foreground font-medium">סיכום:</span>
+                    {['week', 'month', 'year', 'custom'].map(m => (
+                      <button
+                        key={m}
+                        onClick={() => setReflectionSummaryMode(prev => ({ ...prev, [studentId]: m }))}
+                        className={`text-[10px] px-2.5 py-1 rounded-full border transition-colors ${mode === m ? 'bg-primary text-primary-foreground border-primary' : 'bg-background border-border hover:bg-muted'}`}
+                      >
+                        {getModeLabel(m)}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Custom date range */}
+                  {mode === 'custom' && (
+                    <div className="px-3 pt-2 flex items-center gap-2">
+                      <input
+                        type="date"
+                        value={customFrom}
+                        onChange={e => setReflectionCustomFrom(prev => ({ ...prev, [studentId]: e.target.value }))}
+                        className="text-xs border rounded-lg px-2 py-1 bg-background"
+                      />
+                      <span className="text-xs text-muted-foreground">עד</span>
+                      <input
+                        type="date"
+                        value={customTo}
+                        onChange={e => setReflectionCustomTo(prev => ({ ...prev, [studentId]: e.target.value }))}
+                        className="text-xs border rounded-lg px-2 py-1 bg-background"
+                      />
+                    </div>
+                  )}
+
+                  {/* Summary results */}
+                  {summary ? (
+                    <div className="px-3 py-3 space-y-2">
                       <div className="flex items-center justify-between">
-                        <span className="text-sm font-medium">{r.student_name || getStudentName(r.student_id)}</span>
-                        <span className="text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString('he-IL')}</span>
+                        <p className="text-[10px] text-muted-foreground">
+                          ממוצע על פני {summary.count} דיווחים ({summary.from.toLocaleDateString('he-IL')} - {summary.to.toLocaleDateString('he-IL')})
+                        </p>
                       </div>
-                      <div className="grid grid-cols-2 gap-1.5">
-                        {Object.entries(REFLECTION_LABELS).map(([key, label]) => (
-                          <div key={key} className="flex items-center justify-between bg-background/60 rounded-lg px-2 py-1">
-                            <span className="text-xs text-muted-foreground">{label}</span>
-                            <span className="text-xs font-bold">{r[key]}/5</span>
+                      <div className="grid grid-cols-2 gap-2">
+                        {Object.entries(REFLECTION_LABELS).map(([key, label]) => {
+                          const avg = summary.averages[key as keyof typeof summary.averages];
+                          const starLabel = REFLECTION_STAR_LABELS[key]?.[Math.round(avg) - 1] || '';
+                          return (
+                            <div key={key} className="bg-background/60 rounded-xl p-2.5 space-y-1">
+                              <span className="text-[10px] text-muted-foreground block">{label}</span>
+                              <div className="flex items-center gap-1.5">
+                                {renderStars(avg)}
+                                <span className="text-xs font-bold text-foreground">{avg}</span>
+                              </div>
+                              <span className="text-[9px] text-muted-foreground/70">{starLabel}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="px-3 py-3">
+                      <p className="text-xs text-muted-foreground text-center">אין דיווחים בטווח הזמן שנבחר</p>
+                    </div>
+                  )}
+
+                  {/* Individual reflections (collapsed) */}
+                  <details className="px-3 pb-3">
+                    <summary className="text-[10px] text-primary cursor-pointer hover:underline mb-2">הצג דיווחים בודדים ({studentReflections.length})</summary>
+                    <div className="space-y-2 max-h-60 overflow-y-auto">
+                      {studentReflections.slice(0, 20).map((r: any) => (
+                        <div key={r.id} className="bg-muted/40 rounded-xl p-2.5 space-y-1">
+                          <span className="text-[10px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString('he-IL')}</span>
+                          <div className="grid grid-cols-2 gap-1">
+                            {Object.entries(REFLECTION_LABELS).map(([key, label]) => (
+                              <div key={key} className="flex items-center justify-between bg-background/60 rounded-lg px-2 py-0.5">
+                                <span className="text-[10px] text-muted-foreground">{label}</span>
+                                <div className="flex items-center gap-1">
+                                  {renderStars(r[key])}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </details>
+
+                  {/* Student insights */}
+                  {studentInsightsFiltered.length > 0 && (
+                    <details className="px-3 pb-3">
+                      <summary className="text-[10px] text-primary cursor-pointer hover:underline mb-2">תובנות ({studentInsightsFiltered.length})</summary>
+                      <div className="space-y-2 max-h-60 overflow-y-auto">
+                        {studentInsightsFiltered.slice(0, 15).map((insight: any) => (
+                          <div key={insight.id} className="bg-muted/40 rounded-xl p-2.5">
+                            <span className="text-[10px] text-muted-foreground block mb-1">{new Date(insight.created_at).toLocaleDateString('he-IL')}</span>
+                            <p className="text-xs text-foreground/80">{insight.content}</p>
                           </div>
                         ))}
                       </div>
-                    </div>
-                  ))}
+                    </details>
+                  )}
                 </div>
-              </div>
-            )}
-            {viewInsights.length > 0 && (
-              <div>
-                <p className="text-xs font-semibold text-muted-foreground mb-2">תובנות תלמידים</p>
-                <div className="space-y-2">
-                  {viewInsights.slice(0, 15).map((insight: any) => (
-                    <div key={insight.id} className="bg-muted/40 rounded-xl p-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium">{getStudentName(insight.student_id)}</span>
-                        <span className="text-xs text-muted-foreground">{new Date(insight.created_at).toLocaleDateString('he-IL')}</span>
-                      </div>
-                      <p className="text-sm text-foreground/80">{insight.content}</p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
+              );
+            })}
           </div>
         )}
       </div>
