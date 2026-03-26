@@ -276,6 +276,36 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   const PAGE_PADDING_BOTTOM = 28;
   const USABLE_HEIGHT = A4_HEIGHT_PX - PAGE_PADDING_TOP - PAGE_PADDING_BOTTOM;
 
+  // --- Grade blocks ---
+  const gradeBlocks = data.grades.map((g, i) => `
+    <div style="display:flex;border-bottom:1px solid ${colors.tableBorder};background:${i % 2 === 0 ? colors.tableAltRow : colors.white};">
+      <div style="padding:8px 14px;font-weight:600;font-size:11px;color:${colors.text};width:80px;flex-shrink:0;border-left:1px solid ${colors.tableBorder};">${g.subject}</div>
+      <div style="padding:8px 14px;font-size:13px;color:${colors.accent};text-align:center;width:45px;flex-shrink:0;font-weight:700;border-left:1px solid ${colors.tableBorder};">${g.grade ?? '—'}</div>
+      <div style="padding:8px 14px;font-size:11px;color:${colors.text};line-height:1.7;white-space:pre-wrap;flex:1;">${g.ai_enhanced_evaluation || g.verbal_evaluation || '—'}</div>
+    </div>
+  `).join('');
+
+  const signatureLine = (label: string) => `
+    <div style="display:flex;flex-direction:column;align-items:center;width:100px;">
+      <div style="width:80px;border-bottom:1px solid ${colors.headerBorder};margin-bottom:6px;height:28px;"></div>
+      <div style="font-size:9px;color:${colors.textLight};font-weight:600;">${label}</div>
+    </div>
+  `;
+
+  const signaturesHtml = `
+    <div style="margin-top:32px;padding-top:16px;border-top:1px solid ${colors.headerBorder};">
+      <div style="display:flex;justify-content:space-around;align-items:flex-end;">
+        <div style="display:flex;flex-direction:column;align-items:center;width:100px;">
+          <img src="${sigDataUrl}" style="width:80px;height:auto;margin-bottom:4px;" />
+          <div style="font-size:9px;color:${colors.textLight};font-weight:600;">מנהל ביה״ס</div>
+        </div>
+        ${signatureLine('מחנכ/ת')}
+        ${signatureLine('התלמיד/ה')}
+        ${signatureLine('ההורים')}
+      </div>
+    </div>
+  `;
+
   // Content sections for page 1 area (educator report)
   const page1Sections = [
     `<div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:16px;text-align:center;letter-spacing:1px;">📝 דיווח מחנכ/ת</div>`,
