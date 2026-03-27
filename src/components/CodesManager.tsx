@@ -4,10 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { RefreshCw, Shield, Users, User, Copy } from 'lucide-react';
+import { RefreshCw, Shield, Users, User, Copy, UserRound } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
-type Student = Database['public']['Tables']['students']['Row'];
+type Student = Database['public']['Tables']['students']['Row'] & { parent_code?: string };
 
 const generateRandomCode = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -25,6 +25,7 @@ interface Props {
 
 export default function CodesManager({ students, onRefresh }: Props) {
   const [regenerating, setRegenerating] = useState<string | null>(null);
+  const [regeneratingParent, setRegeneratingParent] = useState<string | null>(null);
 
   const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -43,8 +44,17 @@ export default function CodesManager({ students, onRefresh }: Props) {
     const newCode = generateRandomCode();
     const { error } = await supabase.from('students').update({ student_code: newCode }).eq('id', student.id);
     if (error) { toast.error('שגיאה ביצירת קוד חדש'); }
-    else { toast.success(`קוד חדש נוצר: ${newCode}`); onRefresh(); }
+    else { toast.success(`קוד תלמיד חדש: ${newCode}`); onRefresh(); }
     setRegenerating(null);
+  };
+
+  const handleRegenerateParent = async (student: Student) => {
+    setRegeneratingParent(student.id);
+    const newCode = 'P' + generateRandomCode().slice(0, 7);
+    const { error } = await (supabase.from('students') as any).update({ parent_code: newCode }).eq('id', student.id);
+    if (error) { toast.error('שגיאה ביצירת קוד הורה חדש'); }
+    else { toast.success(`קוד הורה חדש: ${newCode}`); onRefresh(); }
+    setRegeneratingParent(null);
   };
 
   return (
@@ -84,31 +94,57 @@ export default function CodesManager({ students, onRefresh }: Props) {
           <div key={cls}>
             <p className="text-xs font-semibold mb-2">🏫 הכיתה של {cls}</p>
             <div className="space-y-1.5">
-              {classStudents.map(s => (
-                <div key={s.id} className={`flex items-center justify-between p-2.5 rounded-lg border bg-card transition-opacity ${!s.is_active ? 'opacity-40' : ''}`}>
-                  <div className="flex-1 min-w-0">
+              {classStudents.map(s => {
+                const parentCode = (s as any).parent_code || '';
+                return (
+                <div key={s.id} className={`flex flex-col gap-1.5 p-2.5 rounded-lg border bg-card transition-opacity ${!s.is_active ? 'opacity-40' : ''}`}>
+                  <div className="flex items-center justify-between">
                     <p className="text-sm font-medium">{s.first_name} {s.last_name}</p>
-                    <Badge variant="secondary" className="font-mono text-[10px] mt-0.5">{s.student_code}</Badge>
+                    <div className="flex items-center gap-1.5">
+                      <Switch
+                        checked={s.is_active}
+                        onCheckedChange={() => handleToggleActive(s)}
+                        className="scale-75"
+                      />
+                    </div>
                   </div>
-                  <div className="flex items-center gap-1.5">
-                    <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleCopy(s.student_code)}>
-                      <Copy className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="sm" variant="ghost" className="h-7 w-7 p-0"
-                      disabled={regenerating === s.id}
-                      onClick={() => handleRegenerate(s)}
-                    >
-                      <RefreshCw className={`h-3 w-3 ${regenerating === s.id ? 'animate-spin' : ''}`} />
-                    </Button>
-                    <Switch
-                      checked={s.is_active}
-                      onCheckedChange={() => handleToggleActive(s)}
-                      className="scale-75"
-                    />
+                  {/* Student code */}
+                  <div className="flex items-center justify-between bg-muted/50 rounded-md px-2 py-1">
+                    <div className="flex items-center gap-1.5">
+                      <User className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-[10px] text-muted-foreground">קוד תלמיד:</span>
+                      <Badge variant="secondary" className="font-mono text-[10px]">{s.student_code}</Badge>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleCopy(s.student_code)}>
+                        <Copy className="h-2.5 w-2.5" />
+                      </Button>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" disabled={regenerating === s.id} onClick={() => handleRegenerate(s)}>
+                        <RefreshCw className={`h-2.5 w-2.5 ${regenerating === s.id ? 'animate-spin' : ''}`} />
+                      </Button>
+                    </div>
+                  </div>
+                  {/* Parent code */}
+                  <div className="flex items-center justify-between bg-accent/30 rounded-md px-2 py-1">
+                    <div className="flex items-center gap-1.5">
+                      <UserRound className="h-3 w-3 text-primary" />
+                      <span className="text-[10px] text-primary/80">קוד הורה:</span>
+                      <Badge variant="outline" className="font-mono text-[10px] border-primary/30 text-primary">{parentCode || '—'}</Badge>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      {parentCode && (
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => handleCopy(parentCode)}>
+                          <Copy className="h-2.5 w-2.5" />
+                        </Button>
+                      )}
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" disabled={regeneratingParent === s.id} onClick={() => handleRegenerateParent(s)}>
+                        <RefreshCw className={`h-2.5 w-2.5 ${regeneratingParent === s.id ? 'animate-spin' : ''}`} />
+                      </Button>
+                    </div>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         );
