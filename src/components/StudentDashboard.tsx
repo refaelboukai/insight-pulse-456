@@ -51,6 +51,7 @@ export default function StudentDashboard() {
   const [grades, setGrades] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [activePanel, setActivePanel] = useState<string | null>(null);
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     reports: true, grades: false, support: false, pedagogy: false, exams: false, learningStyle: false,
   });
