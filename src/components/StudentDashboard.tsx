@@ -479,10 +479,10 @@ export default function StudentDashboard() {
                 setReflectionSaving(false);
                 if (error) { toast.error('שגיאה בשמירה'); return; }
                 setReflectionSaved(true);
-                toast.success('היום שלי נשמר! ✨');
+                toast.success('נשמר בהצלחה');
               }}
             >
-              {reflectionSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Sparkles className="h-4 w-4" /> שמור את היום שלי</>}
+              {reflectionSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'שמור'}
             </Button>
           </>
         )}
