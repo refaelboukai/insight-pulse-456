@@ -17,6 +17,7 @@ import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, Loader
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import { g, genderTerms } from '@/lib/genderUtils';
 
 type Student = Database['public']['Tables']['students']['Row'];
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
@@ -107,6 +108,8 @@ export default function StudentDashboard() {
   }, [selectedStudentId]);
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
+  const gender = selectedStudent?.gender;
+  const terms = genderTerms(gender);
 
   useEffect(() => {
     if (!selectedStudentId) return;
@@ -215,7 +218,7 @@ export default function StudentDashboard() {
       <div className="space-y-4 max-w-2xl mx-auto animate-fade-in">
         <div className="text-center py-12">
           <p className="text-muted-foreground text-sm">לא נמצא תלמיד משויך לחשבון שלך.</p>
-          <p className="text-muted-foreground text-xs mt-1">פנה/י למנהל המערכת.</p>
+          <p className="text-muted-foreground text-xs mt-1">{g(null, 'פנה', 'פני')} למנהל המערכת.</p>
         </div>
       </div>
     );
@@ -281,7 +284,7 @@ export default function StudentDashboard() {
           </div>
           {!isLocked && (
             <button onClick={() => setSelectedStudentId('')} className="mt-2 text-primary-foreground/70 hover:text-primary-foreground text-xs underline">
-              החלף תלמיד
+              {terms.switchStudent}
             </button>
           )}
         </div>
@@ -459,7 +462,7 @@ export default function StudentDashboard() {
         <Textarea
           value={insightText}
           onChange={(e) => setInsightText(e.target.value)}
-          placeholder="כתוב/י כאן מה עבר עליך היום, מה למדת על עצמך, מה הרגשת..."
+          placeholder={`${terms.write} כאן מה עבר עליך היום, מה למדת על עצמך, מה הרגשת...`}
           className="min-h-[100px] rounded-xl border-muted text-sm resize-none"
           disabled={insightSaved}
         />

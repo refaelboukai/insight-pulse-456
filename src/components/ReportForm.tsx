@@ -368,7 +368,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                   ))}
                 </div>
                 <Textarea
-                  placeholder="תאר/י את האירוע (חובה)..."
+                  placeholder={`${selectedStudent?.gender === 'נ' ? 'תארי' : 'תאר'} את האירוע (חובה)...`}
                   value={violenceComment}
                   onChange={e => setViolenceComment(e.target.value)}
                   rows={2}
@@ -381,7 +381,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
             {!hasViolent && behaviors.length > 0 && (
               <div className="mt-2">
                 <Textarea
-                  placeholder="הערה על ההתנהגות (לא חובה) — למשל: רוב השיעור התנהג יפה ואז הפריע..."
+                  placeholder={`הערה על ההתנהגות (לא חובה) — למשל: רוב השיעור ${selectedStudent?.gender === 'נ' ? 'התנהגה' : 'התנהג'} יפה ואז ${selectedStudent?.gender === 'נ' ? 'הפריעה' : 'הפריע'}...`}
                   value={behaviorComment}
                   onChange={e => setBehaviorComment(e.target.value)}
                   rows={2}
@@ -412,7 +412,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
               הדיווח נשמר!
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground mt-1">
-              מה תרצה לעשות עכשיו?
+              {selectedStudent?.gender === 'נ' ? 'מה תרצי לעשות עכשיו?' : 'מה תרצה לעשות עכשיו?'}
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2 mt-3">

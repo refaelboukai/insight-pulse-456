@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import logoSrc from '@/assets/logo.jpeg';
 import principalSigSrc from '@/assets/principal-signature.jpeg';
+import { g, type Gender } from '@/lib/genderUtils';
 
 interface GradeEntry {
   subject: string;
@@ -46,6 +47,7 @@ interface ReportCardData {
   semesterLabel?: string;
   reflectionSummary?: ReflectionSummary | null;
   socialEmotionalSummary?: string | null;
+  gender?: Gender;
 }
 
 function getHebrewDate(): string {
@@ -211,7 +213,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding:12px 16px;border:1px solid ${colors.noteBorder};border-radius:4px;background:${colors.headerBg};">
       <div>
-        <div style="font-size:9px;color:${colors.textLight};margin-bottom:2px;font-weight:600;letter-spacing:1px;">שם התלמיד/ה</div>
+        <div style="font-size:9px;color:${colors.textLight};margin-bottom:2px;font-weight:600;letter-spacing:1px;">שם ${g(data.gender, 'התלמיד', 'התלמידה')}</div>
         <div style="font-size:16px;font-weight:700;color:${colors.text};">${data.studentName}</div>
       </div>
       <div style="text-align:center;">
@@ -236,7 +238,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   const reflSummary = data.reflectionSummary;
   const reflectionHtml = reflSummary ? `
     <div style="margin-bottom:20px;">
-      <div style="font-size:12px;font-weight:700;color:${colors.sectionTitle};margin-bottom:8px;border-bottom:1px solid ${colors.headerBorder};padding-bottom:4px;">הערכה עצמית של התלמיד/ה</div>
+      <div style="font-size:12px;font-weight:700;color:${colors.sectionTitle};margin-bottom:8px;border-bottom:1px solid ${colors.headerBorder};padding-bottom:4px;">הערכה עצמית של ${g(data.gender, 'התלמיד', 'התלמידה')}</div>
       <table style="width:100%;border-collapse:collapse;border:1px solid ${colors.tableBorder};">
         <thead>
           <tr style="background:${colors.tableHeaderBg};">
@@ -290,8 +292,8 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
           <img src="${sigDataUrl}" style="width:80px;height:auto;margin-bottom:4px;" />
           <div style="font-size:9px;color:${colors.textLight};font-weight:600;">מנהל ביה״ס</div>
         </div>
-        ${signatureLine('מחנכ/ת')}
-        ${signatureLine('התלמיד/ה')}
+        ${signatureLine(g(data.gender, 'מחנך', 'מחנכת'))}
+        ${signatureLine(g(data.gender, 'התלמיד', 'התלמידה'))}
         ${signatureLine('ההורים')}
       </div>
     </div>
@@ -299,7 +301,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
 
   // Content sections for page 1 area (educator report)
   const page1Sections = [
-    `<div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:16px;text-align:center;letter-spacing:1px;">📝 דיווח מחנכ/ת</div>`,
+    `<div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:16px;text-align:center;letter-spacing:1px;">📝 דיווח ${g(data.gender, 'מחנך', 'מחנכת')}</div>`,
     personalNoteHtml,
     teamTableHtml,
     socialEmotionalHtml,
@@ -307,7 +309,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   ].filter(Boolean);
 
   if (page1Sections.length === 0) {
-    page1Sections.push(`<div style="padding:30px;text-align:center;color:${colors.textLight};font-size:12px;">לא הוזנה הערכת מחנכ/ת</div>`);
+    page1Sections.push(`<div style="padding:30px;text-align:center;color:${colors.textLight};font-size:12px;">לא הוזנה הערכת ${g(data.gender, 'מחנך', 'מחנכת')}</div>`);
   }
 
   // Content sections for page 2 area (grades + signatures)
