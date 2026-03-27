@@ -72,7 +72,8 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
     const lastDay = new Date(year, month + 1, 0).getDate();
     const to = `${year}-${String(month + 1).padStart(2, '0')}-${lastDay}`;
 
-    const { data } = await supabase
+    // Fetch manual calendar events
+    const { data: calData } = await supabase
       .from('calendar_events' as any)
       .select('*')
       .gte('event_date', from)
@@ -80,7 +81,36 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       .order('event_date')
       .order('event_time');
 
-    setEvents((data as any as CalendarEvent[]) || []);
+    // Fetch exam schedule entries for the same month
+    const { data: examData } = await supabase
+      .from('exam_schedule')
+      .select('*, students(first_name, last_name), managed_subjects(name)')
+      .gte('exam_date', from)
+      .lte('exam_date', to)
+      .order('exam_date');
+
+    // Convert exams to CalendarEvent format
+    const examEvents: CalendarEvent[] = (examData || []).map((exam: any) => {
+      const studentName = exam.students ? `${exam.students.first_name} ${exam.students.last_name}` : '';
+      const subjectName = exam.managed_subjects?.name || '';
+      const subSubject = exam.sub_subject ? ` - ${exam.sub_subject}` : '';
+      const desc = exam.exam_description ? `\n${exam.exam_description}` : '';
+      return {
+        id: `exam-${exam.id}`,
+        title: `📝 בחינה: ${subjectName}${subSubject}`,
+        event_date: exam.exam_date,
+        event_time: null,
+        description: `${studentName}${desc}`,
+        color: 'orange',
+        created_by: exam.created_by,
+        created_at: exam.created_at,
+      };
+    });
+
+    const allEvents = [...((calData as any as CalendarEvent[]) || []), ...examEvents]
+      .sort((a, b) => a.event_date.localeCompare(b.event_date));
+
+    setEvents(allEvents);
     setLoading(false);
   };
 
@@ -340,7 +370,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                         <p className="text-[10px] text-foreground/60 mr-3.5 mt-0.5 whitespace-pre-line">{ev.description}</p>
                       )}
                     </div>
-                    {editable && (
+                    {editable && !ev.id.startsWith('exam-') && (
                       <div className="flex gap-0.5 shrink-0">
                         <button onClick={(e) => { e.stopPropagation(); openEditDialog(ev); }} className="p-1 rounded hover:bg-background/50">
                           <Pencil className="h-3 w-3 text-muted-foreground" />
