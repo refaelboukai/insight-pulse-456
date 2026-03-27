@@ -308,8 +308,9 @@ export default function AdminDashboard() {
   };
 
   const handleResetPasswordSubmit = () => {
-    if (resetPassword !== '9020') { setResetPasswordError('סיסמה שגויה'); return; }
-    setResetPasswordError(''); setShowResetPassword(false); setResetPassword(''); setShowResetConfirm(true);
+    if (resetPassword !== '9020') { setResetPasswordError('קוד שגוי'); return; }
+    if (resetPasswordConfirm !== '9020') { setResetPasswordError('יש להזין את הקוד פעמיים לאישור'); return; }
+    setResetPasswordError(''); setShowResetPassword(false); setResetPassword(''); setResetPasswordConfirm(''); setShowResetConfirm(true);
   };
 
   const handleResetAllReports = async () => {
