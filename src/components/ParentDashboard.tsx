@@ -177,6 +177,18 @@ export default function ParentDashboard() {
             </p>
           </button>
         )}
+        <button
+          onClick={() => setActiveTab('summaries')}
+          className={`flex-1 rounded-xl p-3 text-center border transition-all ${
+            activeTab === 'summaries' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card hover:shadow-sm'
+          }`}
+        >
+          <MessageSquareText className={`h-5 w-5 mx-auto mb-1 ${activeTab === 'summaries' ? '' : 'text-muted-foreground'}`} />
+          <p className="text-xs font-bold">סיכום שבועי</p>
+          <p className={`text-[10px] mt-0.5 ${activeTab === 'summaries' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+            {weeklySummaries.length} סיכומים
+          </p>
+        </button>
       </div>
 
       {!showReports && !showCalendar && (
