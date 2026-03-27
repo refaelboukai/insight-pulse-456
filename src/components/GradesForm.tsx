@@ -85,7 +85,7 @@ export default function GradesForm() {
   const [subjectOpen, setSubjectOpen] = useState(false);
 
   useEffect(() => {
-    supabase.from('students').select('id, first_name, last_name, class_name, is_active')
+    supabase.from('students').select('id, first_name, last_name, class_name, is_active, gender')
       .eq('is_active', true).order('class_name').order('last_name')
       .then(({ data }) => { if (data) setStudents(data); });
   }, []);
