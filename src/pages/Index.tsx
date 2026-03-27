@@ -60,6 +60,7 @@ export default function Index() {
       grades: <GradesForm />,
       support: <SupportPlanForm />,
       event: <ExceptionalEventForm />,
+      calendar: <SharedCalendar />,
     };
 
     const currentCard = staffCards.find(c => c.key === staffPanel);
