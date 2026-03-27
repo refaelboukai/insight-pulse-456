@@ -15,6 +15,7 @@ import {
 import { CalendarIcon, CheckCircle2, Clock, XCircle, FileText, ClipboardCheck, Sparkles, Download, Loader2, Share2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import { g } from '@/lib/genderUtils';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
 type Student = Database['public']['Tables']['students']['Row'];
