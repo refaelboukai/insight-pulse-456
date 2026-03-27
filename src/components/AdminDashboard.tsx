@@ -1101,7 +1101,7 @@ export default function AdminDashboard() {
           <AccordionContent>{renderSupportContent(cls)}</AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="students" className="rounded-2xl border bg-card px-4">
+        <AccordionItem value="students" id="accordion-students" className="rounded-2xl border bg-card px-4">
           <AccordionTrigger className="text-sm font-bold py-3">
             <span className="flex items-center gap-2">
               <Users className="h-4 w-4 text-primary" />
