@@ -66,6 +66,7 @@ export default function Index() {
       support: <SupportPlanForm />,
       event: <ExceptionalEventForm />,
       calendar: <SharedCalendar />,
+      weekly_summary: <WeeklySummaryForm />,
     };
 
     const currentCard = staffCards.find(c => c.key === staffPanel);
