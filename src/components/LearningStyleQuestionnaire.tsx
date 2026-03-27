@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
-import { Brain, ChevronRight, ChevronLeft, Sparkles, RotateCcw } from 'lucide-react';
+import { Brain, ChevronRight, ChevronLeft, Sparkles, Sun, Users, Eye, Clock, Heart, Puzzle } from 'lucide-react';
 import { g, type Gender } from '@/lib/genderUtils';
 
 interface LearningStyleQuestionnaireProps {
@@ -21,103 +21,117 @@ const CATEGORIES = {
   cognitive: 'קוגניטיבי',
 };
 
+const CATEGORY_ICONS: Record<string, typeof Brain> = {
+  environment: Sun,
+  social: Users,
+  sensory: Eye,
+  time: Clock,
+  emotional: Heart,
+  cognitive: Puzzle,
+};
+
+const CATEGORY_COLORS: Record<string, string> = {
+  environment: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300',
+  social: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300',
+  sensory: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300',
+  time: 'bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-300',
+  emotional: 'bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300',
+  cognitive: 'bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300',
+};
+
 type CategoryKey = keyof typeof CATEGORIES;
 
-const QUESTIONS_MALE: { category: CategoryKey; text: string }[] = [
-  // Environment (1-6)
-  { category: 'environment', text: 'אני לומד טוב יותר באור חזק' },
-  { category: 'environment', text: 'רעש לא מפריע לי להתרכז' },
-  { category: 'environment', text: 'אני צריך שקט מוחלט כדי ללמוד' },
-  { category: 'environment', text: 'הטמפרטורה משפיעה על הריכוז שלי' },
-  { category: 'environment', text: 'אני מעדיף ללמוד ליד שולחן' },
-  { category: 'environment', text: 'אני לומד טוב יותר בצורה חופשית (ספה/רצפה)' },
-  // Social (7-11)
-  { category: 'social', text: 'אני מעדיף ללמוד לבד' },
-  { category: 'social', text: 'אני לומד טוב יותר בזוג' },
-  { category: 'social', text: 'אני לומד טוב יותר בקבוצה' },
-  { category: 'social', text: 'אני צריך שמישהו ינחה אותי' },
-  { category: 'social', text: 'אני נהנה לעבוד עם אחרים' },
-  // Sensory / VAK (12-16)
-  { category: 'sensory', text: 'אני מבין טוב יותר דרך ראייה (תמונות/תרשימים)' },
-  { category: 'sensory', text: 'אני מבין טוב יותר דרך שמיעה' },
-  { category: 'sensory', text: 'אני לומד הכי טוב דרך עשייה' },
-  { category: 'sensory', text: 'כתיבה עוזרת לי לזכור' },
-  { category: 'sensory', text: 'אני צריך תנועה כדי להתרכז' },
-  // Time & Attention (17-20)
-  { category: 'time', text: 'אני מרוכז יותר בבוקר' },
-  { category: 'time', text: 'אני מרוכז יותר בערב' },
-  { category: 'time', text: 'אני צריך הפסקות קצרות' },
-  { category: 'time', text: 'אני יכול להתרכז לאורך זמן' },
-  // Emotional (21-25)
-  { category: 'emotional', text: 'אני לומד מתוך רצון פנימי' },
-  { category: 'emotional', text: 'קשה לי להתמיד' },
-  { category: 'emotional', text: 'אני מסיים משימות גם כשקשה' },
-  { category: 'emotional', text: 'אני צריך חיזוקים מבחוץ' },
-  { category: 'emotional', text: 'אני מרגיש אחריות על ההצלחה שלי' },
-  // Cognitive (26-30)
-  { category: 'cognitive', text: 'אני צריך להבין את התמונה הגדולה' },
-  { category: 'cognitive', text: 'אני עובד לפי שלבים מסודרים' },
-  { category: 'cognitive', text: 'אני מגיב מהר בלי לחשוב הרבה' },
+interface Question {
+  category: CategoryKey;
+  text: string;
+}
+
+// ──────────── 24 שאלות מותאמות זכר ────────────
+const QUESTIONS_MALE: Question[] = [
+  // סביבה (4)
+  { category: 'environment', text: 'אני מתרכז טוב יותר כשיש שקט סביבי' },
+  { category: 'environment', text: 'אני אוהב ללמוד בישיבה חופשית (ספה, שטיח, רצפה)' },
+  { category: 'environment', text: 'אור חזק עוזר לי ללמוד' },
+  { category: 'environment', text: 'אני רגיש לחום או קור בכיתה' },
+  // חברתי (4)
+  { category: 'social', text: 'אני מעדיף ללמוד לבד על פני קבוצה' },
+  { category: 'social', text: 'אני נהנה לעבוד עם חבר בזוג' },
+  { category: 'social', text: 'אני צריך שמבוגר יעזור לי להתחיל' },
+  { category: 'social', text: 'עבודת צוות נותנת לי אנרגיה' },
+  // חושי (4)
+  { category: 'sensory', text: 'תמונות ותרשימים עוזרים לי להבין' },
+  { category: 'sensory', text: 'אני מבין טוב יותר כששומע הסבר בקול' },
+  { category: 'sensory', text: 'אני לומד הכי טוב כשעושה משהו בידיים' },
+  { category: 'sensory', text: 'קשה לי לשבת בלי לזוז הרבה זמן' },
+  // זמן (4)
+  { category: 'time', text: 'בבוקר הראש שלי הכי צלול' },
+  { category: 'time', text: 'אני צריך הפסקה קצרה כל כמה דקות' },
+  { category: 'time', text: 'אני יכול להתרכז לאורך שיעור שלם' },
+  { category: 'time', text: 'דווקא אחה"צ או בערב אני יותר ממוקד' },
+  // רגשי (4)
+  { category: 'emotional', text: 'אני לומד כי זה מעניין אותי, לא בגלל ציונים' },
+  { category: 'emotional', text: 'אני מסיים משימות גם כשקשה לי' },
+  { category: 'emotional', text: 'חיזוק מהמורה נותן לי כוח להמשיך' },
+  { category: 'emotional', text: 'אני מרגיש שההצלחה בלימודים תלויה בי' },
+  // קוגניטיבי (4)
+  { category: 'cognitive', text: 'חשוב לי להבין למה לומדים משהו לפני שמתחילים' },
+  { category: 'cognitive', text: 'אני אוהב ללמוד צעד אחרי צעד בסדר ברור' },
   { category: 'cognitive', text: 'אני חושב לפני שאני עונה' },
-  { category: 'cognitive', text: 'אני צריך מבנה ברור' },
+  { category: 'cognitive', text: 'מבנה ברור של השיעור עוזר לי' },
 ];
 
-const QUESTIONS_FEMALE: { category: CategoryKey; text: string }[] = [
-  // Environment (1-6)
-  { category: 'environment', text: 'אני לומדת טוב יותר באור חזק' },
-  { category: 'environment', text: 'רעש לא מפריע לי להתרכז' },
-  { category: 'environment', text: 'אני צריכה שקט מוחלט כדי ללמוד' },
-  { category: 'environment', text: 'הטמפרטורה משפיעה על הריכוז שלי' },
-  { category: 'environment', text: 'אני מעדיפה ללמוד ליד שולחן' },
-  { category: 'environment', text: 'אני לומדת טוב יותר בצורה חופשית (ספה/רצפה)' },
-  // Social (7-11)
-  { category: 'social', text: 'אני מעדיפה ללמוד לבד' },
-  { category: 'social', text: 'אני לומדת טוב יותר בזוג' },
-  { category: 'social', text: 'אני לומדת טוב יותר בקבוצה' },
-  { category: 'social', text: 'אני צריכה שמישהו ינחה אותי' },
-  { category: 'social', text: 'אני נהנית לעבוד עם אחרים' },
-  // Sensory / VAK (12-16)
-  { category: 'sensory', text: 'אני מבינה טוב יותר דרך ראייה (תמונות/תרשימים)' },
-  { category: 'sensory', text: 'אני מבינה טוב יותר דרך שמיעה' },
-  { category: 'sensory', text: 'אני לומדת הכי טוב דרך עשייה' },
-  { category: 'sensory', text: 'כתיבה עוזרת לי לזכור' },
-  { category: 'sensory', text: 'אני צריכה תנועה כדי להתרכז' },
-  // Time & Attention (17-20)
-  { category: 'time', text: 'אני מרוכזת יותר בבוקר' },
-  { category: 'time', text: 'אני מרוכזת יותר בערב' },
-  { category: 'time', text: 'אני צריכה הפסקות קצרות' },
-  { category: 'time', text: 'אני יכולה להתרכז לאורך זמן' },
-  // Emotional (21-25)
-  { category: 'emotional', text: 'אני לומדת מתוך רצון פנימי' },
-  { category: 'emotional', text: 'קשה לי להתמיד' },
-  { category: 'emotional', text: 'אני מסיימת משימות גם כשקשה' },
-  { category: 'emotional', text: 'אני צריכה חיזוקים מבחוץ' },
-  { category: 'emotional', text: 'אני מרגישה אחריות על ההצלחה שלי' },
-  // Cognitive (26-30)
-  { category: 'cognitive', text: 'אני צריכה להבין את התמונה הגדולה' },
-  { category: 'cognitive', text: 'אני עובדת לפי שלבים מסודרים' },
-  { category: 'cognitive', text: 'אני מגיבה מהר בלי לחשוב הרבה' },
+// ──────────── 24 שאלות מותאמות נקבה ────────────
+const QUESTIONS_FEMALE: Question[] = [
+  // סביבה (4)
+  { category: 'environment', text: 'אני מתרכזת טוב יותר כשיש שקט סביבי' },
+  { category: 'environment', text: 'אני אוהבת ללמוד בישיבה חופשית (ספה, שטיח, רצפה)' },
+  { category: 'environment', text: 'אור חזק עוזר לי ללמוד' },
+  { category: 'environment', text: 'אני רגישה לחום או קור בכיתה' },
+  // חברתי (4)
+  { category: 'social', text: 'אני מעדיפה ללמוד לבד על פני קבוצה' },
+  { category: 'social', text: 'אני נהנית לעבוד עם חברה בזוג' },
+  { category: 'social', text: 'אני צריכה שמבוגר יעזור לי להתחיל' },
+  { category: 'social', text: 'עבודת צוות נותנת לי אנרגיה' },
+  // חושי (4)
+  { category: 'sensory', text: 'תמונות ותרשימים עוזרים לי להבין' },
+  { category: 'sensory', text: 'אני מבינה טוב יותר כששומעת הסבר בקול' },
+  { category: 'sensory', text: 'אני לומדת הכי טוב כשעושה משהו בידיים' },
+  { category: 'sensory', text: 'קשה לי לשבת בלי לזוז הרבה זמן' },
+  // זמן (4)
+  { category: 'time', text: 'בבוקר הראש שלי הכי צלול' },
+  { category: 'time', text: 'אני צריכה הפסקה קצרה כל כמה דקות' },
+  { category: 'time', text: 'אני יכולה להתרכז לאורך שיעור שלם' },
+  { category: 'time', text: 'דווקא אחה"צ או בערב אני יותר ממוקדת' },
+  // רגשי (4)
+  { category: 'emotional', text: 'אני לומדת כי זה מעניין אותי, לא בגלל ציונים' },
+  { category: 'emotional', text: 'אני מסיימת משימות גם כשקשה לי' },
+  { category: 'emotional', text: 'חיזוק מהמורה נותן לי כוח להמשיך' },
+  { category: 'emotional', text: 'אני מרגישה שההצלחה בלימודים תלויה בי' },
+  // קוגניטיבי (4)
+  { category: 'cognitive', text: 'חשוב לי להבין למה לומדים משהו לפני שמתחילים' },
+  { category: 'cognitive', text: 'אני אוהבת ללמוד צעד אחרי צעד בסדר ברור' },
   { category: 'cognitive', text: 'אני חושבת לפני שאני עונה' },
-  { category: 'cognitive', text: 'אני צריכה מבנה ברור' },
+  { category: 'cognitive', text: 'מבנה ברור של השיעור עוזר לי' },
 ];
 
-// Default export for calculations uses male form (gender-neutral for data processing)
+// Default for calculations
 const QUESTIONS = QUESTIONS_MALE;
 
+const EMOJI_SCALE = [
+  { emoji: '😕', label: 'בכלל לא', value: 1 },
+  { emoji: '🤔', label: 'קצת', value: 2 },
+  { emoji: '😐', label: 'ככה ככה', value: 3 },
+  { emoji: '🙂', label: 'די נכון', value: 4 },
+  { emoji: '😄', label: 'ממש אני!', value: 5 },
+];
+
+// Keep old SCALE_LABELS for export compatibility
 const SCALE_LABELS = [
   'בכלל לא נכון לי',
   'קצת נכון',
   'בינוני',
   'די נכון',
   'מאוד נכון לי',
-];
-
-const SCALE_COLORS = [
-  'bg-red-400 hover:bg-red-500 text-white',
-  'bg-orange-400 hover:bg-orange-500 text-white',
-  'bg-yellow-400 hover:bg-yellow-500 text-white',
-  'bg-lime-400 hover:bg-lime-500 text-white',
-  'bg-green-500 hover:bg-green-600 text-white',
 ];
 
 function calculateResults(responses: Record<number, number>) {
@@ -142,43 +156,36 @@ function calculateResults(responses: Record<number, number>) {
   const dominant = sorted.slice(0, 3).map(([k]) => k);
   const secondary = sorted.slice(3).map(([k]) => k);
 
-  // Detect contradictions
   const challenges: string[] = [];
-  // impulsive (q28 high) + structured (q27 high, q30 high)
-  if ((responses[27] || 0) >= 4 && ((responses[26] || 0) >= 4 || (responses[29] || 0) >= 4)) {
-    challenges.push('סתירה: נטייה לאימפולסיביות לצד צורך במבנה מסודר');
-  }
-  // independent (q7 high) + authority-dependent (q10 high)
-  if ((responses[6] || 0) >= 4 && (responses[9] || 0) >= 4) {
+  // impulsive vs structured — removed Q28 (was impulsive, now removed)
+  // independent (q4 high) + needs guidance (q6 high)
+  if ((responses[4] || 0) >= 4 && (responses[6] || 0) >= 4) {
     challenges.push('סתירה: העדפה ללמידה עצמאית לצד צורך בהנחיה');
   }
-  // low persistence (q22 high) + finishes tasks (q23 high)
-  if ((responses[21] || 0) >= 4 && (responses[22] || 0) >= 4) {
-    challenges.push('סתירה: קושי בהתמדה אך מדווח על סיום משימות');
-  }
+  // low persistence (q17 emotional) + finishes tasks (q17 high)
+  // With new structure: Q16=interest, Q17=persistence, Q18=reinforcement, Q19=self-efficacy
+  // No direct contradiction pair needed with new cleaner questions
 
-  // Generate recommendations
   const recommendations: string[] = [];
   const catLabels = CATEGORIES;
 
   if (averages.sensory >= 3.5) {
-    if ((responses[13] || 0) >= 4) recommendations.push('שילוב למידה דרך עשייה ותנועה');
-    if ((responses[11] || 0) >= 4) recommendations.push('שימוש בעזרים חזותיים: תרשימים, מפות חשיבה');
-    if ((responses[12] || 0) >= 4) recommendations.push('שימוש בהקלטות ושיחות כדי לעזור בלמידה');
+    if ((responses[10] || 0) >= 4) recommendations.push('שילוב למידה דרך עשייה ותנועה');
+    if ((responses[8] || 0) >= 4) recommendations.push('שימוש בעזרים חזותיים: תרשימים, מפות חשיבה');
+    if ((responses[9] || 0) >= 4) recommendations.push('שימוש בהקלטות ושיחות כדי לעזור בלמידה');
   }
-  if ((responses[18] || 0) >= 4) recommendations.push('שילוב הפסקות קצרות ותכופות');
-  if ((responses[23] || 0) >= 4) recommendations.push('מתן חיזוקים חיוביים מידיים');
-  if ((responses[29] || 0) >= 4) recommendations.push('הצגת מבנה ברור ושלבים מסודרים');
-  if ((responses[25] || 0) >= 4) recommendations.push('הצגת התמונה הגדולה לפני כניסה לפרטים');
-  if ((responses[15] || 0) >= 4) recommendations.push('אפשר תנועה במהלך הלמידה');
-  if ((responses[8] || 0) >= 4) recommendations.push('עבודה בקבוצות קטנות');
-  if ((responses[6] || 0) >= 4) recommendations.push('מתן מרחב ללמידה עצמאית');
+  if ((responses[13] || 0) >= 4) recommendations.push('שילוב הפסקות קצרות ותכופות');
+  if ((responses[18] || 0) >= 4) recommendations.push('מתן חיזוקים חיוביים מידיים');
+  if ((responses[23] || 0) >= 4) recommendations.push('הצגת מבנה ברור ושלבים מסודרים');
+  if ((responses[20] || 0) >= 4) recommendations.push('הצגת התמונה הגדולה לפני כניסה לפרטים');
+  if ((responses[11] || 0) >= 4) recommendations.push('אפשר תנועה במהלך הלמידה');
+  if ((responses[7] || 0) >= 4) recommendations.push('עבודה בקבוצות קטנות');
+  if ((responses[4] || 0) >= 4) recommendations.push('מתן מרחב ללמידה עצמאית');
 
   if (recommendations.length === 0) {
     recommendations.push('ליצור סביבה מגוונת שמשלבת ערוצים שונים');
   }
 
-  // Simple student insight
   const dominantLabels = dominant.map(d => catLabels[d as CategoryKey]);
   const studentInsight = `הסגנון הדומיננטי שלך: ${dominantLabels.join(', ')}. ${
     recommendations.slice(0, 2).join('. ')
@@ -201,8 +208,9 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
   const [results, setResults] = useState<any>(null);
   const [saving, setSaving] = useState(false);
   const [checking, setChecking] = useState(true);
+  const [direction, setDirection] = useState<'next' | 'prev'>('next');
+  const [animating, setAnimating] = useState(false);
 
-  // Check if already completed
   useEffect(() => {
     const check = async () => {
       const { data } = await supabase
@@ -221,17 +229,30 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
     check();
   }, [studentId]);
 
+  const genderedQuestions = gender === 'נ' ? QUESTIONS_FEMALE : QUESTIONS_MALE;
+  const totalQ = genderedQuestions.length;
+
+  const navigateTo = (target: number) => {
+    if (animating || target < 0 || target >= totalQ) return;
+    setDirection(target > currentQ ? 'next' : 'prev');
+    setAnimating(true);
+    setTimeout(() => {
+      setCurrentQ(target);
+      setAnimating(false);
+    }, 200);
+  };
+
   const handleAnswer = (value: number) => {
     const newResponses = { ...responses, [currentQ]: value };
     setResponses(newResponses);
 
-    if (currentQ < QUESTIONS_MALE.length - 1) {
-      setTimeout(() => setCurrentQ(prev => prev + 1), 200);
+    if (currentQ < totalQ - 1) {
+      setTimeout(() => navigateTo(currentQ + 1), 300);
     }
   };
 
   const handleSubmit = async () => {
-    if (Object.keys(responses).length < QUESTIONS_MALE.length) {
+    if (Object.keys(responses).length < totalQ) {
       toast.error('יש לענות על כל השאלות');
       return;
     }
@@ -256,12 +277,13 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
     } else {
       setResults(computedResults);
       setIsCompleted(true);
-      toast.success('השאלון הושלם בהצלחה!');
+      toast.success('השאלון הושלם בהצלחה! 🎉');
       onComplete?.();
     }
   };
 
   if (checking) return null;
+
   if (isCompleted && results) {
     return (
       <div className="card-styled rounded-2xl p-4 space-y-3">
@@ -289,80 +311,140 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
     );
   }
 
-  const genderedQuestions = gender === 'נ' ? QUESTIONS_FEMALE : QUESTIONS_MALE;
-  const progress = ((currentQ + 1) / genderedQuestions.length) * 100;
+  const progress = ((currentQ + 1) / totalQ) * 100;
   const currentQuestion = genderedQuestions[currentQ];
-  const allAnswered = Object.keys(responses).length === genderedQuestions.length;
+  const allAnswered = Object.keys(responses).length === totalQ;
+  const answeredCount = Object.keys(responses).length;
+  const CategoryIcon = CATEGORY_ICONS[currentQuestion.category];
+  const catColor = CATEGORY_COLORS[currentQuestion.category];
 
   return (
-    <div className="card-styled rounded-2xl p-4 space-y-4">
+    <div className="card-styled rounded-2xl p-5 space-y-4 overflow-hidden">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Brain className="h-5 w-5 text-primary" />
-          <span className="font-bold text-sm">סגנון הלמידה שלי</span>
+          <div className="bg-primary/10 rounded-lg p-1.5">
+            <Brain className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <span className="font-bold text-sm block">סגנון הלמידה שלי</span>
+            <span className="text-[10px] text-muted-foreground">{answeredCount}/{totalQ} תשובות</span>
+          </div>
         </div>
-        <span className="text-xs text-muted-foreground">{currentQ + 1}/{genderedQuestions.length}</span>
+        <div className="flex items-center gap-1.5 bg-muted/50 rounded-full px-3 py-1">
+          <span className="text-xs font-bold text-primary">{currentQ + 1}</span>
+          <span className="text-[10px] text-muted-foreground">מתוך {totalQ}</span>
+        </div>
       </div>
 
-      {/* Progress */}
-      <Progress value={progress} className="h-2" />
+      {/* Progress bar */}
+      <div className="space-y-1">
+        <Progress value={progress} className="h-2.5 rounded-full" />
+        <div className="flex justify-between">
+          {Object.keys(CATEGORIES).map((cat, i) => {
+            const startIdx = i * 4;
+            const endIdx = startIdx + 4;
+            const catAnswered = Object.keys(responses)
+              .map(Number)
+              .filter(idx => idx >= startIdx && idx < endIdx).length;
+            const isCurrentCat = currentQuestion.category === cat;
+            return (
+              <div
+                key={cat}
+                className={`h-1 rounded-full flex-1 mx-0.5 transition-colors ${
+                  catAnswered === 4 ? 'bg-primary' :
+                  isCurrentCat ? 'bg-primary/40' : 'bg-muted'
+                }`}
+              />
+            );
+          })}
+        </div>
+      </div>
 
-      {/* Category label */}
-      <div className="text-center">
-        <span className="text-[10px] font-medium text-primary bg-primary/10 rounded-full px-3 py-0.5">
+      {/* Category badge */}
+      <div className="flex justify-center">
+        <span className={`inline-flex items-center gap-1.5 text-xs font-medium rounded-full px-3 py-1 ${catColor}`}>
+          {CategoryIcon && <CategoryIcon className="h-3.5 w-3.5" />}
           {CATEGORIES[currentQuestion.category]}
         </span>
       </div>
 
-      {/* Question */}
-      <div className="text-center py-4 min-h-[80px] flex items-center justify-center">
-        <p className="font-semibold text-base leading-relaxed">{currentQuestion.text}</p>
+      {/* Question with animation */}
+      <div
+        className={`text-center py-6 min-h-[80px] flex items-center justify-center transition-all duration-200 ${
+          animating
+            ? direction === 'next'
+              ? 'opacity-0 -translate-x-4'
+              : 'opacity-0 translate-x-4'
+            : 'opacity-100 translate-x-0'
+        }`}
+      >
+        <p className="font-semibold text-base leading-relaxed px-2">{currentQuestion.text}</p>
       </div>
 
-      {/* Scale buttons */}
-      <div className="space-y-2">
-        {SCALE_LABELS.map((label, i) => {
-          const value = i + 1;
+      {/* Emoji scale */}
+      <div className="flex justify-center gap-2 py-2">
+        {EMOJI_SCALE.map(({ emoji, label, value }) => {
           const isSelected = responses[currentQ] === value;
           return (
             <button
               key={value}
               onClick={() => handleAnswer(value)}
-              className={`w-full py-3 px-4 rounded-xl text-sm font-medium transition-all transform active:scale-[0.98] ${
+              className={`flex flex-col items-center gap-1 rounded-xl p-2.5 min-w-[56px] transition-all duration-200 active:scale-95 ${
                 isSelected
-                  ? `${SCALE_COLORS[i]} ring-2 ring-offset-2 ring-primary scale-[1.02]`
-                  : 'bg-muted hover:bg-muted/80 text-foreground'
+                  ? 'bg-primary/15 ring-2 ring-primary scale-110 shadow-md'
+                  : 'bg-muted/50 hover:bg-muted hover:scale-105'
               }`}
             >
-              <span className="flex items-center justify-between">
-                <span>{label}</span>
-                <span className="text-lg font-bold opacity-60">{value}</span>
+              <span className={`text-2xl transition-transform duration-200 ${isSelected ? 'scale-110' : ''}`}>
+                {emoji}
+              </span>
+              <span className={`text-[10px] font-medium leading-tight ${
+                isSelected ? 'text-primary' : 'text-muted-foreground'
+              }`}>
+                {label}
               </span>
             </button>
           );
         })}
       </div>
 
+      {/* Dot indicators for quick navigation */}
+      <div className="flex justify-center gap-1 py-1">
+        {Array.from({ length: totalQ }).map((_, i) => (
+          <button
+            key={i}
+            onClick={() => navigateTo(i)}
+            className={`rounded-full transition-all duration-200 ${
+              i === currentQ
+                ? 'w-4 h-2 bg-primary'
+                : responses[i] !== undefined
+                  ? 'w-2 h-2 bg-primary/40'
+                  : 'w-2 h-2 bg-muted-foreground/20'
+            }`}
+          />
+        ))}
+      </div>
+
       {/* Navigation */}
-      <div className="flex items-center justify-between pt-2">
+      <div className="flex items-center justify-between pt-1">
         <Button
           variant="ghost"
           size="sm"
           disabled={currentQ === 0}
-          onClick={() => setCurrentQ(prev => prev - 1)}
+          onClick={() => navigateTo(currentQ - 1)}
           className="gap-1"
         >
           <ChevronRight className="h-4 w-4" />
           הקודם
         </Button>
 
-        {currentQ < genderedQuestions.length - 1 ? (
+        {currentQ < totalQ - 1 ? (
           <Button
             variant="ghost"
             size="sm"
             disabled={responses[currentQ] === undefined}
-            onClick={() => setCurrentQ(prev => prev + 1)}
+            onClick={() => navigateTo(currentQ + 1)}
             className="gap-1"
           >
             הבא
@@ -373,10 +455,10 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
             size="sm"
             onClick={handleSubmit}
             disabled={saving}
-            className="gap-1.5"
+            className="gap-1.5 btn-primary-gradient"
           >
             <Sparkles className="h-3.5 w-3.5" />
-            {saving ? 'שומר...' : 'המשך לתובנות שלי'}
+            {saving ? 'שומר...' : 'סיימתי! 🎉'}
           </Button>
         ) : (
           <span className="text-xs text-muted-foreground">{g(gender, 'ענה', 'עני')} על כל השאלות</span>
@@ -386,5 +468,4 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
   );
 }
 
-// Exported for use in pedagogy form / admin
 export { CATEGORIES, QUESTIONS, SCALE_LABELS, calculateResults };
