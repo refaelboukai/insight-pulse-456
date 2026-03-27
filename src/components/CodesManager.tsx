@@ -4,10 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { RefreshCw, Shield, Users, User, Copy } from 'lucide-react';
+import { RefreshCw, Shield, Users, User, Copy, UserRound } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
-type Student = Database['public']['Tables']['students']['Row'];
+type Student = Database['public']['Tables']['students']['Row'] & { parent_code?: string };
 
 const generateRandomCode = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
