@@ -1102,188 +1102,133 @@ export default function AdminDashboard() {
     return <div className="space-y-3">{renderCategoryGrid(cards)}</div>;
   };
 
-  // ===== RENDER MANAGEMENT VIEW =====
-  const renderManagementView = () => (
-    <div className="space-y-3">
-      {/* Quick actions at top */}
-      <div className="flex gap-2">
-        <SmsReminderSection />
-        <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1" onClick={() => handleExcelExport()}>
-          <Download className="h-3.5 w-3.5" /> הפקת אקסל
-        </Button>
-      </div>
-
-      {renderStatCards()}
-
-      <Accordion type="multiple" value={openAccordions} onValueChange={setOpenAccordions} className="w-full space-y-2">
-        <AccordionItem value="events" id="accordion-events" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4 text-destructive" />
-              אירועים חריגים ({getFilteredEvents().length})
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderEventsContent()}</AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="support" id="accordion-support" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <HeartHandshake className="h-4 w-4 text-accent" />
-              תמיכות ({supportAssignments.length})
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderSupportContent()}</AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="students" id="accordion-students" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              תלמידים ({activeStudents.length})
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderStudentsContent()}</AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="reports" id="accordion-reports" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-blue-500" />
-              דיווחים
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderReportsContent()}</AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="long-absent" className="rounded-2xl border border-amber-500/30 bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              תלמידים שלא מגיעים ({longAbsentStudents.length})
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderLongAbsentContent()}</AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="monthly-report" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              דוח חודשי AI
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderMonthlyReportContent()}</AccordionContent>
-        </AccordionItem>
-
-        {/* Settings accordion with sub-categories */}
-        <AccordionItem value="settings" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <Settings className="h-4 w-4 text-muted-foreground" />
-              הגדרות מערכת
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>
-            <Accordion type="multiple" className="w-full">
-              <AccordionItem value="codes">
-                <AccordionTrigger className="text-sm py-2">
-                  <span className="flex items-center gap-2">
-                    <Key className="h-3.5 w-3.5 text-primary" />
-                    ניהול קודים
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <CodesManager students={students} onRefresh={fetchAll} />
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="subjects">
-                <AccordionTrigger className="text-sm py-2">
-                  <span className="flex items-center gap-2">
-                    <GraduationCap className="h-3.5 w-3.5 text-primary" />
-                    ניהול מקצועות
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <SubjectManager />
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="staff">
-                <AccordionTrigger className="text-sm py-2">
-                  <span className="flex items-center gap-2">
-                    <UserCog className="h-3.5 w-3.5 text-primary" />
-                    אנשי צוות ({staffMembers.length})
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-3">
-                    <div className="flex gap-2">
-                      <Input placeholder="שם איש צוות" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
-                        onKeyDown={e => { if (e.key === 'Enter') handleAddStaff(); }} className="h-9 text-sm flex-1" />
-                      <Button size="sm" onClick={handleAddStaff} disabled={addingStaff} className="gap-1 h-9"><Plus className="h-3.5 w-3.5" /> הוסף</Button>
-                    </div>
-                    {staffMembers.map(sm => (
-                      <div key={sm.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
-                        <span className="text-sm font-medium">{sm.name}</span>
-                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDeleteStaff(sm.id)}><X className="h-3.5 w-3.5" /></Button>
-                      </div>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="report-cards">
-                <AccordionTrigger className="text-sm py-2">
-                  <span className="flex items-center gap-2">
-                    <GraduationCap className="h-3.5 w-3.5 text-primary" />
-                    הפקת תעודות
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  {renderReportCardsContent()}
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="excel-export">
-                <AccordionTrigger className="text-sm py-2">
-                  <span className="flex items-center gap-2">
-                    <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
-                    ייצוא אקסל לפי כיתה
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-2">
-                    {CLASS_OPTIONS.map(cls => (
-                      <Button key={cls} variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={() => handleExcelExport(cls)}>
-                        <Download className="h-3.5 w-3.5" /> הורד אקסל — כיתת {cls}
-                      </Button>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="reset">
-                <AccordionTrigger className="text-sm py-2">
-                  <span className="flex items-center gap-2">
-                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                    איפוס נתונים
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent>
-                  <Button variant="destructive" size="sm" className="gap-1.5 w-full"
-                    onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }} disabled={resetting}>
-                    <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס כל הנתונים'}
-                  </Button>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
-          </AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
+  // ===== RENDER SETTINGS SCREEN =====
+  const renderSettingsContent = () => (
+    <Accordion type="multiple" className="w-full">
+      <AccordionItem value="codes">
+        <AccordionTrigger className="text-sm py-2">
+          <span className="flex items-center gap-2"><Key className="h-3.5 w-3.5 text-primary" /> ניהול קודים</span>
+        </AccordionTrigger>
+        <AccordionContent><CodesManager students={students} onRefresh={fetchAll} /></AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="subjects">
+        <AccordionTrigger className="text-sm py-2">
+          <span className="flex items-center gap-2"><GraduationCap className="h-3.5 w-3.5 text-primary" /> ניהול מקצועות</span>
+        </AccordionTrigger>
+        <AccordionContent><SubjectManager /></AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="staff">
+        <AccordionTrigger className="text-sm py-2">
+          <span className="flex items-center gap-2"><UserCog className="h-3.5 w-3.5 text-primary" /> אנשי צוות ({staffMembers.length})</span>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-3">
+            <div className="flex gap-2">
+              <Input placeholder="שם איש צוות" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
+                onKeyDown={e => { if (e.key === 'Enter') handleAddStaff(); }} className="h-9 text-sm flex-1" />
+              <Button size="sm" onClick={handleAddStaff} disabled={addingStaff} className="gap-1 h-9"><Plus className="h-3.5 w-3.5" /> הוסף</Button>
+            </div>
+            {staffMembers.map(sm => (
+              <div key={sm.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
+                <span className="text-sm font-medium">{sm.name}</span>
+                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDeleteStaff(sm.id)}><X className="h-3.5 w-3.5" /></Button>
+              </div>
+            ))}
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="report-cards">
+        <AccordionTrigger className="text-sm py-2">
+          <span className="flex items-center gap-2"><GraduationCap className="h-3.5 w-3.5 text-primary" /> הפקת תעודות</span>
+        </AccordionTrigger>
+        <AccordionContent>{renderReportCardsContent()}</AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="excel-export">
+        <AccordionTrigger className="text-sm py-2">
+          <span className="flex items-center gap-2"><FileSpreadsheet className="h-3.5 w-3.5 text-primary" /> ייצוא אקסל לפי כיתה</span>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-2">
+            {CLASS_OPTIONS.map(cls => (
+              <Button key={cls} variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={() => handleExcelExport(cls)}>
+                <Download className="h-3.5 w-3.5" /> הורד אקסל — כיתת {cls}
+              </Button>
+            ))}
+          </div>
+        </AccordionContent>
+      </AccordionItem>
+      <AccordionItem value="reset">
+        <AccordionTrigger className="text-sm py-2">
+          <span className="flex items-center gap-2"><Trash2 className="h-3.5 w-3.5 text-destructive" /> איפוס נתונים</span>
+        </AccordionTrigger>
+        <AccordionContent>
+          <Button variant="destructive" size="sm" className="gap-1.5 w-full"
+            onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }} disabled={resetting}>
+            <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס כל הנתונים'}
+          </Button>
+        </AccordionContent>
+      </AccordionItem>
+    </Accordion>
   );
+
+  // ===== RENDER MANAGEMENT VIEW =====
+  const renderManagementView = () => {
+    const presentCount = activeStudents.length - todayAbsent.length;
+    const filteredEvents = getFilteredEvents();
+
+    const cards: CategoryCard[] = [
+      { key: 'students', icon: Users, value: `${presentCount}/${activeStudents.length}`, label: 'תלמידים', sub: new Date().toLocaleDateString('he-IL'), iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'reports', icon: FileText, value: todayReports.length, label: 'דיווחים היום', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'events', icon: ShieldAlert, value: filteredEvents.length, label: 'אירועים חריגים', iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
+      { key: 'support', icon: HeartHandshake, value: supportAssignments.length, label: 'תמיכות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
+      { key: 'long-absent', icon: AlertTriangle, value: longAbsentStudents.length, label: 'לא מגיעים', iconBg: 'bg-warning/10', iconColor: 'text-warning' },
+      { key: 'monthly-report', icon: Sparkles, label: 'דוח חודשי AI', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'sms', icon: MessageSquare, label: 'SMS תזכורות', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'excel', icon: Download, label: 'הפקת אקסל', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'settings', icon: Settings, label: 'הגדרות מערכת', iconBg: 'bg-muted', iconColor: 'text-muted-foreground' },
+    ];
+
+    if (activePanel === 'excel') {
+      handleExcelExport();
+      setActivePanel(null);
+    }
+
+    if (activePanel && activePanel !== 'excel' && activePanel !== 'sms') {
+      const panelContent: Record<string, React.ReactNode> = {
+        students: renderStudentsContent(),
+        reports: renderReportsContent(),
+        events: renderEventsContent(),
+        support: renderSupportContent(),
+        'long-absent': renderLongAbsentContent(),
+        'monthly-report': renderMonthlyReportContent(),
+        settings: renderSettingsContent(),
+      };
+      const panelLabels: Record<string, string> = {
+        students: 'תלמידים', reports: 'דיווחים', events: 'אירועים חריגים',
+        support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים',
+        'monthly-report': 'דוח חודשי AI', settings: 'הגדרות מערכת',
+      };
+      return (
+        <div className="space-y-2">
+          {renderBackButton()}
+          <h3 className="text-sm font-bold">{panelLabels[activePanel] || activePanel}</h3>
+          <div className="rounded-2xl border bg-card p-4">{panelContent[activePanel]}</div>
+        </div>
+      );
+    }
+
+    if (activePanel === 'sms') {
+      return (
+        <div className="space-y-2">
+          {renderBackButton()}
+          <h3 className="text-sm font-bold">SMS תזכורות</h3>
+          <div className="rounded-2xl border bg-card p-4"><SmsReminderSection /></div>
+        </div>
+      );
+    }
+
+    return <div className="space-y-3">{renderCategoryGrid(cards)}</div>;
+  };
 
   // ===== MAIN RENDER =====
   return (
