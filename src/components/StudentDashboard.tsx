@@ -640,7 +640,12 @@ export default function StudentDashboard() {
 
       {/* Learning Style Questionnaire */}
       {showLearningStyle && !learningStyleCompleted && (
-        <LearningStyleQuestionnaire studentId={selectedStudentId} gender={gender} onComplete={() => { setLearningStyleCompleted(true); setShowLearningStyle(false); }} />
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/30 px-3 py-2">
+            <span className="text-destructive text-xs font-bold">⚠️ שאלון זה ייעלם ממסך הכניסה לאחר המילוי — ניתן למלא פעם אחת בלבד.</span>
+          </div>
+          <LearningStyleQuestionnaire studentId={selectedStudentId} gender={gender} onComplete={() => { setLearningStyleCompleted(true); setShowLearningStyle(false); }} />
+        </div>
       )}
 
       {/* Card Grid */}
