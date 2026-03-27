@@ -1253,6 +1253,7 @@ export default function AdminDashboard() {
         ].map(tab => (
           <button key={tab.key} onClick={() => {
             setMainView(tab.key);
+            setActivePanel(null);
             setReportSelectedStudentId(null);
           }}
             className={`flex items-center justify-center gap-2 py-3.5 px-3 rounded-xl text-sm font-bold transition-all ${
