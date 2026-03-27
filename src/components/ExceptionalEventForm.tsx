@@ -22,10 +22,6 @@ export default function ExceptionalEventForm() {
   const [incidentType, setIncidentType] = useState<IncidentType | ''>('');
   const [violenceSubtypes, setViolenceSubtypes] = useState<string[]>([]);
   const [description, setDescription] = useState('');
-  const [eventLocation, setEventLocation] = useState('');
-  const [lessonSubject, setLessonSubject] = useState('');
-  const [staffPresent, setStaffPresent] = useState('');
-  const [additionalInfo, setAdditionalInfo] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   const [staffResponse, setStaffResponse] = useState('');
