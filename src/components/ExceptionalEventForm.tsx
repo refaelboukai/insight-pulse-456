@@ -185,7 +185,7 @@ export default function ExceptionalEventForm() {
 
           <div>
             <label className="text-sm font-bold block text-muted-foreground">סוג אירוע</label>
-            <Select value={incidentType} onValueChange={v => setIncidentType(v as IncidentType)}>
+            <Select value={incidentType} onValueChange={v => { setIncidentType(v as IncidentType); if (v !== 'violence') setViolenceSubtypes([]); }}>
               <SelectTrigger className="rounded-xl h-11 border-2">
                 <SelectValue placeholder="בחר/י סוג אירוע" />
               </SelectTrigger>
