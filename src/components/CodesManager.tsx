@@ -57,6 +57,14 @@ export default function CodesManager({ students, onRefresh }: Props) {
     setRegeneratingParent(null);
   };
 
+  const handleToggleParentVisibility = async (student: Student, field: 'parent_show_reports' | 'parent_show_calendar') => {
+    const currentVal = (student as any)[field] !== false;
+    const { error } = await (supabase.from('students') as any).update({ [field]: !currentVal }).eq('id', student.id);
+    if (error) { toast.error('שגיאה בעדכון'); return; }
+    toast.success(!currentVal ? 'הופעל להורה' : 'הוסתר מהורה');
+    onRefresh();
+  };
+
   return (
     <div className="space-y-4">
       {/* System codes */}
