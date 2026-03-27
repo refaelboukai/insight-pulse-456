@@ -15,7 +15,7 @@ interface LearningStyleQuestionnaireProps {
 const CATEGORIES = {
   environment: 'סביבת למידה',
   social: 'חברתי',
-  sensory: 'חושי (VAK)',
+  sensory: 'חושי',
   time: 'זמן וריכוז',
   emotional: 'רגשי',
   cognitive: 'קוגניטיבי',
