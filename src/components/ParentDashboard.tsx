@@ -36,11 +36,12 @@ export default function ParentDashboard() {
     if (!lockedStudentId) return;
     setLoading(true);
 
-    const [studentRes, reportsRes, examsRes, subjectsRes] = await Promise.all([
+    const [studentRes, reportsRes, examsRes, subjectsRes, summariesRes] = await Promise.all([
       (supabase.from('students') as any).select('*').eq('id', lockedStudentId).maybeSingle(),
       supabase.from('lesson_reports').select('*').eq('student_id', lockedStudentId).order('report_date', { ascending: false }).limit(200),
       supabase.from('exam_schedule').select('*').eq('student_id', lockedStudentId).gte('exam_date', new Date().toISOString().split('T')[0]).order('exam_date', { ascending: true }),
       supabase.from('managed_subjects').select('*'),
+      supabase.from('weekly_summaries' as any).select('*').eq('student_id', lockedStudentId).order('week_start', { ascending: false }).limit(4),
     ]);
 
     setStudent(studentRes.data);
