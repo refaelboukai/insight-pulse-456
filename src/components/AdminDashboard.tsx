@@ -110,8 +110,10 @@ export default function AdminDashboard() {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetPassword, setResetPassword] = useState('');
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState('');
   const [resetPasswordError, setResetPasswordError] = useState('');
   const [resetting, setResetting] = useState(false);
+  const [exportingFull, setExportingFull] = useState(false);
   const [generatingCard, setGeneratingCard] = useState<string | null>(null);
   const [reportCardSemester, setReportCardSemester] = useState<string>('all');
 
