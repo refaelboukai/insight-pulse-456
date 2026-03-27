@@ -463,7 +463,7 @@ export default function StudentDashboard() {
         <Textarea
           value={insightText}
           onChange={(e) => setInsightText(e.target.value)}
-          placeholder="כתוב/י כאן מה עבר עליך היום, מה למדת על עצמך, מה הרגשת..."
+          placeholder={`${terms.write} כאן מה עבר עליך היום, מה למדת על עצמך, מה הרגשת...`}
           className="min-h-[100px] rounded-xl border-muted text-sm resize-none"
           disabled={insightSaved}
         />
