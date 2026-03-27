@@ -23,7 +23,7 @@ const CATEGORIES = {
 
 type CategoryKey = keyof typeof CATEGORIES;
 
-const QUESTIONS: { category: CategoryKey; text: string }[] = [
+const QUESTIONS_MALE: { category: CategoryKey; text: string }[] = [
   // Environment (1-6)
   { category: 'environment', text: 'אני לומד טוב יותר באור חזק' },
   { category: 'environment', text: 'רעש לא מפריע לי להתרכז' },
@@ -61,6 +61,48 @@ const QUESTIONS: { category: CategoryKey; text: string }[] = [
   { category: 'cognitive', text: 'אני חושב לפני שאני עונה' },
   { category: 'cognitive', text: 'אני צריך מבנה ברור' },
 ];
+
+const QUESTIONS_FEMALE: { category: CategoryKey; text: string }[] = [
+  // Environment (1-6)
+  { category: 'environment', text: 'אני לומדת טוב יותר באור חזק' },
+  { category: 'environment', text: 'רעש לא מפריע לי להתרכז' },
+  { category: 'environment', text: 'אני צריכה שקט מוחלט כדי ללמוד' },
+  { category: 'environment', text: 'הטמפרטורה משפיעה על הריכוז שלי' },
+  { category: 'environment', text: 'אני מעדיפה ללמוד ליד שולחן' },
+  { category: 'environment', text: 'אני לומדת טוב יותר בצורה חופשית (ספה/רצפה)' },
+  // Social (7-11)
+  { category: 'social', text: 'אני מעדיפה ללמוד לבד' },
+  { category: 'social', text: 'אני לומדת טוב יותר בזוג' },
+  { category: 'social', text: 'אני לומדת טוב יותר בקבוצה' },
+  { category: 'social', text: 'אני צריכה שמישהו ינחה אותי' },
+  { category: 'social', text: 'אני נהנית לעבוד עם אחרים' },
+  // Sensory / VAK (12-16)
+  { category: 'sensory', text: 'אני מבינה טוב יותר דרך ראייה (תמונות/תרשימים)' },
+  { category: 'sensory', text: 'אני מבינה טוב יותר דרך שמיעה' },
+  { category: 'sensory', text: 'אני לומדת הכי טוב דרך עשייה' },
+  { category: 'sensory', text: 'כתיבה עוזרת לי לזכור' },
+  { category: 'sensory', text: 'אני צריכה תנועה כדי להתרכז' },
+  // Time & Attention (17-20)
+  { category: 'time', text: 'אני מרוכזת יותר בבוקר' },
+  { category: 'time', text: 'אני מרוכזת יותר בערב' },
+  { category: 'time', text: 'אני צריכה הפסקות קצרות' },
+  { category: 'time', text: 'אני יכולה להתרכז לאורך זמן' },
+  // Emotional (21-25)
+  { category: 'emotional', text: 'אני לומדת מתוך רצון פנימי' },
+  { category: 'emotional', text: 'קשה לי להתמיד' },
+  { category: 'emotional', text: 'אני מסיימת משימות גם כשקשה' },
+  { category: 'emotional', text: 'אני צריכה חיזוקים מבחוץ' },
+  { category: 'emotional', text: 'אני מרגישה אחריות על ההצלחה שלי' },
+  // Cognitive (26-30)
+  { category: 'cognitive', text: 'אני צריכה להבין את התמונה הגדולה' },
+  { category: 'cognitive', text: 'אני עובדת לפי שלבים מסודרים' },
+  { category: 'cognitive', text: 'אני מגיבה מהר בלי לחשוב הרבה' },
+  { category: 'cognitive', text: 'אני חושבת לפני שאני עונה' },
+  { category: 'cognitive', text: 'אני צריכה מבנה ברור' },
+];
+
+// Default export for calculations uses male form (gender-neutral for data processing)
+const QUESTIONS = QUESTIONS_MALE;
 
 const SCALE_LABELS = [
   'בכלל לא נכון לי',
