@@ -86,27 +86,27 @@ export default function Index() {
         ) : (
           <Tabs defaultValue="attendance" dir="rtl">
             <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-4 h-auto p-1.5 gap-1.5 rounded-2xl shadow-soft bg-card border border-border">
-              <TabsTrigger value="attendance" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+              <TabsTrigger value="attendance" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(168,40%,92%)] data-[state=active]:text-[hsl(168,50%,30%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
                 <ClipboardCheck className="h-5 w-5 sm:h-4 sm:w-4" />
                 ביקור
               </TabsTrigger>
-              <TabsTrigger value="report" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+              <TabsTrigger value="report" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(220,45%,92%)] data-[state=active]:text-[hsl(220,45%,35%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
                 <FileText className="h-5 w-5 sm:h-4 sm:w-4" />
                 דיווח
               </TabsTrigger>
-              <TabsTrigger value="pedagogy" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+              <TabsTrigger value="pedagogy" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(270,40%,92%)] data-[state=active]:text-[hsl(270,40%,35%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
                 <BookOpen className="h-5 w-5 sm:h-4 sm:w-4" />
                 פדגוגיה
               </TabsTrigger>
-              <TabsTrigger value="grades" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+              <TabsTrigger value="grades" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(35,60%,90%)] data-[state=active]:text-[hsl(35,60%,30%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
                 <GraduationCap className="h-5 w-5 sm:h-4 sm:w-4" />
                 ציונים
               </TabsTrigger>
-              <TabsTrigger value="support" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+              <TabsTrigger value="support" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(145,40%,90%)] data-[state=active]:text-[hsl(145,40%,30%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
                 <HeartHandshake className="h-5 w-5 sm:h-4 sm:w-4" />
                 תמיכה
               </TabsTrigger>
-              <TabsTrigger value="event" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+              <TabsTrigger value="event" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(0,55%,92%)] data-[state=active]:text-[hsl(0,55%,35%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
                 <AlertTriangle className="h-5 w-5 sm:h-4 sm:w-4" />
                 אירוע
               </TabsTrigger>
