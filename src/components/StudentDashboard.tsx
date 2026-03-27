@@ -380,75 +380,145 @@ export default function StudentDashboard() {
           <span className="font-semibold text-sm">היום שלי</span>
           {reflectionSaved && <Badge variant="secondary" className="text-[10px] px-2 py-0 rounded-full mr-auto">נשמר ✓</Badge>}
         </div>
-        {[
-          { key: 'class_presence', label: 'נוכחות בכיתה', emoji: '🏫', descriptions: ['לא הייתי', 'הייתי קצת', 'הייתי חצי מהזמן', 'הייתי רוב הזמן', 'הייתי כל הזמן'] },
-          { key: 'behavior', label: 'התנהגות', emoji: '⭐', descriptions: ['קשה מאוד', 'קשה', 'בסדר', 'טוב', 'מצוין'] },
-          { key: 'social_interaction', label: 'אינטראקציה חברתית', emoji: '🤝', descriptions: ['לא דיברתי עם אף אחד', 'דיברתי מעט', 'הייתי בקשר עם חברים', 'שיתפתי פעולה טוב', 'יזמתי ועזרתי לאחרים'] },
-          { key: 'academic_tasks', label: 'משימות לימודיות', emoji: '📚', descriptions: ['לא עשיתי כלום', 'עשיתי מעט', 'עשיתי חלק', 'עשיתי רוב המשימות', 'השלמתי הכל'] },
-        ].map(item => {
-          const currentVal = dailyReflection[item.key as keyof typeof dailyReflection];
-          return (
-            <div key={item.key} className="rounded-xl border border-border/50 bg-muted/30 p-3 space-y-2">
-              <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-foreground/80">{item.emoji} {item.label}</span>
-                <span className="text-[10px] text-muted-foreground font-medium bg-background px-2 py-0.5 rounded-full">
-                  {item.descriptions[currentVal - 1]}
-                </span>
-              </div>
-              <TooltipProvider delayDuration={0}>
-                <div className="flex gap-2 justify-center py-1">
-                  {[1, 2, 3, 4, 5].map(star => {
-                    const isFilled = star <= currentVal;
-                    return (
-                      <Tooltip key={star}>
-                        <TooltipTrigger asChild>
-                          <button
-                            type="button"
-                            disabled={reflectionSaved}
-                            onClick={() => setDailyReflection(prev => ({ ...prev, [item.key]: star }))}
-                            className="p-0.5 transition-all duration-200 hover:scale-110 disabled:opacity-60 disabled:hover:scale-100"
-                          >
-                            <Star
-                              className={`h-6 w-6 transition-all duration-200 ${
-                                isFilled
-                                  ? 'fill-primary/80 text-primary drop-shadow-sm'
-                                  : 'fill-none text-border hover:text-primary/30'
-                              }`}
-                            />
-                          </button>
-                        </TooltipTrigger>
-                        <TooltipContent side="top" className="text-[11px] max-w-[160px] text-center font-medium">
-                          {item.descriptions[star - 1]}
-                        </TooltipContent>
-                      </Tooltip>
-                    );
-                  })}
-                </div>
-              </TooltipProvider>
+
+        {reflectionSaved ? (
+          /* Celebratory saved state */
+          <div className="rounded-2xl p-5 text-center space-y-3 animate-scale-in" style={{ background: 'linear-gradient(135deg, hsl(var(--primary) / 0.08), hsl(var(--accent) / 0.08))' }}>
+            <div className="text-3xl">
+              {(() => {
+                const avg = (dailyReflection.class_presence + dailyReflection.behavior + dailyReflection.social_interaction + dailyReflection.academic_tasks) / 4;
+                if (avg >= 4.5) return '🌟';
+                if (avg >= 3.5) return '😊';
+                if (avg >= 2.5) return '👍';
+                return '💪';
+              })()}
             </div>
-          );
-        })}
-        {!reflectionSaved && (
-          <Button
-            size="sm"
-            className="w-full btn-primary-gradient text-primary-foreground rounded-lg h-9"
-            disabled={reflectionSaving}
-            onClick={async () => {
-              if (!selectedStudentId || !selectedStudent) return;
-              setReflectionSaving(true);
-              const { error } = await supabase.from('daily_reflections').insert({
-                student_id: selectedStudentId,
-                student_name: `${selectedStudent.first_name} ${selectedStudent.last_name}`,
-                ...dailyReflection,
-              });
-              setReflectionSaving(false);
-              if (error) { toast.error('שגיאה בשמירה'); return; }
-              setReflectionSaved(true);
-              toast.success('היום שלי נשמר בהצלחה!');
-            }}
-          >
-            {reflectionSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'שמור את היום שלי'}
-          </Button>
+            <p className="font-bold text-sm text-foreground">
+              {(() => {
+                const avg = (dailyReflection.class_presence + dailyReflection.behavior + dailyReflection.social_interaction + dailyReflection.academic_tasks) / 4;
+                if (avg >= 4.5) return 'יום מדהים! כל הכבוד! ✨';
+                if (avg >= 3.5) return 'יום טוב! המשיכו ככה! 😊';
+                if (avg >= 2.5) return 'יום סביר, מחר יהיה עוד יותר טוב!';
+                return 'מחר יום חדש — אפשר להתחיל מחדש! 💪';
+              })()}
+            </p>
+            <div className="flex justify-center gap-3 pt-1">
+              {[
+                { key: 'class_presence', label: 'נוכחות', color: 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300' },
+                { key: 'behavior', label: 'התנהגות', color: 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300' },
+                { key: 'social_interaction', label: 'חברים', color: 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-300' },
+                { key: 'academic_tasks', label: 'לימודים', color: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300' },
+              ].map(item => (
+                <div key={item.key} className={`rounded-lg px-2.5 py-1.5 ${item.color}`}>
+                  <span className="text-[10px] block font-medium">{item.label}</span>
+                  <span className="font-bold text-sm">{dailyReflection[item.key as keyof typeof dailyReflection]}/5</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          /* Active rating cards */
+          <>
+            {[
+              {
+                key: 'class_presence', label: 'נוכחות', emoji: '🏫',
+                color: 'border-blue-200 dark:border-blue-800',
+                bgColor: 'bg-blue-50 dark:bg-blue-950/30',
+                activeColor: 'bg-blue-500',
+                descriptions: ['לא הייתי', 'הייתי קצת', 'חצי מהזמן', 'רוב הזמן', 'כל הזמן!'],
+                emojis: ['😴', '🚶', '😐', '🙂', '🌟'],
+              },
+              {
+                key: 'behavior', label: 'התנהגות', emoji: '⭐',
+                color: 'border-emerald-200 dark:border-emerald-800',
+                bgColor: 'bg-emerald-50 dark:bg-emerald-950/30',
+                activeColor: 'bg-emerald-500',
+                descriptions: ['קשה מאוד', 'קשה', 'בסדר', 'טוב', 'מצוין!'],
+                emojis: ['😣', '😕', '😐', '🙂', '🌟'],
+              },
+              {
+                key: 'social_interaction', label: 'חברים', emoji: '🤝',
+                color: 'border-purple-200 dark:border-purple-800',
+                bgColor: 'bg-purple-50 dark:bg-purple-950/30',
+                activeColor: 'bg-purple-500',
+                descriptions: ['לבד', 'דיברתי מעט', 'הייתי בקשר', 'שיתפתי פעולה', 'יזמתי ועזרתי!'],
+                emojis: ['😶', '🤔', '😊', '🤝', '🌟'],
+              },
+              {
+                key: 'academic_tasks', label: 'לימודים', emoji: '📚',
+                color: 'border-amber-200 dark:border-amber-800',
+                bgColor: 'bg-amber-50 dark:bg-amber-950/30',
+                activeColor: 'bg-amber-500',
+                descriptions: ['לא עשיתי', 'עשיתי מעט', 'עשיתי חלק', 'עשיתי רוב', 'הכל!'],
+                emojis: ['😴', '📝', '📖', '📚', '🌟'],
+              },
+            ].map(item => {
+              const currentVal = dailyReflection[item.key as keyof typeof dailyReflection];
+              return (
+                <div key={item.key} className={`rounded-xl border-2 ${item.color} ${item.bgColor} p-3 space-y-2.5 transition-all duration-200`}>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-foreground/80">{item.emoji} {item.label}</span>
+                    <span className={`text-[11px] font-semibold px-2.5 py-0.5 rounded-full transition-all duration-300 ${
+                      currentVal >= 4 ? 'bg-primary/15 text-primary' :
+                      currentVal >= 3 ? 'bg-muted text-foreground/70' :
+                      'bg-destructive/10 text-destructive/70'
+                    }`}>
+                      {item.descriptions[currentVal - 1]}
+                    </span>
+                  </div>
+                  <div className="flex gap-1.5 justify-center py-0.5">
+                    {[1, 2, 3, 4, 5].map(val => {
+                      const isSelected = val === currentVal;
+                      const isFilled = val <= currentVal;
+                      return (
+                        <button
+                          key={val}
+                          type="button"
+                          onClick={() => setDailyReflection(prev => ({ ...prev, [item.key]: val }))}
+                          className={`flex flex-col items-center gap-0.5 rounded-xl px-2.5 py-1.5 min-w-[48px] transition-all duration-200 active:scale-90 ${
+                            isSelected
+                              ? 'scale-110 shadow-md ring-2 ring-primary/30 bg-white dark:bg-card'
+                              : isFilled
+                                ? 'bg-white/60 dark:bg-card/60'
+                                : 'bg-transparent hover:bg-white/40 dark:hover:bg-card/40 hover:scale-105'
+                          }`}
+                        >
+                          <span className={`text-xl transition-transform duration-200 ${isSelected ? 'scale-110' : ''}`}>
+                            {item.emojis[val - 1]}
+                          </span>
+                          <span className={`text-[9px] font-medium leading-tight ${
+                            isSelected ? 'text-primary' : isFilled ? 'text-foreground/60' : 'text-muted-foreground/50'
+                          }`}>
+                            {val}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              );
+            })}
+            <Button
+              size="sm"
+              className="w-full btn-primary-gradient text-primary-foreground rounded-xl h-10 text-sm font-bold gap-2"
+              disabled={reflectionSaving}
+              onClick={async () => {
+                if (!selectedStudentId || !selectedStudent) return;
+                setReflectionSaving(true);
+                const { error } = await supabase.from('daily_reflections').insert({
+                  student_id: selectedStudentId,
+                  student_name: `${selectedStudent.first_name} ${selectedStudent.last_name}`,
+                  ...dailyReflection,
+                });
+                setReflectionSaving(false);
+                if (error) { toast.error('שגיאה בשמירה'); return; }
+                setReflectionSaved(true);
+                toast.success('היום שלי נשמר! ✨');
+              }}
+            >
+              {reflectionSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : <><Sparkles className="h-4 w-4" /> שמור את היום שלי</>}
+            </Button>
+          </>
         )}
       </div>
 
