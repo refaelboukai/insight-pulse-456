@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { SUBJECTS } from '@/lib/constants';
 import { Send, Sparkles, GraduationCap, ChevronDown, ChevronUp, CheckCircle2, Heart, Users2, Plus, X } from 'lucide-react';
+import { g } from '@/lib/genderUtils';
 
 type Student = {
   id: string;
@@ -16,6 +17,7 @@ type Student = {
   last_name: string;
   class_name: string | null;
   is_active: boolean;
+  gender?: string | null;
 };
 
 type SubGrade = { grade: string; weight: string };
