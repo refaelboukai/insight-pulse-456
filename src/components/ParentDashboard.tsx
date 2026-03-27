@@ -345,6 +345,29 @@ export default function ParentDashboard() {
           )}
         </div>
       )}
+
+      {/* Weekly Summaries */}
+      {activeTab === 'summaries' && (
+        <div className="space-y-2">
+          {weeklySummaries.length === 0 ? (
+            <Card><CardContent className="p-4 text-center text-muted-foreground text-sm">אין סיכומים שבועיים עדיין</CardContent></Card>
+          ) : (
+            weeklySummaries.map((s: any) => (
+              <Card key={s.id}>
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <MessageSquareText className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      שבוע {new Date(s.week_start).toLocaleDateString('he-IL')}
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{s.summary_text}</p>
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
     </div>
   );
 }
