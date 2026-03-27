@@ -568,51 +568,32 @@ export default function AdminDashboard() {
     });
   };
 
-  // ===== RENDER STAT CARDS =====
-  const toggleAccordion = (key: string) => {
-    setOpenAccordions(prev => 
-      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
-    );
-    // Scroll to the accordion after a short delay
-    setTimeout(() => {
-      document.getElementById(`accordion-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }, 100);
-  };
+  // ===== PANEL BACK BUTTON =====
+  const renderBackButton = () => (
+    <button onClick={() => setActivePanel(null)}
+      className="flex items-center gap-1.5 text-sm font-medium text-primary mb-3 hover:underline">
+      <ChevronDown className="h-4 w-4 rotate-90" /> חזרה לתפריט
+    </button>
+  );
 
-  const renderStatCards = (classFilter?: string) => {
-    const filteredStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
-    const filteredAbsent = classFilter ? getClassAbsent(classFilter) : todayAbsent;
-    const filteredReports = classFilter ? getClassTodayReports(classFilter) : todayReports;
-    const filteredAssignments = classFilter ? getClassAssignments(classFilter) : supportAssignments;
-    const presentCount = filteredStudents.length - filteredAbsent.length;
-    const filteredEvents = getFilteredEvents();
+  // ===== RENDER CATEGORY GRID =====
+  type CategoryCard = { key: string; icon: React.ElementType; label: string; value?: string | number; iconBg: string; iconColor: string; sub?: string };
 
-    const cards = [
-      { key: 'students', icon: Users, value: `${presentCount}/${filteredStudents.length}`, label: 'תלמידים היום', sub: new Date().toLocaleDateString('he-IL'), iconBg: 'bg-primary/10', iconColor: 'text-primary' },
-      { key: 'reports', icon: FileText, value: filteredReports.length, label: 'דיווחים היום', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
-      { key: 'events', icon: ShieldAlert, value: filteredEvents.length, label: 'אירועים חריגים', iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
-      { key: 'support', icon: HeartHandshake, value: filteredAssignments.length, label: 'תמיכות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
-    ];
-
-    return (
-      <div className="grid grid-cols-4 gap-2">
-        {cards.map(card => {
-          const isActive = openAccordions.includes(card.key);
-          return (
-            <button key={card.key} onClick={() => toggleAccordion(card.key)}
-              className={`rounded-2xl p-3 text-center border transition-all cursor-pointer ${isActive ? 'ring-2 ring-primary/40 bg-primary/5 border-primary/30 shadow-md' : 'bg-card hover:shadow-sm hover:border-primary/20'}`}>
-              <div className={`w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center ${card.iconBg}`}>
-                <card.icon className={`h-4 w-4 ${card.iconColor}`} />
-              </div>
-              <p className="text-lg font-bold leading-tight">{card.value}</p>
-              <p className="text-[10px] text-muted-foreground">{card.label}</p>
-              {card.sub && <p className="text-[8px] text-muted-foreground/60 mt-0.5">{card.sub}</p>}
-            </button>
-          );
-        })}
-      </div>
-    );
-  };
+  const renderCategoryGrid = (cards: CategoryCard[]) => (
+    <div className="grid grid-cols-3 gap-2.5">
+      {cards.map(card => (
+        <button key={card.key} onClick={() => setActivePanel(card.key)}
+          className="rounded-2xl p-3.5 text-center border bg-card hover:shadow-md hover:border-primary/20 transition-all cursor-pointer active:scale-[0.97]">
+          <div className={`w-10 h-10 rounded-xl mx-auto mb-1.5 flex items-center justify-center ${card.iconBg}`}>
+            <card.icon className={`h-5 w-5 ${card.iconColor}`} />
+          </div>
+          {card.value !== undefined && <p className="text-lg font-bold leading-tight">{card.value}</p>}
+          <p className="text-[11px] text-muted-foreground font-medium">{card.label}</p>
+          {card.sub && <p className="text-[9px] text-muted-foreground/60 mt-0.5">{card.sub}</p>}
+        </button>
+      ))}
+    </div>
+  );
 
   // ===== RENDER EVENTS ACCORDION CONTENT =====
   const renderEventsContent = () => {
