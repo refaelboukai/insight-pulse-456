@@ -357,7 +357,7 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
           הקודם
         </Button>
 
-        {currentQ < QUESTIONS.length - 1 ? (
+        {currentQ < genderedQuestions.length - 1 ? (
           <Button
             variant="ghost"
             size="sm"
