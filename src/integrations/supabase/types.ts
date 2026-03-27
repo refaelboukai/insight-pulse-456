@@ -958,6 +958,8 @@ export type Database = {
           mother_name: string | null
           mother_phone: string | null
           parent_code: string
+          parent_show_calendar: boolean
+          parent_show_reports: boolean
           student_code: string
           updated_at: string
         }
@@ -980,6 +982,8 @@ export type Database = {
           mother_name?: string | null
           mother_phone?: string | null
           parent_code?: string
+          parent_show_calendar?: boolean
+          parent_show_reports?: boolean
           student_code: string
           updated_at?: string
         }
@@ -1002,6 +1006,8 @@ export type Database = {
           mother_name?: string | null
           mother_phone?: string | null
           parent_code?: string
+          parent_show_calendar?: boolean
+          parent_show_reports?: boolean
           student_code?: string
           updated_at?: string
         }
@@ -1193,7 +1199,7 @@ export type Database = {
         | "hospitalization"
         | "balance_home"
         | "medical_suspension"
-      app_role: "admin" | "staff" | "student"
+      app_role: "admin" | "staff" | "student" | "parent"
       attendance_status: "full" | "partial" | "absent"
       behavior_type: "respectful" | "non_respectful" | "disruptive" | "violent"
       incident_type:
@@ -1351,7 +1357,7 @@ export const Constants = {
         "balance_home",
         "medical_suspension",
       ],
-      app_role: ["admin", "staff", "student"],
+      app_role: ["admin", "staff", "student", "parent"],
       attendance_status: ["full", "partial", "absent"],
       behavior_type: ["respectful", "non_respectful", "disruptive", "violent"],
       incident_type: [

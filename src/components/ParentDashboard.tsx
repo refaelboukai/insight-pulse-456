@@ -1,0 +1,232 @@
+import { useEffect, useState } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS } from '@/lib/constants';
+import { FileText, Calendar, BookOpen, Clock, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react';
+import { format } from 'date-fns';
+import { he } from 'date-fns/locale';
+
+export default function ParentDashboard() {
+  const { lockedStudentId } = useAuth();
+  const [student, setStudent] = useState<any>(null);
+  const [reports, setReports] = useState<any[]>([]);
+  const [exams, setExams] = useState<any[]>([]);
+  const [subjects, setSubjects] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<'reports' | 'exams'>('reports');
+
+  useEffect(() => {
+    if (!lockedStudentId) return;
+    fetchData();
+  }, [lockedStudentId]);
+
+  const fetchData = async () => {
+    if (!lockedStudentId) return;
+    setLoading(true);
+
+    const [studentRes, reportsRes, examsRes, subjectsRes] = await Promise.all([
+      (supabase.from('students') as any).select('*').eq('id', lockedStudentId).maybeSingle(),
+      supabase.from('lesson_reports').select('*').eq('student_id', lockedStudentId).order('report_date', { ascending: false }).limit(50),
+      supabase.from('exam_schedule').select('*').eq('student_id', lockedStudentId).gte('exam_date', new Date().toISOString().split('T')[0]).order('exam_date', { ascending: true }),
+      supabase.from('managed_subjects').select('*'),
+    ]);
+
+    setStudent(studentRes.data);
+    
+    // Filter based on parent visibility toggles
+    const showReports = studentRes.data?.parent_show_reports !== false;
+    const showCalendar = studentRes.data?.parent_show_calendar !== false;
+    
+    setReports(showReports ? (reportsRes.data || []) : []);
+    setExams(showCalendar ? (examsRes.data || []) : []);
+    setSubjects(subjectsRes.data || []);
+    
+    // If current tab content is hidden, switch
+    if (!showReports && activeTab === 'reports') setActiveTab('exams');
+    if (!showCalendar && activeTab === 'exams') setActiveTab('reports');
+    
+    setLoading(false);
+  };
+
+  const getSubjectName = (id: string) => subjects.find((s: any) => s.id === id)?.name || id;
+
+  const showReports = student?.parent_show_reports !== false;
+  const showCalendar = student?.parent_show_calendar !== false;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <div className="text-center space-y-3">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 mx-auto flex items-center justify-center animate-pulse">
+            <div className="w-6 h-6 rounded-full bg-primary/30" />
+          </div>
+          <p className="text-muted-foreground text-sm">טוען נתונים...</p>
+        </div>
+      </div>
+    );
+  }
+
+  const attendanceIcon = (status: string) => {
+    if (status === 'full') return <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />;
+    if (status === 'partial') return <Clock className="h-3.5 w-3.5 text-amber-500" />;
+    return <XCircle className="h-3.5 w-3.5 text-red-500" />;
+  };
+
+  const behaviorColor = (types: string[]) => {
+    if (types.includes('violent')) return 'text-red-600';
+    if (types.includes('disruptive')) return 'text-amber-600';
+    if (types.includes('non_respectful')) return 'text-orange-500';
+    return 'text-green-600';
+  };
+
+  return (
+    <div className="space-y-4" dir="rtl">
+      {/* Welcome card */}
+      <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
+        <CardContent className="p-4">
+          <h2 className="text-lg font-bold text-foreground">
+            שלום, הורה של {student?.first_name} {student?.last_name} 👋
+          </h2>
+          <p className="text-xs text-muted-foreground mt-1">
+            כאן תוכלו לצפות בנתונים העדכניים ביותר של ילדכם
+          </p>
+        </CardContent>
+      </Card>
+
+      {/* Tab buttons */}
+      <div className="flex gap-2">
+        {showReports && (
+          <button
+            onClick={() => setActiveTab('reports')}
+            className={`flex-1 rounded-xl p-3 text-center border transition-all ${
+              activeTab === 'reports' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card hover:shadow-sm'
+            }`}
+          >
+            <FileText className={`h-5 w-5 mx-auto mb-1 ${activeTab === 'reports' ? '' : 'text-muted-foreground'}`} />
+            <p className="text-xs font-bold">דיווחי שיעורים</p>
+            <p className={`text-[10px] mt-0.5 ${activeTab === 'reports' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+              {reports.length} דיווחים
+            </p>
+          </button>
+        )}
+        {showCalendar && (
+          <button
+            onClick={() => setActiveTab('exams')}
+            className={`flex-1 rounded-xl p-3 text-center border transition-all ${
+              activeTab === 'exams' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card hover:shadow-sm'
+            }`}
+          >
+            <Calendar className={`h-5 w-5 mx-auto mb-1 ${activeTab === 'exams' ? '' : 'text-muted-foreground'}`} />
+            <p className="text-xs font-bold">מבחנים קרובים</p>
+            <p className={`text-[10px] mt-0.5 ${activeTab === 'exams' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+              {exams.length} מבחנים
+            </p>
+          </button>
+        )}
+      </div>
+
+      {!showReports && !showCalendar && (
+        <Card>
+          <CardContent className="p-6 text-center">
+            <p className="text-muted-foreground text-sm">אין מידע זמין כרגע. הצוות החינוכי יפעיל את הנתונים בקרוב.</p>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Lesson Reports */}
+      {activeTab === 'reports' && showReports && (
+        <div className="space-y-2">
+          {reports.length === 0 ? (
+            <Card><CardContent className="p-4 text-center text-muted-foreground text-sm">אין דיווחים עדיין</CardContent></Card>
+          ) : (
+            reports.map((r: any) => (
+              <Card key={r.id} className="overflow-hidden">
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <BookOpen className="h-3.5 w-3.5 text-primary" />
+                      <span className="text-sm font-bold">{r.lesson_subject}</span>
+                    </div>
+                    <span className="text-[10px] text-muted-foreground">
+                      {format(new Date(r.report_date), 'dd/MM/yyyy', { locale: he })}
+                    </span>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1.5">
+                    {/* Attendance */}
+                    <div className="flex items-center gap-1 bg-muted/50 rounded-md px-2 py-0.5">
+                      {attendanceIcon(r.attendance)}
+                      <span className="text-[10px]">{ATTENDANCE_LABELS[r.attendance] || r.attendance}</span>
+                    </div>
+
+                    {/* Behavior */}
+                    {r.behavior_types?.map((bt: string) => (
+                      <Badge key={bt} variant="outline" className={`text-[10px] ${behaviorColor(r.behavior_types)}`}>
+                        {BEHAVIOR_LABELS[bt] || bt}
+                      </Badge>
+                    ))}
+
+                    {/* Participation */}
+                    {r.participation?.map((p: string) => (
+                      <Badge key={p} variant="secondary" className="text-[10px]">
+                        {PARTICIPATION_LABELS[p] || p}
+                      </Badge>
+                    ))}
+                  </div>
+
+                  {/* Comment */}
+                  {r.comment && (
+                    <p className="text-xs text-muted-foreground bg-muted/30 rounded-md p-2 mt-1">
+                      {r.comment}
+                    </p>
+                  )}
+                </CardContent>
+              </Card>
+            ))
+          )}
+        </div>
+      )}
+
+      {/* Exams */}
+      {activeTab === 'exams' && showCalendar && (
+        <div className="space-y-2">
+          {exams.length === 0 ? (
+            <Card><CardContent className="p-4 text-center text-muted-foreground text-sm">אין מבחנים קרובים</CardContent></Card>
+          ) : (
+            exams.map((exam: any) => {
+              const daysUntil = Math.ceil((new Date(exam.exam_date).getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+              return (
+                <Card key={exam.id} className={daysUntil <= 3 ? 'border-amber-300 bg-amber-50/30' : ''}>
+                  <CardContent className="p-3">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <Calendar className="h-3.5 w-3.5 text-primary" />
+                        <span className="text-sm font-bold">{getSubjectName(exam.subject_id)}</span>
+                        {exam.sub_subject && (
+                          <Badge variant="secondary" className="text-[10px]">{exam.sub_subject}</Badge>
+                        )}
+                      </div>
+                      <div className="text-left">
+                        <p className="text-xs font-medium">{format(new Date(exam.exam_date), 'dd/MM', { locale: he })}</p>
+                        {daysUntil <= 7 && (
+                          <p className={`text-[10px] ${daysUntil <= 3 ? 'text-amber-600 font-bold' : 'text-muted-foreground'}`}>
+                            {daysUntil === 0 ? 'היום!' : daysUntil === 1 ? 'מחר' : `עוד ${daysUntil} ימים`}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+                    {exam.exam_description && (
+                      <p className="text-xs text-muted-foreground mt-1.5">{exam.exam_description}</p>
+                    )}
+                  </CardContent>
+                </Card>
+              );
+            })
+          )}
+        </div>
+      )}
+    </div>
+  );
+}

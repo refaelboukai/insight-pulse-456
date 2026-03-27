@@ -9,9 +9,10 @@ import SupportPlanForm from '@/components/SupportPlanForm';
 import GradesForm from '@/components/GradesForm';
 import PedagogyForm from '@/components/PedagogyForm';
 import StudentDashboard from '@/components/StudentDashboard';
+import ParentDashboard from '@/components/ParentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
 import { Button } from '@/components/ui/button';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen, ChevronLeft, Calendar } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen, ChevronLeft, Calendar, UserRound } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 type StaffPanel = 'attendance' | 'report' | 'pedagogy' | 'grades' | 'support' | 'event' | 'calendar' | null;
@@ -30,6 +31,7 @@ export default function Index() {
   const { role, fullName, signOut } = useAuth();
   const isAdmin = role === 'admin';
   const isStudent = role === 'student';
+  const isParent = role === 'parent';
   const [absentStudentIds, setAbsentStudentIds] = useState<Set<string>>(new Set());
   const [staffPanel, setStaffPanel] = useState<StaffPanel>(null);
 
@@ -92,6 +94,7 @@ export default function Index() {
               <p className="text-xs text-primary-foreground/70 flex items-center gap-1">
                 {isAdmin && <Shield className="w-3 h-3" />}
                 {isStudent && <User className="w-3 h-3" />}
+                {isParent && <UserRound className="w-3 h-3" />}
                 {fullName}
               </p>
             </div>
@@ -110,7 +113,9 @@ export default function Index() {
 
       {/* Content */}
       <main className="container mx-auto px-3 sm:px-4 py-4 pb-10 max-w-4xl">
-        {isStudent ? (
+        {isParent ? (
+          <ParentDashboard />
+        ) : isStudent ? (
           <StudentDashboard />
         ) : isAdmin ? (
           <AdminDashboard />
