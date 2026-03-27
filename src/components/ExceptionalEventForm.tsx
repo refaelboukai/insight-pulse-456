@@ -36,14 +36,12 @@ export default function ExceptionalEventForm() {
 
   useEffect(() => {
     const load = async () => {
-      const [sRes, stRes, subjRes] = await Promise.all([
+      const [sRes, stRes] = await Promise.all([
         supabase.from('students').select('*').eq('is_active', true).order('class_name').order('last_name'),
         supabase.from('staff_members').select('id, name').eq('is_active', true).order('name'),
-        supabase.from('managed_subjects').select('id, name').eq('is_active', true).order('name'),
       ]);
       if (sRes.data) setStudents(sRes.data);
       if (stRes.data) setStaffMembers(stRes.data as any[]);
-      if (subjRes.data) setManagedSubjects(subjRes.data as any[]);
     };
     load();
   }, []);
