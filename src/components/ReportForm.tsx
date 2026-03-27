@@ -368,7 +368,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                   ))}
                 </div>
                 <Textarea
-                  placeholder="תאר/י את האירוע (חובה)..."
+                  placeholder={`${selectedStudent?.gender === 'נ' ? 'תארי' : 'תאר'} את האירוע (חובה)...`}
                   value={violenceComment}
                   onChange={e => setViolenceComment(e.target.value)}
                   rows={2}
