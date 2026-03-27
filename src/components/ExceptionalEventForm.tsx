@@ -64,9 +64,14 @@ export default function ExceptionalEventForm() {
 
   const getEventData = () => {
     const now = new Date();
+    let fullDescription = description;
+    if (incidentType === 'violence' && violenceSubtypes.length > 0) {
+      const subtypeNames = violenceSubtypes.map(v => VIOLENCE_LABELS[v] || v).join(', ');
+      fullDescription = `סוג אלימות: ${subtypeNames}\n\n${description}`;
+    }
     return {
       incidentType,
-      description,
+      description: fullDescription,
       peopleInvolved: buildPeopleInvolvedText(),
       staffResponse,
       followupRequired,
