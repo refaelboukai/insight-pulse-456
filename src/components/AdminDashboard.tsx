@@ -1083,7 +1083,7 @@ export default function AdminDashboard() {
 
           {/* SMS */}
           <div className="card-styled rounded-2xl p-4">
-            <SmsReminderSection staffMembers={staffMembers} />
+            <SmsReminderSection />
           </div>
 
           {/* Report Cards */}
