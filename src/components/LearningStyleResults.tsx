@@ -61,7 +61,7 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
   if (!profile || !profile.is_completed) {
     return (
       <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-lg">
-        התלמיד/ה טרם מילא/ה את שאלון סגנון הלמידה.
+        {g(gender, 'התלמיד טרם מילא', 'התלמידה טרם מילאה')} את שאלון סגנון הלמידה.
       </div>
     );
   }
