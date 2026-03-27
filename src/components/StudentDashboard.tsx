@@ -624,6 +624,7 @@ export default function StudentDashboard() {
       exams: renderExamsPanel(),
       support: renderSupportPanel(),
       schedule: renderSchedulePanel(),
+      weekly_summary: renderWeeklySummaryPanel(),
     };
     const panelLabels: Record<string, string> = {
       reminders: 'תזכורות להיום', reflection: 'היום שלי', insights: 'תובנות שלי על היום',
