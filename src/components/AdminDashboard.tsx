@@ -330,12 +330,43 @@ export default function AdminDashboard() {
         supabase.from('brain_training_scores' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
         supabase.from('brain_training_history' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
         supabase.from('schedule_checkins' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('pedagogical_goals' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('student_insights' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('exam_schedule' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('support_completions' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('learning_style_profiles' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
       ]);
       const errors = results.filter(r => r.error);
       if (errors.length > 0) toast.error('שגיאה באיפוס חלק מהנתונים');
-      else toast.success('כל הדיווחים אופסו בהצלחה!');
+      else toast.success('כל הנתונים אופסו בהצלחה!');
       fetchAll();
     } catch { toast.error('שגיאה באיפוס'); } finally { setResetting(false); }
+  };
+
+  const handleFullExport = async () => {
+    setExportingFull(true);
+    try {
+      const [gradesRes, evalsRes, pedRes, examRes, logsRes, subjectsRes] = await Promise.all([
+        supabase.from('student_grades').select('*').order('created_at', { ascending: false }),
+        supabase.from('student_evaluations').select('*').order('created_at', { ascending: false }),
+        supabase.from('pedagogical_goals').select('*').order('month'),
+        supabase.from('exam_schedule').select('*').order('exam_date'),
+        supabase.from('activity_logs').select('*').order('created_at', { ascending: false }),
+        supabase.from('managed_subjects').select('id, name'),
+      ]);
+      await exportFullActivityToExcel({
+        reports, students, alerts, events, dailyAttendance, supportSessions, supportAssignments,
+        dailyReflections, studentInsights,
+        grades: gradesRes.data || [],
+        evaluations: evalsRes.data || [],
+        pedagogyGoals: pedRes.data || [],
+        examSchedule: examRes.data || [],
+        activityLogs: logsRes.data || [],
+        staffMembers,
+        managedSubjects: subjectsRes.data || [],
+      });
+      toast.success('קובץ אקסל מלא הורד בהצלחה');
+    } catch { toast.error('שגיאה בייצוא'); } finally { setExportingFull(false); }
   };
 
   const SEMESTER_LABELS: Record<string, string> = { semester_a: 'סמסטר א׳', semester_b: 'סמסטר ב׳', summer: 'סמסטר קיץ', all: 'שנתי מאוחד' };
