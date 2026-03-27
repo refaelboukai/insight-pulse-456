@@ -1259,7 +1259,7 @@ export default function AdminDashboard() {
       const panelLabels: Record<string, string> = {
         students: 'תלמידים', reports: 'דיווחים', events: 'אירועים חריגים',
         support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים',
-        'monthly-report': 'דוח חודשי AI', settings: 'הגדרות מערכת',
+        'monthly-report': 'דוח חודשי AI', calendar: 'לוח שנה', settings: 'הגדרות מערכת',
       };
       return (
         <div className="space-y-2">
