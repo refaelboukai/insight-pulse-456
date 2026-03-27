@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Brain, ChevronRight, ChevronLeft, Sparkles, RotateCcw } from 'lucide-react';
+import { g, type Gender } from '@/lib/genderUtils';
 
 interface LearningStyleQuestionnaireProps {
   studentId: string;
   onComplete?: () => void;
+  gender?: Gender;
 }
 
 const CATEGORIES = {
