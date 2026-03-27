@@ -286,7 +286,6 @@ export default function StudentDashboard() {
             <button onClick={() => setSelectedStudentId('')} className="mt-2 text-primary-foreground/70 hover:text-primary-foreground text-xs underline">
               {terms.switchStudent}
             </button>
-            </button>
           )}
         </div>
       </div>
