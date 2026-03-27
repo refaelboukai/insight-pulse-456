@@ -569,6 +569,16 @@ export default function AdminDashboard() {
   };
 
   // ===== RENDER STAT CARDS =====
+  const toggleAccordion = (key: string) => {
+    setOpenAccordions(prev => 
+      prev.includes(key) ? prev.filter(k => k !== key) : [...prev, key]
+    );
+    // Scroll to the accordion after a short delay
+    setTimeout(() => {
+      document.getElementById(`accordion-${key}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
+
   const renderStatCards = (classFilter?: string) => {
     const filteredStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
     const filteredAbsent = classFilter ? getClassAbsent(classFilter) : todayAbsent;
@@ -577,44 +587,29 @@ export default function AdminDashboard() {
     const presentCount = filteredStudents.length - filteredAbsent.length;
     const filteredEvents = getFilteredEvents();
 
+    const cards = [
+      { key: 'students', icon: Users, value: `${presentCount}/${filteredStudents.length}`, label: 'תלמידים היום', sub: new Date().toLocaleDateString('he-IL'), iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'reports', icon: FileText, value: filteredReports.length, label: 'דיווחים היום', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'events', icon: ShieldAlert, value: filteredEvents.length, label: 'אירועים חריגים', iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
+      { key: 'support', icon: HeartHandshake, value: filteredAssignments.length, label: 'תמיכות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
+    ];
+
     return (
       <div className="grid grid-cols-4 gap-2">
-        {/* Students present today */}
-        <div className="rounded-2xl p-3 text-center border bg-card">
-          <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-primary/10">
-            <Users className="h-4 w-4 text-primary" />
-          </div>
-          <p className="text-lg font-bold leading-tight">{presentCount}/{filteredStudents.length}</p>
-          <p className="text-[10px] text-muted-foreground">תלמידים היום</p>
-          <p className="text-[8px] text-muted-foreground/60 mt-0.5">{new Date().toLocaleDateString('he-IL')}</p>
-        </div>
-
-        {/* Reports */}
-        <div className="rounded-2xl p-3 text-center border bg-card">
-          <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-blue-500/10">
-            <FileText className="h-4 w-4 text-blue-500" />
-          </div>
-          <p className="text-lg font-bold">{filteredReports.length}</p>
-          <p className="text-[10px] text-muted-foreground">דיווחים היום</p>
-        </div>
-
-        {/* Events */}
-        <div className="rounded-2xl p-3 text-center border bg-card">
-          <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-destructive/10">
-            <ShieldAlert className="h-4 w-4 text-destructive" />
-          </div>
-          <p className="text-lg font-bold">{filteredEvents.length}</p>
-          <p className="text-[10px] text-muted-foreground">אירועים חריגים</p>
-        </div>
-
-        {/* Support */}
-        <div className="rounded-2xl p-3 text-center border bg-card">
-          <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-accent/10">
-            <HeartHandshake className="h-4 w-4 text-accent" />
-          </div>
-          <p className="text-lg font-bold">{filteredAssignments.length}</p>
-          <p className="text-[10px] text-muted-foreground">תמיכות</p>
-        </div>
+        {cards.map(card => {
+          const isActive = openAccordions.includes(card.key);
+          return (
+            <button key={card.key} onClick={() => toggleAccordion(card.key)}
+              className={`rounded-2xl p-3 text-center border transition-all cursor-pointer ${isActive ? 'ring-2 ring-primary/40 bg-primary/5 border-primary/30 shadow-md' : 'bg-card hover:shadow-sm hover:border-primary/20'}`}>
+              <div className={`w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center ${card.iconBg}`}>
+                <card.icon className={`h-4 w-4 ${card.iconColor}`} />
+              </div>
+              <p className="text-lg font-bold leading-tight">{card.value}</p>
+              <p className="text-[10px] text-muted-foreground">{card.label}</p>
+              {card.sub && <p className="text-[8px] text-muted-foreground/60 mt-0.5">{card.sub}</p>}
+            </button>
+          );
+        })}
       </div>
     );
   };
