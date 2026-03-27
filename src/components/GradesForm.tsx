@@ -91,6 +91,7 @@ export default function GradesForm() {
   }, []);
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
+  const studentGender = selectedStudent?.gender;
 
   // Load existing evaluation when student is selected
   useEffect(() => {
