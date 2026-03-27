@@ -59,7 +59,6 @@ serve(async (req) => {
 
       return {
         name: `${s.first_name} ${s.last_name}`,
-        id_number: s.student_code,
         class: s.class_name,
         grade: s.grade,
         attendance: `${sAttendance.length - absent.length}/${sAttendance.length} ימי נוכחות`,
