@@ -108,6 +108,8 @@ export default function StudentDashboard() {
   }, [selectedStudentId]);
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
+  const gender = selectedStudent?.gender;
+  const terms = genderTerms(gender);
 
   useEffect(() => {
     if (!selectedStudentId) return;
