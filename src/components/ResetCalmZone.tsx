@@ -35,7 +35,7 @@ export default function ResetCalmZone() {
   if (!studentCode) {
     return (
       <div className="text-center py-12">
-        <p className="text-sm text-muted-foreground">לא נמצא תלמיד משויך.</p>
+        <p className="text-sm text-muted-foreground">לא נמצא חשבון תלמיד משויך.</p>
       </div>
     );
   }

@@ -48,7 +48,7 @@ export default function DailyReminderBanner() {
           <p className="text-sm font-semibold text-foreground">תזכורת דיווח יומי</p>
           <p className="text-xs text-muted-foreground">
             {reportCount === 0
-              ? 'טרם הוגשו דיווחים היום. אל תשכח/י למלא דיווח לאחר כל שיעור!'
+              ? 'טרם הוגשו דיווחים היום. אל תשכחו למלא דיווח לאחר כל שיעור!'
               : `הגשת ${reportCount} דיווחים היום.`}
           </p>
         </div>

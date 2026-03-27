@@ -4,10 +4,12 @@ import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'sonner';
 import { Brain, ChevronRight, ChevronLeft, Sparkles, RotateCcw } from 'lucide-react';
+import { g, type Gender } from '@/lib/genderUtils';
 
 interface LearningStyleQuestionnaireProps {
   studentId: string;
   onComplete?: () => void;
+  gender?: Gender;
 }
 
 const CATEGORIES = {
@@ -21,7 +23,7 @@ const CATEGORIES = {
 
 type CategoryKey = keyof typeof CATEGORIES;
 
-const QUESTIONS: { category: CategoryKey; text: string }[] = [
+const QUESTIONS_MALE: { category: CategoryKey; text: string }[] = [
   // Environment (1-6)
   { category: 'environment', text: 'אני לומד טוב יותר באור חזק' },
   { category: 'environment', text: 'רעש לא מפריע לי להתרכז' },
@@ -59,6 +61,48 @@ const QUESTIONS: { category: CategoryKey; text: string }[] = [
   { category: 'cognitive', text: 'אני חושב לפני שאני עונה' },
   { category: 'cognitive', text: 'אני צריך מבנה ברור' },
 ];
+
+const QUESTIONS_FEMALE: { category: CategoryKey; text: string }[] = [
+  // Environment (1-6)
+  { category: 'environment', text: 'אני לומדת טוב יותר באור חזק' },
+  { category: 'environment', text: 'רעש לא מפריע לי להתרכז' },
+  { category: 'environment', text: 'אני צריכה שקט מוחלט כדי ללמוד' },
+  { category: 'environment', text: 'הטמפרטורה משפיעה על הריכוז שלי' },
+  { category: 'environment', text: 'אני מעדיפה ללמוד ליד שולחן' },
+  { category: 'environment', text: 'אני לומדת טוב יותר בצורה חופשית (ספה/רצפה)' },
+  // Social (7-11)
+  { category: 'social', text: 'אני מעדיפה ללמוד לבד' },
+  { category: 'social', text: 'אני לומדת טוב יותר בזוג' },
+  { category: 'social', text: 'אני לומדת טוב יותר בקבוצה' },
+  { category: 'social', text: 'אני צריכה שמישהו ינחה אותי' },
+  { category: 'social', text: 'אני נהנית לעבוד עם אחרים' },
+  // Sensory / VAK (12-16)
+  { category: 'sensory', text: 'אני מבינה טוב יותר דרך ראייה (תמונות/תרשימים)' },
+  { category: 'sensory', text: 'אני מבינה טוב יותר דרך שמיעה' },
+  { category: 'sensory', text: 'אני לומדת הכי טוב דרך עשייה' },
+  { category: 'sensory', text: 'כתיבה עוזרת לי לזכור' },
+  { category: 'sensory', text: 'אני צריכה תנועה כדי להתרכז' },
+  // Time & Attention (17-20)
+  { category: 'time', text: 'אני מרוכזת יותר בבוקר' },
+  { category: 'time', text: 'אני מרוכזת יותר בערב' },
+  { category: 'time', text: 'אני צריכה הפסקות קצרות' },
+  { category: 'time', text: 'אני יכולה להתרכז לאורך זמן' },
+  // Emotional (21-25)
+  { category: 'emotional', text: 'אני לומדת מתוך רצון פנימי' },
+  { category: 'emotional', text: 'קשה לי להתמיד' },
+  { category: 'emotional', text: 'אני מסיימת משימות גם כשקשה' },
+  { category: 'emotional', text: 'אני צריכה חיזוקים מבחוץ' },
+  { category: 'emotional', text: 'אני מרגישה אחריות על ההצלחה שלי' },
+  // Cognitive (26-30)
+  { category: 'cognitive', text: 'אני צריכה להבין את התמונה הגדולה' },
+  { category: 'cognitive', text: 'אני עובדת לפי שלבים מסודרים' },
+  { category: 'cognitive', text: 'אני מגיבה מהר בלי לחשוב הרבה' },
+  { category: 'cognitive', text: 'אני חושבת לפני שאני עונה' },
+  { category: 'cognitive', text: 'אני צריכה מבנה ברור' },
+];
+
+// Default export for calculations uses male form (gender-neutral for data processing)
+const QUESTIONS = QUESTIONS_MALE;
 
 const SCALE_LABELS = [
   'בכלל לא נכון לי',
@@ -150,7 +194,7 @@ function calculateResults(responses: Record<number, number>) {
   };
 }
 
-export default function LearningStyleQuestionnaire({ studentId, onComplete }: LearningStyleQuestionnaireProps) {
+export default function LearningStyleQuestionnaire({ studentId, onComplete, gender }: LearningStyleQuestionnaireProps) {
   const [currentQ, setCurrentQ] = useState(0);
   const [responses, setResponses] = useState<Record<number, number>>({});
   const [isCompleted, setIsCompleted] = useState(false);
@@ -181,13 +225,13 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete }: Le
     const newResponses = { ...responses, [currentQ]: value };
     setResponses(newResponses);
 
-    if (currentQ < QUESTIONS.length - 1) {
+    if (currentQ < QUESTIONS_MALE.length - 1) {
       setTimeout(() => setCurrentQ(prev => prev + 1), 200);
     }
   };
 
   const handleSubmit = async () => {
-    if (Object.keys(responses).length < QUESTIONS.length) {
+    if (Object.keys(responses).length < QUESTIONS_MALE.length) {
       toast.error('יש לענות על כל השאלות');
       return;
     }
@@ -245,9 +289,10 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete }: Le
     );
   }
 
-  const progress = ((currentQ + 1) / QUESTIONS.length) * 100;
-  const currentQuestion = QUESTIONS[currentQ];
-  const allAnswered = Object.keys(responses).length === QUESTIONS.length;
+  const genderedQuestions = gender === 'נ' ? QUESTIONS_FEMALE : QUESTIONS_MALE;
+  const progress = ((currentQ + 1) / genderedQuestions.length) * 100;
+  const currentQuestion = genderedQuestions[currentQ];
+  const allAnswered = Object.keys(responses).length === genderedQuestions.length;
 
   return (
     <div className="card-styled rounded-2xl p-4 space-y-4">
@@ -257,7 +302,7 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete }: Le
           <Brain className="h-5 w-5 text-primary" />
           <span className="font-bold text-sm">סגנון הלמידה שלי</span>
         </div>
-        <span className="text-xs text-muted-foreground">{currentQ + 1}/{QUESTIONS.length}</span>
+        <span className="text-xs text-muted-foreground">{currentQ + 1}/{genderedQuestions.length}</span>
       </div>
 
       {/* Progress */}
@@ -312,7 +357,7 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete }: Le
           הקודם
         </Button>
 
-        {currentQ < QUESTIONS.length - 1 ? (
+        {currentQ < genderedQuestions.length - 1 ? (
           <Button
             variant="ghost"
             size="sm"
@@ -334,7 +379,7 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete }: Le
             {saving ? 'שומר...' : 'המשך לתובנות שלי'}
           </Button>
         ) : (
-          <span className="text-xs text-muted-foreground">ענה/י על כל השאלות</span>
+          <span className="text-xs text-muted-foreground">{g(gender, 'ענה', 'עני')} על כל השאלות</span>
         )}
       </div>
     </div>

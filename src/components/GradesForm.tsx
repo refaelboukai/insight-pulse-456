@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { toast } from 'sonner';
 import { SUBJECTS } from '@/lib/constants';
 import { Send, Sparkles, GraduationCap, ChevronDown, ChevronUp, CheckCircle2, Heart, Users2, Plus, X } from 'lucide-react';
+import { g } from '@/lib/genderUtils';
 
 type Student = {
   id: string;
@@ -16,6 +17,7 @@ type Student = {
   last_name: string;
   class_name: string | null;
   is_active: boolean;
+  gender?: string | null;
 };
 
 type SubGrade = { grade: string; weight: string };
@@ -83,12 +85,13 @@ export default function GradesForm() {
   const [subjectOpen, setSubjectOpen] = useState(false);
 
   useEffect(() => {
-    supabase.from('students').select('id, first_name, last_name, class_name, is_active')
+    supabase.from('students').select('id, first_name, last_name, class_name, is_active, gender')
       .eq('is_active', true).order('class_name').order('last_name')
       .then(({ data }) => { if (data) setStudents(data); });
   }, []);
 
   const selectedStudent = students.find(s => s.id === selectedStudentId);
+  const studentGender = selectedStudent?.gender;
 
   // Load existing evaluation when student is selected
   useEffect(() => {
@@ -244,7 +247,7 @@ export default function GradesForm() {
 
   const handleSubmit = async () => {
     if (!selectedStudentId || !subject) {
-      toast.error('נא לבחור תלמיד/ה ומקצוע');
+      toast.error(`נא לבחור ${g(null, 'תלמיד', 'תלמידה')} ומקצוע`);
       return;
     }
     if (totalGrade === null && !verbalEvaluation.trim()) {
@@ -346,7 +349,7 @@ export default function GradesForm() {
         <div className="text-center mb-2">
           <GraduationCap className="h-6 w-6 mx-auto text-primary mb-1" />
           <h3 className="font-bold text-sm">ציונים והערכות</h3>
-          <p className="text-xs text-muted-foreground">בחר/י תלמיד/ה להזנת ציון והערכה</p>
+          <p className="text-xs text-muted-foreground">בחירת תלמיד/ה להזנת ציון והערכה</p>
         </div>
         <div className="flex justify-center">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
@@ -549,7 +552,7 @@ export default function GradesForm() {
                 <div className="space-y-2">
                   <label className="text-sm font-semibold">הערכה מילולית</label>
                   <Textarea
-                    placeholder="כתוב הערכה מילולית על התלמיד/ה..."
+                    placeholder={`כתיבת הערכה מילולית על ${g(studentGender, 'התלמיד', 'התלמידה')}...`}
                     value={verbalEvaluation}
                     onChange={e => setVerbalEvaluation(e.target.value)}
                     className="min-h-[80px] text-sm"
@@ -622,7 +625,7 @@ export default function GradesForm() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">ממני אלייך – נימה אישית מהמחנכת והמדריכה</label>
               <Textarea
-                placeholder="כתבי מילים אישיות, מחזקות ומעודדות לתלמיד/ה..."
+                placeholder={`כתיבת מילים אישיות, מחזקות ומעודדות ל${g(studentGender, 'תלמיד', 'תלמידה')}...`}
                 value={personalNote}
                 onChange={e => { setPersonalNote(e.target.value); setEvalSaved(false); }}
                 className="min-h-[80px] text-sm"

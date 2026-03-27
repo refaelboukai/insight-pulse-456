@@ -8,13 +8,16 @@ import { toast } from 'sonner';
 import { Brain, Save, Sparkles, AlertTriangle } from 'lucide-react';
 import { CATEGORIES } from './LearningStyleQuestionnaire';
 
+import { g, type Gender } from '@/lib/genderUtils';
+
 interface LearningStyleResultsProps {
   studentId: string;
   studentName: string;
-  isEditable?: boolean; // staff can add notes
+  isEditable?: boolean;
+  gender?: Gender;
 }
 
-export default function LearningStyleResults({ studentId, studentName, isEditable = false }: LearningStyleResultsProps) {
+export default function LearningStyleResults({ studentId, studentName, isEditable = false, gender }: LearningStyleResultsProps) {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [staffNotes, setStaffNotes] = useState('');
@@ -58,7 +61,7 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
   if (!profile || !profile.is_completed) {
     return (
       <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-lg">
-        התלמיד/ה טרם מילא/ה את שאלון סגנון הלמידה.
+        {g(gender, 'התלמיד טרם מילא', 'התלמידה טרם מילאה')} את שאלון סגנון הלמידה.
       </div>
     );
   }
@@ -131,7 +134,7 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
             className="text-sm min-h-[80px]"
             value={staffNotes}
             onChange={e => setStaffNotes(e.target.value)}
-            placeholder="הוסף שיטות למידה או תובנות שעובדות עבור התלמיד/ה..."
+            placeholder={`הוסף שיטות למידה או תובנות שעובדות עבור ${g(gender, 'התלמיד', 'התלמידה')}...`}
           />
           <Button size="sm" onClick={handleSaveNotes} disabled={saving} className="gap-1.5">
             <Save className="h-3.5 w-3.5" />

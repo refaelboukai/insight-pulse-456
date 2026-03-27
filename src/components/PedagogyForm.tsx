@@ -12,8 +12,9 @@ import { toast } from 'sonner';
 import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain } from 'lucide-react';
 import { format } from 'date-fns';
 import LearningStyleResults from '@/components/LearningStyleResults';
+import { g } from '@/lib/genderUtils';
 
-type Student = { id: string; first_name: string; last_name: string; class_name: string | null; is_active: boolean };
+type Student = { id: string; first_name: string; last_name: string; class_name: string | null; is_active: boolean; gender?: string | null };
 type ManagedSubject = { id: string; name: string; has_sub_subjects: boolean; sub_subjects: string[]; is_active: boolean };
 type PedagogicalGoal = {
   id: string; student_id: string; subject_id: string; sub_subject: string | null;
@@ -61,7 +62,7 @@ export default function PedagogyForm() {
   }, []);
 
   const loadStudents = async () => {
-    const { data } = await supabase.from('students').select('id, first_name, last_name, class_name, is_active').eq('is_active', true).order('first_name');
+    const { data } = await supabase.from('students').select('id, first_name, last_name, class_name, is_active, gender').eq('is_active', true).order('first_name');
     if (data) setStudents(data);
   };
 
@@ -224,9 +225,9 @@ export default function PedagogyForm() {
             </Select>
           </div>
           <div>
-            <Label className="text-xs mb-1 block">תלמיד/ה</Label>
+            <Label className="text-xs mb-1 block">{g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'תלמיד', 'תלמידה')}</Label>
             <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר תלמיד/ה" /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחירת תלמיד/ה" /></SelectTrigger>
               <SelectContent>
                 {filteredStudents.map(s => (
                   <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
@@ -245,6 +246,7 @@ export default function PedagogyForm() {
                 ? `${filteredStudents.find(s => s.id === selectedStudentId)!.first_name} ${filteredStudents.find(s => s.id === selectedStudentId)!.last_name}`
                 : ''}
               isEditable={true}
+              gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
             />
 
             {/* Subject + month selection */}
@@ -293,11 +295,11 @@ export default function PedagogyForm() {
                   <AccordionContent className="px-4 pb-4 space-y-3">
                     <div>
                       <Label className="text-xs">סגנון הלמידה</Label>
-                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.learning_style || ''} onChange={e => updateField('learning_style', e.target.value)} placeholder="תאר/י את סגנון הלמידה של התלמיד/ה..." />
+                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.learning_style || ''} onChange={e => updateField('learning_style', e.target.value)} placeholder={`${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'תאר', 'תארי')} את סגנון הלמידה של ${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'התלמיד', 'התלמידה')}...`} />
                     </div>
                     <div>
                       <Label className="text-xs">מצב נוכחי</Label>
-                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.current_status || ''} onChange={e => updateField('current_status', e.target.value)} placeholder="מהו המצב הנוכחי של התלמיד/ה במקצוע..." />
+                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.current_status || ''} onChange={e => updateField('current_status', e.target.value)} placeholder={`מהו המצב הנוכחי של ${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'התלמיד', 'התלמידה')} במקצוע...`} />
                     </div>
                     <div>
                       <Label className="text-xs">יעדים לימודיים</Label>
