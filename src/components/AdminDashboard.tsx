@@ -65,10 +65,10 @@ export default function AdminDashboard() {
   const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
 
   const [mainView, setMainView] = useState<'management' | 'tali' | 'eden'>('management');
+  const [activePanel, setActivePanel] = useState<string | null>(null);
 
   // Events time filter
   const [eventsTimeFilter, setEventsTimeFilter] = useState<'today' | 'week' | 'month'>('today');
-  const [openAccordions, setOpenAccordions] = useState<string[]>([]);
 
   // Reports student filter
   const [reportSelectedStudentId, setReportSelectedStudentId] = useState<string | null>(null);
