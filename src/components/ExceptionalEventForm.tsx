@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
+import { INCIDENT_TYPE_LABELS, VIOLENCE_LABELS } from '@/lib/constants';
 import { generateEventPdf } from '@/lib/generateEventPdf';
 import { Send, FileWarning, MessageCircle, Users, Shield, X } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
