@@ -22,10 +22,12 @@ import {
 
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield, Download,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare, Brain, RotateCcw,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare, Brain, RotateCcw, BookOpen, FileSpreadsheet,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { generateEventPdf } from '@/lib/generateEventPdf';
+import { generatePedagogyPdf, generatePedagogyTrackingPdf, type MonthlyGoalRow } from '@/lib/generatePedagogyPdf';
+import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
 import { toast } from 'sonner';
 import { exportReportsToExcel } from '@/lib/exportReportsToExcel';
 import type { Database } from '@/integrations/supabase/types';
@@ -735,6 +737,167 @@ export default function AdminDashboard() {
     </div>
   );
 
+  const PEDAGOGY_MONTHS = ['ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר', 'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני'];
+
+  const handleExportStudentPedagogy = async (student: Student, format: 'pdf' | 'excel') => {
+    const studentName = `${student.first_name} ${student.last_name}`;
+    try {
+      // Fetch all pedagogy goals for this student in the selected year
+      const { data: goals } = await supabase.from('pedagogical_goals')
+        .select('*')
+        .eq('student_id', student.id)
+        .eq('school_year', selectedYear);
+
+      if (!goals || goals.length === 0) {
+        toast.error(`אין יעדים פדגוגיים עבור ${studentName}`);
+        return;
+      }
+
+      // Fetch subject names
+      const { data: subjectsData } = await supabase.from('managed_subjects').select('id, name').eq('is_active', true);
+      const subjectMap = new Map((subjectsData || []).map(s => [s.id, s.name]));
+
+      // Group goals by subject+sub_subject
+      const groups = new Map<string, { subjectName: string; subSubject: string | null; goals: typeof goals }>();
+      for (const g of goals) {
+        const key = `${g.subject_id}_${g.sub_subject || ''}`;
+        if (!groups.has(key)) {
+          groups.set(key, {
+            subjectName: subjectMap.get(g.subject_id) || 'לא ידוע',
+            subSubject: g.sub_subject,
+            goals: [],
+          });
+        }
+        groups.get(key)!.goals.push(g);
+      }
+
+      if (format === 'excel') {
+        // Export all subjects into one Excel with multiple "virtual" sheets via combined rows
+        const allRows: { month: string; subject: string; learningStyle: string | null; currentStatus: string | null; learningGoals: string | null; measurementMethods: string | null; whatWasDone: string | null; whatWasNotDone: string | null; teacherNotes: string | null; adminNotes: string | null }[] = [];
+        for (const [, group] of groups) {
+          const subjectTitle = group.subSubject ? `${group.subjectName} (${group.subSubject})` : group.subjectName;
+          for (const month of PEDAGOGY_MONTHS) {
+            const g = group.goals.find(gl => gl.month === month);
+            if (g) {
+              allRows.push({
+                month,
+                subject: subjectTitle,
+                learningStyle: g.learning_style,
+                currentStatus: g.current_status,
+                learningGoals: g.learning_goals,
+                measurementMethods: g.measurement_methods,
+                whatWasDone: g.what_was_done,
+                whatWasNotDone: g.what_was_not_done,
+                teacherNotes: g.teacher_notes,
+                adminNotes: g.admin_notes,
+              });
+            }
+          }
+        }
+
+        // Use xlsx directly for multi-subject export
+        const XLSX = await import('xlsx');
+        const wb = XLSX.utils.book_new();
+        const data = allRows.map(r => ({
+          'מקצוע': r.subject,
+          'חודש': r.month,
+          'סגנון למידה': r.learningStyle || '',
+          'מצב נוכחי': r.currentStatus || '',
+          'יעדים לימודיים': r.learningGoals || '',
+          'דרכי מדידה': r.measurementMethods || '',
+          'מה נעשה': r.whatWasDone || '',
+          'פערים': r.whatWasNotDone || '',
+          'הערות מורה': r.teacherNotes || '',
+          'הערות הנהלה': r.adminNotes || '',
+        }));
+        const ws = XLSX.utils.json_to_sheet(data);
+        const cols = Object.keys(data[0] || {});
+        ws['!cols'] = cols.map(col => {
+          const maxLen = Math.max(col.length, ...data.map(r => ((r as any)[col] || '').length));
+          return { wch: Math.min(Math.max(maxLen, 10), 40) };
+        });
+        XLSX.utils.book_append_sheet(wb, ws, 'יעדים פדגוגיים');
+        XLSX.writeFile(wb, `יעדים-פדגוגיים-${studentName}-${selectedYear}.xlsx`);
+        toast.success('קובץ Excel הורד בהצלחה');
+      } else {
+        // PDF: generate a combined tracking PDF for all subjects
+        const { default: jsPDF } = await import('jspdf');
+        const html2canvas = (await import('html2canvas')).default;
+
+        // Build a combined HTML for all subjects
+        const container = document.createElement('div');
+        container.style.cssText = 'position:fixed;top:-9999px;left:0;width:800px;font-family:Arial,sans-serif;direction:rtl;background:#fff;padding:24px;';
+
+        let html = `
+          <div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #2563eb;padding-bottom:10px;margin-bottom:20px;">
+            <div>
+              <div style="font-size:18px;font-weight:bold;color:#1e293b;">יעדים פדגוגיים - ${studentName}</div>
+              <div style="font-size:12px;color:#64748b;">כל המקצועות | ${selectedYear}</div>
+            </div>
+          </div>
+        `;
+
+        for (const [, group] of groups) {
+          const subjectTitle = group.subSubject ? `${group.subjectName} (${group.subSubject})` : group.subjectName;
+          const monthsWithData = PEDAGOGY_MONTHS.filter(m => group.goals.some(g => g.month === m));
+          if (monthsWithData.length === 0) continue;
+
+          const fieldLabels = ['מצב נוכחי', 'יעדים', 'מה נעשה', 'פערים', 'הערות מורה'];
+          const fieldKeys = ['current_status', 'learning_goals', 'what_was_done', 'what_was_not_done', 'teacher_notes'];
+
+          const headerCells = monthsWithData.map(m => `<th style="padding:5px 6px;font-size:10px;background:#2563eb;color:#fff;text-align:center;min-width:60px;">${m}</th>`).join('');
+          const bodyRows = fieldLabels.map((label, i) => {
+            const key = fieldKeys[i];
+            const cells = monthsWithData.map(m => {
+              const g = group.goals.find(gl => gl.month === m);
+              const val = (g as any)?.[key] || '-';
+              return `<td style="padding:4px 6px;font-size:9px;border:1px solid #e2e8f0;vertical-align:top;max-width:100px;word-break:break-word;">${val}</td>`;
+            }).join('');
+            return `<tr><td style="padding:4px 6px;font-size:10px;font-weight:bold;background:#f1f5f9;border:1px solid #e2e8f0;white-space:nowrap;">${label}</td>${cells}</tr>`;
+          }).join('');
+
+          html += `
+            <div style="margin-bottom:20px;">
+              <div style="font-size:13px;font-weight:bold;color:#2563eb;margin-bottom:6px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;">📘 ${subjectTitle}</div>
+              <table style="width:100%;border-collapse:collapse;">
+                <thead><tr><th style="padding:5px 6px;font-size:10px;background:#1e293b;color:#fff;text-align:center;">תחום</th>${headerCells}</tr></thead>
+                <tbody>${bodyRows}</tbody>
+              </table>
+            </div>
+          `;
+        }
+
+        html += `<div style="margin-top:16px;font-size:9px;color:#94a3b8;text-align:center;">הופק בתאריך ${new Date().toLocaleDateString('he-IL')}</div>`;
+        container.innerHTML = html;
+        document.body.appendChild(container);
+
+        const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+        document.body.removeChild(container);
+
+        const imgData = canvas.toDataURL('image/jpeg', 0.95);
+        const pdfWidth = 842;
+        const pdfHeight = (canvas.height / canvas.width) * pdfWidth;
+        const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [pdfWidth, Math.max(pdfHeight, 595)] });
+        pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+
+        const blob = pdf.output('blob');
+        const fileName = `יעדים-פדגוגיים-${studentName}-${selectedYear}.pdf`;
+        const file = new File([blob], fileName, { type: 'application/pdf' });
+        if (navigator.share && navigator.canShare?.({ files: [file] })) {
+          await navigator.share({ title: fileName, files: [file] });
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
+          URL.revokeObjectURL(url);
+        }
+        toast.success('דוח PDF הופק בהצלחה');
+      }
+    } catch (err) {
+      console.error(err);
+      toast.error('שגיאה בייצוא');
+    }
+  };
+
   // Render students list
   const renderStudents = (viewStudents: Student[], sectionPrefix: string, showManagement: boolean) => (
     <div className="card-styled rounded-2xl overflow-hidden">
@@ -813,6 +976,24 @@ export default function AdminDashboard() {
                             }}
                           >
                             <Brain className="h-3.5 w-3.5 text-primary" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-center h-8 w-8 p-0"
+                            title="ייצוא יעדים פדגוגיים PDF"
+                            onClick={() => handleExportStudentPedagogy(s, 'pdf')}
+                          >
+                            <BookOpen className="h-3.5 w-3.5 text-accent" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-center h-8 w-8 p-0"
+                            title="ייצוא יעדים פדגוגיים Excel"
+                            onClick={() => handleExportStudentPedagogy(s, 'excel')}
+                          >
+                            <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
                           </Button>
                         </>
                       )}
