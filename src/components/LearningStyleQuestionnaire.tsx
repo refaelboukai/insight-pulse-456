@@ -302,7 +302,7 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
           <Brain className="h-5 w-5 text-primary" />
           <span className="font-bold text-sm">סגנון הלמידה שלי</span>
         </div>
-        <span className="text-xs text-muted-foreground">{currentQ + 1}/{QUESTIONS.length}</span>
+        <span className="text-xs text-muted-foreground">{currentQ + 1}/{genderedQuestions.length}</span>
       </div>
 
       {/* Progress */}
