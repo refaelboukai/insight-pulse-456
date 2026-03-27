@@ -108,24 +108,7 @@ export default function Index() {
       {/* Content */}
       <main className="container mx-auto px-3 sm:px-4 py-4 pb-10 max-w-4xl">
         {isStudent ? (
-          <Tabs defaultValue="dashboard" dir="rtl">
-            <TabsList className="grid w-full grid-cols-2 mb-4 h-20 p-2 rounded-2xl shadow-soft bg-card border border-border">
-              <TabsTrigger value="dashboard" className="gap-2.5 rounded-xl text-base font-bold transition-all duration-200 h-16 data-[state=active]:bg-[hsl(160,45%,45%)] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-[hsl(160,45%,45%,0.08)]">
-                <User className="h-6 w-6" />
-                הפורטל שלי
-              </TabsTrigger>
-              <TabsTrigger value="reset" className="gap-2.5 rounded-xl text-base font-bold transition-all duration-200 h-16 data-[state=active]:bg-[hsl(30,85%,60%)] data-[state=active]:text-white data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-[hsl(30,85%,60%,0.08)]">
-                <Leaf className="h-6 w-6" />
-                אזור הרגעה
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="dashboard" className="animate-fade-in mt-0">
-              <StudentDashboard />
-            </TabsContent>
-            <TabsContent value="reset" forceMount className="animate-fade-in mt-0 data-[state=inactive]:hidden">
-              <ResetCalmZone />
-            </TabsContent>
-          </Tabs>
+          <StudentDashboard />
         ) : isAdmin ? (
           <AdminDashboard />
         ) : (
