@@ -134,7 +134,7 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
             className="text-sm min-h-[80px]"
             value={staffNotes}
             onChange={e => setStaffNotes(e.target.value)}
-            placeholder="הוסף שיטות למידה או תובנות שעובדות עבור התלמיד/ה..."
+            placeholder={`הוסף שיטות למידה או תובנות שעובדות עבור ${g(gender, 'התלמיד', 'התלמידה')}...`}
           />
           <Button size="sm" onClick={handleSaveNotes} disabled={saving} className="gap-1.5">
             <Save className="h-3.5 w-3.5" />

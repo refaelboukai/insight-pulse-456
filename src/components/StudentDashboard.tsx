@@ -306,6 +306,7 @@ export default function StudentDashboard() {
       {showLearningStyle && !learningStyleCompleted && (
         <LearningStyleQuestionnaire
           studentId={selectedStudentId}
+          gender={gender}
           onComplete={() => {
             setLearningStyleCompleted(true);
             setShowLearningStyle(false);
