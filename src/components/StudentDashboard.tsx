@@ -576,6 +576,26 @@ export default function StudentDashboard() {
 
   const renderSchedulePanel = () => <StudentScheduleView studentId={selectedStudent.id} />;
 
+  const renderWeeklySummaryPanel = () => (
+    <div className="space-y-2">
+      {weeklySummaries.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3"><MessageSquareText className="h-5 w-5 text-muted-foreground" /></div>
+          <p className="text-sm text-muted-foreground">אין סיכומים שבועיים עדיין</p>
+        </div>
+      ) : (
+        weeklySummaries.map((s: any) => (
+          <div key={s.id} className="p-3 rounded-xl border bg-card space-y-1.5 hover:shadow-sm transition-shadow">
+            <Badge variant="outline" className="text-xs rounded-md">
+              שבוע {new Date(s.week_start).toLocaleDateString('he-IL')}
+            </Badge>
+            <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{s.summary_text}</p>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
   // ===== CARD GRID DEFINITION =====
   type StudentCard = { key: string; icon: React.ElementType; label: string; value?: string | number; iconBg: string; iconColor: string };
 
