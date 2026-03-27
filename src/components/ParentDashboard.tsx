@@ -21,7 +21,8 @@ export default function ParentDashboard() {
   const [exams, setExams] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'reports' | 'exams'>('reports');
+  const [activeTab, setActiveTab] = useState<'reports' | 'exams' | 'summaries'>('reports');
+  const [weeklySummaries, setWeeklySummaries] = useState<any[]>([]);
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
