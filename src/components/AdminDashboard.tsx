@@ -1111,7 +1111,7 @@ export default function AdminDashboard() {
           <AccordionContent>{renderStudentsContent(cls)}</AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="reports" className="rounded-2xl border bg-card px-4">
+        <AccordionItem value="reports" id="accordion-reports" className="rounded-2xl border bg-card px-4">
           <AccordionTrigger className="text-sm font-bold py-3">
             <span className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-blue-500" />
