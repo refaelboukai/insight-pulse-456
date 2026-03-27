@@ -150,6 +150,30 @@ export default function CodesManager({ students, onRefresh }: Props) {
                       </Button>
                     </div>
                   </div>
+                  {/* Parent visibility toggles */}
+                  {parentCode && (
+                    <div className="flex items-center gap-3 px-2 py-1 bg-muted/30 rounded-md">
+                      <span className="text-[10px] text-muted-foreground">הורה רואה:</span>
+                      <button
+                        onClick={() => handleToggleParentVisibility(s, 'parent_show_reports')}
+                        className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded transition-colors ${
+                          (s as any).parent_show_reports !== false ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {(s as any).parent_show_reports !== false ? <Eye className="h-2.5 w-2.5" /> : <EyeOff className="h-2.5 w-2.5" />}
+                        דיווחים
+                      </button>
+                      <button
+                        onClick={() => handleToggleParentVisibility(s, 'parent_show_calendar')}
+                        className={`flex items-center gap-1 text-[10px] px-1.5 py-0.5 rounded transition-colors ${
+                          (s as any).parent_show_calendar !== false ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'
+                        }`}
+                      >
+                        {(s as any).parent_show_calendar !== false ? <Eye className="h-2.5 w-2.5" /> : <EyeOff className="h-2.5 w-2.5" />}
+                        מבחנים
+                      </button>
+                    </div>
+                  )}
                 </div>
                 );
               })}
