@@ -370,7 +370,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                         <p className="text-[10px] text-foreground/60 mr-3.5 mt-0.5 whitespace-pre-line">{ev.description}</p>
                       )}
                     </div>
-                    {editable && (
+                    {editable && !ev.id.startsWith('exam-') && (
                       <div className="flex gap-0.5 shrink-0">
                         <button onClick={(e) => { e.stopPropagation(); openEditDialog(ev); }} className="p-1 rounded hover:bg-background/50">
                           <Pencil className="h-3 w-3 text-muted-foreground" />
