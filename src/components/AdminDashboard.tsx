@@ -28,7 +28,7 @@ import { generateEventPdf } from '@/lib/generateEventPdf';
 import { generatePedagogyPdf, generatePedagogyTrackingPdf, type MonthlyGoalRow } from '@/lib/generatePedagogyPdf';
 import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
 import { toast } from 'sonner';
-import { exportReportsToExcel } from '@/lib/exportReportsToExcel';
+import { exportReportsToExcel, exportFullActivityToExcel } from '@/lib/exportReportsToExcel';
 import type { Database } from '@/integrations/supabase/types';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
@@ -110,8 +110,10 @@ export default function AdminDashboard() {
   const [showResetPassword, setShowResetPassword] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetPassword, setResetPassword] = useState('');
+  const [resetPasswordConfirm, setResetPasswordConfirm] = useState('');
   const [resetPasswordError, setResetPasswordError] = useState('');
   const [resetting, setResetting] = useState(false);
+  const [exportingFull, setExportingFull] = useState(false);
   const [generatingCard, setGeneratingCard] = useState<string | null>(null);
   const [reportCardSemester, setReportCardSemester] = useState<string>('all');
 
@@ -306,8 +308,9 @@ export default function AdminDashboard() {
   };
 
   const handleResetPasswordSubmit = () => {
-    if (resetPassword !== '9020') { setResetPasswordError('סיסמה שגויה'); return; }
-    setResetPasswordError(''); setShowResetPassword(false); setResetPassword(''); setShowResetConfirm(true);
+    if (resetPassword !== '9020') { setResetPasswordError('קוד שגוי'); return; }
+    if (resetPasswordConfirm !== '9020') { setResetPasswordError('יש להזין את הקוד פעמיים לאישור'); return; }
+    setResetPasswordError(''); setShowResetPassword(false); setResetPassword(''); setResetPasswordConfirm(''); setShowResetConfirm(true);
   };
 
   const handleResetAllReports = async () => {
@@ -327,12 +330,43 @@ export default function AdminDashboard() {
         supabase.from('brain_training_scores' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
         supabase.from('brain_training_history' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
         supabase.from('schedule_checkins' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('pedagogical_goals' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('student_insights' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('exam_schedule' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('support_completions' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
+        supabase.from('learning_style_profiles' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
       ]);
       const errors = results.filter(r => r.error);
       if (errors.length > 0) toast.error('שגיאה באיפוס חלק מהנתונים');
-      else toast.success('כל הדיווחים אופסו בהצלחה!');
+      else toast.success('כל הנתונים אופסו בהצלחה!');
       fetchAll();
     } catch { toast.error('שגיאה באיפוס'); } finally { setResetting(false); }
+  };
+
+  const handleFullExport = async () => {
+    setExportingFull(true);
+    try {
+      const [gradesRes, evalsRes, pedRes, examRes, logsRes, subjectsRes] = await Promise.all([
+        supabase.from('student_grades').select('*').order('created_at', { ascending: false }),
+        supabase.from('student_evaluations').select('*').order('created_at', { ascending: false }),
+        supabase.from('pedagogical_goals').select('*').order('month'),
+        supabase.from('exam_schedule').select('*').order('exam_date'),
+        supabase.from('activity_logs').select('*').order('created_at', { ascending: false }),
+        supabase.from('managed_subjects').select('id, name'),
+      ]);
+      await exportFullActivityToExcel({
+        reports, students, alerts, events, dailyAttendance, supportSessions, supportAssignments,
+        dailyReflections, studentInsights,
+        grades: gradesRes.data || [],
+        evaluations: evalsRes.data || [],
+        pedagogyGoals: pedRes.data || [],
+        examSchedule: examRes.data || [],
+        activityLogs: logsRes.data || [],
+        staffMembers,
+        managedSubjects: subjectsRes.data || [],
+      });
+      toast.success('קובץ אקסל מלא הורד בהצלחה');
+    } catch { toast.error('שגיאה בייצוא'); } finally { setExportingFull(false); }
   };
 
   const SEMESTER_LABELS: Record<string, string> = { semester_a: 'סמסטר א׳', semester_b: 'סמסטר ב׳', summer: 'סמסטר קיץ', all: 'שנתי מאוחד' };
@@ -1157,15 +1191,31 @@ export default function AdminDashboard() {
           </div>
         </AccordionContent>
       </AccordionItem>
+      <AccordionItem value="full-export">
+        <AccordionTrigger className="text-sm py-2">
+          <span className="flex items-center gap-2"><Download className="h-3.5 w-3.5 text-primary" /> ייצוא מלא — כל הפעולות</span>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">ייצוא קובץ אקסל מקיף הכולל את כל הפעולות שבוצעו במערכת: דיווחים, נוכחות, ציונים, אירועים, תמיכות, רפלקציות, תובנות, יעדים פדגוגיים, לוח מבחנים, לוגי פעילות ועוד.</p>
+            <Button variant="default" size="sm" className="w-full gap-2" onClick={handleFullExport} disabled={exportingFull}>
+              <Download className="h-3.5 w-3.5" /> {exportingFull ? 'מייצא...' : 'הורד אקסל מלא'}
+            </Button>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
       <AccordionItem value="reset">
         <AccordionTrigger className="text-sm py-2">
           <span className="flex items-center gap-2"><Trash2 className="h-3.5 w-3.5 text-destructive" /> איפוס נתונים</span>
         </AccordionTrigger>
         <AccordionContent>
-          <Button variant="destructive" size="sm" className="gap-1.5 w-full"
-            onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }} disabled={resetting}>
-            <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס כל הנתונים'}
-          </Button>
+          <div className="space-y-2">
+            <p className="text-xs text-destructive/80">⚠️ פעולה זו תמחק את כל הנתונים באפליקציה (דיווחים, ציונים, תמיכות, רפלקציות, שאלונים ועוד). שימו לב: לא ניתן לבטל פעולה זו!</p>
+            <Button variant="destructive" size="sm" className="gap-1.5 w-full"
+              onClick={() => { setResetPassword(''); setResetPasswordConfirm(''); setResetPasswordError(''); setShowResetPassword(true); }} disabled={resetting}>
+              <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס כל הנתונים'}
+            </Button>
+          </div>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
@@ -1329,21 +1379,29 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Reset Password Dialog */}
+      {/* Reset Password Dialog - Double Code */}
       <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
         <DialogContent dir="rtl" className="max-w-xs">
           <DialogHeader>
-            <DialogTitle className="text-sm flex items-center gap-2"><Trash2 className="h-4 w-4 text-destructive" /> אימות סיסמה</DialogTitle>
-            <DialogDescription className="text-xs">הזן סיסמה כדי להמשיך</DialogDescription>
+            <DialogTitle className="text-sm flex items-center gap-2"><Trash2 className="h-4 w-4 text-destructive" /> אימות כפול — איפוס מערכת</DialogTitle>
+            <DialogDescription className="text-xs">יש להזין את קוד המנהל פעמיים לאישור המחיקה</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <Input type="password" placeholder="סיסמה" value={resetPassword} onChange={e => { setResetPassword(e.target.value); setResetPasswordError(''); }}
-              onKeyDown={e => { if (e.key === 'Enter') handleResetPasswordSubmit(); }} className="h-10 text-sm" />
-            {resetPasswordError && <p className="text-xs text-destructive">{resetPasswordError}</p>}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה ראשונה:</label>
+              <Input type="password" placeholder="קוד מנהל" value={resetPassword} onChange={e => { setResetPassword(e.target.value); setResetPasswordError(''); }}
+                className="h-10 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה שנייה:</label>
+              <Input type="password" placeholder="הזן שוב לאישור" value={resetPasswordConfirm} onChange={e => { setResetPasswordConfirm(e.target.value); setResetPasswordError(''); }}
+                onKeyDown={e => { if (e.key === 'Enter') handleResetPasswordSubmit(); }} className="h-10 text-sm" />
+            </div>
+            {resetPasswordError && <p className="text-xs text-destructive font-medium">{resetPasswordError}</p>}
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="ghost" size="sm" onClick={() => setShowResetPassword(false)}>ביטול</Button>
-            <Button variant="destructive" size="sm" onClick={handleResetPasswordSubmit}>אישור</Button>
+            <Button variant="destructive" size="sm" onClick={handleResetPasswordSubmit}>אישור איפוס</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
