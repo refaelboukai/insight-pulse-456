@@ -36,6 +36,9 @@ function AuthGate() {
   );
 }
 
+// Wrap Login to avoid ref warning
+const LoginPage = () => <Login />;
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>

@@ -50,7 +50,7 @@ export default function Index() {
       </header>
 
       {/* Content */}
-      <main className="container mx-auto px-3 py-4 pb-10">
+      <main className="container mx-auto px-3 sm:px-4 py-4 pb-10 max-w-4xl">
         {/* School title for non-admin, non-student */}
         {!isAdmin && !isStudent && (
           <div className="text-center mb-4">
