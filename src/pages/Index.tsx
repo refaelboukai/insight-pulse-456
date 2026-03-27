@@ -50,7 +50,7 @@ export default function Index() {
       </header>
 
       {/* Content */}
-      <main className="container mx-auto px-3 py-4 pb-10">
+      <main className="container mx-auto px-3 sm:px-4 py-4 pb-10 max-w-4xl">
         {/* School title for non-admin, non-student */}
         {!isAdmin && !isStudent && (
           <div className="text-center mb-4">
@@ -85,29 +85,29 @@ export default function Index() {
           <AdminDashboard />
         ) : (
           <Tabs defaultValue="attendance" dir="rtl">
-            <TabsList className="grid w-full grid-cols-6 mb-4 h-12 p-1 rounded-xl shadow-soft bg-card">
-              <TabsTrigger value="attendance" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
-                <ClipboardCheck className="h-3.5 w-3.5" />
+            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-4 h-auto p-1.5 gap-1.5 rounded-2xl shadow-soft bg-card border border-border">
+              <TabsTrigger value="attendance" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+                <ClipboardCheck className="h-5 w-5 sm:h-4 sm:w-4" />
                 ביקור
               </TabsTrigger>
-              <TabsTrigger value="report" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
-                <FileText className="h-3.5 w-3.5" />
+              <TabsTrigger value="report" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+                <FileText className="h-5 w-5 sm:h-4 sm:w-4" />
                 דיווח
               </TabsTrigger>
-              <TabsTrigger value="pedagogy" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
-                <BookOpen className="h-3.5 w-3.5" />
+              <TabsTrigger value="pedagogy" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+                <BookOpen className="h-5 w-5 sm:h-4 sm:w-4" />
                 פדגוגיה
               </TabsTrigger>
-              <TabsTrigger value="grades" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
-                <GraduationCap className="h-3.5 w-3.5" />
+              <TabsTrigger value="grades" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+                <GraduationCap className="h-5 w-5 sm:h-4 sm:w-4" />
                 ציונים
               </TabsTrigger>
-              <TabsTrigger value="support" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
-                <HeartHandshake className="h-3.5 w-3.5" />
+              <TabsTrigger value="support" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+                <HeartHandshake className="h-5 w-5 sm:h-4 sm:w-4" />
                 תמיכה
               </TabsTrigger>
-              <TabsTrigger value="event" className="gap-1 rounded-lg data-[state=active]:shadow-sm text-[10px] font-semibold px-0.5">
-                <AlertTriangle className="h-3.5 w-3.5" />
+              <TabsTrigger value="event" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
+                <AlertTriangle className="h-5 w-5 sm:h-4 sm:w-4" />
                 אירוע
               </TabsTrigger>
             </TabsList>
