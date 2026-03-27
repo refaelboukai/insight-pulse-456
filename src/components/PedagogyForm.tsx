@@ -295,11 +295,11 @@ export default function PedagogyForm() {
                   <AccordionContent className="px-4 pb-4 space-y-3">
                     <div>
                       <Label className="text-xs">סגנון הלמידה</Label>
-                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.learning_style || ''} onChange={e => updateField('learning_style', e.target.value)} placeholder="תאר/י את סגנון הלמידה של התלמיד/ה..." />
+                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.learning_style || ''} onChange={e => updateField('learning_style', e.target.value)} placeholder={`${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'תאר', 'תארי')} את סגנון הלמידה של ${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'התלמיד', 'התלמידה')}...`} />
                     </div>
                     <div>
                       <Label className="text-xs">מצב נוכחי</Label>
-                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.current_status || ''} onChange={e => updateField('current_status', e.target.value)} placeholder="מהו המצב הנוכחי של התלמיד/ה במקצוע..." />
+                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.current_status || ''} onChange={e => updateField('current_status', e.target.value)} placeholder={`מהו המצב הנוכחי של ${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'התלמיד', 'התלמידה')} במקצוע...`} />
                     </div>
                     <div>
                       <Label className="text-xs">יעדים לימודיים</Label>
