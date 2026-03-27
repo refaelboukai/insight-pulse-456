@@ -100,6 +100,8 @@ export default function AdminDashboard() {
   const [newLastName, setNewLastName] = useState('');
   const [newClass, setNewClass] = useState('');
   const [customClassName, setCustomClassName] = useState('');
+  const [newMotherName, setNewMotherName] = useState('');
+  const [newFatherName, setNewFatherName] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
@@ -286,10 +288,12 @@ export default function AdminDashboard() {
       student_code: studentCode, parent_code: parentCode,
       first_name: newFirstName.trim(), last_name: newLastName.trim(),
       grade: finalClass, class_name: finalClass,
+      mother_name: newMotherName.trim() || null,
+      father_name: newFatherName.trim() || null,
     });
     if (!error) {
       toast.success(`${newFirstName} ${newLastName} נוסף/ה — קוד תלמיד: ${studentCode}, קוד הורה: ${parentCode}`);
-      setNewFirstName(''); setNewLastName(''); setNewClass(''); setCustomClassName(''); setShowAddStudent(false); fetchAll();
+      setNewFirstName(''); setNewLastName(''); setNewClass(''); setCustomClassName(''); setNewMotherName(''); setNewFatherName(''); setShowAddStudent(false); fetchAll();
     } else {
       toast.error('שגיאה בהוספת תלמיד');
     }
@@ -797,6 +801,8 @@ export default function AdminDashboard() {
                 {newClass === '__custom__' && (
                   <Input placeholder="שם הכיתה החדשה" value={customClassName} onChange={e => setCustomClassName(e.target.value)} className="h-10 text-sm" />
                 )}
+                <Input placeholder="שם האם (אופציונלי)" value={newMotherName} onChange={e => setNewMotherName(e.target.value)} className="h-10 text-sm" />
+                <Input placeholder="שם האב (אופציונלי)" value={newFatherName} onChange={e => setNewFatherName(e.target.value)} className="h-10 text-sm" />
                 <p className="text-[10px] text-muted-foreground">קוד תלמיד וקוד הורה ייוצרו אוטומטית</p>
                 <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">{addingStudent ? 'מוסיף...' : 'הוספה'}</Button>
               </div>
