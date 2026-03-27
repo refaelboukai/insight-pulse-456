@@ -16,12 +16,6 @@ import type { Database } from '@/integrations/supabase/types';
 type IncidentType = Database['public']['Enums']['incident_type'];
 type Student = Database['public']['Tables']['students']['Row'];
 
-const EVENT_LOCATIONS = [
-  'בתוך הכיתה במהלך שיעור',
-  'מחוץ לכיתה במהלך שיעור',
-  'במהלך ההפסקה',
-  'אחר',
-] as const;
 
 export default function ExceptionalEventForm() {
   const { user } = useAuth();
