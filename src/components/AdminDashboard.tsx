@@ -28,7 +28,7 @@ import { generateEventPdf } from '@/lib/generateEventPdf';
 import { generatePedagogyPdf, generatePedagogyTrackingPdf, type MonthlyGoalRow } from '@/lib/generatePedagogyPdf';
 import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
 import { toast } from 'sonner';
-import { exportReportsToExcel } from '@/lib/exportReportsToExcel';
+import { exportReportsToExcel, exportFullActivityToExcel } from '@/lib/exportReportsToExcel';
 import type { Database } from '@/integrations/supabase/types';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
