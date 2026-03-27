@@ -71,12 +71,8 @@ export default function ExceptionalEventForm() {
       const subtypeNames = violenceSubtypes.map(v => VIOLENCE_LABELS[v] || v).join(', ');
       parts.push(`סוג אלימות: ${subtypeNames}`);
     }
-    if (eventLocation) parts.push(`מיקום האירוע: ${eventLocation}`);
-    if (lessonSubject) parts.push(`סוג השיעור: ${lessonSubject}`);
-    if (staffPresent) parts.push(`צוות נוכח/אמור היה לנכוח: ${staffPresent}`);
-    if (description) parts.push(`\n${description}`);
-    if (additionalInfo) parts.push(`\nמידע נוסף: ${additionalInfo}`);
-    return parts.join('\n');
+    if (description) parts.push(description);
+    return parts.join('\n\n');
   };
 
   const getEventData = () => {
