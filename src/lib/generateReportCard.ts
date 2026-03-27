@@ -213,7 +213,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </div>
     <div style="display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:22px;padding:12px 16px;border:1px solid ${colors.noteBorder};border-radius:4px;background:${colors.headerBg};">
       <div>
-        <div style="font-size:9px;color:${colors.textLight};margin-bottom:2px;font-weight:600;letter-spacing:1px;">שם התלמיד/ה</div>
+        <div style="font-size:9px;color:${colors.textLight};margin-bottom:2px;font-weight:600;letter-spacing:1px;">שם ${g(data.gender, 'התלמיד', 'התלמידה')}</div>
         <div style="font-size:16px;font-weight:700;color:${colors.text};">${data.studentName}</div>
       </div>
       <div style="text-align:center;">
