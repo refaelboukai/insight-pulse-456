@@ -12,7 +12,7 @@ import StudentDashboard from '@/components/StudentDashboard';
 import ParentDashboard from '@/components/ParentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
 import { Button } from '@/components/ui/button';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen, ChevronLeft, Calendar } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen, ChevronLeft, Calendar, UserRound } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 type StaffPanel = 'attendance' | 'report' | 'pedagogy' | 'grades' | 'support' | 'event' | 'calendar' | null;
