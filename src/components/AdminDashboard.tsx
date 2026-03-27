@@ -1050,7 +1050,7 @@ export default function AdminDashboard() {
               <Key className="h-4 w-4 text-primary" />
               <span className="font-bold text-sm">ניהול קודים</span>
             </div>
-            <CodesManager />
+            <CodesManager students={students} onRefresh={fetchAll} />
           </div>
 
           {/* Subject Manager */}
