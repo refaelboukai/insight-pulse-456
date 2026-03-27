@@ -87,6 +87,7 @@ export default function StudentDashboard() {
   const [dailyReflection, setDailyReflection] = useState({ class_presence: 3, behavior: 3, social_interaction: 3, academic_tasks: 3 });
   const [reflectionSaving, setReflectionSaving] = useState(false);
   const [reflectionSaved, setReflectionSaved] = useState(false);
+  const [weeklySummaries, setWeeklySummaries] = useState<any[]>([]);
 
   const isLocked = !!lockedStudentId;
 
