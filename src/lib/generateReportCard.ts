@@ -309,7 +309,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   ].filter(Boolean);
 
   if (page1Sections.length === 0) {
-    page1Sections.push(`<div style="padding:30px;text-align:center;color:${colors.textLight};font-size:12px;">לא הוזנה הערכת מחנכ/ת</div>`);
+    page1Sections.push(`<div style="padding:30px;text-align:center;color:${colors.textLight};font-size:12px;">לא הוזנה הערכת ${g(data.gender, 'מחנך', 'מחנכת')}</div>`);
   }
 
   // Content sections for page 2 area (grades + signatures)

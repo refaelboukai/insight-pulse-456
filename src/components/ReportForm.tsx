@@ -412,7 +412,8 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
               הדיווח נשמר!
             </DialogTitle>
             <DialogDescription className="text-sm text-muted-foreground mt-1">
-              מה תרצה לעשות עכשיו?
+              {selectedStudent?.gender === 'נ' ? 'מה תרצי לעשות עכשיו?' : 'מה תרצה לעשות עכשיו?'}
+            </DialogDescription>
             </DialogDescription>
           </DialogHeader>
           <div className="flex flex-col gap-2 mt-3">
