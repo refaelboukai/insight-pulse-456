@@ -32,7 +32,7 @@ export default function ExceptionalEventForm() {
 
   const [students, setStudents] = useState<Student[]>([]);
   const [staffMembers, setStaffMembers] = useState<{ id: string; name: string }[]>([]);
-  const [managedSubjects, setManagedSubjects] = useState<{ id: string; name: string }[]>([]);
+  
 
   useEffect(() => {
     const load = async () => {
