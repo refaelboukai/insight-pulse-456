@@ -369,6 +369,37 @@ export default function StudentDashboard() {
             <span className="text-sm font-medium text-accent group-hover:text-accent/80 transition-colors">מעבר לאזור ההרגעה 🧘</span>
           </div>
         </a>
+
+        {/* Upcoming exam reminders */}
+        {examSchedule.filter(e => {
+          const examDate = new Date(e.exam_date);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const daysUntil = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          return daysUntil >= 0 && daysUntil <= 7;
+        }).map((e: any) => {
+          const examDate = new Date(e.exam_date);
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          const daysUntil = Math.ceil((examDate.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+          const isToday = daysUntil === 0;
+          const isTomorrow = daysUntil === 1;
+          const dayLabel = isToday ? 'היום!' : isTomorrow ? 'מחר' : `בעוד ${daysUntil} ימים`;
+          return (
+            <div key={e.id} className={`flex items-center gap-3 p-3 rounded-xl border ${isToday ? 'border-destructive/40 bg-destructive/5' : 'border-accent/30 bg-accent/5'}`}>
+              <div className="flex items-center gap-2 flex-1">
+                <GraduationCap className={`h-4 w-4 ${isToday ? 'text-destructive' : 'text-accent'}`} />
+                <div className="flex-1">
+                  <span className="text-sm font-medium">{managedSubjects[e.subject_id] || 'מקצוע'}{e.sub_subject ? ` (${e.sub_subject})` : ''}</span>
+                  {e.exam_description && <span className="text-xs text-muted-foreground mr-1.5">- {e.exam_description}</span>}
+                </div>
+              </div>
+              <Badge variant={isToday ? 'destructive' : 'secondary'} className="text-xs rounded-md">
+                📝 {dayLabel}
+              </Badge>
+            </div>
+          );
+        })}
       </div>
 
       {/* היום שלי - Daily Reflection */}
