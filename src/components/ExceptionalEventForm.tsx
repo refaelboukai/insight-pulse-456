@@ -3,6 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
@@ -10,35 +11,50 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { toast } from 'sonner';
 import { INCIDENT_TYPE_LABELS, VIOLENCE_LABELS } from '@/lib/constants';
 import { generateEventPdf } from '@/lib/generateEventPdf';
-import { Send, FileWarning, MessageCircle, Users, Shield, X } from 'lucide-react';
+import { Send, FileWarning, MessageCircle, Users, Shield, X, MapPin, Sparkles, Loader2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type IncidentType = Database['public']['Enums']['incident_type'];
 type Student = Database['public']['Tables']['students']['Row'];
+
+const EVENT_LOCATIONS = [
+  'בתוך הכיתה במהלך שיעור',
+  'מחוץ לכיתה במהלך שיעור',
+  'במהלך ההפסקה',
+  'אחר',
+] as const;
 
 export default function ExceptionalEventForm() {
   const { user } = useAuth();
   const [incidentType, setIncidentType] = useState<IncidentType | ''>('');
   const [violenceSubtypes, setViolenceSubtypes] = useState<string[]>([]);
   const [description, setDescription] = useState('');
+  const [eventLocation, setEventLocation] = useState('');
+  const [lessonSubject, setLessonSubject] = useState('');
+  const [staffPresent, setStaffPresent] = useState('');
+  const [additionalInfo, setAdditionalInfo] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
   const [staffResponse, setStaffResponse] = useState('');
   const [followupRequired, setFollowupRequired] = useState(false);
   const [followupNotes, setFollowupNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [formattingField, setFormattingField] = useState<string | null>(null);
 
   const [students, setStudents] = useState<Student[]>([]);
   const [staffMembers, setStaffMembers] = useState<{ id: string; name: string }[]>([]);
+  const [managedSubjects, setManagedSubjects] = useState<{ id: string; name: string }[]>([]);
 
   useEffect(() => {
     const load = async () => {
-      const [sRes, stRes] = await Promise.all([
+      const [sRes, stRes, subjRes] = await Promise.all([
         supabase.from('students').select('*').eq('is_active', true).order('class_name').order('last_name'),
         supabase.from('staff_members').select('id, name').eq('is_active', true).order('name'),
+        supabase.from('managed_subjects').select('id, name').eq('is_active', true).order('name'),
       ]);
       if (sRes.data) setStudents(sRes.data);
       if (stRes.data) setStaffMembers(stRes.data as any[]);
+      if (subjRes.data) setManagedSubjects(subjRes.data as any[]);
     };
     load();
   }, []);
@@ -62,16 +78,25 @@ export default function ExceptionalEventForm() {
     return parts.join(' | ');
   };
 
-  const getEventData = () => {
-    const now = new Date();
-    let fullDescription = description;
+  const buildFullDescription = () => {
+    const parts: string[] = [];
     if (incidentType === 'violence' && violenceSubtypes.length > 0) {
       const subtypeNames = violenceSubtypes.map(v => VIOLENCE_LABELS[v] || v).join(', ');
-      fullDescription = `סוג אלימות: ${subtypeNames}\n\n${description}`;
+      parts.push(`סוג אלימות: ${subtypeNames}`);
     }
+    if (eventLocation) parts.push(`מיקום האירוע: ${eventLocation}`);
+    if (lessonSubject) parts.push(`סוג השיעור: ${lessonSubject}`);
+    if (staffPresent) parts.push(`צוות נוכח/אמור היה לנכוח: ${staffPresent}`);
+    if (description) parts.push(`\n${description}`);
+    if (additionalInfo) parts.push(`\nמידע נוסף: ${additionalInfo}`);
+    return parts.join('\n');
+  };
+
+  const getEventData = () => {
+    const now = new Date();
     return {
       incidentType,
-      description: fullDescription,
+      description: buildFullDescription(),
       peopleInvolved: buildPeopleInvolvedText(),
       staffResponse,
       followupRequired,
@@ -93,6 +118,10 @@ export default function ExceptionalEventForm() {
     setIncidentType('');
     setViolenceSubtypes([]);
     setDescription('');
+    setEventLocation('');
+    setLessonSubject('');
+    setStaffPresent('');
+    setAdditionalInfo('');
     setSelectedStudents([]);
     setSelectedStaff([]);
     setStaffResponse('');
@@ -112,6 +141,44 @@ export default function ExceptionalEventForm() {
     setSelectedStaff(prev => prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]);
   };
 
+  const handleAiFormat = async (fieldType: string) => {
+    const textMap: Record<string, string> = {
+      description: description,
+      staffResponse: staffResponse,
+      followupNotes: followupNotes,
+    };
+    const text = textMap[fieldType];
+    if (!text || text.trim().length < 10) {
+      toast.error('נא להזין טקסט ארוך יותר לפני שיפור');
+      return;
+    }
+    setFormattingField(fieldType);
+    try {
+      const { data, error } = await supabase.functions.invoke('format-event-text', {
+        body: { text, fieldType },
+      });
+      if (error) throw error;
+      if (data?.error) {
+        toast.error(data.error);
+        return;
+      }
+      if (data?.formatted) {
+        const setterMap: Record<string, (v: string) => void> = {
+          description: setDescription,
+          staffResponse: setStaffResponse,
+          followupNotes: setFollowupNotes,
+        };
+        setterMap[fieldType](data.formatted);
+        toast.success('הטקסט עוצב בהצלחה');
+      }
+    } catch (e) {
+      console.error(e);
+      toast.error('שגיאה בשיפור הטקסט');
+    } finally {
+      setFormattingField(null);
+    }
+  };
+
   const handleReport = async () => {
     if (!validateForm()) return;
 
@@ -122,7 +189,7 @@ export default function ExceptionalEventForm() {
       const { error } = await supabase.from('exceptional_events').insert({
         reported_by: user!.id,
         incident_type: incidentType as IncidentType,
-        description,
+        description: buildFullDescription(),
         people_involved: peopleInvolved || null,
         staff_response: staffResponse || null,
         followup_required: followupRequired,
@@ -176,6 +243,24 @@ export default function ExceptionalEventForm() {
     group.filter(s => selectedStudents.includes(s.id)).length;
   const selectedStaffCount = staffMembers.filter(sm => selectedStaff.includes(sm.id)).length;
 
+  const AiFormatButton = ({ fieldType, disabled }: { fieldType: string; disabled?: boolean }) => (
+    <Button
+      type="button"
+      variant="ghost"
+      size="sm"
+      onClick={() => handleAiFormat(fieldType)}
+      disabled={formattingField === fieldType || disabled}
+      className="text-xs gap-1 h-7 px-2 text-muted-foreground hover:text-primary"
+    >
+      {formattingField === fieldType ? (
+        <Loader2 className="h-3 w-3 animate-spin" />
+      ) : (
+        <Sparkles className="h-3 w-3" />
+      )}
+      שיפור עיצוב AI
+    </Button>
+  );
+
   return (
     <div className="max-w-2xl mx-auto space-y-4">
       <div className="card-styled rounded-2xl overflow-hidden animate-slide-up">
@@ -223,11 +308,72 @@ export default function ExceptionalEventForm() {
               </div>
             </div>
           )}
+
+          {/* Event context fields */}
+          <div className="space-y-3 p-3 rounded-xl bg-muted/30 border border-border">
+            <div className="flex items-center gap-1.5 mb-1">
+              <MapPin className="h-4 w-4 text-muted-foreground" />
+              <label className="text-sm font-bold text-muted-foreground">הקשר האירוע</label>
+            </div>
+            
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">האירוע התרחש</label>
+              <Select value={eventLocation} onValueChange={setEventLocation}>
+                <SelectTrigger className="rounded-xl h-10 border-2 text-sm">
+                  <SelectValue placeholder="בחר/י מיקום" />
+                </SelectTrigger>
+                <SelectContent>
+                  {EVENT_LOCATIONS.map(loc => (
+                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">סוג השיעור שבו התלמיד היה אמור להיות</label>
+              <Select value={lessonSubject} onValueChange={setLessonSubject}>
+                <SelectTrigger className="rounded-xl h-10 border-2 text-sm">
+                  <SelectValue placeholder="בחר/י מקצוע" />
+                </SelectTrigger>
+                <SelectContent>
+                  {managedSubjects.map(s => (
+                    <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">צוות שהיה נוכח או אמור היה לנכוח</label>
+              <Input
+                placeholder="שם/ות אנשי הצוות..."
+                value={staffPresent}
+                onChange={e => setStaffPresent(e.target.value)}
+                className="rounded-xl border-2 h-10 text-sm"
+              />
+            </div>
+
+            <div>
+              <label className="text-xs text-muted-foreground mb-1 block">מידע רלוונטי נוסף</label>
+              <Textarea
+                placeholder="כל מידע נוסף הרלוונטי לאירוע..."
+                value={additionalInfo}
+                onChange={e => setAdditionalInfo(e.target.value)}
+                rows={2}
+                className="rounded-xl border-2 resize-none text-sm"
+              />
+            </div>
+          </div>
+
           <div>
-            <label className="text-sm font-bold mb-1.5 flex items-center gap-1.5 text-muted-foreground">
-              <MessageCircle className="w-4 h-4" />
-              תיאור האירוע
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-bold flex items-center gap-1.5 text-muted-foreground">
+                <MessageCircle className="w-4 h-4" />
+                תיאור האירוע
+              </label>
+              <AiFormatButton fieldType="description" disabled={!description || description.length < 10} />
+            </div>
             <Textarea
               placeholder="תאר/י את האירוע..."
               value={description}
@@ -366,10 +512,13 @@ export default function ExceptionalEventForm() {
           </div>
 
           <div>
-            <label className="text-sm font-bold mb-1.5 flex items-center gap-1.5 text-muted-foreground">
-              <Shield className="w-4 h-4" />
-              תגובת הצוות
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label className="text-sm font-bold flex items-center gap-1.5 text-muted-foreground">
+                <Shield className="w-4 h-4" />
+                תגובת הצוות
+              </label>
+              <AiFormatButton fieldType="staffResponse" disabled={!staffResponse || staffResponse.length < 10} />
+            </div>
             <Textarea
               placeholder="מה נעשה בתגובה לאירוע..."
               value={staffResponse}
@@ -388,13 +537,19 @@ export default function ExceptionalEventForm() {
           </label>
 
           {followupRequired && (
-            <Textarea
-              placeholder="הערות למעקב..."
-              value={followupNotes}
-              onChange={e => setFollowupNotes(e.target.value)}
-              rows={2}
-              className="rounded-xl border-2 resize-none animate-fade-in"
-            />
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="text-sm font-bold text-muted-foreground">הערות למעקב</label>
+                <AiFormatButton fieldType="followupNotes" disabled={!followupNotes || followupNotes.length < 10} />
+              </div>
+              <Textarea
+                placeholder="הערות למעקב..."
+                value={followupNotes}
+                onChange={e => setFollowupNotes(e.target.value)}
+                rows={2}
+                className="rounded-xl border-2 resize-none animate-fade-in"
+              />
+            </div>
           )}
 
           <Button
