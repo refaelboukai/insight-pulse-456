@@ -81,16 +81,22 @@ export default function ParentDashboard() {
     }
   });
 
-  // Build greeting with parent names
+  // Build greeting with parent first names only (no family status)
   const getGreeting = () => {
     if (!student) return '';
     const names: string[] = [];
-    if (student.mother_name) names.push(student.mother_name);
-    if (student.father_name && student.father_name !== 'אין קשר אב') names.push(student.father_name);
+    if (student.mother_name) {
+      const firstName = student.mother_name.trim().split(/\s+/)[0];
+      names.push(firstName);
+    }
+    if (student.father_name) {
+      const firstName = student.father_name.trim().split(/\s+/)[0];
+      names.push(firstName);
+    }
     if (names.length > 0) {
       return `שלום ${names.join(' ו')} 👋`;
     }
-    return `שלום, הורה של ${student.first_name} ${student.last_name} 👋`;
+    return `שלום 👋`;
   };
 
   if (loading) {
