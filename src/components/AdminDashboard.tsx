@@ -1191,15 +1191,31 @@ export default function AdminDashboard() {
           </div>
         </AccordionContent>
       </AccordionItem>
+      <AccordionItem value="full-export">
+        <AccordionTrigger className="text-sm py-2">
+          <span className="flex items-center gap-2"><Download className="h-3.5 w-3.5 text-primary" /> ייצוא מלא — כל הפעולות</span>
+        </AccordionTrigger>
+        <AccordionContent>
+          <div className="space-y-2">
+            <p className="text-xs text-muted-foreground">ייצוא קובץ אקסל מקיף הכולל את כל הפעולות שבוצעו במערכת: דיווחים, נוכחות, ציונים, אירועים, תמיכות, רפלקציות, תובנות, יעדים פדגוגיים, לוח מבחנים, לוגי פעילות ועוד.</p>
+            <Button variant="default" size="sm" className="w-full gap-2" onClick={handleFullExport} disabled={exportingFull}>
+              <Download className="h-3.5 w-3.5" /> {exportingFull ? 'מייצא...' : 'הורד אקסל מלא'}
+            </Button>
+          </div>
+        </AccordionContent>
+      </AccordionItem>
       <AccordionItem value="reset">
         <AccordionTrigger className="text-sm py-2">
           <span className="flex items-center gap-2"><Trash2 className="h-3.5 w-3.5 text-destructive" /> איפוס נתונים</span>
         </AccordionTrigger>
         <AccordionContent>
-          <Button variant="destructive" size="sm" className="gap-1.5 w-full"
-            onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }} disabled={resetting}>
-            <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס כל הנתונים'}
-          </Button>
+          <div className="space-y-2">
+            <p className="text-xs text-destructive/80">⚠️ פעולה זו תמחק את כל הנתונים באפליקציה (דיווחים, ציונים, תמיכות, רפלקציות, שאלונים ועוד). שימו לב: לא ניתן לבטל פעולה זו!</p>
+            <Button variant="destructive" size="sm" className="gap-1.5 w-full"
+              onClick={() => { setResetPassword(''); setResetPasswordConfirm(''); setResetPasswordError(''); setShowResetPassword(true); }} disabled={resetting}>
+              <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס כל הנתונים'}
+            </Button>
+          </div>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
