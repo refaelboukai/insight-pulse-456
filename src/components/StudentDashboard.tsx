@@ -372,19 +372,22 @@ export default function StudentDashboard() {
       </div>
 
       {/* היום שלי - Daily Reflection */}
-      <div className="card-styled rounded-2xl p-4 space-y-4">
-        <div className="flex items-center gap-2.5 mb-1">
-          <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center">
-            <Smile className="h-4 w-4 text-primary" />
+      <div className="card-styled rounded-2xl p-5 space-y-5">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+            <Smile className="h-5 w-5 text-primary" />
           </div>
-          <span className="font-semibold text-sm">היום שלי</span>
-          {reflectionSaved && <Badge variant="secondary" className="text-[10px] px-2 py-0 rounded-full mr-auto">נשמר ✓</Badge>}
+          <div>
+            <span className="font-bold text-base block">היום שלי</span>
+            <span className="text-xs text-muted-foreground">איך היה לי היום?</span>
+          </div>
+          {reflectionSaved && <Badge variant="secondary" className="text-xs px-2.5 py-0.5 rounded-full mr-auto">נשמר ✓</Badge>}
         </div>
 
         {reflectionSaved ? (
           /* Saved summary */
-          <div className="rounded-xl p-4 space-y-3 animate-scale-in border border-primary/20 bg-primary/5">
-            <p className="text-sm font-medium text-foreground text-center">
+          <div className="rounded-xl p-5 space-y-4 animate-scale-in border border-primary/20 bg-primary/5">
+            <p className="text-base font-medium text-foreground text-center">
               {(() => {
                 const avg = (dailyReflection.class_presence + dailyReflection.behavior + dailyReflection.social_interaction + dailyReflection.academic_tasks) / 4;
                 if (avg >= 4.5) return 'יום חזק — כל הכבוד.';
@@ -393,16 +396,16 @@ export default function StudentDashboard() {
                 return 'לא היום הכי קל — זה בסדר, מחר מתחילים מחדש.';
               })()}
             </p>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-4 gap-2.5">
               {[
                 { key: 'class_presence', label: 'נוכחות' },
                 { key: 'behavior', label: 'התנהגות' },
                 { key: 'social_interaction', label: 'חברתי' },
                 { key: 'academic_tasks', label: 'לימודים' },
               ].map(item => (
-                <div key={item.key} className="text-center rounded-lg bg-background/60 p-2">
-                  <span className="text-[10px] text-muted-foreground block">{item.label}</span>
-                  <span className="font-bold text-sm text-foreground">{dailyReflection[item.key as keyof typeof dailyReflection]}/5</span>
+                <div key={item.key} className="text-center rounded-xl bg-background/60 p-2.5">
+                  <span className="text-xs text-muted-foreground block mb-0.5">{item.label}</span>
+                  <span className="font-bold text-base text-foreground">{dailyReflection[item.key as keyof typeof dailyReflection]}/5</span>
                 </div>
               ))}
             </div>
@@ -413,36 +416,32 @@ export default function StudentDashboard() {
             {[
               {
                 key: 'class_presence', label: 'נוכחות',
-                color: 'border-border/60',
                 descriptions: ['לא הייתי', 'הייתי קצת', 'חצי מהזמן', 'רוב הזמן', 'כל הזמן'],
               },
               {
                 key: 'behavior', label: 'התנהגות',
-                color: 'border-border/60',
                 descriptions: ['קשה מאוד', 'קשה', 'בסדר', 'טוב', 'מצוין'],
               },
               {
                 key: 'social_interaction', label: 'חברתי',
-                color: 'border-border/60',
                 descriptions: ['לבד', 'מעט קשר', 'הייתי בקשר', 'שיתפתי פעולה', 'יזמתי ועזרתי'],
               },
               {
                 key: 'academic_tasks', label: 'לימודים',
-                color: 'border-border/60',
                 descriptions: ['לא עשיתי', 'עשיתי מעט', 'עשיתי חלק', 'רוב המשימות', 'הכל'],
               },
             ].map(item => {
               const currentVal = dailyReflection[item.key as keyof typeof dailyReflection];
               return (
-                <div key={item.key} className="rounded-xl border border-border/50 bg-muted/20 p-3 space-y-2">
+                <div key={item.key} className="rounded-xl border border-border/40 bg-muted/15 p-4 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold text-foreground/80">{item.label}</span>
-                    <span className="text-[11px] text-muted-foreground font-medium">
+                    <span className="text-sm font-bold text-foreground">{item.label}</span>
+                    <span className="text-xs text-muted-foreground font-medium bg-muted/50 px-2.5 py-1 rounded-full">
                       {item.descriptions[currentVal - 1]}
                     </span>
                   </div>
-                  {/* Segmented control style */}
-                  <div className="flex gap-1 bg-muted/40 rounded-lg p-1">
+                  {/* Segmented control */}
+                  <div className="flex gap-1.5 bg-muted/30 rounded-xl p-1.5">
                     {[1, 2, 3, 4, 5].map(val => {
                       const isSelected = val === currentVal;
                       return (
@@ -450,9 +449,9 @@ export default function StudentDashboard() {
                           key={val}
                           type="button"
                           onClick={() => setDailyReflection(prev => ({ ...prev, [item.key]: val }))}
-                          className={`flex-1 py-2 rounded-md text-xs font-semibold transition-all duration-200 active:scale-95 ${
+                          className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all duration-200 active:scale-95 ${
                             isSelected
-                              ? 'bg-primary text-primary-foreground shadow-sm'
+                              ? 'bg-primary text-primary-foreground shadow-md'
                               : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
                           }`}
                         >
@@ -465,8 +464,7 @@ export default function StudentDashboard() {
               );
             })}
             <Button
-              size="sm"
-              className="w-full btn-primary-gradient text-primary-foreground rounded-xl h-10 text-sm font-medium"
+              className="w-full btn-primary-gradient text-primary-foreground rounded-xl h-11 text-sm font-bold"
               disabled={reflectionSaving}
               onClick={async () => {
                 if (!selectedStudentId || !selectedStudent) return;
