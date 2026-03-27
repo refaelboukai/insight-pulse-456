@@ -59,10 +59,10 @@ export const PERFORMANCE_LABELS: Record<number, string> = {
 
 export const INCIDENT_TYPE_LABELS: Record<string, string> = {
   violence: 'אלימות',
-  bullying: 'בריונות',
   medical: 'רפואי',
   safety: 'בטיחות',
-  other: 'אחר',
+  self_harm: 'פגיעה עצמית',
+  suicide_attempt: 'ניסיון אובדני',
 };
 
 export const ABSENCE_REASON_LABELS: Record<string, string> = {
