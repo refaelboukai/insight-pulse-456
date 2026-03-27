@@ -783,10 +783,21 @@ export default function AdminDashboard() {
               <div className="space-y-3 pt-1">
                 <Input placeholder="שם פרטי" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="h-10 text-sm" />
                 <Input placeholder="שם משפחה" value={newLastName} onChange={e => setNewLastName(e.target.value)} className="h-10 text-sm" />
-                <Select value={newClass} onValueChange={setNewClass}>
+                <Select value={newClass} onValueChange={v => { setNewClass(v); if (v !== '__custom__') setCustomClassName(''); }}>
                   <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י כיתה" /></SelectTrigger>
-                  <SelectContent>{CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}</SelectContent>
+                  <SelectContent>
+                    {CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}
+                    {/* Show existing non-standard classes */}
+                    {[...new Set(students.map(s => s.class_name).filter(c => c && !CLASS_OPTIONS.includes(c)))].map(c => (
+                      <SelectItem key={c!} value={c!}>הכיתה של {c}</SelectItem>
+                    ))}
+                    <SelectItem value="__custom__">➕ כיתה חדשה...</SelectItem>
+                  </SelectContent>
                 </Select>
+                {newClass === '__custom__' && (
+                  <Input placeholder="שם הכיתה החדשה" value={customClassName} onChange={e => setCustomClassName(e.target.value)} className="h-10 text-sm" />
+                )}
+                <p className="text-[10px] text-muted-foreground">קוד תלמיד וקוד הורה ייוצרו אוטומטית</p>
                 <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">{addingStudent ? 'מוסיף...' : 'הוספה'}</Button>
               </div>
             </DialogContent>
