@@ -1050,90 +1050,57 @@ export default function AdminDashboard() {
   };
 
   // ===== RENDER CLASS VIEW =====
-  const renderClassView = (cls: string) => (
-    <div className="space-y-3">
-      {/* Quick actions at top */}
-      <div className="flex gap-2">
-        <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1" onClick={() => handleExcelExport(cls)}>
-          <Download className="h-3.5 w-3.5" /> הורד אקסל
-        </Button>
-      </div>
+  const renderClassView = (cls: string) => {
+    const filteredStudents = getClassStudents(cls);
+    const filteredAbsent = getClassAbsent(cls);
+    const filteredReports = getClassTodayReports(cls);
+    const filteredAssignments = getClassAssignments(cls);
+    const presentCount = filteredStudents.length - filteredAbsent.length;
+    const filteredEvents = getFilteredEvents();
 
-      {renderStatCards(cls)}
+    const cards: CategoryCard[] = [
+      { key: 'students', icon: Users, value: `${presentCount}/${filteredStudents.length}`, label: 'תלמידים', sub: new Date().toLocaleDateString('he-IL'), iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'reports', icon: FileText, value: filteredReports.length, label: 'דיווחים היום', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'events', icon: ShieldAlert, value: filteredEvents.length, label: 'אירועים חריגים', iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
+      { key: 'support', icon: HeartHandshake, value: filteredAssignments.length, label: 'תמיכות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
+      { key: 'long-absent', icon: AlertTriangle, value: longAbsentStudents.filter(la => la.student.class_name === cls).length, label: 'לא מגיעים', iconBg: 'bg-warning/10', iconColor: 'text-warning' },
+      { key: 'reflections', icon: MessageSquare, label: 'תובנות והערכה', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'monthly-report', icon: Sparkles, label: 'דוח חודשי AI', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'excel', icon: Download, label: 'הורד אקסל', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+    ];
 
-      <Accordion type="multiple" value={openAccordions} onValueChange={setOpenAccordions} className="w-full space-y-2">
-        <AccordionItem value="events" id="accordion-events" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4 text-destructive" />
-              אירועים חריגים ({getFilteredEvents().length})
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderEventsContent()}</AccordionContent>
-        </AccordionItem>
+    // If a panel is active, show that panel
+    if (activePanel === 'excel') {
+      handleExcelExport(cls);
+      setActivePanel(null);
+    }
 
-        <AccordionItem value="support" id="accordion-support" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <HeartHandshake className="h-4 w-4 text-accent" />
-              תמיכות ({getClassAssignments(cls).length})
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderSupportContent(cls)}</AccordionContent>
-        </AccordionItem>
+    if (activePanel && activePanel !== 'excel') {
+      const panelContent: Record<string, React.ReactNode> = {
+        students: renderStudentsContent(cls),
+        reports: renderReportsContent(cls),
+        events: renderEventsContent(),
+        support: renderSupportContent(cls),
+        'long-absent': renderLongAbsentContent(cls),
+        reflections: renderReflectionsContent(cls),
+        'monthly-report': renderMonthlyReportContent(cls),
+      };
+      const panelLabels: Record<string, string> = {
+        students: 'תלמידים', reports: 'דיווחים', events: 'אירועים חריגים',
+        support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים',
+        reflections: 'תובנות והערכה עצמית', 'monthly-report': 'דוח חודשי AI',
+      };
+      return (
+        <div className="space-y-2">
+          {renderBackButton()}
+          <h3 className="text-sm font-bold">{panelLabels[activePanel] || activePanel}</h3>
+          <div className="rounded-2xl border bg-card p-4">{panelContent[activePanel]}</div>
+        </div>
+      );
+    }
 
-        <AccordionItem value="students" id="accordion-students" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <Users className="h-4 w-4 text-primary" />
-              תלמידים ({getClassStudents(cls).length})
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderStudentsContent(cls)}</AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="reports" id="accordion-reports" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-blue-500" />
-              דיווחים
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderReportsContent(cls)}</AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="long-absent" className="rounded-2xl border border-amber-500/30 bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-amber-600" />
-              תלמידים שלא מגיעים ({longAbsentStudents.filter(la => la.student.class_name === cls).length})
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderLongAbsentContent(cls)}</AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="reflections" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <MessageSquare className="h-4 w-4 text-primary" />
-              תובנות והערכה עצמית
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderReflectionsContent(cls)}</AccordionContent>
-        </AccordionItem>
-
-        <AccordionItem value="monthly-report" className="rounded-2xl border bg-card px-4">
-          <AccordionTrigger className="text-sm font-bold py-3">
-            <span className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              דוח חודשי AI
-            </span>
-          </AccordionTrigger>
-          <AccordionContent>{renderMonthlyReportContent(cls)}</AccordionContent>
-        </AccordionItem>
-      </Accordion>
-    </div>
-  );
+    return <div className="space-y-3">{renderCategoryGrid(cards)}</div>;
+  };
 
   // ===== RENDER MANAGEMENT VIEW =====
   const renderManagementView = () => (
