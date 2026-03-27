@@ -64,6 +64,12 @@ export default function PedagogyForm() {
   const [showTracking, setShowTracking] = useState(false);
   const [exporting, setExporting] = useState(false);
 
+  // Classmate exam dialog
+  const [showExamClassDialog, setShowExamClassDialog] = useState(false);
+  const [examClassStudents, setExamClassStudents] = useState<Student[]>([]);
+  const [selectedExamStudents, setSelectedExamStudents] = useState<Set<string>>(new Set());
+  const [pendingExamData, setPendingExamData] = useState<{ subjectId: string; subSubject: string | null; date: string; description: string; schoolYear: string } | null>(null);
+
   useEffect(() => {
     loadStudents();
     loadSubjects();
