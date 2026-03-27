@@ -601,13 +601,21 @@ export default function StudentDashboard() {
       exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
     };
     const currentCard = studentCards.find(c => c.key === activePanel);
+    const isPinned = pinnedPanels.has(activePanel);
     return (
       <div className="space-y-2 max-w-2xl mx-auto animate-fade-in">
         {renderBackButton()}
-        <h3 className="text-sm font-bold flex items-center gap-2">
-          {currentCard && <currentCard.icon className={`h-4 w-4 ${currentCard.iconColor}`} />}
-          {panelLabels[activePanel] || activePanel}
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold flex items-center gap-2">
+            {currentCard && <currentCard.icon className={`h-4 w-4 ${currentCard.iconColor}`} />}
+            {panelLabels[activePanel] || activePanel}
+          </h3>
+          <button onClick={() => togglePin(activePanel)}
+            className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-all ${isPinned ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-muted/50 border-border text-muted-foreground hover:text-foreground'}`}>
+            {isPinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+            {isPinned ? 'בטל נעיצה' : 'נעץ למסך הראשי'}
+          </button>
+        </div>
         <div className="rounded-2xl border bg-card p-4">{panelContent[activePanel]}</div>
       </div>
     );
