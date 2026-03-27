@@ -94,6 +94,7 @@ export default function Index() {
               <p className="text-xs text-primary-foreground/70 flex items-center gap-1">
                 {isAdmin && <Shield className="w-3 h-3" />}
                 {isStudent && <User className="w-3 h-3" />}
+                {isParent && <UserRound className="w-3 h-3" />}
                 {fullName}
               </p>
             </div>
