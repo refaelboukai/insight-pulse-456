@@ -5,6 +5,7 @@ import SubjectManager from '@/components/SubjectManager';
 import WeeklySupportSummary from '@/components/WeeklySupportSummary';
 import StudentScheduleManager from '@/components/StudentScheduleManager';
 import SmsReminderSection from '@/components/SmsReminderSection';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Badge } from '@/components/ui/badge';
@@ -14,7 +15,6 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS, INCIDENT_TYPE_LABELS,
   SEVERITY_LABELS, ABSENCE_REASON_LABELS, LONG_ABSENT_REASONS,
@@ -64,14 +64,12 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
 
-  // Top-level view: management | tali | eden
   const [mainView, setMainView] = useState<'management' | 'tali' | 'eden'>('management');
 
-  // Panels
-  const [showEventsPanel, setShowEventsPanel] = useState(false);
-  const [showSupportPanel, setShowSupportPanel] = useState(false);
-  const [showStudentsPanel, setShowStudentsPanel] = useState(false);
-  const [showReportsPanel, setShowReportsPanel] = useState(false);
+  // Events time filter
+  const [eventsTimeFilter, setEventsTimeFilter] = useState<'today' | 'week' | 'month'>('today');
+
+  // Reports student filter
   const [reportSelectedStudentId, setReportSelectedStudentId] = useState<string | null>(null);
 
   // Staff management
@@ -134,9 +132,6 @@ export default function AdminDashboard() {
   const [reflectionCustomFrom, setReflectionCustomFrom] = useState<Record<string, string>>({});
   const [reflectionCustomTo, setReflectionCustomTo] = useState<Record<string, string>>({});
   const [reflectionVisibility, setReflectionVisibility] = useState<Record<string, boolean>>({});
-
-  // Settings sub-tab
-  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const fetchAll = async () => {
     const { from: yearFrom, to: yearTo } = getYearDateRange(selectedYear);
@@ -535,7 +530,6 @@ export default function AdminDashboard() {
   const todayReports = reports.filter(r => r.report_date?.startsWith(todayStr));
   const activeStudents = students.filter(s => s.is_active);
 
-  // Get class-specific data
   const getClassStudents = (cls: string) => activeStudents.filter(s => s.class_name === cls);
   const getClassReports = (cls: string) => {
     const ids = new Set(getClassStudents(cls).map(s => s.id));
@@ -554,209 +548,224 @@ export default function AdminDashboard() {
     return supportAssignments.filter((sa: any) => ids.has(sa.student_id));
   };
 
+  // Filter events by time
+  const getFilteredEvents = () => {
+    const now = new Date();
+    return events.filter(ev => {
+      const evDate = new Date(ev.created_at);
+      if (eventsTimeFilter === 'today') {
+        return evDate.toISOString().split('T')[0] === todayStr;
+      } else if (eventsTimeFilter === 'week') {
+        const weekAgo = new Date(now);
+        weekAgo.setDate(now.getDate() - 7);
+        return evDate >= weekAgo;
+      } else {
+        const monthAgo = new Date(now);
+        monthAgo.setDate(now.getDate() - 30);
+        return evDate >= monthAgo;
+      }
+    });
+  };
+
   // ===== RENDER STAT CARDS =====
   const renderStatCards = (classFilter?: string) => {
     const filteredStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
     const filteredAbsent = classFilter ? getClassAbsent(classFilter) : todayAbsent;
     const filteredReports = classFilter ? getClassTodayReports(classFilter) : todayReports;
-    const filteredEvents = events; // events are global
     const filteredAssignments = classFilter ? getClassAssignments(classFilter) : supportAssignments;
     const presentCount = filteredStudents.length - filteredAbsent.length;
+    const filteredEvents = getFilteredEvents();
 
     return (
       <div className="grid grid-cols-4 gap-2">
         {/* Students present today */}
-        <button onClick={() => { setShowStudentsPanel(!showStudentsPanel); setShowEventsPanel(false); setShowSupportPanel(false); setShowReportsPanel(false); }}
-          className={`rounded-2xl p-3 text-center transition-all hover:shadow-md border bg-card ${showStudentsPanel ? 'ring-2 ring-primary border-primary' : 'border-border'}`}>
+        <div className="rounded-2xl p-3 text-center border bg-card">
           <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-primary/10">
             <Users className="h-4 w-4 text-primary" />
           </div>
           <p className="text-lg font-bold leading-tight">{presentCount}/{filteredStudents.length}</p>
           <p className="text-[10px] text-muted-foreground">תלמידים היום</p>
           <p className="text-[8px] text-muted-foreground/60 mt-0.5">{new Date().toLocaleDateString('he-IL')}</p>
-        </button>
+        </div>
 
         {/* Reports */}
-        <button onClick={() => { setShowReportsPanel(!showReportsPanel); setShowEventsPanel(false); setShowSupportPanel(false); setShowStudentsPanel(false); }}
-          className={`rounded-2xl p-3 text-center transition-all hover:shadow-md border bg-card ${showReportsPanel ? 'ring-2 ring-blue-500 border-blue-500' : 'border-border'}`}>
+        <div className="rounded-2xl p-3 text-center border bg-card">
           <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-blue-500/10">
             <FileText className="h-4 w-4 text-blue-500" />
           </div>
           <p className="text-lg font-bold">{filteredReports.length}</p>
           <p className="text-[10px] text-muted-foreground">דיווחים היום</p>
-        </button>
+        </div>
 
         {/* Events */}
-        <button onClick={() => { setShowEventsPanel(!showEventsPanel); setShowSupportPanel(false); setShowStudentsPanel(false); setShowReportsPanel(false); }}
-          className={`rounded-2xl p-3 text-center transition-all hover:shadow-md border bg-card ${showEventsPanel ? 'ring-2 ring-destructive border-destructive' : 'border-border'}`}>
+        <div className="rounded-2xl p-3 text-center border bg-card">
           <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-destructive/10">
             <ShieldAlert className="h-4 w-4 text-destructive" />
           </div>
           <p className="text-lg font-bold">{filteredEvents.length}</p>
           <p className="text-[10px] text-muted-foreground">אירועים חריגים</p>
-        </button>
+        </div>
 
         {/* Support */}
-        <button onClick={() => { setShowSupportPanel(!showSupportPanel); setShowEventsPanel(false); setShowStudentsPanel(false); setShowReportsPanel(false); }}
-          className={`rounded-2xl p-3 text-center transition-all hover:shadow-md border bg-card ${showSupportPanel ? 'ring-2 ring-accent border-accent' : 'border-border'}`}>
+        <div className="rounded-2xl p-3 text-center border bg-card">
           <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-accent/10">
             <HeartHandshake className="h-4 w-4 text-accent" />
           </div>
           <p className="text-lg font-bold">{filteredAssignments.length}</p>
           <p className="text-[10px] text-muted-foreground">תמיכות</p>
-        </button>
+        </div>
       </div>
     );
   };
 
-  // ===== RENDER EVENTS PANEL =====
-  const renderEventsPanel = () => {
-    if (!showEventsPanel) return null;
+  // ===== RENDER EVENTS ACCORDION CONTENT =====
+  const renderEventsContent = () => {
+    const filtered = getFilteredEvents();
     return (
-      <div className="rounded-2xl overflow-hidden border border-destructive/20 bg-card animate-fade-in">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <ShieldAlert className="h-4 w-4 text-destructive" />
-            <span className="font-bold text-sm">אירועים חריגים ({events.length})</span>
-          </div>
-          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowEventsPanel(false)}>
-            <X className="h-4 w-4" />
-          </Button>
-        </div>
-        <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto">
-          {events.length === 0 ? (
-            <p className="text-center text-muted-foreground text-xs py-6">אין אירועים חריגים</p>
-          ) : events.map(ev => (
-            <div key={ev.id} className="p-3 rounded-xl border bg-card hover:shadow-sm transition-shadow">
-              <div className="flex items-start justify-between gap-2 mb-2">
-                <div>
-                  <Badge variant="destructive" className="text-[10px] px-2 py-0 mb-1">
-                    {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
-                  </Badge>
-                  <p className="text-xs text-muted-foreground">
-                    {new Date(ev.created_at).toLocaleDateString('he-IL')} · {new Date(ev.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                  </p>
-                </div>
-                <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px] gap-1 text-primary" onClick={async () => {
-                  try {
-                    const eventData = {
-                      incidentType: ev.incident_type, description: ev.description,
-                      peopleInvolved: ev.people_involved || '', staffResponse: ev.staff_response || '',
-                      followupRequired: ev.followup_required, followupNotes: ev.followup_notes || '',
-                      date: new Date(ev.created_at).toLocaleDateString('he-IL'),
-                      time: new Date(ev.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-                    };
-                    const blob = await generateEventPdf(eventData);
-                    const fileName = `אירוע-חריג-${eventData.date}.pdf`;
-                    const file = new File([blob], fileName, { type: 'application/pdf' });
-                    if (navigator.share && navigator.canShare?.({ files: [file] })) { await navigator.share({ title: fileName, files: [file] }); }
-                    else { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); }
-                  } catch { toast.error('שגיאה בהפקת הדוח'); }
-                }}>
-                  <Share2 className="h-3 w-3" /> שתף
-                </Button>
-              </div>
-              <p className="text-xs leading-relaxed text-foreground/80 whitespace-pre-line">{ev.description}</p>
-              {ev.people_involved && <p className="text-[10px] text-muted-foreground mt-1.5">👥 {ev.people_involved}</p>}
-              {ev.staff_response && <p className="text-[10px] text-muted-foreground mt-1">🛡️ {ev.staff_response}</p>}
-              {ev.followup_required && <Badge variant="outline" className="text-[10px] mt-1.5 border-accent text-accent">נדרש מעקב</Badge>}
-            </div>
+      <div className="space-y-3">
+        {/* Time filter */}
+        <div className="flex gap-1.5">
+          {([['today', 'היום'], ['week', 'שבוע אחרון'], ['month', 'חודש אחרון']] as const).map(([key, label]) => (
+            <button key={key} onClick={() => setEventsTimeFilter(key)}
+              className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${eventsTimeFilter === key ? 'bg-destructive text-destructive-foreground border-destructive' : 'border-border bg-card hover:bg-muted'}`}>
+              {label}
+            </button>
           ))}
         </div>
+        {filtered.length === 0 ? (
+          <p className="text-center text-muted-foreground text-xs py-4">אין אירועים חריגים</p>
+        ) : (
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {filtered.map(ev => (
+              <div key={ev.id} className="p-3 rounded-xl border bg-card hover:shadow-sm transition-shadow">
+                <div className="flex items-start justify-between gap-2 mb-2">
+                  <div>
+                    <Badge variant="destructive" className="text-[10px] px-2 py-0 mb-1">
+                      {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
+                    </Badge>
+                    <p className="text-xs text-muted-foreground">
+                      {new Date(ev.created_at).toLocaleDateString('he-IL')} · {new Date(ev.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                    </p>
+                  </div>
+                  <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px] gap-1 text-primary" onClick={async () => {
+                    try {
+                      const eventData = {
+                        incidentType: ev.incident_type, description: ev.description,
+                        peopleInvolved: ev.people_involved || '', staffResponse: ev.staff_response || '',
+                        followupRequired: ev.followup_required, followupNotes: ev.followup_notes || '',
+                        date: new Date(ev.created_at).toLocaleDateString('he-IL'),
+                        time: new Date(ev.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+                      };
+                      const blob = await generateEventPdf(eventData);
+                      const fileName = `אירוע-חריג-${eventData.date}.pdf`;
+                      const file = new File([blob], fileName, { type: 'application/pdf' });
+                      if (navigator.share && navigator.canShare?.({ files: [file] })) { await navigator.share({ title: fileName, files: [file] }); }
+                      else { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); }
+                    } catch { toast.error('שגיאה בהפקת הדוח'); }
+                  }}>
+                    <Share2 className="h-3 w-3" /> שתף
+                  </Button>
+                </div>
+                <p className="text-xs leading-relaxed text-foreground/80 whitespace-pre-line">{ev.description}</p>
+                {ev.people_involved && <p className="text-[10px] text-muted-foreground mt-1.5">👥 {ev.people_involved}</p>}
+                {ev.staff_response && <p className="text-[10px] text-muted-foreground mt-1">🛡️ {ev.staff_response}</p>}
+                {ev.followup_required && <Badge variant="outline" className="text-[10px] mt-1.5 border-accent text-accent">נדרש מעקב</Badge>}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
 
-  // ===== RENDER SUPPORT PANEL =====
-  const renderSupportPanel = (classFilter?: string) => {
-    if (!showSupportPanel) return null;
+  // ===== RENDER SUPPORT ACCORDION CONTENT =====
+  const renderSupportContent = (classFilter?: string) => {
     const filtered = classFilter ? getClassAssignments(classFilter) : supportAssignments;
     return (
-      <div className="rounded-2xl overflow-hidden border border-accent/20 bg-card animate-fade-in">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <HeartHandshake className="h-4 w-4 text-accent" />
-            <span className="font-bold text-sm">תמיכות ({filtered.length})</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setAssignClassFilter(classFilter || null); setShowAddAssignment(true); }}>
-              <Plus className="h-3 w-3" /> שיוך חדש
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowSupportPanel(false)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+      <div className="space-y-3">
+        <div className="flex justify-end">
+          <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setAssignClassFilter(classFilter || null); setShowAddAssignment(true); }}>
+            <Plus className="h-3 w-3" /> שיוך תמיכה חדשה
+          </Button>
         </div>
-        <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto">
-          {filtered.length === 0 ? (
-            <p className="text-center text-muted-foreground text-xs py-6">אין שיוכי תמיכה</p>
-          ) : filtered.map((sa: any) => (
-            <div key={sa.id} className="p-2.5 rounded-xl border bg-card">
-              <div className="flex justify-between items-start mb-1">
-                <div>
-                  <button onClick={() => { const s = students.find(st => st.id === sa.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline">{studentName(sa.student_id)}</button>
-                  <p className="text-[10px] text-muted-foreground">מאמן: {sa.staff_members?.name || '—'}</p>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Badge variant="outline" className="text-[10px]">{sa.frequency === 'daily' ? 'יומי' : 'שבועי'}</Badge>
-                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => handleDeleteAssignment(sa.id)}><X className="h-3 w-3" /></Button>
-                </div>
+        <Accordion type="multiple" className="w-full">
+          <AccordionItem value="assignments">
+            <AccordionTrigger className="text-sm font-bold py-3">
+              <span className="flex items-center gap-2">
+                <ClipboardCheck className="h-4 w-4 text-accent" />
+                שיוכי תמיכה ({filtered.length})
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <div className="space-y-2">
+                {filtered.length === 0 ? (
+                  <p className="text-center text-muted-foreground text-xs py-4">אין שיוכי תמיכה</p>
+                ) : filtered.map((sa: any) => (
+                  <div key={sa.id} className="p-2.5 rounded-xl border bg-card">
+                    <div className="flex justify-between items-start mb-1">
+                      <div>
+                        <button onClick={() => { const s = students.find(st => st.id === sa.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline">{studentName(sa.student_id)}</button>
+                        <p className="text-[10px] text-muted-foreground">מאמן: {sa.staff_members?.name || '—'}</p>
+                      </div>
+                      <div className="flex items-center gap-1">
+                        <Badge variant="outline" className="text-[10px]">{sa.frequency === 'daily' ? 'יומי' : 'שבועי'}</Badge>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => handleDeleteAssignment(sa.id)}><X className="h-3 w-3" /></Button>
+                      </div>
+                    </div>
+                    <div className="flex flex-wrap gap-1">
+                      {(sa.support_types || []).map((t: string) => <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">{SUPPORT_LABELS[t] || t}</Badge>)}
+                    </div>
+                    {sa.support_description && <p className="text-[10px] text-foreground/80 mt-1">📝 {sa.support_description}</p>}
+                  </div>
+                ))}
               </div>
-              <div className="flex flex-wrap gap-1">
-                {(sa.support_types || []).map((t: string) => <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">{SUPPORT_LABELS[t] || t}</Badge>)}
-              </div>
-              {sa.support_description && <p className="text-[10px] text-foreground/80 mt-1">📝 {sa.support_description}</p>}
-            </div>
-          ))}
+            </AccordionContent>
+          </AccordionItem>
 
-          {/* Weekly summary */}
-          <div className="pt-2 border-t border-border">
-            <WeeklySupportSummary
-              studentIds={new Set((classFilter ? getClassStudents(classFilter) : activeStudents).map(s => s.id))}
-              students={classFilter ? getClassStudents(classFilter) : activeStudents}
-              staffMembers={staffMembers}
-            />
-          </div>
-        </div>
+          <AccordionItem value="weekly-summary">
+            <AccordionTrigger className="text-sm font-bold py-3">
+              <span className="flex items-center gap-2">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                סיכום שבועי
+              </span>
+            </AccordionTrigger>
+            <AccordionContent>
+              <WeeklySupportSummary
+                studentIds={new Set((classFilter ? getClassStudents(classFilter) : activeStudents).map(s => s.id))}
+                students={classFilter ? getClassStudents(classFilter) : activeStudents}
+                staffMembers={staffMembers}
+              />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
     );
   };
 
-  // ===== RENDER STUDENTS PANEL =====
-  const renderStudentsPanel = (classFilter?: string) => {
-    if (!showStudentsPanel) return null;
+  // ===== RENDER STUDENTS ACCORDION CONTENT =====
+  const renderStudentsContent = (classFilter?: string) => {
     const filteredStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
     const filteredAbsent = classFilter ? getClassAbsent(classFilter) : todayAbsent;
-
     return (
-      <div className="rounded-2xl overflow-hidden border bg-card animate-fade-in">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Users className="h-4 w-4 text-primary" />
-            <span className="font-bold text-sm">תלמידים ({filteredStudents.length})</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" className="gap-1 text-xs h-7"><UserPlus className="h-3 w-3" /> הוספה</Button>
-              </DialogTrigger>
-              <DialogContent dir="rtl" className="max-w-sm">
-                <DialogHeader><DialogTitle className="text-sm">הוספת תלמיד/ה</DialogTitle></DialogHeader>
-                <div className="space-y-3 pt-1">
-                  <Input placeholder="שם פרטי" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="h-10 text-sm" />
-                  <Input placeholder="שם משפחה" value={newLastName} onChange={e => setNewLastName(e.target.value)} className="h-10 text-sm" />
-                  <Select value={newClass} onValueChange={setNewClass}>
-                    <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י כיתה" /></SelectTrigger>
-                    <SelectContent>{CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}</SelectContent>
-                  </Select>
-                  <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">{addingStudent ? 'מוסיף...' : 'הוספה'}</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowStudentsPanel(false)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
+      <div>
+        <div className="flex justify-end mb-2">
+          <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
+            <DialogTrigger asChild>
+              <Button size="sm" variant="outline" className="gap-1 text-xs h-7"><UserPlus className="h-3 w-3" /> הוספה</Button>
+            </DialogTrigger>
+            <DialogContent dir="rtl" className="max-w-sm">
+              <DialogHeader><DialogTitle className="text-sm">הוספת תלמיד/ה</DialogTitle></DialogHeader>
+              <div className="space-y-3 pt-1">
+                <Input placeholder="שם פרטי" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="h-10 text-sm" />
+                <Input placeholder="שם משפחה" value={newLastName} onChange={e => setNewLastName(e.target.value)} className="h-10 text-sm" />
+                <Select value={newClass} onValueChange={setNewClass}>
+                  <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י כיתה" /></SelectTrigger>
+                  <SelectContent>{CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}</SelectContent>
+                </Select>
+                <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">{addingStudent ? 'מוסיף...' : 'הוספה'}</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm" dir="rtl">
@@ -787,8 +796,7 @@ export default function AdminDashboard() {
                         </div>
                       </button>
                     </td>
-                    {!classFilter && <td className="text-center p-2.5 text-xs text-muted-foreground">{s.class_name}</td>}
-                    {classFilter && <td className="text-center p-2.5 text-xs text-muted-foreground">{s.class_name}</td>}
+                    <td className="text-center p-2.5 text-xs text-muted-foreground">{s.class_name}</td>
                     <td className="text-center p-2.5">
                       <span className="text-xs font-medium">{studentReports.length}</span>
                     </td>
@@ -823,99 +831,65 @@ export default function AdminDashboard() {
     );
   };
 
-  // ===== RENDER REPORTS PANEL (by student selection) =====
-  const renderReportsPanel = (classFilter?: string) => {
-    if (!showReportsPanel) return null;
+  // ===== RENDER REPORTS ACCORDION CONTENT =====
+  const renderReportsContent = (classFilter?: string) => {
     const filteredStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
     const selectedReports = reportSelectedStudentId
       ? reports.filter(r => r.student_id === reportSelectedStudentId)
       : [];
-
     return (
-      <div className="rounded-2xl overflow-hidden border border-blue-500/20 bg-card animate-fade-in">
-        <div className="p-4 border-b border-border flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <FileText className="h-4 w-4 text-blue-500" />
-            <span className="font-bold text-sm">דיווחים</span>
-          </div>
-          <div className="flex items-center gap-1">
-            <Button variant="outline" size="sm" className="gap-1 text-[10px] h-7" onClick={() => {
-              const classStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
-              const classIds = new Set(classStudents.map(s => s.id));
-              exportReportsToExcel({
-                reports: reports.filter(r => classIds.has(r.student_id)), students: classStudents,
-                alerts: alerts.filter(a => classIds.has(a.student_id)),
-                events, dailyAttendance: dailyAttendance.filter(a => classIds.has(a.student_id)),
-                supportSessions: supportSessions.filter((ss: any) => classIds.has(ss.student_id)),
-                supportAssignments: supportAssignments.filter((sa: any) => classIds.has(sa.student_id)),
-              });
-              toast.success('קובץ אקסל הורד');
-            }}>
-              <Download className="h-3 w-3" /> אקסל
-            </Button>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowReportsPanel(false)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        <div className="p-3 space-y-3">
-          {/* Student selector */}
-          <Select value={reportSelectedStudentId || ''} onValueChange={setReportSelectedStudentId}>
-            <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר/י תלמיד לצפייה בדיווחים" /></SelectTrigger>
-            <SelectContent>
-              {filteredStudents.map(s => (
-                <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+      <div className="space-y-3">
+        <Select value={reportSelectedStudentId || ''} onValueChange={setReportSelectedStudentId}>
+          <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר/י תלמיד לצפייה בדיווחים" /></SelectTrigger>
+          <SelectContent>
+            {filteredStudents.map(s => (
+              <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
 
-          {reportSelectedStudentId && selectedReports.length === 0 && (
-            <p className="text-center text-muted-foreground text-xs py-4">אין דיווחים לתלמיד זה</p>
-          )}
+        {reportSelectedStudentId && selectedReports.length === 0 && (
+          <p className="text-center text-muted-foreground text-xs py-4">אין דיווחים לתלמיד זה</p>
+        )}
 
-          {selectedReports.length > 0 && (
-            <div className="space-y-2 max-h-[400px] overflow-y-auto">
-              {selectedReports.slice(0, 30).map(r => (
-                <div key={r.id} className="p-2.5 rounded-xl border bg-card">
-                  <div className="flex justify-between items-start mb-1.5">
-                    <p className="text-xs font-medium">{r.lesson_subject}</p>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] text-muted-foreground">{new Date(r.report_date).toLocaleDateString('he-IL')}</span>
-                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditReport(r)}><Pencil className="h-3 w-3 text-muted-foreground" /></Button>
-                    </div>
+        {selectedReports.length > 0 && (
+          <div className="space-y-2 max-h-[400px] overflow-y-auto">
+            {selectedReports.slice(0, 30).map(r => (
+              <div key={r.id} className="p-2.5 rounded-xl border bg-card">
+                <div className="flex justify-between items-start mb-1.5">
+                  <p className="text-xs font-medium">{r.lesson_subject}</p>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[10px] text-muted-foreground">{new Date(r.report_date).toLocaleDateString('he-IL')}</span>
+                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditReport(r)}><Pencil className="h-3 w-3 text-muted-foreground" /></Button>
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                      {r.attendance === 'full' && <CheckCircle2 className="h-2.5 w-2.5 ml-0.5" />}
-                      {r.attendance === 'partial' && <Clock className="h-2.5 w-2.5 ml-0.5" />}
-                      {r.attendance === 'absent' && <XCircle className="h-2.5 w-2.5 ml-0.5" />}
-                      {ATTENDANCE_LABELS[r.attendance]}
-                    </Badge>
-                    {r.behavior_types?.map(b => <Badge key={b} variant={b === 'violent' ? 'destructive' : 'outline'} className="text-[10px] px-1.5 py-0">{BEHAVIOR_LABELS[b]}</Badge>)}
-                    {r.participation?.map(p => <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>)}
-                  </div>
-                  {r.comment && <p className="text-[10px] text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2 py-1">{r.comment}</p>}
                 </div>
-              ))}
-            </div>
-          )}
-        </div>
+                <div className="flex flex-wrap gap-1">
+                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                    {r.attendance === 'full' && <CheckCircle2 className="h-2.5 w-2.5 ml-0.5" />}
+                    {r.attendance === 'partial' && <Clock className="h-2.5 w-2.5 ml-0.5" />}
+                    {r.attendance === 'absent' && <XCircle className="h-2.5 w-2.5 ml-0.5" />}
+                    {ATTENDANCE_LABELS[r.attendance]}
+                  </Badge>
+                  {r.behavior_types?.map(b => <Badge key={b} variant={b === 'violent' ? 'destructive' : 'outline'} className="text-[10px] px-1.5 py-0">{BEHAVIOR_LABELS[b]}</Badge>)}
+                  {r.participation?.map(p => <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>)}
+                </div>
+                {r.comment && <p className="text-[10px] text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2 py-1">{r.comment}</p>}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     );
   };
 
   // ===== RENDER REFLECTIONS (class views only) =====
-  const renderReflections = (classFilter: string) => {
+  const renderReflectionsContent = (classFilter: string) => {
     const classStudents = getClassStudents(classFilter);
     const studentIdsWithReflections = [...new Set(dailyReflections.map(r => r.student_id).filter(Boolean))].filter(id => classStudents.some(s => s.id === id));
-    if (studentIdsWithReflections.length === 0) return null;
+    if (studentIdsWithReflections.length === 0) return <p className="text-xs text-muted-foreground text-center py-4">אין תובנות</p>;
 
     return (
-      <div className="rounded-2xl border bg-card p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <MessageSquare className="h-4 w-4 text-primary" />
-          <span className="font-bold text-sm">תובנות והערכה עצמית</span>
-        </div>
+      <div className="space-y-3">
         {studentIdsWithReflections.map(studentId => {
           const mode = reflectionSummaryMode[studentId] || 'week';
           const summary = computeReflectionSummary(studentId, mode, reflectionCustomFrom[studentId], reflectionCustomTo[studentId]);
@@ -984,19 +958,15 @@ export default function AdminDashboard() {
   };
 
   // ===== RENDER LONG ABSENT =====
-  const renderLongAbsent = (classFilter?: string) => {
+  const renderLongAbsentContent = (classFilter?: string) => {
     const filtered = classFilter
       ? longAbsentStudents.filter(la => la.student.class_name === classFilter)
       : longAbsentStudents;
-    if (filtered.length === 0) return null;
+    if (filtered.length === 0) return <p className="text-xs text-muted-foreground text-center py-4">אין תלמידים עם היעדרות ממושכת</p>;
 
     return (
-      <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 bg-card p-4 space-y-2">
-        <div className="flex items-center gap-2 mb-1">
-          <AlertTriangle className="h-4 w-4 text-amber-600" />
-          <span className="font-bold text-sm text-amber-700">תלמידים שלא מגיעים ({filtered.length})</span>
-        </div>
-        <p className="text-xs text-muted-foreground mb-2">5+ ימי היעדרות רצופים</p>
+      <div className="space-y-2">
+        <p className="text-xs text-muted-foreground">5+ ימי היעדרות רצופים</p>
         {filtered.map(({ student, consecutiveDays, reason }) => {
           const followup = longAbsentFollowups.get(student.id);
           return (
@@ -1017,15 +987,11 @@ export default function AdminDashboard() {
     );
   };
 
-  // ===== RENDER AI MONTHLY REPORT =====
-  const renderMonthlyReport = (classFilter?: string) => {
+  // ===== RENDER MONTHLY REPORT CONTENT =====
+  const renderMonthlyReportContent = (classFilter?: string) => {
     const filteredStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
     return (
-      <div className="rounded-2xl border bg-card p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-4 w-4 text-primary" />
-          <span className="font-bold text-sm">דוח חודשי AI</span>
-        </div>
+      <div className="space-y-3">
         <div className="flex gap-2">
           <Button onClick={() => generateMonthlyReport(null)} disabled={generatingReport} size="sm" className="gap-1.5 flex-1">
             {generatingReport && !reportStudentId ? <><div className="w-3 h-3 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> מפיק...</> : <><Sparkles className="h-3.5 w-3.5" /> כלל התלמידים</>}
@@ -1053,143 +1019,325 @@ export default function AdminDashboard() {
     );
   };
 
-  // ===== RENDER SETTINGS =====
-  const renderSettings = () => (
+  // ===== RENDER REPORT CARDS CONTENT =====
+  const renderReportCardsContent = () => (
     <div className="space-y-3">
-      <div className="rounded-2xl border bg-card p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <Key className="h-4 w-4 text-primary" />
-          <span className="font-bold text-sm">ניהול קודים</span>
-        </div>
-        <CodesManager students={students} onRefresh={fetchAll} />
-      </div>
-
-      <div className="rounded-2xl border bg-card p-4">
-        <div className="flex items-center gap-2 mb-3">
-          <GraduationCap className="h-4 w-4 text-primary" />
-          <span className="font-bold text-sm">ניהול מקצועות</span>
-        </div>
-        <SubjectManager />
-      </div>
-
-      <div className="rounded-2xl border bg-card p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <UserCog className="h-4 w-4 text-primary" />
-          <span className="font-bold text-sm">אנשי צוות ({staffMembers.length})</span>
-        </div>
-        <div className="flex gap-2">
-          <Input placeholder="שם איש צוות" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
-            onKeyDown={e => { if (e.key === 'Enter') handleAddStaff(); }} className="h-9 text-sm flex-1" />
-          <Button size="sm" onClick={handleAddStaff} disabled={addingStaff} className="gap-1 h-9"><Plus className="h-3.5 w-3.5" /> הוסף</Button>
-        </div>
-        {staffMembers.map(sm => (
-          <div key={sm.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
-            <span className="text-sm font-medium">{sm.name}</span>
-            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDeleteStaff(sm.id)}><X className="h-3.5 w-3.5" /></Button>
-          </div>
+      <div className="grid grid-cols-4 gap-1 mb-3">
+        {[{ value: 'semester_a', label: 'סמסטר א׳' }, { value: 'semester_b', label: 'סמסטר ב׳' }, { value: 'summer', label: 'קיץ' }, { value: 'all', label: 'שנתי' }].map(opt => (
+          <button key={opt.value} onClick={() => setReportCardSemester(opt.value)}
+            className={`text-[10px] py-1.5 px-1 rounded-md border font-semibold transition-all ${reportCardSemester === opt.value ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-primary/10'}`}>
+            {opt.label}
+          </button>
         ))}
       </div>
-
-      <div className="rounded-2xl border bg-card p-4">
-        <SmsReminderSection />
-      </div>
-
-      {/* Report Cards */}
-      <div className="rounded-2xl border bg-card p-4 space-y-3">
-        <div className="flex items-center gap-2">
-          <GraduationCap className="h-4 w-4 text-primary" />
-          <span className="font-bold text-sm">הפקת תעודות</span>
-        </div>
-        <div className="grid grid-cols-4 gap-1 mb-3">
-          {[{ value: 'semester_a', label: 'סמסטר א׳' }, { value: 'semester_b', label: 'סמסטר ב׳' }, { value: 'summer', label: 'קיץ' }, { value: 'all', label: 'שנתי' }].map(opt => (
-            <button key={opt.value} onClick={() => setReportCardSemester(opt.value)}
-              className={`text-[10px] py-1.5 px-1 rounded-md border font-semibold transition-all ${reportCardSemester === opt.value ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-primary/10'}`}>
-              {opt.label}
-            </button>
-          ))}
-        </div>
-        {CLASS_OPTIONS.map(cls => {
-          const classStudents = activeStudents.filter(s => s.class_name === cls);
-          return (
-            <div key={cls} className="space-y-1">
-              <p className="text-xs font-bold text-muted-foreground">כיתת {cls}</p>
-              {classStudents.map(s => {
-                const isVisible = reflectionVisibility[s.id] !== false;
-                const hasReflections = dailyReflections.some(r => r.student_id === s.id);
-                return (
-                  <div key={s.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
-                    <span className="text-xs font-medium">{s.first_name} {s.last_name}</span>
-                    <div className="flex items-center gap-2">
-                      {hasReflections && isVisible && <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">📊 הערכה</span>}
-                      <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-[10px]" disabled={generatingCard === s.id} onClick={() => handleGenerateReportCard(s)}>
-                        {generatingCard === s.id ? <div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" /> : <GraduationCap className="h-3.5 w-3.5" />}
-                        הפק
-                      </Button>
-                    </div>
+      {CLASS_OPTIONS.map(cls => {
+        const classStudents = activeStudents.filter(s => s.class_name === cls);
+        return (
+          <div key={cls} className="space-y-1">
+            <p className="text-xs font-bold text-muted-foreground">כיתת {cls}</p>
+            {classStudents.map(s => {
+              const isVisible = reflectionVisibility[s.id] !== false;
+              const hasReflections = dailyReflections.some(r => r.student_id === s.id);
+              return (
+                <div key={s.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
+                  <span className="text-xs font-medium">{s.first_name} {s.last_name}</span>
+                  <div className="flex items-center gap-2">
+                    {hasReflections && isVisible && <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">📊 הערכה</span>}
+                    <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-[10px]" disabled={generatingCard === s.id} onClick={() => handleGenerateReportCard(s)}>
+                      {generatingCard === s.id ? <div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" /> : <GraduationCap className="h-3.5 w-3.5" />}
+                      הפק
+                    </Button>
                   </div>
-                );
-              })}
-            </div>
-          );
-        })}
-      </div>
-
-      {/* Excel export */}
-      {CLASS_OPTIONS.map(cls => (
-        <Button key={cls} variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={() => {
-          const classStudents = students.filter(s => s.class_name === cls);
-          const classIds = new Set(classStudents.map(s => s.id));
-          exportReportsToExcel({
-            reports: reports.filter(r => classIds.has(r.student_id)), students: classStudents,
-            alerts: alerts.filter(a => classIds.has(a.student_id)),
-            events: events.filter(ev => ev.people_involved && classStudents.some(s => ev.people_involved!.includes(s.first_name))),
-            dailyAttendance: dailyAttendance.filter(a => classIds.has(a.student_id)),
-            supportSessions: supportSessions.filter((ss: any) => classIds.has(ss.student_id)),
-            supportAssignments: supportAssignments.filter((sa: any) => classIds.has(sa.student_id)),
-          });
-          toast.success(`קובץ אקסל הורד — כיתת ${cls}`);
-        }}>
-          <Download className="h-3.5 w-3.5" /> הורד אקסל — כיתת {cls}
-        </Button>
-      ))}
+                </div>
+              );
+            })}
+          </div>
+        );
+      })}
     </div>
   );
 
+  // ===== EXCEL EXPORT HELPER =====
+  const handleExcelExport = (classFilter?: string) => {
+    const classStudents = classFilter ? students.filter(s => s.class_name === classFilter) : students;
+    const classIds = new Set(classStudents.map(s => s.id));
+    exportReportsToExcel({
+      reports: reports.filter(r => classIds.has(r.student_id)), students: classStudents,
+      alerts: alerts.filter(a => classIds.has(a.student_id)),
+      events: classFilter ? events.filter(ev => ev.people_involved && classStudents.some(s => ev.people_involved!.includes(s.first_name))) : events,
+      dailyAttendance: dailyAttendance.filter(a => classIds.has(a.student_id)),
+      supportSessions: supportSessions.filter((ss: any) => classIds.has(ss.student_id)),
+      supportAssignments: supportAssignments.filter((sa: any) => classIds.has(sa.student_id)),
+    });
+    toast.success(classFilter ? `קובץ אקסל הורד — כיתת ${classFilter}` : 'קובץ אקסל הורד');
+  };
+
   // ===== RENDER CLASS VIEW =====
   const renderClassView = (cls: string) => (
-    <div className="space-y-4">
+    <div className="space-y-3">
+      {/* Quick actions at top */}
+      <div className="flex gap-2">
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1" onClick={() => handleExcelExport(cls)}>
+          <Download className="h-3.5 w-3.5" /> הורד אקסל
+        </Button>
+      </div>
+
       {renderStatCards(cls)}
-      {renderEventsPanel()}
-      {renderSupportPanel(cls)}
-      {renderStudentsPanel(cls)}
-      {renderReportsPanel(cls)}
-      {renderLongAbsent(cls)}
-      {renderReflections(cls)}
-      {renderMonthlyReport(cls)}
+
+      <Accordion type="multiple" className="w-full space-y-2">
+        <AccordionItem value="events" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-destructive" />
+              אירועים חריגים ({getFilteredEvents().length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderEventsContent()}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="support" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <HeartHandshake className="h-4 w-4 text-accent" />
+              תמיכות ({getClassAssignments(cls).length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderSupportContent(cls)}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="students" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              תלמידים ({getClassStudents(cls).length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderStudentsContent(cls)}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="reports" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-500" />
+              דיווחים
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderReportsContent(cls)}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="long-absent" className="rounded-2xl border border-amber-500/30 bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              תלמידים שלא מגיעים ({longAbsentStudents.filter(la => la.student.class_name === cls).length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderLongAbsentContent(cls)}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="reflections" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <MessageSquare className="h-4 w-4 text-primary" />
+              תובנות והערכה עצמית
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderReflectionsContent(cls)}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="monthly-report" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              דוח חודשי AI
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderMonthlyReportContent(cls)}</AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 
   // ===== RENDER MANAGEMENT VIEW =====
   const renderManagementView = () => (
-    <div className="space-y-4">
-      {renderStatCards()}
-      {renderEventsPanel()}
-      {renderSupportPanel()}
-      {renderStudentsPanel()}
-      {renderReportsPanel()}
-      {renderLongAbsent()}
-      {renderMonthlyReport()}
+    <div className="space-y-3">
+      {/* Quick actions at top */}
+      <div className="flex gap-2">
+        <SmsReminderSection />
+        <Button variant="outline" size="sm" className="gap-1.5 text-xs flex-1" onClick={() => handleExcelExport()}>
+          <Download className="h-3.5 w-3.5" /> הפקת אקסל
+        </Button>
+      </div>
 
-      {/* Settings toggle */}
-      <button onClick={() => setSettingsOpen(!settingsOpen)}
-        className="w-full flex items-center justify-between p-3 rounded-2xl border bg-card hover:bg-muted/30 transition-colors">
-        <div className="flex items-center gap-2">
-          <Settings className="h-4 w-4 text-muted-foreground" />
-          <span className="font-bold text-sm">הגדרות מערכת</span>
-        </div>
-        {settingsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
-      </button>
-      {settingsOpen && renderSettings()}
+      {renderStatCards()}
+
+      <Accordion type="multiple" className="w-full space-y-2">
+        <AccordionItem value="events" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <ShieldAlert className="h-4 w-4 text-destructive" />
+              אירועים חריגים ({getFilteredEvents().length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderEventsContent()}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="support" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <HeartHandshake className="h-4 w-4 text-accent" />
+              תמיכות ({supportAssignments.length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderSupportContent()}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="students" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <Users className="h-4 w-4 text-primary" />
+              תלמידים ({activeStudents.length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderStudentsContent()}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="reports" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <FileText className="h-4 w-4 text-blue-500" />
+              דיווחים
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderReportsContent()}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="long-absent" className="rounded-2xl border border-amber-500/30 bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <AlertTriangle className="h-4 w-4 text-amber-600" />
+              תלמידים שלא מגיעים ({longAbsentStudents.length})
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderLongAbsentContent()}</AccordionContent>
+        </AccordionItem>
+
+        <AccordionItem value="monthly-report" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <Sparkles className="h-4 w-4 text-primary" />
+              דוח חודשי AI
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>{renderMonthlyReportContent()}</AccordionContent>
+        </AccordionItem>
+
+        {/* Settings accordion with sub-categories */}
+        <AccordionItem value="settings" className="rounded-2xl border bg-card px-4">
+          <AccordionTrigger className="text-sm font-bold py-3">
+            <span className="flex items-center gap-2">
+              <Settings className="h-4 w-4 text-muted-foreground" />
+              הגדרות מערכת
+            </span>
+          </AccordionTrigger>
+          <AccordionContent>
+            <Accordion type="multiple" className="w-full">
+              <AccordionItem value="codes">
+                <AccordionTrigger className="text-sm py-2">
+                  <span className="flex items-center gap-2">
+                    <Key className="h-3.5 w-3.5 text-primary" />
+                    ניהול קודים
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <CodesManager students={students} onRefresh={fetchAll} />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="subjects">
+                <AccordionTrigger className="text-sm py-2">
+                  <span className="flex items-center gap-2">
+                    <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                    ניהול מקצועות
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <SubjectManager />
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="staff">
+                <AccordionTrigger className="text-sm py-2">
+                  <span className="flex items-center gap-2">
+                    <UserCog className="h-3.5 w-3.5 text-primary" />
+                    אנשי צוות ({staffMembers.length})
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-3">
+                    <div className="flex gap-2">
+                      <Input placeholder="שם איש צוות" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
+                        onKeyDown={e => { if (e.key === 'Enter') handleAddStaff(); }} className="h-9 text-sm flex-1" />
+                      <Button size="sm" onClick={handleAddStaff} disabled={addingStaff} className="gap-1 h-9"><Plus className="h-3.5 w-3.5" /> הוסף</Button>
+                    </div>
+                    {staffMembers.map(sm => (
+                      <div key={sm.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
+                        <span className="text-sm font-medium">{sm.name}</span>
+                        <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDeleteStaff(sm.id)}><X className="h-3.5 w-3.5" /></Button>
+                      </div>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="report-cards">
+                <AccordionTrigger className="text-sm py-2">
+                  <span className="flex items-center gap-2">
+                    <GraduationCap className="h-3.5 w-3.5 text-primary" />
+                    הפקת תעודות
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  {renderReportCardsContent()}
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="excel-export">
+                <AccordionTrigger className="text-sm py-2">
+                  <span className="flex items-center gap-2">
+                    <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
+                    ייצוא אקסל לפי כיתה
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-2">
+                    {CLASS_OPTIONS.map(cls => (
+                      <Button key={cls} variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={() => handleExcelExport(cls)}>
+                        <Download className="h-3.5 w-3.5" /> הורד אקסל — כיתת {cls}
+                      </Button>
+                    ))}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+
+              <AccordionItem value="reset">
+                <AccordionTrigger className="text-sm py-2">
+                  <span className="flex items-center gap-2">
+                    <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                    איפוס נתונים
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent>
+                  <Button variant="destructive" size="sm" className="gap-1.5 w-full"
+                    onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }} disabled={resetting}>
+                    <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס כל הנתונים'}
+                  </Button>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </AccordionContent>
+        </AccordionItem>
+      </Accordion>
     </div>
   );
 
@@ -1205,31 +1353,26 @@ export default function AdminDashboard() {
             <SelectContent>{SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}</SelectContent>
           </Select>
         </div>
-        <Button variant="ghost" size="sm" className="text-[10px] text-muted-foreground hover:text-destructive gap-1 px-2 h-7"
-          onClick={() => { setResetPassword(''); setResetPasswordError(''); setShowResetPassword(true); }} disabled={resetting}>
-          <Trash2 className="h-3 w-3" />{resetting ? 'מאפס...' : 'איפוס'}
-        </Button>
       </div>
 
-      {/* Main View Tabs */}
-      <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-muted/50 border">
+      {/* Main View Tabs - BIGGER with pastel active colors */}
+      <div className="grid grid-cols-3 gap-2 p-1.5 rounded-2xl bg-muted/40 border">
         {[
-          { key: 'management' as const, label: 'הנהלה', icon: Building2, color: 'text-primary' },
-          { key: 'tali' as const, label: 'כיתת טלי', icon: Users, color: 'text-emerald-600' },
-          { key: 'eden' as const, label: 'כיתת עדן', icon: Users, color: 'text-blue-600' },
+          { key: 'management' as const, label: 'הנהלה', icon: Building2, activeBg: 'bg-violet-100 dark:bg-violet-950/40', activeText: 'text-violet-700 dark:text-violet-300', activeBorder: 'border-violet-300 dark:border-violet-700' },
+          { key: 'tali' as const, label: 'כיתת טלי', icon: Users, activeBg: 'bg-emerald-100 dark:bg-emerald-950/40', activeText: 'text-emerald-700 dark:text-emerald-300', activeBorder: 'border-emerald-300 dark:border-emerald-700' },
+          { key: 'eden' as const, label: 'כיתת עדן', icon: Users, activeBg: 'bg-sky-100 dark:bg-sky-950/40', activeText: 'text-sky-700 dark:text-sky-300', activeBorder: 'border-sky-300 dark:border-sky-700' },
         ].map(tab => (
           <button key={tab.key} onClick={() => {
             setMainView(tab.key);
-            setShowEventsPanel(false); setShowSupportPanel(false); setShowStudentsPanel(false); setShowReportsPanel(false);
             setReportSelectedStudentId(null);
           }}
-            className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition-all ${
+            className={`flex items-center justify-center gap-2 py-3.5 px-3 rounded-xl text-sm font-bold transition-all ${
               mainView === tab.key
-                ? 'bg-background shadow-sm border border-border'
-                : 'hover:bg-background/50'
+                ? `${tab.activeBg} ${tab.activeBorder} border shadow-sm`
+                : 'hover:bg-background/50 border border-transparent'
             }`}>
-            <tab.icon className={`h-4 w-4 ${mainView === tab.key ? tab.color : 'text-muted-foreground'}`} />
-            <span className={mainView === tab.key ? 'text-foreground' : 'text-muted-foreground'}>{tab.label}</span>
+            <tab.icon className={`h-5 w-5 ${mainView === tab.key ? tab.activeText : 'text-muted-foreground'}`} />
+            <span className={mainView === tab.key ? tab.activeText : 'text-muted-foreground'}>{tab.label}</span>
           </button>
         ))}
       </div>
