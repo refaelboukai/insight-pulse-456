@@ -17,7 +17,7 @@ interface LearningStyleResultsProps {
   gender?: Gender;
 }
 
-export default function LearningStyleResults({ studentId, studentName, isEditable = false }: LearningStyleResultsProps) {
+export default function LearningStyleResults({ studentId, studentName, isEditable = false, gender }: LearningStyleResultsProps) {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [staffNotes, setStaffNotes] = useState('');
