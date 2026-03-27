@@ -381,7 +381,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
             {!hasViolent && behaviors.length > 0 && (
               <div className="mt-2">
                 <Textarea
-                  placeholder="הערה על ההתנהגות (לא חובה) — למשל: רוב השיעור התנהג יפה ואז הפריע..."
+                  placeholder={`הערה על ההתנהגות (לא חובה) — למשל: רוב השיעור ${selectedStudent?.gender === 'נ' ? 'התנהגה' : 'התנהג'} יפה ואז ${selectedStudent?.gender === 'נ' ? 'הפריעה' : 'הפריע'}...`}
                   value={behaviorComment}
                   onChange={e => setBehaviorComment(e.target.value)}
                   rows={2}
