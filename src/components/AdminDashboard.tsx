@@ -433,6 +433,7 @@ export default function AdminDashboard() {
         studentName: `${student.first_name} ${student.last_name}`,
         className: student.class_name || '',
         semesterLabel: SEMESTER_LABELS[reportCardSemester] || '',
+        gender: student.gender,
         grades: (grades || []).map((g: any) => ({
           subject: g.subject,
           grade: g.grade,
