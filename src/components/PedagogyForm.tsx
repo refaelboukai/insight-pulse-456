@@ -9,7 +9,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain } from 'lucide-react';
+import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain, FileText, FileSpreadsheet, BarChart3, Download, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import LearningStyleResults from '@/components/LearningStyleResults';
 import { g } from '@/lib/genderUtils';
