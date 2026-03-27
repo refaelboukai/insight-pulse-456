@@ -22,7 +22,7 @@ import {
 
 import {
   AlertTriangle, TrendingUp, Users, FileText, Bell, UserPlus, ShieldAlert, Shield, Download,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare, Brain, RotateCcw,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare, Brain, RotateCcw, BookOpen, FileSpreadsheet,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { generateEventPdf } from '@/lib/generateEventPdf';
