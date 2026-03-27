@@ -26,6 +26,8 @@ import {
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { generateEventPdf } from '@/lib/generateEventPdf';
+import { generatePedagogyPdf, generatePedagogyTrackingPdf, type MonthlyGoalRow } from '@/lib/generatePedagogyPdf';
+import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
 import { toast } from 'sonner';
 import { exportReportsToExcel } from '@/lib/exportReportsToExcel';
 import type { Database } from '@/integrations/supabase/types';
