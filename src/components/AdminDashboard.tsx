@@ -288,10 +288,12 @@ export default function AdminDashboard() {
       student_code: studentCode, parent_code: parentCode,
       first_name: newFirstName.trim(), last_name: newLastName.trim(),
       grade: finalClass, class_name: finalClass,
+      mother_name: newMotherName.trim() || null,
+      father_name: newFatherName.trim() || null,
     });
     if (!error) {
       toast.success(`${newFirstName} ${newLastName} נוסף/ה — קוד תלמיד: ${studentCode}, קוד הורה: ${parentCode}`);
-      setNewFirstName(''); setNewLastName(''); setNewClass(''); setCustomClassName(''); setShowAddStudent(false); fetchAll();
+      setNewFirstName(''); setNewLastName(''); setNewClass(''); setCustomClassName(''); setNewMotherName(''); setNewFatherName(''); setShowAddStudent(false); fetchAll();
     } else {
       toast.error('שגיאה בהוספת תלמיד');
     }
