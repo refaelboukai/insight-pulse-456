@@ -52,6 +52,19 @@ export default function StudentDashboard() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [pinnedPanels, setPinnedPanels] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('student-pinned-panels');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  const togglePin = (key: string) => {
+    setPinnedPanels(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      localStorage.setItem('student-pinned-panels', JSON.stringify([...next]));
+      return next;
+    });
+  };
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     reports: true, grades: false, support: false, pedagogy: false, exams: false, learningStyle: false,
   });
