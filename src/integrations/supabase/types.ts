@@ -958,6 +958,8 @@ export type Database = {
           mother_name: string | null
           mother_phone: string | null
           parent_code: string
+          parent_show_calendar: boolean
+          parent_show_reports: boolean
           student_code: string
           updated_at: string
         }
@@ -980,6 +982,8 @@ export type Database = {
           mother_name?: string | null
           mother_phone?: string | null
           parent_code?: string
+          parent_show_calendar?: boolean
+          parent_show_reports?: boolean
           student_code: string
           updated_at?: string
         }
@@ -1002,6 +1006,8 @@ export type Database = {
           mother_name?: string | null
           mother_phone?: string | null
           parent_code?: string
+          parent_show_calendar?: boolean
+          parent_show_reports?: boolean
           student_code?: string
           updated_at?: string
         }
