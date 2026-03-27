@@ -288,63 +288,6 @@ export default function ExceptionalEventForm() {
             </div>
           )}
 
-          {/* Event context fields */}
-          <div className="space-y-3 p-3 rounded-xl bg-muted/30 border border-border">
-            <div className="flex items-center gap-1.5 mb-1">
-              <MapPin className="h-4 w-4 text-muted-foreground" />
-              <label className="text-sm font-bold text-muted-foreground">הקשר האירוע</label>
-            </div>
-            
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">האירוע התרחש</label>
-              <Select value={eventLocation} onValueChange={setEventLocation}>
-                <SelectTrigger className="rounded-xl h-10 border-2 text-sm">
-                  <SelectValue placeholder="בחר/י מיקום" />
-                </SelectTrigger>
-                <SelectContent>
-                  {EVENT_LOCATIONS.map(loc => (
-                    <SelectItem key={loc} value={loc}>{loc}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">סוג השיעור שבו התלמיד היה אמור להיות</label>
-              <Select value={lessonSubject} onValueChange={setLessonSubject}>
-                <SelectTrigger className="rounded-xl h-10 border-2 text-sm">
-                  <SelectValue placeholder="בחר/י מקצוע" />
-                </SelectTrigger>
-                <SelectContent>
-                  {managedSubjects.map(s => (
-                    <SelectItem key={s.id} value={s.name}>{s.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">צוות שהיה נוכח או אמור היה לנכוח</label>
-              <Input
-                placeholder="שם/ות אנשי הצוות..."
-                value={staffPresent}
-                onChange={e => setStaffPresent(e.target.value)}
-                className="rounded-xl border-2 h-10 text-sm"
-              />
-            </div>
-
-            <div>
-              <label className="text-xs text-muted-foreground mb-1 block">מידע רלוונטי נוסף</label>
-              <Textarea
-                placeholder="כל מידע נוסף הרלוונטי לאירוע..."
-                value={additionalInfo}
-                onChange={e => setAdditionalInfo(e.target.value)}
-                rows={2}
-                className="rounded-xl border-2 resize-none text-sm"
-              />
-            </div>
-          </div>
-
           <div>
             <div className="flex items-center justify-between mb-1.5">
               <label className="text-sm font-bold flex items-center gap-1.5 text-muted-foreground">
@@ -353,11 +296,14 @@ export default function ExceptionalEventForm() {
               </label>
               <AiFormatButton fieldType="description" disabled={!description || description.length < 10} />
             </div>
+            <p className="text-xs text-muted-foreground/70 mb-2 leading-relaxed">
+              יש לכלול: היכן התרחש האירוע (כיתה, חצר, מסדרון), מצב רגשי של התלמיד לפני האירוע, טריגרים אפשריים, סוג השיעור שבו היה אמור להיות, צוות שהיה נוכח או אמור היה לנכוח, וכל מידע רלוונטי נוסף.
+            </p>
             <Textarea
-              placeholder="תאר/י את האירוע..."
+              placeholder="תאר/י את האירוע בפירוט — כולל מיקום, נסיבות, מצב רגשי, טריגרים..."
               value={description}
               onChange={e => setDescription(e.target.value)}
-              rows={4}
+              rows={6}
               className="rounded-xl border-2 resize-none"
               required
             />
