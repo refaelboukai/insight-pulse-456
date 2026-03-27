@@ -25,6 +25,7 @@ interface Props {
 
 export default function CodesManager({ students, onRefresh }: Props) {
   const [regenerating, setRegenerating] = useState<string | null>(null);
+  const [regeneratingParent, setRegeneratingParent] = useState<string | null>(null);
 
   const handleCopy = (code: string) => {
     navigator.clipboard.writeText(code);
@@ -43,8 +44,17 @@ export default function CodesManager({ students, onRefresh }: Props) {
     const newCode = generateRandomCode();
     const { error } = await supabase.from('students').update({ student_code: newCode }).eq('id', student.id);
     if (error) { toast.error('שגיאה ביצירת קוד חדש'); }
-    else { toast.success(`קוד חדש נוצר: ${newCode}`); onRefresh(); }
+    else { toast.success(`קוד תלמיד חדש: ${newCode}`); onRefresh(); }
     setRegenerating(null);
+  };
+
+  const handleRegenerateParent = async (student: Student) => {
+    setRegeneratingParent(student.id);
+    const newCode = 'P' + generateRandomCode().slice(0, 7);
+    const { error } = await (supabase.from('students') as any).update({ parent_code: newCode }).eq('id', student.id);
+    if (error) { toast.error('שגיאה ביצירת קוד הורה חדש'); }
+    else { toast.success(`קוד הורה חדש: ${newCode}`); onRefresh(); }
+    setRegeneratingParent(null);
   };
 
   return (
