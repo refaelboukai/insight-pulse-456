@@ -552,7 +552,7 @@ export default function GradesForm() {
                 <div className="space-y-2">
                   <label className="text-sm font-semibold">הערכה מילולית</label>
                   <Textarea
-                    placeholder="כתוב הערכה מילולית על התלמיד/ה..."
+                    placeholder={`כתיבת הערכה מילולית על ${g(studentGender, 'התלמיד', 'התלמידה')}...`}
                     value={verbalEvaluation}
                     onChange={e => setVerbalEvaluation(e.target.value)}
                     className="min-h-[80px] text-sm"
