@@ -722,6 +722,7 @@ export default function AdminDashboard() {
             <WeeklySupportSummary
               studentIds={new Set(activeStudents.map(s => s.id))}
               students={activeStudents}
+              staffMembers={staffMembers}
             />
           </div>
 
