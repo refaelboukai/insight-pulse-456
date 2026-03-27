@@ -12,14 +12,72 @@ import DailyReminderBanner from '@/components/DailyReminderBanner';
 import ResetCalmZone from '@/components/ResetCalmZone';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, Leaf, BookOpen } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, Leaf, BookOpen, ChevronLeft } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
+
+type StaffPanel = 'attendance' | 'report' | 'pedagogy' | 'grades' | 'support' | 'event' | null;
+
+const staffCards: { key: StaffPanel & string; icon: React.ElementType; label: string; iconBg: string; iconColor: string; activeBg: string }[] = [
+  { key: 'attendance', icon: ClipboardCheck, label: 'ביקור', iconBg: 'bg-[hsl(168,40%,92%)]', iconColor: 'text-[hsl(168,50%,30%)]', activeBg: 'bg-[hsl(168,40%,92%)]' },
+  { key: 'report', icon: FileText, label: 'דיווח', iconBg: 'bg-[hsl(220,45%,92%)]', iconColor: 'text-[hsl(220,45%,35%)]', activeBg: 'bg-[hsl(220,45%,92%)]' },
+  { key: 'pedagogy', icon: BookOpen, label: 'פדגוגיה', iconBg: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,35%)]', activeBg: 'bg-[hsl(270,40%,92%)]' },
+  { key: 'grades', icon: GraduationCap, label: 'ציונים', iconBg: 'bg-[hsl(35,60%,90%)]', iconColor: 'text-[hsl(35,60%,30%)]', activeBg: 'bg-[hsl(35,60%,90%)]' },
+  { key: 'support', icon: HeartHandshake, label: 'תמיכה', iconBg: 'bg-[hsl(145,40%,90%)]', iconColor: 'text-[hsl(145,40%,30%)]', activeBg: 'bg-[hsl(145,40%,90%)]' },
+  { key: 'event', icon: AlertTriangle, label: 'אירוע חריג', iconBg: 'bg-[hsl(0,55%,92%)]', iconColor: 'text-[hsl(0,55%,35%)]', activeBg: 'bg-[hsl(0,55%,92%)]' },
+];
 
 export default function Index() {
   const { role, fullName, signOut } = useAuth();
   const isAdmin = role === 'admin';
   const isStudent = role === 'student';
   const [absentStudentIds, setAbsentStudentIds] = useState<Set<string>>(new Set());
+  const [staffPanel, setStaffPanel] = useState<StaffPanel>(null);
+
+  const renderStaffContent = () => {
+    if (!staffPanel) {
+      return (
+        <div className="space-y-4" dir="rtl">
+          <DailyReminderBanner />
+          <div className="grid grid-cols-3 gap-2.5">
+            {staffCards.map(card => (
+              <button key={card.key} onClick={() => setStaffPanel(card.key as StaffPanel)}
+                className="rounded-2xl p-4 text-center border bg-card hover:shadow-md hover:border-primary/20 transition-all cursor-pointer active:scale-[0.97]">
+                <div className={`w-12 h-12 rounded-xl mx-auto mb-2 flex items-center justify-center ${card.iconBg}`}>
+                  <card.icon className={`h-6 w-6 ${card.iconColor}`} />
+                </div>
+                <p className="text-sm font-bold text-foreground">{card.label}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    const panelComponents: Record<string, React.ReactNode> = {
+      attendance: <DailyAttendance onAttendanceChange={setAbsentStudentIds} />,
+      report: <ReportForm absentStudentIds={absentStudentIds} />,
+      pedagogy: <PedagogyForm />,
+      grades: <GradesForm />,
+      support: <SupportPlanForm />,
+      event: <ExceptionalEventForm />,
+    };
+
+    const currentCard = staffCards.find(c => c.key === staffPanel);
+
+    return (
+      <div className="space-y-2 animate-fade-in" dir="rtl">
+        <button onClick={() => setStaffPanel(null)}
+          className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+          <ChevronLeft className="h-4 w-4" /> חזרה לתפריט
+        </button>
+        <h3 className="text-sm font-bold flex items-center gap-2">
+          {currentCard && <currentCard.icon className={`h-4 w-4 ${currentCard.iconColor}`} />}
+          {currentCard?.label}
+        </h3>
+        {panelComponents[staffPanel]}
+      </div>
+    );
+  };
 
   return (
     <div className="min-h-screen" style={{ background: 'var(--gradient-warm)' }}>
@@ -51,17 +109,6 @@ export default function Index() {
 
       {/* Content */}
       <main className="container mx-auto px-3 sm:px-4 py-4 pb-10 max-w-4xl">
-        {/* School title for non-admin, non-student */}
-        {!isAdmin && !isStudent && (
-          <div className="text-center mb-4">
-            <h2 className="text-lg font-bold text-foreground">בית ספר מרום בית אקשטיין</h2>
-            <p className="text-sm text-muted-foreground">מערכת דיווח חינוכית</p>
-          </div>
-        )}
-
-        {/* Daily reminder for staff */}
-        {!isAdmin && !isStudent && <DailyReminderBanner />}
-
         {isStudent ? (
           <Tabs defaultValue="dashboard" dir="rtl">
             <TabsList className="grid w-full grid-cols-2 mb-4 h-20 p-2 rounded-2xl shadow-soft bg-card border border-border">
@@ -84,52 +131,7 @@ export default function Index() {
         ) : isAdmin ? (
           <AdminDashboard />
         ) : (
-          <Tabs defaultValue="attendance" dir="rtl">
-            <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 mb-4 h-auto p-1.5 gap-1.5 rounded-2xl shadow-soft bg-card border border-border">
-              <TabsTrigger value="attendance" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(168,40%,92%)] data-[state=active]:text-[hsl(168,50%,30%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
-                <ClipboardCheck className="h-5 w-5 sm:h-4 sm:w-4" />
-                ביקור
-              </TabsTrigger>
-              <TabsTrigger value="report" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(220,45%,92%)] data-[state=active]:text-[hsl(220,45%,35%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
-                <FileText className="h-5 w-5 sm:h-4 sm:w-4" />
-                דיווח
-              </TabsTrigger>
-              <TabsTrigger value="pedagogy" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(270,40%,92%)] data-[state=active]:text-[hsl(270,40%,35%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
-                <BookOpen className="h-5 w-5 sm:h-4 sm:w-4" />
-                פדגוגיה
-              </TabsTrigger>
-              <TabsTrigger value="grades" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(35,60%,90%)] data-[state=active]:text-[hsl(35,60%,30%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
-                <GraduationCap className="h-5 w-5 sm:h-4 sm:w-4" />
-                ציונים
-              </TabsTrigger>
-              <TabsTrigger value="support" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(145,40%,90%)] data-[state=active]:text-[hsl(145,40%,30%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
-                <HeartHandshake className="h-5 w-5 sm:h-4 sm:w-4" />
-                תמיכה
-              </TabsTrigger>
-              <TabsTrigger value="event" className="flex flex-col sm:flex-row gap-1 sm:gap-1.5 rounded-xl py-2.5 sm:py-3 px-1 text-xs sm:text-sm font-bold transition-all duration-200 data-[state=active]:bg-[hsl(0,55%,92%)] data-[state=active]:text-[hsl(0,55%,35%)] data-[state=active]:shadow-md data-[state=inactive]:text-muted-foreground data-[state=inactive]:hover:bg-muted/60">
-                <AlertTriangle className="h-5 w-5 sm:h-4 sm:w-4" />
-                אירוע
-              </TabsTrigger>
-            </TabsList>
-            <TabsContent value="attendance" className="animate-fade-in mt-0">
-              <DailyAttendance onAttendanceChange={setAbsentStudentIds} />
-            </TabsContent>
-            <TabsContent value="report" className="animate-fade-in mt-0">
-              <ReportForm absentStudentIds={absentStudentIds} />
-            </TabsContent>
-            <TabsContent value="pedagogy" className="animate-fade-in mt-0">
-              <PedagogyForm />
-            </TabsContent>
-            <TabsContent value="grades" className="animate-fade-in mt-0">
-              <GradesForm />
-            </TabsContent>
-            <TabsContent value="support" className="animate-fade-in mt-0">
-              <SupportPlanForm />
-            </TabsContent>
-            <TabsContent value="event" className="animate-fade-in mt-0">
-              <ExceptionalEventForm />
-            </TabsContent>
-          </Tabs>
+          renderStaffContent()
         )}
       </main>
     </div>
