@@ -301,7 +301,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
 
   // Content sections for page 1 area (educator report)
   const page1Sections = [
-    `<div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:16px;text-align:center;letter-spacing:1px;">📝 דיווח מחנכ/ת</div>`,
+    `<div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:16px;text-align:center;letter-spacing:1px;">📝 דיווח ${g(data.gender, 'מחנך', 'מחנכת')}</div>`,
     personalNoteHtml,
     teamTableHtml,
     socialEmotionalHtml,
