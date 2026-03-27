@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import ReportForm from '@/components/ReportForm';
 import ExceptionalEventForm from '@/components/ExceptionalEventForm';
+import SharedCalendar from '@/components/SharedCalendar';
 import DailyAttendance from '@/components/DailyAttendance';
 import AdminDashboard from '@/components/AdminDashboard';
 import SupportPlanForm from '@/components/SupportPlanForm';
@@ -10,10 +11,10 @@ import PedagogyForm from '@/components/PedagogyForm';
 import StudentDashboard from '@/components/StudentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
 import { Button } from '@/components/ui/button';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen, ChevronLeft } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen, ChevronLeft, Calendar } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
-type StaffPanel = 'attendance' | 'report' | 'pedagogy' | 'grades' | 'support' | 'event' | null;
+type StaffPanel = 'attendance' | 'report' | 'pedagogy' | 'grades' | 'support' | 'event' | 'calendar' | null;
 
 const staffCards: { key: StaffPanel & string; icon: React.ElementType; label: string; iconBg: string; iconColor: string; activeBg: string }[] = [
   { key: 'attendance', icon: ClipboardCheck, label: 'ביקור', iconBg: 'bg-[hsl(168,40%,92%)]', iconColor: 'text-[hsl(168,50%,30%)]', activeBg: 'bg-[hsl(168,40%,92%)]' },
@@ -22,6 +23,7 @@ const staffCards: { key: StaffPanel & string; icon: React.ElementType; label: st
   { key: 'grades', icon: GraduationCap, label: 'ציונים', iconBg: 'bg-[hsl(35,60%,90%)]', iconColor: 'text-[hsl(35,60%,30%)]', activeBg: 'bg-[hsl(35,60%,90%)]' },
   { key: 'support', icon: HeartHandshake, label: 'תמיכה', iconBg: 'bg-[hsl(145,40%,90%)]', iconColor: 'text-[hsl(145,40%,30%)]', activeBg: 'bg-[hsl(145,40%,90%)]' },
   { key: 'event', icon: AlertTriangle, label: 'אירוע חריג', iconBg: 'bg-[hsl(0,55%,92%)]', iconColor: 'text-[hsl(0,55%,35%)]', activeBg: 'bg-[hsl(0,55%,92%)]' },
+  { key: 'calendar', icon: Calendar, label: 'לוח שנה', iconBg: 'bg-[hsl(200,45%,92%)]', iconColor: 'text-[hsl(200,45%,35%)]', activeBg: 'bg-[hsl(200,45%,92%)]' },
 ];
 
 export default function Index() {
@@ -58,6 +60,7 @@ export default function Index() {
       grades: <GradesForm />,
       support: <SupportPlanForm />,
       event: <ExceptionalEventForm />,
+      calendar: <SharedCalendar />,
     };
 
     const currentCard = staffCards.find(c => c.key === staffPanel);

@@ -29,6 +29,7 @@ import { generatePedagogyPdf, generatePedagogyTrackingPdf, type MonthlyGoalRow }
 import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
 import { toast } from 'sonner';
 import { exportReportsToExcel, exportFullActivityToExcel } from '@/lib/exportReportsToExcel';
+import SharedCalendar from '@/components/SharedCalendar';
 import type { Database } from '@/integrations/supabase/types';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
@@ -1233,6 +1234,7 @@ export default function AdminDashboard() {
       { key: 'support', icon: HeartHandshake, value: supportAssignments.length, label: 'תמיכות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
       { key: 'long-absent', icon: AlertTriangle, value: longAbsentStudents.length, label: 'לא מגיעים', iconBg: 'bg-warning/10', iconColor: 'text-warning' },
       { key: 'monthly-report', icon: Sparkles, label: 'דוח חודשי AI', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'calendar', icon: Calendar, label: 'לוח שנה', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'sms', icon: MessageSquare, label: 'SMS תזכורות', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'excel', icon: Download, label: 'הפקת אקסל', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'settings', icon: Settings, label: 'הגדרות מערכת', iconBg: 'bg-muted', iconColor: 'text-muted-foreground' },
@@ -1251,12 +1253,13 @@ export default function AdminDashboard() {
         support: renderSupportContent(),
         'long-absent': renderLongAbsentContent(),
         'monthly-report': renderMonthlyReportContent(),
+        calendar: <SharedCalendar editable />,
         settings: renderSettingsContent(),
       };
       const panelLabels: Record<string, string> = {
         students: 'תלמידים', reports: 'דיווחים', events: 'אירועים חריגים',
         support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים',
-        'monthly-report': 'דוח חודשי AI', settings: 'הגדרות מערכת',
+        'monthly-report': 'דוח חודשי AI', calendar: 'לוח שנה', settings: 'הגדרות מערכת',
       };
       return (
         <div className="space-y-2">
