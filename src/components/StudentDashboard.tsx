@@ -724,6 +724,7 @@ export default function StudentDashboard() {
           grades: renderGradesPanel, pedagogy: renderPedagogyPanel,
           exams: renderExamsPanel, support: renderSupportPanel,
           schedule: renderSchedulePanel,
+          weekly_summary: renderWeeklySummaryPanel,
         };
         const pinnedLabels: Record<string, string> = {
           reminders: 'תזכורות להיום', reflection: 'היום שלי', insights: 'תובנות שלי על היום',
