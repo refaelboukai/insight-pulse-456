@@ -193,6 +193,108 @@ export default function PedagogyForm() {
     else loadExams();
   };
 
+  const loadAllMonthGoals = useCallback(async () => {
+    if (!selectedStudentId || !selectedSubjectId) return;
+    const query = supabase.from('pedagogical_goals')
+      .select('*')
+      .eq('student_id', selectedStudentId)
+      .eq('subject_id', selectedSubjectId)
+      .eq('school_year', selectedYear);
+
+    if (selectedSubSubject) {
+      query.eq('sub_subject', selectedSubSubject);
+    } else {
+      query.is('sub_subject', null);
+    }
+
+    const { data } = await query;
+    if (data) setAllMonthGoals(data as PedagogicalGoal[]);
+  }, [selectedStudentId, selectedSubjectId, selectedSubSubject, selectedYear]);
+
+  useEffect(() => {
+    if (showTracking) loadAllMonthGoals();
+  }, [showTracking, loadAllMonthGoals]);
+
+  const getMonthlyRows = (): MonthlyGoalRow[] => {
+    return MONTHS.map(month => {
+      const g = allMonthGoals.find(goal => goal.month === month);
+      return {
+        month,
+        learningStyle: g?.learning_style || null,
+        currentStatus: g?.current_status || null,
+        learningGoals: g?.learning_goals || null,
+        measurementMethods: g?.measurement_methods || null,
+        whatWasDone: g?.what_was_done || null,
+        whatWasNotDone: g?.what_was_not_done || null,
+        teacherNotes: g?.teacher_notes || null,
+        adminNotes: g?.admin_notes || null,
+      };
+    }).filter(r => r.learningStyle || r.currentStatus || r.learningGoals || r.whatWasDone || r.teacherNotes);
+  };
+
+  const selectedStudent = filteredStudents.find(s => s.id === selectedStudentId);
+  const studentFullName = selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : '';
+
+  const handleExportPdf = async () => {
+    if (!existingGoalId) { toast.error('יש לשמור את היעד לפני הפקת PDF'); return; }
+    setExporting(true);
+    try {
+      const blob = await generatePedagogyPdf({
+        studentName: studentFullName,
+        subjectName: selectedSubject?.name || '',
+        subSubject: selectedSubSubject,
+        month: selectedMonth,
+        schoolYear: selectedYear,
+        learningStyle: goal.learning_style,
+        currentStatus: goal.current_status,
+        learningGoals: goal.learning_goals,
+        measurementMethods: goal.measurement_methods,
+        whatWasDone: goal.what_was_done,
+        whatWasNotDone: goal.what_was_not_done,
+        teacherNotes: goal.teacher_notes,
+        adminNotes: goal.admin_notes,
+      });
+      const fileName = `יעד-פדגוגי-${studentFullName}-${selectedMonth}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: fileName, files: [file] });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
+        URL.revokeObjectURL(url);
+      }
+      toast.success('הדוח הופק בהצלחה');
+    } catch (err) { console.error(err); toast.error('שגיאה בהפקת PDF'); }
+    setExporting(false);
+  };
+
+  const handleExportTrackingPdf = async () => {
+    setExporting(true);
+    try {
+      await loadAllMonthGoals();
+      const rows = getMonthlyRows();
+      if (rows.length === 0) { toast.error('אין נתונים לייצוא'); setExporting(false); return; }
+      const blob = await generatePedagogyTrackingPdf(studentFullName, selectedSubject?.name || '', selectedSubSubject, selectedYear, rows);
+      const fileName = `מעקב-פדגוגי-${studentFullName}-${selectedSubject?.name || ''}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: fileName, files: [file] });
+      } else {
+        const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url);
+      }
+      toast.success('דוח מעקב הופק בהצלחה');
+    } catch (err) { console.error(err); toast.error('שגיאה בהפקת PDF'); }
+    setExporting(false);
+  };
+
+  const handleExportExcel = async () => {
+    await loadAllMonthGoals();
+    const rows = getMonthlyRows();
+    if (rows.length === 0) { toast.error('אין נתונים לייצוא'); return; }
+    exportPedagogyToExcel(studentFullName, selectedSubject?.name || '', selectedSubSubject, selectedYear, rows);
+    toast.success('קובץ Excel הורד בהצלחה');
+  };
+
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
   const filteredStudents = selectedClass ? students.filter(s => s.class_name === selectedClass) : students;
 
