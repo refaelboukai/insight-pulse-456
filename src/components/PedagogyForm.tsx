@@ -57,6 +57,9 @@ export default function PedagogyForm() {
   const [exams, setExams] = useState<ExamEntry[]>([]);
   const [newExamDate, setNewExamDate] = useState('');
   const [newExamDesc, setNewExamDesc] = useState('');
+  const [allMonthGoals, setAllMonthGoals] = useState<PedagogicalGoal[]>([]);
+  const [showTracking, setShowTracking] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadStudents();
