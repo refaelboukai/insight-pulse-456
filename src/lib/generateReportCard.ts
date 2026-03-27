@@ -238,7 +238,7 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   const reflSummary = data.reflectionSummary;
   const reflectionHtml = reflSummary ? `
     <div style="margin-bottom:20px;">
-      <div style="font-size:12px;font-weight:700;color:${colors.sectionTitle};margin-bottom:8px;border-bottom:1px solid ${colors.headerBorder};padding-bottom:4px;">הערכה עצמית של התלמיד/ה</div>
+      <div style="font-size:12px;font-weight:700;color:${colors.sectionTitle};margin-bottom:8px;border-bottom:1px solid ${colors.headerBorder};padding-bottom:4px;">הערכה עצמית של ${g(data.gender, 'התלמיד', 'התלמידה')}</div>
       <table style="width:100%;border-collapse:collapse;border:1px solid ${colors.tableBorder};">
         <thead>
           <tr style="background:${colors.tableHeaderBg};">
