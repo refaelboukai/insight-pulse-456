@@ -10,7 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { toast } from 'sonner';
 import { INCIDENT_TYPE_LABELS, VIOLENCE_LABELS } from '@/lib/constants';
 import { generateEventPdf } from '@/lib/generateEventPdf';
-import { Send, FileWarning, MessageCircle, Users, Shield, X, MapPin, Sparkles, Loader2 } from 'lucide-react';
+import { Send, FileWarning, MessageCircle, Users, Shield, X, Sparkles, Loader2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type IncidentType = Database['public']['Enums']['incident_type'];
