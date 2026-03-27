@@ -122,7 +122,8 @@ export default function ExceptionalEventForm() {
         staff_response: staffResponse || null,
         followup_required: followupRequired,
         followup_notes: followupNotes || null,
-      });
+        violence_subtypes: incidentType === 'violence' ? violenceSubtypes : [],
+      } as any);
 
       if (error) {
         toast.error('שגיאה בשמירת האירוע');
