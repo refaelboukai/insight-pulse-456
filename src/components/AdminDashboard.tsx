@@ -1178,7 +1178,7 @@ export default function AdminDashboard() {
           <AccordionContent>{renderEventsContent()}</AccordionContent>
         </AccordionItem>
 
-        <AccordionItem value="support" className="rounded-2xl border bg-card px-4">
+        <AccordionItem value="support" id="accordion-support" className="rounded-2xl border bg-card px-4">
           <AccordionTrigger className="text-sm font-bold py-3">
             <span className="flex items-center gap-2">
               <HeartHandshake className="h-4 w-4 text-accent" />
