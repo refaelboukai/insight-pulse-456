@@ -1234,6 +1234,7 @@ export default function AdminDashboard() {
       { key: 'support', icon: HeartHandshake, value: supportAssignments.length, label: 'תמיכות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
       { key: 'long-absent', icon: AlertTriangle, value: longAbsentStudents.length, label: 'לא מגיעים', iconBg: 'bg-warning/10', iconColor: 'text-warning' },
       { key: 'monthly-report', icon: Sparkles, label: 'דוח חודשי AI', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'calendar', icon: Calendar, label: 'לוח שנה', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'sms', icon: MessageSquare, label: 'SMS תזכורות', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'excel', icon: Download, label: 'הפקת אקסל', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'settings', icon: Settings, label: 'הגדרות מערכת', iconBg: 'bg-muted', iconColor: 'text-muted-foreground' },
