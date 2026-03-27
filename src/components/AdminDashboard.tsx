@@ -21,7 +21,7 @@ import {
 } from '@/lib/constants';
 import {
   AlertTriangle, TrendingUp, Users, FileText, UserPlus, ShieldAlert, Shield, Download,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare, Brain, RotateCcw, BookOpen, FileSpreadsheet, Eye, Settings, BarChart3,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare, Brain, RotateCcw, BookOpen, FileSpreadsheet, Eye, Settings, BarChart3, Building2,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { generateEventPdf } from '@/lib/generateEventPdf';
@@ -63,7 +63,16 @@ export default function AdminDashboard() {
   const [studentInsights, setStudentInsights] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
-  const [activeTab, setActiveTab] = useState('overview');
+
+  // Top-level view: management | tali | eden
+  const [mainView, setMainView] = useState<'management' | 'tali' | 'eden'>('management');
+
+  // Panels
+  const [showEventsPanel, setShowEventsPanel] = useState(false);
+  const [showSupportPanel, setShowSupportPanel] = useState(false);
+  const [showStudentsPanel, setShowStudentsPanel] = useState(false);
+  const [showReportsPanel, setShowReportsPanel] = useState(false);
+  const [reportSelectedStudentId, setReportSelectedStudentId] = useState<string | null>(null);
 
   // Staff management
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
@@ -126,12 +135,11 @@ export default function AdminDashboard() {
   const [reflectionCustomTo, setReflectionCustomTo] = useState<Record<string, string>>({});
   const [reflectionVisibility, setReflectionVisibility] = useState<Record<string, boolean>>({});
 
-  // Events panel
-  const [showEventsPanel, setShowEventsPanel] = useState(false);
+  // Settings sub-tab
+  const [settingsOpen, setSettingsOpen] = useState(false);
 
   const fetchAll = async () => {
     const { from: yearFrom, to: yearTo } = getYearDateRange(selectedYear);
-    const today = new Date().toISOString().split('T')[0];
     const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes, reflectionsRes, insightsRes] = await Promise.all([
       supabase.from('lesson_reports').select('*')
         .gte('report_date', `${yearFrom}T00:00:00`).lte('report_date', `${yearTo}T23:59:59`)
@@ -409,7 +417,7 @@ export default function AdminDashboard() {
         if (!groups.has(key)) groups.set(key, { subjectName: subjectMap.get(g.subject_id) || 'מקצוע', subSubject: g.sub_subject, goals: [] });
         groups.get(key)!.goals.push(g);
       });
-      const studentName = `${student.first_name} ${student.last_name}`;
+      const sName = `${student.first_name} ${student.last_name}`;
       if (format === 'excel') {
         const XLSX = await import('xlsx');
         const allRows: any[] = [];
@@ -422,14 +430,14 @@ export default function AdminDashboard() {
         const data = allRows.map(r => ({ 'מקצוע': r.subject, 'חודש': r.month, 'סגנון למידה': r.learningStyle || '', 'מצב נוכחי': r.currentStatus || '', 'יעדים לימודיים': r.learningGoals || '', 'דרכי מדידה': r.measurementMethods || '', 'מה נעשה': r.whatWasDone || '', 'פערים': r.whatWasNotDone || '', 'הערות מורה': r.teacherNotes || '', 'הערות הנהלה': r.adminNotes || '' }));
         const ws = XLSX.utils.json_to_sheet(data);
         XLSX.utils.book_append_sheet(wb, ws, 'יעדים פדגוגיים');
-        XLSX.writeFile(wb, `יעדים-פדגוגיים-${studentName}-${selectedYear}.xlsx`);
+        XLSX.writeFile(wb, `יעדים-פדגוגיים-${sName}-${selectedYear}.xlsx`);
         toast.success('קובץ Excel הורד');
       } else {
         const { default: jsPDF } = await import('jspdf');
         const html2canvas = (await import('html2canvas')).default;
         const container = document.createElement('div');
         container.style.cssText = 'position:fixed;top:-9999px;left:0;width:800px;font-family:Arial,sans-serif;direction:rtl;background:#fff;padding:24px;';
-        let html = `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #2563eb;padding-bottom:10px;margin-bottom:20px;"><div><div style="font-size:18px;font-weight:bold;color:#1e293b;">יעדים פדגוגיים - ${studentName}</div><div style="font-size:12px;color:#64748b;">כל המקצועות | ${selectedYear}</div></div></div>`;
+        let html = `<div style="display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid #2563eb;padding-bottom:10px;margin-bottom:20px;"><div><div style="font-size:18px;font-weight:bold;color:#1e293b;">יעדים פדגוגיים - ${sName}</div><div style="font-size:12px;color:#64748b;">כל המקצועות | ${selectedYear}</div></div></div>`;
         for (const [, group] of groups) {
           const subjectTitle = group.subSubject ? `${group.subjectName} (${group.subSubject})` : group.subjectName;
           const monthsWithData = PEDAGOGY_MONTHS.filter(m => group.goals.some(g => g.month === m));
@@ -454,7 +462,7 @@ export default function AdminDashboard() {
         const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [pdfWidth, Math.max(pdfHeight, 595)] });
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
         const blob = pdf.output('blob');
-        const fileName = `יעדים-פדגוגיים-${studentName}-${selectedYear}.pdf`;
+        const fileName = `יעדים-פדגוגיים-${sName}-${selectedYear}.pdf`;
         const file = new File([blob], fileName, { type: 'application/pdf' });
         if (navigator.share && navigator.canShare?.({ files: [file] })) { await navigator.share({ title: fileName, files: [file] }); }
         else { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); }
@@ -527,9 +535,667 @@ export default function AdminDashboard() {
   const todayReports = reports.filter(r => r.report_date?.startsWith(todayStr));
   const activeStudents = students.filter(s => s.is_active);
 
-  // ===== RENDER =====
+  // Get class-specific data
+  const getClassStudents = (cls: string) => activeStudents.filter(s => s.class_name === cls);
+  const getClassReports = (cls: string) => {
+    const ids = new Set(getClassStudents(cls).map(s => s.id));
+    return reports.filter(r => ids.has(r.student_id));
+  };
+  const getClassTodayReports = (cls: string) => {
+    const ids = new Set(getClassStudents(cls).map(s => s.id));
+    return todayReports.filter(r => ids.has(r.student_id));
+  };
+  const getClassAbsent = (cls: string) => {
+    const ids = new Set(getClassStudents(cls).map(s => s.id));
+    return todayAbsent.filter(a => ids.has(a.student_id));
+  };
+  const getClassAssignments = (cls: string) => {
+    const ids = new Set(getClassStudents(cls).map(s => s.id));
+    return supportAssignments.filter((sa: any) => ids.has(sa.student_id));
+  };
+
+  // ===== RENDER STAT CARDS =====
+  const renderStatCards = (classFilter?: string) => {
+    const filteredStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
+    const filteredAbsent = classFilter ? getClassAbsent(classFilter) : todayAbsent;
+    const filteredReports = classFilter ? getClassTodayReports(classFilter) : todayReports;
+    const filteredEvents = events; // events are global
+    const filteredAssignments = classFilter ? getClassAssignments(classFilter) : supportAssignments;
+    const presentCount = filteredStudents.length - filteredAbsent.length;
+
+    return (
+      <div className="grid grid-cols-4 gap-2">
+        {/* Students present today */}
+        <button onClick={() => { setShowStudentsPanel(!showStudentsPanel); setShowEventsPanel(false); setShowSupportPanel(false); setShowReportsPanel(false); }}
+          className={`rounded-2xl p-3 text-center transition-all hover:shadow-md border bg-card ${showStudentsPanel ? 'ring-2 ring-primary border-primary' : 'border-border'}`}>
+          <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-primary/10">
+            <Users className="h-4 w-4 text-primary" />
+          </div>
+          <p className="text-lg font-bold leading-tight">{presentCount}/{filteredStudents.length}</p>
+          <p className="text-[10px] text-muted-foreground">תלמידים היום</p>
+          <p className="text-[8px] text-muted-foreground/60 mt-0.5">{new Date().toLocaleDateString('he-IL')}</p>
+        </button>
+
+        {/* Reports */}
+        <button onClick={() => { setShowReportsPanel(!showReportsPanel); setShowEventsPanel(false); setShowSupportPanel(false); setShowStudentsPanel(false); }}
+          className={`rounded-2xl p-3 text-center transition-all hover:shadow-md border bg-card ${showReportsPanel ? 'ring-2 ring-blue-500 border-blue-500' : 'border-border'}`}>
+          <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-blue-500/10">
+            <FileText className="h-4 w-4 text-blue-500" />
+          </div>
+          <p className="text-lg font-bold">{filteredReports.length}</p>
+          <p className="text-[10px] text-muted-foreground">דיווחים היום</p>
+        </button>
+
+        {/* Events */}
+        <button onClick={() => { setShowEventsPanel(!showEventsPanel); setShowSupportPanel(false); setShowStudentsPanel(false); setShowReportsPanel(false); }}
+          className={`rounded-2xl p-3 text-center transition-all hover:shadow-md border bg-card ${showEventsPanel ? 'ring-2 ring-destructive border-destructive' : 'border-border'}`}>
+          <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-destructive/10">
+            <ShieldAlert className="h-4 w-4 text-destructive" />
+          </div>
+          <p className="text-lg font-bold">{filteredEvents.length}</p>
+          <p className="text-[10px] text-muted-foreground">אירועים חריגים</p>
+        </button>
+
+        {/* Support */}
+        <button onClick={() => { setShowSupportPanel(!showSupportPanel); setShowEventsPanel(false); setShowStudentsPanel(false); setShowReportsPanel(false); }}
+          className={`rounded-2xl p-3 text-center transition-all hover:shadow-md border bg-card ${showSupportPanel ? 'ring-2 ring-accent border-accent' : 'border-border'}`}>
+          <div className="w-9 h-9 rounded-xl mx-auto mb-1 flex items-center justify-center bg-accent/10">
+            <HeartHandshake className="h-4 w-4 text-accent" />
+          </div>
+          <p className="text-lg font-bold">{filteredAssignments.length}</p>
+          <p className="text-[10px] text-muted-foreground">תמיכות</p>
+        </button>
+      </div>
+    );
+  };
+
+  // ===== RENDER EVENTS PANEL =====
+  const renderEventsPanel = () => {
+    if (!showEventsPanel) return null;
+    return (
+      <div className="rounded-2xl overflow-hidden border border-destructive/20 bg-card animate-fade-in">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <ShieldAlert className="h-4 w-4 text-destructive" />
+            <span className="font-bold text-sm">אירועים חריגים ({events.length})</span>
+          </div>
+          <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowEventsPanel(false)}>
+            <X className="h-4 w-4" />
+          </Button>
+        </div>
+        <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto">
+          {events.length === 0 ? (
+            <p className="text-center text-muted-foreground text-xs py-6">אין אירועים חריגים</p>
+          ) : events.map(ev => (
+            <div key={ev.id} className="p-3 rounded-xl border bg-card hover:shadow-sm transition-shadow">
+              <div className="flex items-start justify-between gap-2 mb-2">
+                <div>
+                  <Badge variant="destructive" className="text-[10px] px-2 py-0 mb-1">
+                    {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
+                  </Badge>
+                  <p className="text-xs text-muted-foreground">
+                    {new Date(ev.created_at).toLocaleDateString('he-IL')} · {new Date(ev.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
+                  </p>
+                </div>
+                <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px] gap-1 text-primary" onClick={async () => {
+                  try {
+                    const eventData = {
+                      incidentType: ev.incident_type, description: ev.description,
+                      peopleInvolved: ev.people_involved || '', staffResponse: ev.staff_response || '',
+                      followupRequired: ev.followup_required, followupNotes: ev.followup_notes || '',
+                      date: new Date(ev.created_at).toLocaleDateString('he-IL'),
+                      time: new Date(ev.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
+                    };
+                    const blob = await generateEventPdf(eventData);
+                    const fileName = `אירוע-חריג-${eventData.date}.pdf`;
+                    const file = new File([blob], fileName, { type: 'application/pdf' });
+                    if (navigator.share && navigator.canShare?.({ files: [file] })) { await navigator.share({ title: fileName, files: [file] }); }
+                    else { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); }
+                  } catch { toast.error('שגיאה בהפקת הדוח'); }
+                }}>
+                  <Share2 className="h-3 w-3" /> שתף
+                </Button>
+              </div>
+              <p className="text-xs leading-relaxed text-foreground/80 whitespace-pre-line">{ev.description}</p>
+              {ev.people_involved && <p className="text-[10px] text-muted-foreground mt-1.5">👥 {ev.people_involved}</p>}
+              {ev.staff_response && <p className="text-[10px] text-muted-foreground mt-1">🛡️ {ev.staff_response}</p>}
+              {ev.followup_required && <Badge variant="outline" className="text-[10px] mt-1.5 border-accent text-accent">נדרש מעקב</Badge>}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // ===== RENDER SUPPORT PANEL =====
+  const renderSupportPanel = (classFilter?: string) => {
+    if (!showSupportPanel) return null;
+    const filtered = classFilter ? getClassAssignments(classFilter) : supportAssignments;
+    return (
+      <div className="rounded-2xl overflow-hidden border border-accent/20 bg-card animate-fade-in">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <HeartHandshake className="h-4 w-4 text-accent" />
+            <span className="font-bold text-sm">תמיכות ({filtered.length})</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button size="sm" variant="outline" className="gap-1 text-xs h-7" onClick={() => { setAssignClassFilter(classFilter || null); setShowAddAssignment(true); }}>
+              <Plus className="h-3 w-3" /> שיוך חדש
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowSupportPanel(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto">
+          {filtered.length === 0 ? (
+            <p className="text-center text-muted-foreground text-xs py-6">אין שיוכי תמיכה</p>
+          ) : filtered.map((sa: any) => (
+            <div key={sa.id} className="p-2.5 rounded-xl border bg-card">
+              <div className="flex justify-between items-start mb-1">
+                <div>
+                  <button onClick={() => { const s = students.find(st => st.id === sa.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline">{studentName(sa.student_id)}</button>
+                  <p className="text-[10px] text-muted-foreground">מאמן: {sa.staff_members?.name || '—'}</p>
+                </div>
+                <div className="flex items-center gap-1">
+                  <Badge variant="outline" className="text-[10px]">{sa.frequency === 'daily' ? 'יומי' : 'שבועי'}</Badge>
+                  <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => handleDeleteAssignment(sa.id)}><X className="h-3 w-3" /></Button>
+                </div>
+              </div>
+              <div className="flex flex-wrap gap-1">
+                {(sa.support_types || []).map((t: string) => <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">{SUPPORT_LABELS[t] || t}</Badge>)}
+              </div>
+              {sa.support_description && <p className="text-[10px] text-foreground/80 mt-1">📝 {sa.support_description}</p>}
+            </div>
+          ))}
+
+          {/* Weekly summary */}
+          <div className="pt-2 border-t border-border">
+            <WeeklySupportSummary
+              studentIds={new Set((classFilter ? getClassStudents(classFilter) : activeStudents).map(s => s.id))}
+              students={classFilter ? getClassStudents(classFilter) : activeStudents}
+              staffMembers={staffMembers}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ===== RENDER STUDENTS PANEL =====
+  const renderStudentsPanel = (classFilter?: string) => {
+    if (!showStudentsPanel) return null;
+    const filteredStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
+    const filteredAbsent = classFilter ? getClassAbsent(classFilter) : todayAbsent;
+
+    return (
+      <div className="rounded-2xl overflow-hidden border bg-card animate-fade-in">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <Users className="h-4 w-4 text-primary" />
+            <span className="font-bold text-sm">תלמידים ({filteredStudents.length})</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
+              <DialogTrigger asChild>
+                <Button size="sm" variant="outline" className="gap-1 text-xs h-7"><UserPlus className="h-3 w-3" /> הוספה</Button>
+              </DialogTrigger>
+              <DialogContent dir="rtl" className="max-w-sm">
+                <DialogHeader><DialogTitle className="text-sm">הוספת תלמיד/ה</DialogTitle></DialogHeader>
+                <div className="space-y-3 pt-1">
+                  <Input placeholder="שם פרטי" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="h-10 text-sm" />
+                  <Input placeholder="שם משפחה" value={newLastName} onChange={e => setNewLastName(e.target.value)} className="h-10 text-sm" />
+                  <Select value={newClass} onValueChange={setNewClass}>
+                    <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י כיתה" /></SelectTrigger>
+                    <SelectContent>{CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}</SelectContent>
+                  </Select>
+                  <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">{addingStudent ? 'מוסיף...' : 'הוספה'}</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowStudentsPanel(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm" dir="rtl">
+            <thead>
+              <tr className="border-b border-border bg-muted/30">
+                <th className="text-right p-2.5 text-xs font-semibold text-muted-foreground">שם</th>
+                <th className="text-center p-2.5 text-xs font-semibold text-muted-foreground">כיתה</th>
+                <th className="text-center p-2.5 text-xs font-semibold text-muted-foreground">דיווחים</th>
+                <th className="text-center p-2.5 text-xs font-semibold text-muted-foreground">נוכחות</th>
+                <th className="text-center p-2.5 text-xs font-semibold text-muted-foreground">פעולות</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredStudents.map(s => {
+                const studentReports = reports.filter(r => r.student_id === s.id);
+                const isAbsentToday = filteredAbsent.some(a => a.student_id === s.id);
+                const hasAssignment = supportAssignments.some((sa: any) => sa.student_id === s.id);
+                return (
+                  <tr key={s.id} className="border-b border-border/50 hover:bg-muted/20 transition-colors">
+                    <td className="p-2.5">
+                      <button onClick={() => setSelectedStudent(s)} className="flex items-center gap-2 hover:text-primary transition-colors">
+                        <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
+                          {s.first_name.charAt(0)}
+                        </div>
+                        <div className="text-right">
+                          <span className="font-semibold text-sm block">{s.first_name} {s.last_name}</span>
+                          {hasAssignment && <span className="text-[9px] text-accent">● תמיכה</span>}
+                        </div>
+                      </button>
+                    </td>
+                    {!classFilter && <td className="text-center p-2.5 text-xs text-muted-foreground">{s.class_name}</td>}
+                    {classFilter && <td className="text-center p-2.5 text-xs text-muted-foreground">{s.class_name}</td>}
+                    <td className="text-center p-2.5">
+                      <span className="text-xs font-medium">{studentReports.length}</span>
+                    </td>
+                    <td className="text-center p-2.5">
+                      {isAbsentToday ? <XCircle className="h-4 w-4 text-destructive mx-auto" /> : <CheckCircle2 className="h-4 w-4 text-green-500 mx-auto" />}
+                    </td>
+                    <td className="text-center p-2.5">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <StudentScheduleManager student={s} schedule={studentSchedules.find((sc: any) => sc.student_id === s.id) || null} onSave={fetchAll} />
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="איפוס שאלון למידה"
+                          onClick={async () => {
+                            const { error } = await supabase.from('learning_style_profiles').delete().eq('student_id', s.id);
+                            if (!error || (error as any)?.code === 'PGRST116') toast.success(`שאלון ${s.first_name} אופס`);
+                          }}>
+                          <Brain className="h-3 w-3 text-primary" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="ייצוא PDF" onClick={() => handleExportStudentPedagogy(s, 'pdf')}>
+                          <BookOpen className="h-3 w-3 text-accent" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="ייצוא Excel" onClick={() => handleExportStudentPedagogy(s, 'excel')}>
+                          <FileSpreadsheet className="h-3 w-3 text-green-600" />
+                        </Button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  };
+
+  // ===== RENDER REPORTS PANEL (by student selection) =====
+  const renderReportsPanel = (classFilter?: string) => {
+    if (!showReportsPanel) return null;
+    const filteredStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
+    const selectedReports = reportSelectedStudentId
+      ? reports.filter(r => r.student_id === reportSelectedStudentId)
+      : [];
+
+    return (
+      <div className="rounded-2xl overflow-hidden border border-blue-500/20 bg-card animate-fade-in">
+        <div className="p-4 border-b border-border flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <FileText className="h-4 w-4 text-blue-500" />
+            <span className="font-bold text-sm">דיווחים</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button variant="outline" size="sm" className="gap-1 text-[10px] h-7" onClick={() => {
+              const classStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
+              const classIds = new Set(classStudents.map(s => s.id));
+              exportReportsToExcel({
+                reports: reports.filter(r => classIds.has(r.student_id)), students: classStudents,
+                alerts: alerts.filter(a => classIds.has(a.student_id)),
+                events, dailyAttendance: dailyAttendance.filter(a => classIds.has(a.student_id)),
+                supportSessions: supportSessions.filter((ss: any) => classIds.has(ss.student_id)),
+                supportAssignments: supportAssignments.filter((sa: any) => classIds.has(sa.student_id)),
+              });
+              toast.success('קובץ אקסל הורד');
+            }}>
+              <Download className="h-3 w-3" /> אקסל
+            </Button>
+            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowReportsPanel(false)}>
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        <div className="p-3 space-y-3">
+          {/* Student selector */}
+          <Select value={reportSelectedStudentId || ''} onValueChange={setReportSelectedStudentId}>
+            <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר/י תלמיד לצפייה בדיווחים" /></SelectTrigger>
+            <SelectContent>
+              {filteredStudents.map(s => (
+                <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+
+          {reportSelectedStudentId && selectedReports.length === 0 && (
+            <p className="text-center text-muted-foreground text-xs py-4">אין דיווחים לתלמיד זה</p>
+          )}
+
+          {selectedReports.length > 0 && (
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {selectedReports.slice(0, 30).map(r => (
+                <div key={r.id} className="p-2.5 rounded-xl border bg-card">
+                  <div className="flex justify-between items-start mb-1.5">
+                    <p className="text-xs font-medium">{r.lesson_subject}</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">{new Date(r.report_date).toLocaleDateString('he-IL')}</span>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditReport(r)}><Pencil className="h-3 w-3 text-muted-foreground" /></Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                      {r.attendance === 'full' && <CheckCircle2 className="h-2.5 w-2.5 ml-0.5" />}
+                      {r.attendance === 'partial' && <Clock className="h-2.5 w-2.5 ml-0.5" />}
+                      {r.attendance === 'absent' && <XCircle className="h-2.5 w-2.5 ml-0.5" />}
+                      {ATTENDANCE_LABELS[r.attendance]}
+                    </Badge>
+                    {r.behavior_types?.map(b => <Badge key={b} variant={b === 'violent' ? 'destructive' : 'outline'} className="text-[10px] px-1.5 py-0">{BEHAVIOR_LABELS[b]}</Badge>)}
+                    {r.participation?.map(p => <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>)}
+                  </div>
+                  {r.comment && <p className="text-[10px] text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2 py-1">{r.comment}</p>}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // ===== RENDER REFLECTIONS (class views only) =====
+  const renderReflections = (classFilter: string) => {
+    const classStudents = getClassStudents(classFilter);
+    const studentIdsWithReflections = [...new Set(dailyReflections.map(r => r.student_id).filter(Boolean))].filter(id => classStudents.some(s => s.id === id));
+    if (studentIdsWithReflections.length === 0) return null;
+
+    return (
+      <div className="rounded-2xl border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <MessageSquare className="h-4 w-4 text-primary" />
+          <span className="font-bold text-sm">תובנות והערכה עצמית</span>
+        </div>
+        {studentIdsWithReflections.map(studentId => {
+          const mode = reflectionSummaryMode[studentId] || 'week';
+          const summary = computeReflectionSummary(studentId, mode, reflectionCustomFrom[studentId], reflectionCustomTo[studentId]);
+          const isVisible = reflectionVisibility[studentId] !== false;
+          const sInsights = studentInsights.filter(i => i.student_id === studentId);
+          return (
+            <div key={studentId} className="border border-border/50 rounded-xl overflow-hidden">
+              <div className="bg-muted/30 p-3 flex items-center justify-between">
+                <span className="text-sm font-bold">{studentName(studentId)}</span>
+                <button onClick={() => setReflectionVisibility(prev => ({ ...prev, [studentId]: !isVisible }))}
+                  className={`text-[10px] px-2 py-1 rounded-full border ${isVisible ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-muted border-border text-muted-foreground'}`}>
+                  {isVisible ? '👁 גלוי בתעודה' : '🔒 נסתר'}
+                </button>
+              </div>
+              <div className="px-3 pt-2 flex flex-wrap gap-1.5">
+                {['week', 'month', 'year', 'custom'].map(m => (
+                  <button key={m} onClick={() => setReflectionSummaryMode(prev => ({ ...prev, [studentId]: m }))}
+                    className={`text-[10px] px-2 py-1 rounded-full border ${mode === m ? 'bg-primary text-primary-foreground border-primary' : 'bg-background border-border hover:bg-muted'}`}>
+                    {{ week: 'שבועי', month: 'חודשי', year: 'שנתי', custom: 'מותאם' }[m]}
+                  </button>
+                ))}
+              </div>
+              {mode === 'custom' && (
+                <div className="px-3 pt-2 flex items-center gap-2">
+                  <input type="date" value={reflectionCustomFrom[studentId] || ''} onChange={e => setReflectionCustomFrom(prev => ({ ...prev, [studentId]: e.target.value }))} className="text-xs border rounded-lg px-2 py-1 bg-background" />
+                  <span className="text-xs text-muted-foreground">עד</span>
+                  <input type="date" value={reflectionCustomTo[studentId] || ''} onChange={e => setReflectionCustomTo(prev => ({ ...prev, [studentId]: e.target.value }))} className="text-xs border rounded-lg px-2 py-1 bg-background" />
+                </div>
+              )}
+              {summary ? (
+                <div className="px-3 py-3 space-y-2">
+                  <p className="text-[10px] text-muted-foreground">{summary.count} דיווחים ({summary.from.toLocaleDateString('he-IL')} - {summary.to.toLocaleDateString('he-IL')})</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {Object.entries(REFLECTION_LABELS).map(([key, label]) => {
+                      const avg = summary.averages[key as keyof typeof summary.averages];
+                      const starLabel = REFLECTION_STAR_LABELS[key]?.[Math.round(avg) - 1] || '';
+                      return (
+                        <div key={key} className="bg-background/60 rounded-xl p-2 space-y-0.5">
+                          <span className="text-[10px] text-muted-foreground block">{label}</span>
+                          <div className="flex items-center gap-1">{renderStars(avg)}<span className="text-xs font-bold">{avg}</span></div>
+                          <span className="text-[9px] text-muted-foreground/70">{starLabel}</span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ) : <p className="text-xs text-muted-foreground text-center px-3 py-3">אין דיווחים בטווח שנבחר</p>}
+              {sInsights.length > 0 && (
+                <details className="px-3 pb-3">
+                  <summary className="text-[10px] text-primary cursor-pointer hover:underline mb-2">תובנות ({sInsights.length})</summary>
+                  <div className="space-y-1.5 max-h-40 overflow-y-auto">
+                    {sInsights.slice(0, 10).map((ins: any) => (
+                      <div key={ins.id} className="bg-muted/40 rounded-lg p-2">
+                        <span className="text-[10px] text-muted-foreground">{new Date(ins.created_at).toLocaleDateString('he-IL')}</span>
+                        <p className="text-xs text-foreground/80">{ins.content}</p>
+                      </div>
+                    ))}
+                  </div>
+                </details>
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ===== RENDER LONG ABSENT =====
+  const renderLongAbsent = (classFilter?: string) => {
+    const filtered = classFilter
+      ? longAbsentStudents.filter(la => la.student.class_name === classFilter)
+      : longAbsentStudents;
+    if (filtered.length === 0) return null;
+
+    return (
+      <div className="rounded-2xl overflow-hidden border-2 border-amber-500/30 bg-card p-4 space-y-2">
+        <div className="flex items-center gap-2 mb-1">
+          <AlertTriangle className="h-4 w-4 text-amber-600" />
+          <span className="font-bold text-sm text-amber-700">תלמידים שלא מגיעים ({filtered.length})</span>
+        </div>
+        <p className="text-xs text-muted-foreground mb-2">5+ ימי היעדרות רצופים</p>
+        {filtered.map(({ student, consecutiveDays, reason }) => {
+          const followup = longAbsentFollowups.get(student.id);
+          return (
+            <div key={student.id} className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3 space-y-1.5">
+              <div className="flex items-center justify-between">
+                <button onClick={() => setSelectedStudent(student)} className="font-semibold text-sm hover:text-primary transition-colors">{student.first_name} {student.last_name}</button>
+                <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">{consecutiveDays} ימים — {reason}</Badge>
+              </div>
+              <div className="flex gap-3 text-xs">
+                <span className="flex items-center gap-1">{followup?.phone_contact ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />} טלפון</span>
+                <span className="flex items-center gap-1">{followup?.home_visit ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />} ביקור בית</span>
+                <span className="flex items-center gap-1">{followup?.materials_sent ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />} חומרים</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // ===== RENDER AI MONTHLY REPORT =====
+  const renderMonthlyReport = (classFilter?: string) => {
+    const filteredStudents = classFilter ? getClassStudents(classFilter) : activeStudents;
+    return (
+      <div className="rounded-2xl border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <Sparkles className="h-4 w-4 text-primary" />
+          <span className="font-bold text-sm">דוח חודשי AI</span>
+        </div>
+        <div className="flex gap-2">
+          <Button onClick={() => generateMonthlyReport(null)} disabled={generatingReport} size="sm" className="gap-1.5 flex-1">
+            {generatingReport && !reportStudentId ? <><div className="w-3 h-3 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> מפיק...</> : <><Sparkles className="h-3.5 w-3.5" /> כלל התלמידים</>}
+          </Button>
+        </div>
+        <div className="flex flex-wrap gap-1">
+          {filteredStudents.map(s => (
+            <button key={s.id} onClick={() => generateMonthlyReport(s.id)} disabled={generatingReport}
+              className="text-[10px] py-1 px-2 rounded-md border border-border bg-card hover:bg-primary/10 transition-colors disabled:opacity-50">
+              {s.first_name} {s.last_name}
+            </button>
+          ))}
+        </div>
+        {generatingReport && <div className="flex items-center justify-center py-4"><div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" /><span className="text-xs text-muted-foreground mr-2">מפיק...</span></div>}
+        {monthlyReport && (
+          <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-semibold text-primary">{reportStudentId ? studentName(reportStudentId) : 'כלל התלמידים'}</p>
+              <Button onClick={shareMonthlyReport} size="sm" variant="default" className="gap-1 h-7 text-[10px] bg-[#25D366] hover:bg-[#1da851] text-white">שיתוף</Button>
+            </div>
+            <p className="text-xs whitespace-pre-wrap leading-relaxed">{monthlyReport}</p>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  // ===== RENDER SETTINGS =====
+  const renderSettings = () => (
+    <div className="space-y-3">
+      <div className="rounded-2xl border bg-card p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <Key className="h-4 w-4 text-primary" />
+          <span className="font-bold text-sm">ניהול קודים</span>
+        </div>
+        <CodesManager students={students} onRefresh={fetchAll} />
+      </div>
+
+      <div className="rounded-2xl border bg-card p-4">
+        <div className="flex items-center gap-2 mb-3">
+          <GraduationCap className="h-4 w-4 text-primary" />
+          <span className="font-bold text-sm">ניהול מקצועות</span>
+        </div>
+        <SubjectManager />
+      </div>
+
+      <div className="rounded-2xl border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <UserCog className="h-4 w-4 text-primary" />
+          <span className="font-bold text-sm">אנשי צוות ({staffMembers.length})</span>
+        </div>
+        <div className="flex gap-2">
+          <Input placeholder="שם איש צוות" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
+            onKeyDown={e => { if (e.key === 'Enter') handleAddStaff(); }} className="h-9 text-sm flex-1" />
+          <Button size="sm" onClick={handleAddStaff} disabled={addingStaff} className="gap-1 h-9"><Plus className="h-3.5 w-3.5" /> הוסף</Button>
+        </div>
+        {staffMembers.map(sm => (
+          <div key={sm.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
+            <span className="text-sm font-medium">{sm.name}</span>
+            <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDeleteStaff(sm.id)}><X className="h-3.5 w-3.5" /></Button>
+          </div>
+        ))}
+      </div>
+
+      <div className="rounded-2xl border bg-card p-4">
+        <SmsReminderSection />
+      </div>
+
+      {/* Report Cards */}
+      <div className="rounded-2xl border bg-card p-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <GraduationCap className="h-4 w-4 text-primary" />
+          <span className="font-bold text-sm">הפקת תעודות</span>
+        </div>
+        <div className="grid grid-cols-4 gap-1 mb-3">
+          {[{ value: 'semester_a', label: 'סמסטר א׳' }, { value: 'semester_b', label: 'סמסטר ב׳' }, { value: 'summer', label: 'קיץ' }, { value: 'all', label: 'שנתי' }].map(opt => (
+            <button key={opt.value} onClick={() => setReportCardSemester(opt.value)}
+              className={`text-[10px] py-1.5 px-1 rounded-md border font-semibold transition-all ${reportCardSemester === opt.value ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-primary/10'}`}>
+              {opt.label}
+            </button>
+          ))}
+        </div>
+        {CLASS_OPTIONS.map(cls => {
+          const classStudents = activeStudents.filter(s => s.class_name === cls);
+          return (
+            <div key={cls} className="space-y-1">
+              <p className="text-xs font-bold text-muted-foreground">כיתת {cls}</p>
+              {classStudents.map(s => {
+                const isVisible = reflectionVisibility[s.id] !== false;
+                const hasReflections = dailyReflections.some(r => r.student_id === s.id);
+                return (
+                  <div key={s.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
+                    <span className="text-xs font-medium">{s.first_name} {s.last_name}</span>
+                    <div className="flex items-center gap-2">
+                      {hasReflections && isVisible && <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">📊 הערכה</span>}
+                      <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-[10px]" disabled={generatingCard === s.id} onClick={() => handleGenerateReportCard(s)}>
+                        {generatingCard === s.id ? <div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" /> : <GraduationCap className="h-3.5 w-3.5" />}
+                        הפק
+                      </Button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        })}
+      </div>
+
+      {/* Excel export */}
+      {CLASS_OPTIONS.map(cls => (
+        <Button key={cls} variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={() => {
+          const classStudents = students.filter(s => s.class_name === cls);
+          const classIds = new Set(classStudents.map(s => s.id));
+          exportReportsToExcel({
+            reports: reports.filter(r => classIds.has(r.student_id)), students: classStudents,
+            alerts: alerts.filter(a => classIds.has(a.student_id)),
+            events: events.filter(ev => ev.people_involved && classStudents.some(s => ev.people_involved!.includes(s.first_name))),
+            dailyAttendance: dailyAttendance.filter(a => classIds.has(a.student_id)),
+            supportSessions: supportSessions.filter((ss: any) => classIds.has(ss.student_id)),
+            supportAssignments: supportAssignments.filter((sa: any) => classIds.has(sa.student_id)),
+          });
+          toast.success(`קובץ אקסל הורד — כיתת ${cls}`);
+        }}>
+          <Download className="h-3.5 w-3.5" /> הורד אקסל — כיתת {cls}
+        </Button>
+      ))}
+    </div>
+  );
+
+  // ===== RENDER CLASS VIEW =====
+  const renderClassView = (cls: string) => (
+    <div className="space-y-4">
+      {renderStatCards(cls)}
+      {renderEventsPanel()}
+      {renderSupportPanel(cls)}
+      {renderStudentsPanel(cls)}
+      {renderReportsPanel(cls)}
+      {renderLongAbsent(cls)}
+      {renderReflections(cls)}
+      {renderMonthlyReport(cls)}
+    </div>
+  );
+
+  // ===== RENDER MANAGEMENT VIEW =====
+  const renderManagementView = () => (
+    <div className="space-y-4">
+      {renderStatCards()}
+      {renderEventsPanel()}
+      {renderSupportPanel()}
+      {renderStudentsPanel()}
+      {renderReportsPanel()}
+      {renderLongAbsent()}
+      {renderMonthlyReport()}
+
+      {/* Settings toggle */}
+      <button onClick={() => setSettingsOpen(!settingsOpen)}
+        className="w-full flex items-center justify-between p-3 rounded-2xl border bg-card hover:bg-muted/30 transition-colors">
+        <div className="flex items-center gap-2">
+          <Settings className="h-4 w-4 text-muted-foreground" />
+          <span className="font-bold text-sm">הגדרות מערכת</span>
+        </div>
+        {settingsOpen ? <ChevronUp className="h-4 w-4 text-muted-foreground" /> : <ChevronDown className="h-4 w-4 text-muted-foreground" />}
+      </button>
+      {settingsOpen && renderSettings()}
+    </div>
+  );
+
+  // ===== MAIN RENDER =====
   return (
-    <div className="space-y-4 max-w-2xl mx-auto animate-fade-in">
+    <div className="space-y-4 max-w-2xl mx-auto animate-fade-in" dir="rtl">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -545,607 +1211,33 @@ export default function AdminDashboard() {
         </Button>
       </div>
 
-      {/* === 4 Stat Cards === */}
-      <div className="grid grid-cols-4 gap-2">
-        <button onClick={() => setActiveTab('students')} className={`card-styled rounded-xl p-3 text-center transition-all hover:shadow-md ${activeTab === 'students' ? 'ring-2 ring-primary' : ''}`}>
-          <div className="w-9 h-9 rounded-xl mx-auto mb-1.5 flex items-center justify-center bg-primary/10">
-            <Users className="h-4.5 w-4.5 text-primary" />
-          </div>
-          <p className="text-lg font-bold">{activeStudents.length}</p>
-          <p className="text-[10px] text-muted-foreground">תלמידים</p>
-        </button>
-
-        <button onClick={() => setActiveTab('reports')} className={`card-styled rounded-xl p-3 text-center transition-all hover:shadow-md ${activeTab === 'reports' ? 'ring-2 ring-primary' : ''}`}>
-          <div className="w-9 h-9 rounded-xl mx-auto mb-1.5 flex items-center justify-center bg-blue-500/10">
-            <FileText className="h-4.5 w-4.5 text-blue-500" />
-          </div>
-          <p className="text-lg font-bold">{todayReports.length}</p>
-          <p className="text-[10px] text-muted-foreground">דיווחים היום</p>
-        </button>
-
-        <button onClick={() => setShowEventsPanel(!showEventsPanel)} className={`card-styled rounded-xl p-3 text-center transition-all hover:shadow-md ${showEventsPanel ? 'ring-2 ring-destructive' : ''}`}>
-          <div className="w-9 h-9 rounded-xl mx-auto mb-1.5 flex items-center justify-center bg-destructive/10">
-            <ShieldAlert className="h-4.5 w-4.5 text-destructive" />
-          </div>
-          <p className="text-lg font-bold">{events.length}</p>
-          <p className="text-[10px] text-muted-foreground">אירועים חריגים</p>
-        </button>
-
-        <button onClick={() => setActiveTab('attendance')} className={`card-styled rounded-xl p-3 text-center transition-all hover:shadow-md ${activeTab === 'attendance' ? 'ring-2 ring-accent' : ''}`}>
-          <div className="w-9 h-9 rounded-xl mx-auto mb-1.5 flex items-center justify-center bg-accent/10">
-            <ClipboardCheck className="h-4.5 w-4.5 text-accent" />
-          </div>
-          <p className="text-lg font-bold">{todayAbsent.length > 0 ? todayAbsent.length : '✓'}</p>
-          <p className="text-[10px] text-muted-foreground">{todayAbsent.length > 0 ? 'חיסורים היום' : 'נוכחות מלאה'}</p>
-        </button>
+      {/* Main View Tabs */}
+      <div className="grid grid-cols-3 gap-1.5 p-1 rounded-2xl bg-muted/50 border">
+        {[
+          { key: 'management' as const, label: 'הנהלה', icon: Building2, color: 'text-primary' },
+          { key: 'tali' as const, label: 'כיתת טלי', icon: Users, color: 'text-emerald-600' },
+          { key: 'eden' as const, label: 'כיתת עדן', icon: Users, color: 'text-blue-600' },
+        ].map(tab => (
+          <button key={tab.key} onClick={() => {
+            setMainView(tab.key);
+            setShowEventsPanel(false); setShowSupportPanel(false); setShowStudentsPanel(false); setShowReportsPanel(false);
+            setReportSelectedStudentId(null);
+          }}
+            className={`flex items-center justify-center gap-1.5 py-2.5 px-2 rounded-xl text-xs font-bold transition-all ${
+              mainView === tab.key
+                ? 'bg-background shadow-sm border border-border'
+                : 'hover:bg-background/50'
+            }`}>
+            <tab.icon className={`h-4 w-4 ${mainView === tab.key ? tab.color : 'text-muted-foreground'}`} />
+            <span className={mainView === tab.key ? 'text-foreground' : 'text-muted-foreground'}>{tab.label}</span>
+          </button>
+        ))}
       </div>
 
-      {/* Events Panel (expandable) */}
-      {showEventsPanel && (
-        <div className="card-styled rounded-2xl overflow-hidden border-destructive/20 animate-fade-in">
-          <div className="p-4 border-b border-border flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <ShieldAlert className="h-4 w-4 text-destructive" />
-              <span className="font-bold text-sm">אירועים חריגים ({events.length})</span>
-            </div>
-            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setShowEventsPanel(false)}>
-              <X className="h-4 w-4" />
-            </Button>
-          </div>
-          <div className="p-3 space-y-2 max-h-[400px] overflow-y-auto">
-            {events.length === 0 ? (
-              <p className="text-center text-muted-foreground text-xs py-6">אין אירועים חריגים</p>
-            ) : events.map(ev => (
-              <div key={ev.id} className="p-3 rounded-xl border bg-card hover:shadow-sm transition-shadow">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <div>
-                    <Badge variant="destructive" className="text-[10px] px-2 py-0 mb-1">
-                      {INCIDENT_TYPE_LABELS[ev.incident_type] || ev.incident_type}
-                    </Badge>
-                    <p className="text-xs text-muted-foreground">
-                      {new Date(ev.created_at).toLocaleDateString('he-IL')} · {new Date(ev.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-                    </p>
-                  </div>
-                  <Button size="sm" variant="ghost" className="h-7 px-2 text-[10px] gap-1 text-primary" onClick={async () => {
-                    try {
-                      const eventData = {
-                        incidentType: ev.incident_type, description: ev.description,
-                        peopleInvolved: ev.people_involved || '', staffResponse: ev.staff_response || '',
-                        followupRequired: ev.followup_required, followupNotes: ev.followup_notes || '',
-                        date: new Date(ev.created_at).toLocaleDateString('he-IL'),
-                        time: new Date(ev.created_at).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' }),
-                      };
-                      const blob = await generateEventPdf(eventData);
-                      const fileName = `אירוע-חריג-${eventData.date}.pdf`;
-                      const file = new File([blob], fileName, { type: 'application/pdf' });
-                      if (navigator.share && navigator.canShare?.({ files: [file] })) { await navigator.share({ title: fileName, files: [file] }); }
-                      else { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); }
-                    } catch { toast.error('שגיאה בהפקת הדוח'); }
-                  }}>
-                    <Share2 className="h-3 w-3" /> שתף
-                  </Button>
-                </div>
-                <p className="text-xs leading-relaxed text-foreground/80 whitespace-pre-line">{ev.description}</p>
-                {ev.people_involved && <p className="text-[10px] text-muted-foreground mt-1.5">👥 {ev.people_involved}</p>}
-                {ev.staff_response && <p className="text-[10px] text-muted-foreground mt-1">🛡️ {ev.staff_response}</p>}
-                {ev.followup_required && <Badge variant="outline" className="text-[10px] mt-1.5 border-accent text-accent">נדרש מעקב</Badge>}
-              </div>
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* Long absent alert */}
-      {longAbsentStudents.length > 0 && (
-        <div className="card-styled rounded-2xl overflow-hidden border-2 border-amber-500/30 p-4 space-y-2">
-          <div className="flex items-center gap-2 mb-1">
-            <AlertTriangle className="h-4 w-4 text-amber-600" />
-            <span className="font-bold text-sm text-amber-700">תלמידים שלא מגיעים ({longAbsentStudents.length})</span>
-          </div>
-          <p className="text-xs text-muted-foreground mb-2">5+ ימי היעדרות רצופים</p>
-          {longAbsentStudents.map(({ student, consecutiveDays, reason }) => {
-            const followup = longAbsentFollowups.get(student.id);
-            return (
-              <div key={student.id} className="bg-amber-50 dark:bg-amber-950/20 rounded-xl p-3 space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <button onClick={() => setSelectedStudent(student)} className="font-semibold text-sm hover:text-primary transition-colors">{student.first_name} {student.last_name}</button>
-                  <Badge variant="outline" className="text-[10px] border-amber-400 text-amber-700">{consecutiveDays} ימים — {reason}</Badge>
-                </div>
-                <div className="flex gap-3 text-xs">
-                  <span className="flex items-center gap-1">{followup?.phone_contact ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />} טלפון</span>
-                  <span className="flex items-center gap-1">{followup?.home_visit ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />} ביקור בית</span>
-                  <span className="flex items-center gap-1">{followup?.materials_sent ? <CheckCircle2 className="h-3.5 w-3.5 text-green-600" /> : <XCircle className="h-3.5 w-3.5 text-muted-foreground" />} חומרים</span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      )}
-
-      {/* === Main Tabs === */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} dir="rtl">
-        <TabsList className="grid grid-cols-5 h-auto p-1 rounded-xl bg-muted/50">
-          {[
-            { value: 'overview', icon: BarChart3, label: 'סקירה' },
-            { value: 'students', icon: Users, label: 'תלמידים' },
-            { value: 'reports', icon: FileText, label: 'דיווחים' },
-            { value: 'attendance', icon: ClipboardCheck, label: 'ביקור' },
-            { value: 'settings', icon: Settings, label: 'ניהול' },
-          ].map(tab => (
-            <TabsTrigger key={tab.value} value={tab.value} className="flex flex-col items-center gap-0.5 py-2 px-1 text-[10px] rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-              <tab.icon className="h-4 w-4" />
-              <span>{tab.label}</span>
-            </TabsTrigger>
-          ))}
-        </TabsList>
-
-        {/* === OVERVIEW TAB === */}
-        <TabsContent value="overview" className="space-y-3 mt-3">
-          {/* Today's attendance summary */}
-          <div className="card-styled rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <ClipboardCheck className="h-4 w-4 text-primary" />
-              <span className="font-bold text-sm">ביקור היום — {new Date().toLocaleDateString('he-IL')}</span>
-            </div>
-            {todayAbsent.length === 0 ? (
-              <div className="text-center py-3">
-                <CheckCircle2 className="h-6 w-6 text-green-500 mx-auto mb-1" />
-                <p className="text-xs text-green-600 font-medium">כל התלמידים נוכחים!</p>
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                {CLASS_OPTIONS.map(cls => {
-                  const classAbsent = todayAbsent.filter(a => { const s = students.find(st => st.id === a.student_id); return s?.class_name === cls; });
-                  if (classAbsent.length === 0) return null;
-                  return (
-                    <div key={cls}>
-                      <p className="text-[10px] font-bold text-muted-foreground mb-1">כיתת {cls}</p>
-                      {classAbsent.map(a => {
-                        const s = students.find(st => st.id === a.student_id);
-                        if (!s) return null;
-                        return (
-                          <div key={a.id} className="flex items-center justify-between text-xs bg-destructive/5 rounded-lg px-3 py-1.5 mb-1">
-                            <button onClick={() => setSelectedStudent(s)} className="font-medium hover:text-primary">{s.first_name} {s.last_name}</button>
-                            <Badge variant="outline" className="text-[10px] px-2">{ABSENCE_REASON_LABELS[a.absence_reason] || 'לא צוינה'}</Badge>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-
-          {/* Weekly support summary */}
-          <div className="card-styled rounded-2xl p-4">
-            <WeeklySupportSummary
-              studentIds={new Set(activeStudents.map(s => s.id))}
-              students={activeStudents}
-              staffMembers={staffMembers}
-            />
-          </div>
-
-          {/* Monthly report */}
-          <div className="card-styled rounded-2xl p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <Sparkles className="h-4 w-4 text-primary" />
-              <span className="font-bold text-sm">דוח חודשי AI</span>
-            </div>
-            <div className="flex gap-2">
-              <Button onClick={() => generateMonthlyReport(null)} disabled={generatingReport} size="sm" className="gap-1.5 flex-1">
-                {generatingReport && !reportStudentId ? <><div className="w-3 h-3 rounded-full border-2 border-primary-foreground border-t-transparent animate-spin" /> מפיק...</> : <><Sparkles className="h-3.5 w-3.5" /> כלל התלמידים</>}
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-1">
-              {students.map(s => (
-                <button key={s.id} onClick={() => generateMonthlyReport(s.id)} disabled={generatingReport}
-                  className="text-[10px] py-1 px-2 rounded-md border border-border bg-card hover:bg-primary/10 transition-colors disabled:opacity-50">
-                  {s.first_name} {s.last_name}
-                </button>
-              ))}
-            </div>
-            {generatingReport && <div className="flex items-center justify-center py-4"><div className="w-6 h-6 rounded-full border-2 border-primary border-t-transparent animate-spin" /><span className="text-xs text-muted-foreground mr-2">מפיק...</span></div>}
-            {monthlyReport && (
-              <div className="rounded-xl border border-primary/20 bg-primary/5 p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                  <p className="text-xs font-semibold text-primary">{reportStudentId ? studentName(reportStudentId) : 'כלל התלמידים'}</p>
-                  <Button onClick={shareMonthlyReport} size="sm" variant="default" className="gap-1 h-7 text-[10px] bg-[#25D366] hover:bg-[#1da851] text-white">שיתוף</Button>
-                </div>
-                <p className="text-xs whitespace-pre-wrap leading-relaxed">{monthlyReport}</p>
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        {/* === STUDENTS TAB === */}
-        <TabsContent value="students" className="space-y-3 mt-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-sm">תלמידים ({activeStudents.length})</span>
-            <Dialog open={showAddStudent} onOpenChange={setShowAddStudent}>
-              <DialogTrigger asChild>
-                <Button size="sm" variant="outline" className="gap-1 text-xs h-8"><UserPlus className="h-3.5 w-3.5" /> הוספה</Button>
-              </DialogTrigger>
-              <DialogContent dir="rtl" className="max-w-sm">
-                <DialogHeader><DialogTitle className="text-sm">הוספת תלמיד/ה</DialogTitle></DialogHeader>
-                <div className="space-y-3 pt-1">
-                  <Input placeholder="שם פרטי" value={newFirstName} onChange={e => setNewFirstName(e.target.value)} className="h-10 text-sm" />
-                  <Input placeholder="שם משפחה" value={newLastName} onChange={e => setNewLastName(e.target.value)} className="h-10 text-sm" />
-                  <Select value={newClass} onValueChange={setNewClass}>
-                    <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י כיתה" /></SelectTrigger>
-                    <SelectContent>{CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}</SelectContent>
-                  </Select>
-                  <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">{addingStudent ? 'מוסיף...' : 'הוספה'}</Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-
-          {CLASS_OPTIONS.map(cls => {
-            const classStudents = activeStudents.filter(s => s.class_name === cls);
-            return (
-              <div key={cls} className="card-styled rounded-2xl overflow-hidden">
-                <div className="p-3 border-b border-border flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-primary/10">
-                    <Users className="h-4 w-4 text-primary" />
-                  </div>
-                  <span className="font-bold text-sm">כיתת {cls}</span>
-                  <Badge variant="secondary" className="text-xs">{classStudents.length}</Badge>
-                </div>
-                <div className="p-2 space-y-1">
-                  {classStudents.map(s => {
-                    const studentReports = reports.filter(r => r.student_id === s.id);
-                    const hasAssignment = supportAssignments.some((sa: any) => sa.student_id === s.id);
-                    return (
-                      <div key={s.id} className="group">
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            onClick={() => setSelectedStudent(s)}
-                            className="flex-1 text-right p-2.5 rounded-xl bg-secondary/30 border border-transparent hover:border-primary/30 hover:bg-primary/5 transition-all cursor-pointer"
-                          >
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary">
-                                  {s.first_name.charAt(0)}
-                                </div>
-                                <span className="font-semibold text-sm">{s.first_name} {s.last_name}</span>
-                              </div>
-                              <div className="flex items-center gap-1.5">
-                                {hasAssignment && <Badge variant="outline" className="text-[9px] px-1.5 py-0 border-accent text-accent">תמיכה</Badge>}
-                                <span className="text-[10px] text-muted-foreground">{studentReports.length} דיווחים</span>
-                                <Eye className="h-3.5 w-3.5 text-muted-foreground group-hover:text-primary transition-colors" />
-                              </div>
-                            </div>
-                          </button>
-                          {/* Action buttons */}
-                          <div className="flex flex-col gap-0.5">
-                            <StudentScheduleManager student={s} schedule={studentSchedules.find((sc: any) => sc.student_id === s.id) || null} onSave={fetchAll} />
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="איפוס שאלון למידה"
-                              onClick={async () => {
-                                const { error } = await supabase.from('learning_style_profiles').delete().eq('student_id', s.id);
-                                if (!error || (error as any)?.code === 'PGRST116') toast.success(`שאלון ${s.first_name} אופס`);
-                              }}>
-                              <Brain className="h-3 w-3 text-primary" />
-                            </Button>
-                          </div>
-                          <div className="flex flex-col gap-0.5">
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="ייצוא PDF" onClick={() => handleExportStudentPedagogy(s, 'pdf')}>
-                              <BookOpen className="h-3 w-3 text-accent" />
-                            </Button>
-                            <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="ייצוא Excel" onClick={() => handleExportStudentPedagogy(s, 'excel')}>
-                              <FileSpreadsheet className="h-3 w-3 text-green-600" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            );
-          })}
-
-          {/* Support Assignments */}
-          <div className="card-styled rounded-2xl p-4 space-y-3">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <HeartHandshake className="h-4 w-4 text-primary" />
-                <span className="font-bold text-sm">שיוך תמיכות ({supportAssignments.length})</span>
-              </div>
-              <Button size="sm" variant="outline" className="gap-1 text-xs h-8" onClick={() => { setAssignClassFilter(null); setShowAddAssignment(true); }}>
-                <Plus className="h-3.5 w-3.5" /> שיוך חדש
-              </Button>
-            </div>
-            {supportAssignments.length === 0 ? (
-              <p className="text-center text-muted-foreground text-xs py-4">אין שיוכי תמיכה</p>
-            ) : supportAssignments.map((sa: any) => (
-              <div key={sa.id} className="p-2.5 rounded-xl border bg-card">
-                <div className="flex justify-between items-start mb-1">
-                  <div>
-                    <button onClick={() => { const s = students.find(st => st.id === sa.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline">{studentName(sa.student_id)}</button>
-                    <p className="text-[10px] text-muted-foreground">מאמן: {sa.staff_members?.name || '—'}</p>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Badge variant="outline" className="text-[10px]">{sa.frequency === 'daily' ? 'יומי' : 'שבועי'}</Badge>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0 text-destructive" onClick={() => handleDeleteAssignment(sa.id)}><X className="h-3 w-3" /></Button>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  {(sa.support_types || []).map((t: string) => <Badge key={t} variant="secondary" className="text-[10px] px-1.5 py-0">{SUPPORT_LABELS[t] || t}</Badge>)}
-                </div>
-                {sa.support_description && <p className="text-[10px] text-foreground/80 mt-1">📝 {sa.support_description}</p>}
-              </div>
-            ))}
-          </div>
-        </TabsContent>
-
-        {/* === REPORTS TAB === */}
-        <TabsContent value="reports" className="space-y-3 mt-3">
-          <div className="flex items-center justify-between mb-1">
-            <span className="font-bold text-sm">דיווחים ({reports.length})</span>
-            <Button variant="outline" size="sm" className="gap-1 text-xs h-8" onClick={() => {
-              exportReportsToExcel({ reports, students, alerts, events, dailyAttendance, supportSessions, supportAssignments });
-              toast.success('קובץ אקסל הורד');
-            }}>
-              <Download className="h-3.5 w-3.5" /> אקסל
-            </Button>
-          </div>
-
-          {/* Reflections & Insights */}
-          {(() => {
-            const studentIdsWithReflections = [...new Set(dailyReflections.map(r => r.student_id).filter(Boolean))];
-            if (studentIdsWithReflections.length === 0) return null;
-            return (
-              <div className="card-styled rounded-2xl p-4 space-y-3">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="h-4 w-4 text-primary" />
-                  <span className="font-bold text-sm">תובנות והערכה עצמית</span>
-                </div>
-                {studentIdsWithReflections.map(studentId => {
-                  const mode = reflectionSummaryMode[studentId] || 'week';
-                  const summary = computeReflectionSummary(studentId, mode, reflectionCustomFrom[studentId], reflectionCustomTo[studentId]);
-                  const isVisible = reflectionVisibility[studentId] !== false;
-                  const sInsights = studentInsights.filter(i => i.student_id === studentId);
-                  return (
-                    <div key={studentId} className="border border-border/50 rounded-xl overflow-hidden">
-                      <div className="bg-muted/30 p-3 flex items-center justify-between">
-                        <span className="text-sm font-bold">{studentName(studentId)}</span>
-                        <button onClick={() => setReflectionVisibility(prev => ({ ...prev, [studentId]: !isVisible }))}
-                          className={`text-[10px] px-2 py-1 rounded-full border ${isVisible ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-muted border-border text-muted-foreground'}`}>
-                          {isVisible ? '👁 גלוי בתעודה' : '🔒 נסתר'}
-                        </button>
-                      </div>
-                      <div className="px-3 pt-2 flex flex-wrap gap-1.5">
-                        {['week', 'month', 'year', 'custom'].map(m => (
-                          <button key={m} onClick={() => setReflectionSummaryMode(prev => ({ ...prev, [studentId]: m }))}
-                            className={`text-[10px] px-2 py-1 rounded-full border ${mode === m ? 'bg-primary text-primary-foreground border-primary' : 'bg-background border-border hover:bg-muted'}`}>
-                            {{ week: 'שבועי', month: 'חודשי', year: 'שנתי', custom: 'מותאם' }[m]}
-                          </button>
-                        ))}
-                      </div>
-                      {mode === 'custom' && (
-                        <div className="px-3 pt-2 flex items-center gap-2">
-                          <input type="date" value={reflectionCustomFrom[studentId] || ''} onChange={e => setReflectionCustomFrom(prev => ({ ...prev, [studentId]: e.target.value }))} className="text-xs border rounded-lg px-2 py-1 bg-background" />
-                          <span className="text-xs text-muted-foreground">עד</span>
-                          <input type="date" value={reflectionCustomTo[studentId] || ''} onChange={e => setReflectionCustomTo(prev => ({ ...prev, [studentId]: e.target.value }))} className="text-xs border rounded-lg px-2 py-1 bg-background" />
-                        </div>
-                      )}
-                      {summary ? (
-                        <div className="px-3 py-3 space-y-2">
-                          <p className="text-[10px] text-muted-foreground">{summary.count} דיווחים ({summary.from.toLocaleDateString('he-IL')} - {summary.to.toLocaleDateString('he-IL')})</p>
-                          <div className="grid grid-cols-2 gap-2">
-                            {Object.entries(REFLECTION_LABELS).map(([key, label]) => {
-                              const avg = summary.averages[key as keyof typeof summary.averages];
-                              const starLabel = REFLECTION_STAR_LABELS[key]?.[Math.round(avg) - 1] || '';
-                              return (
-                                <div key={key} className="bg-background/60 rounded-xl p-2 space-y-0.5">
-                                  <span className="text-[10px] text-muted-foreground block">{label}</span>
-                                  <div className="flex items-center gap-1">{renderStars(avg)}<span className="text-xs font-bold">{avg}</span></div>
-                                  <span className="text-[9px] text-muted-foreground/70">{starLabel}</span>
-                                </div>
-                              );
-                            })}
-                          </div>
-                        </div>
-                      ) : <p className="text-xs text-muted-foreground text-center px-3 py-3">אין דיווחים בטווח שנבחר</p>}
-                      {sInsights.length > 0 && (
-                        <details className="px-3 pb-3">
-                          <summary className="text-[10px] text-primary cursor-pointer hover:underline mb-2">תובנות ({sInsights.length})</summary>
-                          <div className="space-y-1.5 max-h-40 overflow-y-auto">
-                            {sInsights.slice(0, 10).map((ins: any) => (
-                              <div key={ins.id} className="bg-muted/40 rounded-lg p-2">
-                                <span className="text-[10px] text-muted-foreground">{new Date(ins.created_at).toLocaleDateString('he-IL')}</span>
-                                <p className="text-xs text-foreground/80">{ins.content}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </details>
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-            );
-          })()}
-
-          {/* Recent Reports List */}
-          <div className="card-styled rounded-2xl p-4 space-y-2">
-            <span className="font-bold text-sm">דיווחים אחרונים</span>
-            {reports.slice(0, 20).map(r => (
-              <div key={r.id} className="p-2.5 rounded-xl border bg-card">
-                <div className="flex justify-between items-start mb-1.5">
-                  <div>
-                    <button onClick={() => { const s = students.find(st => st.id === r.student_id); if (s) setSelectedStudent(s); }} className="font-medium text-xs text-primary hover:underline">{studentName(r.student_id)}</button>
-                    <p className="text-[10px] text-muted-foreground">{r.lesson_subject}</p>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-muted-foreground">{new Date(r.report_date).toLocaleDateString('he-IL')}</span>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditReport(r)}><Pencil className="h-3 w-3 text-muted-foreground" /></Button>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                    {r.attendance === 'full' && <CheckCircle2 className="h-2.5 w-2.5 ml-0.5" />}
-                    {r.attendance === 'partial' && <Clock className="h-2.5 w-2.5 ml-0.5" />}
-                    {r.attendance === 'absent' && <XCircle className="h-2.5 w-2.5 ml-0.5" />}
-                    {ATTENDANCE_LABELS[r.attendance]}
-                  </Badge>
-                  {r.behavior_types?.map(b => <Badge key={b} variant={b === 'violent' ? 'destructive' : 'outline'} className="text-[10px] px-1.5 py-0">{BEHAVIOR_LABELS[b]}</Badge>)}
-                  {r.participation?.map(p => <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>)}
-                </div>
-                {r.comment && <p className="text-[10px] text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2 py-1">{r.comment}</p>}
-              </div>
-            ))}
-          </div>
-        </TabsContent>
-
-        {/* === ATTENDANCE TAB === */}
-        <TabsContent value="attendance" className="space-y-3 mt-3">
-          {/* Today */}
-          <div className="card-styled rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <ClipboardCheck className="h-4 w-4 text-primary" />
-              <span className="font-bold text-sm">ביקור סדיר — {new Date().toLocaleDateString('he-IL')}</span>
-              <Badge variant="secondary" className="text-xs">{activeStudents.length - todayAbsent.length}/{activeStudents.length} נוכחים</Badge>
-            </div>
-            {todayAbsent.length === 0 ? (
-              <div className="text-center py-4">
-                <CheckCircle2 className="h-8 w-8 text-green-500 mx-auto mb-2" />
-                <p className="text-sm text-green-600 font-medium">כולם נוכחים! 🎉</p>
-              </div>
-            ) : (
-              <div className="space-y-1.5">
-                {CLASS_OPTIONS.map(cls => {
-                  const classAbsent = todayAbsent.filter(a => { const s = students.find(st => st.id === a.student_id); return s?.class_name === cls; });
-                  if (classAbsent.length === 0) return null;
-                  return (
-                    <div key={cls}>
-                      <p className="text-[10px] font-bold text-muted-foreground mb-1">כיתת {cls}</p>
-                      {classAbsent.map(a => {
-                        const s = students.find(st => st.id === a.student_id);
-                        if (!s) return null;
-                        return (
-                          <div key={a.id} className="flex items-center justify-between text-xs bg-destructive/5 rounded-lg px-3 py-2 mb-1">
-                            <button onClick={() => setSelectedStudent(s)} className="font-medium hover:text-primary">{s.first_name} {s.last_name}</button>
-                            <div className="flex items-center gap-2">
-                              <Badge variant="outline" className="text-[10px]">{ABSENCE_REASON_LABELS[a.absence_reason] || 'לא צוינה'}</Badge>
-                              {a.other_reason_text && <span className="text-[10px] text-muted-foreground">{a.other_reason_text}</span>}
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  );
-                })}
-              </div>
-            )}
-          </div>
-        </TabsContent>
-
-        {/* === SETTINGS TAB === */}
-        <TabsContent value="settings" className="space-y-3 mt-3">
-          {/* Codes Manager */}
-          <div className="card-styled rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Key className="h-4 w-4 text-primary" />
-              <span className="font-bold text-sm">ניהול קודים</span>
-            </div>
-            <CodesManager students={students} onRefresh={fetchAll} />
-          </div>
-
-          {/* Subject Manager */}
-          <div className="card-styled rounded-2xl p-4">
-            <div className="flex items-center gap-2 mb-3">
-              <GraduationCap className="h-4 w-4 text-primary" />
-              <span className="font-bold text-sm">ניהול מקצועות</span>
-            </div>
-            <SubjectManager />
-          </div>
-
-          {/* Staff Management */}
-          <div className="card-styled rounded-2xl p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <UserCog className="h-4 w-4 text-primary" />
-              <span className="font-bold text-sm">אנשי צוות ({staffMembers.length})</span>
-            </div>
-            <div className="flex gap-2">
-              <Input placeholder="שם איש צוות" value={newStaffName} onChange={e => setNewStaffName(e.target.value)}
-                onKeyDown={e => { if (e.key === 'Enter') handleAddStaff(); }} className="h-9 text-sm flex-1" />
-              <Button size="sm" onClick={handleAddStaff} disabled={addingStaff} className="gap-1 h-9"><Plus className="h-3.5 w-3.5" /> הוסף</Button>
-            </div>
-            {staffMembers.map(sm => (
-              <div key={sm.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
-                <span className="text-sm font-medium">{sm.name}</span>
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDeleteStaff(sm.id)}><X className="h-3.5 w-3.5" /></Button>
-              </div>
-            ))}
-          </div>
-
-          {/* SMS */}
-          <div className="card-styled rounded-2xl p-4">
-            <SmsReminderSection />
-          </div>
-
-          {/* Report Cards */}
-          <div className="card-styled rounded-2xl p-4 space-y-3">
-            <div className="flex items-center gap-2">
-              <GraduationCap className="h-4 w-4 text-primary" />
-              <span className="font-bold text-sm">הפקת תעודות</span>
-            </div>
-            <div className="grid grid-cols-4 gap-1 mb-3">
-              {[{ value: 'semester_a', label: 'סמסטר א׳' }, { value: 'semester_b', label: 'סמסטר ב׳' }, { value: 'summer', label: 'קיץ' }, { value: 'all', label: 'שנתי' }].map(opt => (
-                <button key={opt.value} onClick={() => setReportCardSemester(opt.value)}
-                  className={`text-[10px] py-1.5 px-1 rounded-md border font-semibold transition-all ${reportCardSemester === opt.value ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-primary/10'}`}>
-                  {opt.label}
-                </button>
-              ))}
-            </div>
-            {CLASS_OPTIONS.map(cls => {
-              const classStudents = activeStudents.filter(s => s.class_name === cls);
-              return (
-                <div key={cls} className="space-y-1">
-                  <p className="text-xs font-bold text-muted-foreground">כיתת {cls}</p>
-                  {classStudents.map(s => {
-                    const isVisible = reflectionVisibility[s.id] !== false;
-                    const hasReflections = dailyReflections.some(r => r.student_id === s.id);
-                    return (
-                      <div key={s.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
-                        <span className="text-xs font-medium">{s.first_name} {s.last_name}</span>
-                        <div className="flex items-center gap-2">
-                          {hasReflections && isVisible && <span className="text-[9px] text-primary bg-primary/10 px-1.5 py-0.5 rounded-full">📊 הערכה</span>}
-                          <Button size="sm" variant="outline" className="h-7 px-2 gap-1 text-[10px]" disabled={generatingCard === s.id} onClick={() => handleGenerateReportCard(s)}>
-                            {generatingCard === s.id ? <div className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" /> : <GraduationCap className="h-3.5 w-3.5" />}
-                            הפק
-                          </Button>
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              );
-            })}
-          </div>
-
-          {/* Excel export */}
-          {CLASS_OPTIONS.map(cls => (
-            <Button key={cls} variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={() => {
-              const classStudents = students.filter(s => s.class_name === cls);
-              const classIds = new Set(classStudents.map(s => s.id));
-              exportReportsToExcel({
-                reports: reports.filter(r => classIds.has(r.student_id)), students: classStudents,
-                alerts: alerts.filter(a => classIds.has(a.student_id)),
-                events: events.filter(ev => ev.people_involved && classStudents.some(s => ev.people_involved!.includes(s.first_name))),
-                dailyAttendance: dailyAttendance.filter(a => classIds.has(a.student_id)),
-                supportSessions: supportSessions.filter((ss: any) => classIds.has(ss.student_id)),
-                supportAssignments: supportAssignments.filter((sa: any) => classIds.has(sa.student_id)),
-              });
-              toast.success(`קובץ אקסל הורד — כיתת ${cls}`);
-            }}>
-              <Download className="h-3.5 w-3.5" /> הורד אקסל — כיתת {cls}
-            </Button>
-          ))}
-        </TabsContent>
-      </Tabs>
+      {/* View Content */}
+      {mainView === 'management' && renderManagementView()}
+      {mainView === 'tali' && renderClassView('טלי')}
+      {mainView === 'eden' && renderClassView('עדן')}
 
       {/* === DIALOGS === */}
 
