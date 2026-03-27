@@ -10,7 +10,7 @@ import PedagogyForm from '@/components/PedagogyForm';
 import StudentDashboard from '@/components/StudentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
 import { Button } from '@/components/ui/button';
-import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, Leaf, BookOpen, ChevronLeft } from 'lucide-react';
+import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen, ChevronLeft } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 type StaffPanel = 'attendance' | 'report' | 'pedagogy' | 'grades' | 'support' | 'event' | null;
