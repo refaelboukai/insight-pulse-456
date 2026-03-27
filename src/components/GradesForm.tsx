@@ -349,7 +349,7 @@ export default function GradesForm() {
         <div className="text-center mb-2">
           <GraduationCap className="h-6 w-6 mx-auto text-primary mb-1" />
           <h3 className="font-bold text-sm">ציונים והערכות</h3>
-          <p className="text-xs text-muted-foreground">בחר/י תלמיד/ה להזנת ציון והערכה</p>
+          <p className="text-xs text-muted-foreground">בחירת תלמיד/ה להזנת ציון והערכה</p>
         </div>
         <div className="flex justify-center">
           <Select value={selectedYear} onValueChange={setSelectedYear}>
