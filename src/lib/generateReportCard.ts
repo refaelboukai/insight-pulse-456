@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import logoSrc from '@/assets/logo.jpeg';
 import principalSigSrc from '@/assets/principal-signature.jpeg';
+import { g, type Gender } from '@/lib/genderUtils';
 
 interface GradeEntry {
   subject: string;
