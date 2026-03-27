@@ -13,7 +13,7 @@ import LearningStyleQuestionnaire from '@/components/LearningStyleQuestionnaire'
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, ChevronLeft, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile, Star } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, ChevronLeft, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile, Star, Pin, PinOff } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -52,6 +52,19 @@ export default function StudentDashboard() {
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [pinnedPanels, setPinnedPanels] = useState<Set<string>>(() => {
+    const saved = localStorage.getItem('student-pinned-panels');
+    return saved ? new Set(JSON.parse(saved)) : new Set();
+  });
+
+  const togglePin = (key: string) => {
+    setPinnedPanels(prev => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      localStorage.setItem('student-pinned-panels', JSON.stringify([...next]));
+      return next;
+    });
+  };
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
     reports: true, grades: false, support: false, pedagogy: false, exams: false, learningStyle: false,
   });
@@ -588,13 +601,21 @@ export default function StudentDashboard() {
       exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
     };
     const currentCard = studentCards.find(c => c.key === activePanel);
+    const isPinned = pinnedPanels.has(activePanel);
     return (
       <div className="space-y-2 max-w-2xl mx-auto animate-fade-in">
         {renderBackButton()}
-        <h3 className="text-sm font-bold flex items-center gap-2">
-          {currentCard && <currentCard.icon className={`h-4 w-4 ${currentCard.iconColor}`} />}
-          {panelLabels[activePanel] || activePanel}
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="text-sm font-bold flex items-center gap-2">
+            {currentCard && <currentCard.icon className={`h-4 w-4 ${currentCard.iconColor}`} />}
+            {panelLabels[activePanel] || activePanel}
+          </h3>
+          <button onClick={() => togglePin(activePanel)}
+            className={`flex items-center gap-1 text-xs px-2.5 py-1.5 rounded-lg border transition-all ${isPinned ? 'bg-primary/10 border-primary/30 text-primary' : 'bg-muted/50 border-border text-muted-foreground hover:text-foreground'}`}>
+            {isPinned ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+            {isPinned ? 'בטל נעיצה' : 'נעץ למסך הראשי'}
+          </button>
+        </div>
         <div className="rounded-2xl border bg-card p-4">{panelContent[activePanel]}</div>
       </div>
     );
@@ -640,14 +661,20 @@ export default function StudentDashboard() {
 
       {/* Learning Style Questionnaire */}
       {showLearningStyle && !learningStyleCompleted && (
-        <LearningStyleQuestionnaire studentId={selectedStudentId} gender={gender} onComplete={() => { setLearningStyleCompleted(true); setShowLearningStyle(false); }} />
+        <div className="space-y-2">
+          <div className="flex items-center gap-2 rounded-xl bg-destructive/10 border border-destructive/30 px-3 py-2">
+            <span className="text-destructive text-xs font-bold">⚠️ שאלון זה ייעלם ממסך הכניסה לאחר המילוי — ניתן למלא פעם אחת בלבד.</span>
+          </div>
+          <LearningStyleQuestionnaire studentId={selectedStudentId} gender={gender} onComplete={() => { setLearningStyleCompleted(true); setShowLearningStyle(false); }} />
+        </div>
       )}
 
       {/* Card Grid */}
       <div className="grid grid-cols-3 gap-2.5">
         {studentCards.map(card => (
           <button key={card.key} onClick={() => setActivePanel(card.key)}
-            className="rounded-2xl p-4 text-center border bg-card hover:shadow-md hover:border-primary/20 transition-all cursor-pointer active:scale-[0.97]">
+            className={`relative rounded-2xl p-4 text-center border bg-card hover:shadow-md hover:border-primary/20 transition-all cursor-pointer active:scale-[0.97] ${pinnedPanels.has(card.key) ? 'ring-2 ring-primary/30' : ''}`}>
+            {pinnedPanels.has(card.key) && <Pin className="absolute top-2 left-2 h-3 w-3 text-primary/50" />}
             <div className={`w-12 h-12 rounded-xl mx-auto mb-2 flex items-center justify-center ${card.iconBg}`}>
               <card.icon className={`h-6 w-6 ${card.iconColor}`} />
             </div>
@@ -656,6 +683,42 @@ export default function StudentDashboard() {
           </button>
         ))}
       </div>
+
+      {/* Pinned panels */}
+      {pinnedPanels.size > 0 && (() => {
+        const pinnedRenderers: Record<string, () => React.ReactNode> = {
+          reminders: renderRemindersPanel, reflection: renderReflectionPanel,
+          insights: renderInsightsPanel, reports: renderReportsPanel,
+          grades: renderGradesPanel, pedagogy: renderPedagogyPanel,
+          exams: renderExamsPanel, support: renderSupportPanel,
+          schedule: renderSchedulePanel,
+        };
+        const pinnedLabels: Record<string, string> = {
+          reminders: 'תזכורות להיום', reflection: 'היום שלי', insights: 'תובנות שלי על היום',
+          reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
+          exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
+        };
+        return [...pinnedPanels].map(key => {
+          const card = studentCards.find(c => c.key === key);
+          if (!card || !pinnedRenderers[key]) return null;
+          return (
+            <div key={key} className="rounded-2xl border bg-card p-4 space-y-3 animate-fade-in">
+              <div className="flex items-center justify-between">
+                <h3 className="text-sm font-bold flex items-center gap-2">
+                  <card.icon className={`h-4 w-4 ${card.iconColor}`} />
+                  {pinnedLabels[key]}
+                </h3>
+                <button onClick={() => togglePin(key)}
+                  className="flex items-center gap-1 text-xs px-2 py-1 rounded-lg bg-primary/10 border border-primary/30 text-primary hover:bg-primary/20 transition-colors">
+                  <PinOff className="h-3 w-3" />
+                  בטל נעיצה
+                </button>
+              </div>
+              {pinnedRenderers[key]()}
+            </div>
+          );
+        });
+      })()}
     </div>
   );
 }
