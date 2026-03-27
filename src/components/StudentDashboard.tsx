@@ -17,6 +17,7 @@ import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, Loader
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
+import { g, genderTerms } from '@/lib/genderUtils';
 
 type Student = Database['public']['Tables']['students']['Row'];
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
