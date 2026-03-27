@@ -231,7 +231,7 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
   };
 
   const handleSubmit = async () => {
-    if (Object.keys(responses).length < QUESTIONS.length) {
+    if (Object.keys(responses).length < QUESTIONS_MALE.length) {
       toast.error('יש לענות על כל השאלות');
       return;
     }
