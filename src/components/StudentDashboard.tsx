@@ -218,7 +218,7 @@ export default function StudentDashboard() {
       <div className="space-y-4 max-w-2xl mx-auto animate-fade-in">
         <div className="text-center py-12">
           <p className="text-muted-foreground text-sm">לא נמצא תלמיד משויך לחשבון שלך.</p>
-          <p className="text-muted-foreground text-xs mt-1">פנה/י למנהל המערכת.</p>
+          <p className="text-muted-foreground text-xs mt-1">{g(null, 'פנה', 'פני')} למנהל המערכת.</p>
         </div>
       </div>
     );
