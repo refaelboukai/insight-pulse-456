@@ -14,7 +14,7 @@ import {
   SUBJECTS, ATTENDANCE_LABELS, BEHAVIOR_LABELS, VIOLENCE_LABELS,
   PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { AlertTriangle, Send, CheckCircle2, XCircle, Clock, UserPlus, RotateCcw } from 'lucide-react';
+import { AlertTriangle, Send, CheckCircle2, XCircle, Clock, UserPlus, RotateCcw, CalendarPlus, Users } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type Student = Database['public']['Tables']['students']['Row'];
@@ -22,6 +22,7 @@ type BehaviorType = Database['public']['Enums']['behavior_type'];
 type ViolenceType = Database['public']['Enums']['violence_type'];
 type AttendanceStatus = Database['public']['Enums']['attendance_status'];
 type ParticipationLevel = Database['public']['Enums']['participation_level'];
+type ManagedSubject = Database['public']['Tables']['managed_subjects']['Row'];
 
 const ATTENDANCE_ICONS: Record<string, typeof CheckCircle2> = {
   full: CheckCircle2,
@@ -48,13 +49,28 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
   const [reportedStudentIds, setReportedStudentIds] = useState<Set<string>>(new Set());
   const [lastClassName, setLastClassName] = useState<string | null>(null);
   const [showPostSubmitDialog, setShowPostSubmitDialog] = useState(false);
+
+  // Exam scheduling state
+  const [showExamSection, setShowExamSection] = useState(false);
+  const [examDate, setExamDate] = useState('');
+  const [examDescription, setExamDescription] = useState('');
+  const [managedSubjects, setManagedSubjects] = useState<ManagedSubject[]>([]);
+  const [savingExam, setSavingExam] = useState(false);
+
+  // Post-exam dialog: ask to add same exam for other students
+  const [showExamClassDialog, setShowExamClassDialog] = useState(false);
+  const [examClassStudents, setExamClassStudents] = useState<Student[]>([]);
+  const [selectedExamStudents, setSelectedExamStudents] = useState<Set<string>>(new Set());
+  const [pendingExamData, setPendingExamData] = useState<{ subjectId: string; date: string; description: string } | null>(null);
+
   useEffect(() => {
     supabase.from('students').select('*').eq('is_active', true).order('last_name')
       .then(({ data }) => { if (data) setStudents(data); });
+    supabase.from('managed_subjects').select('*').eq('is_active', true).order('name')
+      .then(({ data }) => { if (data) setManagedSubjects(data); });
   }, []);
 
   const toggleBehavior = (b: BehaviorType) => {
-    // Only allow one behavior selection
     setBehaviors(prev => prev.includes(b) ? [] : [b]);
     if (b !== 'violent') {
       setViolenceTypes([]);
@@ -83,6 +99,89 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
     setParticipations([]);
     setViolenceComment('');
     setBehaviorComment('');
+    setShowExamSection(false);
+    setExamDate('');
+    setExamDescription('');
+  };
+
+  // Find managed subject by name match
+  const findManagedSubject = (subjectName: string): ManagedSubject | undefined => {
+    return managedSubjects.find(ms => ms.name === subjectName);
+  };
+
+  const handleSaveExam = async () => {
+    if (!examDate || !subject || !studentId || !user) {
+      toast.error('נא למלא תאריך מבחן');
+      return;
+    }
+    const managedSubject = findManagedSubject(subject);
+    if (!managedSubject) {
+      toast.error('המקצוע לא נמצא במערכת - נא לפנות למנהל');
+      return;
+    }
+
+    setSavingExam(true);
+    const { error } = await supabase.from('exam_schedule').insert({
+      student_id: studentId,
+      subject_id: managedSubject.id,
+      exam_date: examDate,
+      exam_description: examDescription || null,
+      created_by: user.id,
+    });
+
+    if (error) {
+      toast.error('שגיאה בשמירת המבחן');
+      console.error(error);
+      setSavingExam(false);
+      return;
+    }
+
+    toast.success('מבחן נשמר בהצלחה!');
+
+    // Ask if they want to add the same exam for other students in the class
+    const currentStudent = students.find(s => s.id === studentId);
+    if (currentStudent?.class_name) {
+      const classmates = students.filter(
+        s => s.class_name === currentStudent.class_name && s.id !== studentId && !absentStudentIds.has(s.id)
+      );
+      if (classmates.length > 0) {
+        setExamClassStudents(classmates);
+        setSelectedExamStudents(new Set(classmates.map(s => s.id))); // Select all by default
+        setPendingExamData({ subjectId: managedSubject.id, date: examDate, description: examDescription });
+        setShowExamClassDialog(true);
+      }
+    }
+
+    setShowExamSection(false);
+    setExamDate('');
+    setExamDescription('');
+    setSavingExam(false);
+  };
+
+  const handleAddExamToClassmates = async () => {
+    if (!pendingExamData || !user || selectedExamStudents.size === 0) {
+      setShowExamClassDialog(false);
+      return;
+    }
+
+    const inserts = [...selectedExamStudents].map(sid => ({
+      student_id: sid,
+      subject_id: pendingExamData.subjectId,
+      exam_date: pendingExamData.date,
+      exam_description: pendingExamData.description || null,
+      created_by: user.id,
+    }));
+
+    const { error } = await supabase.from('exam_schedule').insert(inserts);
+    if (error) {
+      toast.error('שגיאה בשמירת מבחנים לתלמידים נוספים');
+      console.error(error);
+    } else {
+      toast.success(`מבחן נוסף ל-${selectedExamStudents.size} תלמידים נוספים!`);
+    }
+    setShowExamClassDialog(false);
+    setPendingExamData(null);
+    setSelectedExamStudents(new Set());
   };
 
   const handleSubmit = async () => {
@@ -131,7 +230,6 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
 
   const selectedStudent = students.find(s => s.id === studentId);
   const submittedStudent = useMemo(() => {
-    // Keep reference to the student that was just submitted (for dialog)
     return students.find(s => reportedStudentIds.has(s.id) && s.class_name);
   }, [reportedStudentIds, students]);
   const classes = [...new Set(students.map(s => s.class_name))].filter(Boolean);
@@ -140,7 +238,6 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
     ? [lastClassName, ...classes.filter(c => c !== lastClassName)]
     : classes;
 
-  // Find the next unreported student in the same class
   const getNextStudentInClass = () => {
     const currentStudent = students.find(s => s.id === studentId) || 
       [...reportedStudentIds].map(id => students.find(s => s.id === id)).filter(Boolean).pop();
@@ -154,7 +251,6 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
     setShowPostSubmitDialog(false);
     const lastStudentId = [...reportedStudentIds].pop();
     if (lastStudentId) {
-      // Remove from reported so they can report again for same student
       setReportedStudentIds(prev => {
         const next = new Set(prev);
         next.delete(lastStudentId);
@@ -179,6 +275,14 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
       setStudentId(next.id);
     }
     toast.success('הדיווח נשמר בהצלחה!');
+  };
+
+  const toggleExamStudent = (sid: string) => {
+    setSelectedExamStudents(prev => {
+      const next = new Set(prev);
+      if (next.has(sid)) next.delete(sid); else next.add(sid);
+      return next;
+    });
   };
 
   return (
@@ -260,6 +364,53 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
             </div>
           </div>
 
+          {/* Exam Scheduling Section */}
+          {subject && (
+            <div className="card-styled rounded-2xl p-3">
+              {!showExamSection ? (
+                <button
+                  onClick={() => setShowExamSection(true)}
+                  className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 font-medium transition-colors w-full justify-center py-1"
+                >
+                  <CalendarPlus className="h-4 w-4" />
+                  הוסף מבחן לתלמיד
+                </button>
+              ) : (
+                <div className="space-y-2 animate-scale-in">
+                  <div className="flex items-center justify-between">
+                    <p className="text-sm font-bold flex items-center gap-1.5">
+                      <CalendarPlus className="h-4 w-4 text-primary" />
+                      תזמון מבחן — {subject}
+                    </p>
+                    <button onClick={() => { setShowExamSection(false); setExamDate(''); setExamDescription(''); }} className="text-xs text-muted-foreground hover:text-foreground underline">
+                      ביטול
+                    </button>
+                  </div>
+                  <Input
+                    type="date"
+                    value={examDate}
+                    onChange={e => setExamDate(e.target.value)}
+                    className="text-sm rounded-lg"
+                  />
+                  <Input
+                    placeholder="תיאור המבחן (לא חובה)"
+                    value={examDescription}
+                    onChange={e => setExamDescription(e.target.value)}
+                    className="text-sm rounded-lg"
+                  />
+                  <Button
+                    onClick={handleSaveExam}
+                    disabled={savingExam || !examDate}
+                    size="sm"
+                    className="w-full rounded-lg text-xs btn-primary-gradient border-0"
+                  >
+                    {savingExam ? 'שומר...' : 'שמור מבחן'}
+                  </Button>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Step 3: Attendance */}
           <div className="card-styled rounded-2xl p-3">
             <p className="text-base font-bold mb-2">נוכחות</p>
@@ -303,7 +454,7 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
                     key={key}
                     onClick={() => setParticipations(prev => {
                       if (prev.includes(key)) return prev.filter(p => p !== key);
-                      if (prev.length >= 2) return prev; // max 2
+                      if (prev.length >= 2) return prev;
                       return [...prev, key];
                     })}
                     className={`text-sm py-2 px-3 rounded-full border transition-colors ${colorClass}`}
@@ -432,6 +583,73 @@ export default function ReportForm({ absentStudentIds = new Set() }: ReportFormP
               {getNextStudentInClass()
                 ? `דיווח ל${getNextStudentInClass()!.first_name} ${getNextStudentInClass()!.last_name}`
                 : 'תלמיד הבא מהכיתה'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Add exam to classmates dialog */}
+      <Dialog open={showExamClassDialog} onOpenChange={setShowExamClassDialog}>
+        <DialogContent className="max-w-sm rounded-2xl p-5" dir="rtl">
+          <DialogHeader>
+            <DialogTitle className="text-base font-bold flex items-center gap-2">
+              <Users className="h-5 w-5 text-primary" />
+              הוסף מבחן לתלמידים נוספים?
+            </DialogTitle>
+            <DialogDescription className="text-sm text-muted-foreground mt-1">
+              המבחן נשמר. האם להוסיף אותו גם לתלמידים אחרים באותה כיתה?
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-48 overflow-y-auto space-y-1 mt-2">
+            {examClassStudents.map(s => (
+              <label
+                key={s.id}
+                className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer text-sm transition-all ${
+                  selectedExamStudents.has(s.id)
+                    ? 'bg-primary/10 border-primary/30'
+                    : 'bg-card border-border'
+                }`}
+              >
+                <Checkbox
+                  checked={selectedExamStudents.has(s.id)}
+                  onCheckedChange={() => toggleExamStudent(s.id)}
+                  className="h-4 w-4"
+                />
+                {s.first_name} {s.last_name}
+              </label>
+            ))}
+          </div>
+          <div className="flex items-center justify-between mt-2">
+            <button
+              onClick={() => {
+                if (selectedExamStudents.size === examClassStudents.length) {
+                  setSelectedExamStudents(new Set());
+                } else {
+                  setSelectedExamStudents(new Set(examClassStudents.map(s => s.id)));
+                }
+              }}
+              className="text-xs text-primary underline"
+            >
+              {selectedExamStudents.size === examClassStudents.length ? 'בטל הכל' : 'בחר הכל'}
+            </button>
+            <Badge variant="secondary" className="text-xs">
+              {selectedExamStudents.size} נבחרו
+            </Badge>
+          </div>
+          <div className="flex gap-2 mt-3">
+            <Button
+              onClick={() => { setShowExamClassDialog(false); setPendingExamData(null); }}
+              variant="outline"
+              className="flex-1 rounded-lg text-sm"
+            >
+              דלג
+            </Button>
+            <Button
+              onClick={handleAddExamToClassmates}
+              disabled={selectedExamStudents.size === 0}
+              className="flex-1 rounded-lg text-sm btn-primary-gradient border-0"
+            >
+              הוסף ({selectedExamStudents.size})
             </Button>
           </div>
         </DialogContent>
