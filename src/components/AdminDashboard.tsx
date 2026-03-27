@@ -801,6 +801,8 @@ export default function AdminDashboard() {
                 {newClass === '__custom__' && (
                   <Input placeholder="שם הכיתה החדשה" value={customClassName} onChange={e => setCustomClassName(e.target.value)} className="h-10 text-sm" />
                 )}
+                <Input placeholder="שם האם (אופציונלי)" value={newMotherName} onChange={e => setNewMotherName(e.target.value)} className="h-10 text-sm" />
+                <Input placeholder="שם האב (אופציונלי)" value={newFatherName} onChange={e => setNewFatherName(e.target.value)} className="h-10 text-sm" />
                 <p className="text-[10px] text-muted-foreground">קוד תלמיד וקוד הורה ייוצרו אוטומטית</p>
                 <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">{addingStudent ? 'מוסיף...' : 'הוספה'}</Button>
               </div>
