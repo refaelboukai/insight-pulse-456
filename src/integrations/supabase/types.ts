@@ -380,6 +380,7 @@ export type Database = {
           people_involved: string | null
           reported_by: string
           staff_response: string | null
+          violence_subtypes: string[] | null
         }
         Insert: {
           created_at?: string
@@ -391,6 +392,7 @@ export type Database = {
           people_involved?: string | null
           reported_by: string
           staff_response?: string | null
+          violence_subtypes?: string[] | null
         }
         Update: {
           created_at?: string
@@ -402,6 +404,7 @@ export type Database = {
           people_involved?: string | null
           reported_by?: string
           staff_response?: string | null
+          violence_subtypes?: string[] | null
         }
         Relationships: []
       }
@@ -1154,7 +1157,14 @@ export type Database = {
       app_role: "admin" | "staff" | "student"
       attendance_status: "full" | "partial" | "absent"
       behavior_type: "respectful" | "non_respectful" | "disruptive" | "violent"
-      incident_type: "violence" | "bullying" | "medical" | "safety" | "other"
+      incident_type:
+        | "violence"
+        | "bullying"
+        | "medical"
+        | "safety"
+        | "other"
+        | "self_harm"
+        | "suicide_attempt"
       participation_level:
         | "completed_tasks"
         | "active_participation"
@@ -1305,7 +1315,15 @@ export const Constants = {
       app_role: ["admin", "staff", "student"],
       attendance_status: ["full", "partial", "absent"],
       behavior_type: ["respectful", "non_respectful", "disruptive", "violent"],
-      incident_type: ["violence", "bullying", "medical", "safety", "other"],
+      incident_type: [
+        "violence",
+        "bullying",
+        "medical",
+        "safety",
+        "other",
+        "self_harm",
+        "suicide_attempt",
+      ],
       participation_level: [
         "completed_tasks",
         "active_participation",

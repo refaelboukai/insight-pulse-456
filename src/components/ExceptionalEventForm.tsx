@@ -8,7 +8,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
+import { INCIDENT_TYPE_LABELS, VIOLENCE_LABELS } from '@/lib/constants';
 import { generateEventPdf } from '@/lib/generateEventPdf';
 import { Send, FileWarning, MessageCircle, Users, Shield, X } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
@@ -19,6 +19,7 @@ type Student = Database['public']['Tables']['students']['Row'];
 export default function ExceptionalEventForm() {
   const { user } = useAuth();
   const [incidentType, setIncidentType] = useState<IncidentType | ''>('');
+  const [violenceSubtypes, setViolenceSubtypes] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
@@ -63,9 +64,14 @@ export default function ExceptionalEventForm() {
 
   const getEventData = () => {
     const now = new Date();
+    let fullDescription = description;
+    if (incidentType === 'violence' && violenceSubtypes.length > 0) {
+      const subtypeNames = violenceSubtypes.map(v => VIOLENCE_LABELS[v] || v).join(', ');
+      fullDescription = `סוג אלימות: ${subtypeNames}\n\n${description}`;
+    }
     return {
       incidentType,
-      description,
+      description: fullDescription,
       peopleInvolved: buildPeopleInvolvedText(),
       staffResponse,
       followupRequired,
@@ -85,12 +91,17 @@ export default function ExceptionalEventForm() {
 
   const resetForm = () => {
     setIncidentType('');
+    setViolenceSubtypes([]);
     setDescription('');
     setSelectedStudents([]);
     setSelectedStaff([]);
     setStaffResponse('');
     setFollowupRequired(false);
     setFollowupNotes('');
+  };
+
+  const toggleViolenceSubtype = (v: string) => {
+    setViolenceSubtypes(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]);
   };
 
   const toggleStudent = (id: string) => {
@@ -116,7 +127,8 @@ export default function ExceptionalEventForm() {
         staff_response: staffResponse || null,
         followup_required: followupRequired,
         followup_notes: followupNotes || null,
-      });
+        violence_subtypes: incidentType === 'violence' ? violenceSubtypes : [],
+      } as any);
 
       if (error) {
         toast.error('שגיאה בשמירת האירוע');
@@ -178,7 +190,7 @@ export default function ExceptionalEventForm() {
 
           <div>
             <label className="text-sm font-bold block text-muted-foreground">סוג אירוע</label>
-            <Select value={incidentType} onValueChange={v => setIncidentType(v as IncidentType)}>
+            <Select value={incidentType} onValueChange={v => { setIncidentType(v as IncidentType); if (v !== 'violence') setViolenceSubtypes([]); }}>
               <SelectTrigger className="rounded-xl h-11 border-2">
                 <SelectValue placeholder="בחר/י סוג אירוע" />
               </SelectTrigger>
@@ -190,6 +202,27 @@ export default function ExceptionalEventForm() {
             </Select>
           </div>
 
+          {incidentType === 'violence' && (
+            <div className="space-y-2 p-3 rounded-xl bg-destructive/5 border border-destructive/20">
+              <label className="text-sm font-bold block text-destructive">סוג האלימות</label>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(VIOLENCE_LABELS).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleViolenceSubtype(key)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      violenceSubtypes.includes(key)
+                        ? 'bg-destructive text-destructive-foreground shadow-sm'
+                        : 'bg-background border border-border hover:bg-muted'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
           <div>
             <label className="text-sm font-bold mb-1.5 flex items-center gap-1.5 text-muted-foreground">
               <MessageCircle className="w-4 h-4" />
