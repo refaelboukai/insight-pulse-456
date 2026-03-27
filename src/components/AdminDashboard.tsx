@@ -977,7 +977,24 @@ export default function AdminDashboard() {
                           >
                             <Brain className="h-3.5 w-3.5 text-primary" />
                           </Button>
-                        </>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-center h-8 w-8 p-0"
+                            title="ייצוא יעדים פדגוגיים PDF"
+                            onClick={() => handleExportStudentPedagogy(s, 'pdf')}
+                          >
+                            <BookOpen className="h-3.5 w-3.5 text-accent" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="self-center h-8 w-8 p-0"
+                            title="ייצוא יעדים פדגוגיים Excel"
+                            onClick={() => handleExportStudentPedagogy(s, 'excel')}
+                          >
+                            <FileSpreadsheet className="h-3.5 w-3.5 text-green-600" />
+                          </Button>
                       )}
                     </div>
                   ))}
