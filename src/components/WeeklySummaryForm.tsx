@@ -84,6 +84,19 @@ export default function WeeklySummaryForm() {
       if (error) throw error;
       toast.success('הסיכום נשמר בהצלחה');
       setSavedIds(prev => new Set(prev).add(selectedStudentId));
+      // Auto-advance to next student in same class
+      const currentStudent = students.find(s => s.id === selectedStudentId);
+      if (currentStudent?.class_name) {
+        const classStudents = students.filter(s => s.class_name === currentStudent.class_name);
+        const currentIdx = classStudents.findIndex(s => s.id === selectedStudentId);
+        const nextStudent = classStudents.find((s, i) => i > currentIdx && !savedIds.has(s.id) && s.id !== selectedStudentId);
+        const fallback = classStudents.find((s, i) => i > currentIdx && s.id !== selectedStudentId);
+        const next = nextStudent || fallback;
+        if (next) {
+          setSelectedStudentId(next.id);
+          toast.info(`עובר ל${next.first_name} ${next.last_name}`);
+        }
+      }
     } catch (e: any) {
       toast.error('שגיאה בשמירה: ' + (e.message || ''));
     } finally {
