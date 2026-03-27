@@ -12,6 +12,7 @@ import { toast } from 'sonner';
 import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain } from 'lucide-react';
 import { format } from 'date-fns';
 import LearningStyleResults from '@/components/LearningStyleResults';
+import { g } from '@/lib/genderUtils';
 
 type Student = { id: string; first_name: string; last_name: string; class_name: string | null; is_active: boolean; gender?: string | null };
 type ManagedSubject = { id: string; name: string; has_sub_subjects: boolean; sub_subjects: string[]; is_active: boolean };
