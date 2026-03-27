@@ -378,7 +378,7 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
             {saving ? 'שומר...' : 'המשך לתובנות שלי'}
           </Button>
         ) : (
-          <span className="text-xs text-muted-foreground">ענה/י על כל השאלות</span>
+          <span className="text-xs text-muted-foreground">{g(gender, 'ענה', 'עני')} על כל השאלות</span>
         )}
       </div>
     </div>
