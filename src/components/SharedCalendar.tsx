@@ -376,9 +376,16 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
           </button>
         </div>
         {editable && (
-          <div className="flex gap-1.5">
+          <div className="flex gap-1 flex-wrap justify-end">
+            <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={handleDownloadTemplate}>
+              <Download className="h-3 w-3" /> תבנית
+            </Button>
+            <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => fileInputRef.current?.click()}>
+              <Upload className="h-3 w-3" /> טען אקסל
+            </Button>
+            <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleExcelUpload} />
             <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => { setShowPaste(true); setPasteText(''); setParsedEvents([]); }}>
-              <ClipboardPaste className="h-3 w-3" /> הדבק אירועים
+              <ClipboardPaste className="h-3 w-3" /> הדבק
             </Button>
             <Button size="sm" className="h-7 text-[10px] gap-1" onClick={() => openAddDialog()}>
               <Plus className="h-3 w-3" /> הוסף
