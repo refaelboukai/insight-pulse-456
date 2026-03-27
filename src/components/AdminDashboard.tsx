@@ -1379,21 +1379,29 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Reset Password Dialog */}
+      {/* Reset Password Dialog - Double Code */}
       <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
         <DialogContent dir="rtl" className="max-w-xs">
           <DialogHeader>
-            <DialogTitle className="text-sm flex items-center gap-2"><Trash2 className="h-4 w-4 text-destructive" /> אימות סיסמה</DialogTitle>
-            <DialogDescription className="text-xs">הזן סיסמה כדי להמשיך</DialogDescription>
+            <DialogTitle className="text-sm flex items-center gap-2"><Trash2 className="h-4 w-4 text-destructive" /> אימות כפול — איפוס מערכת</DialogTitle>
+            <DialogDescription className="text-xs">יש להזין את קוד המנהל פעמיים לאישור המחיקה</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <Input type="password" placeholder="סיסמה" value={resetPassword} onChange={e => { setResetPassword(e.target.value); setResetPasswordError(''); }}
-              onKeyDown={e => { if (e.key === 'Enter') handleResetPasswordSubmit(); }} className="h-10 text-sm" />
-            {resetPasswordError && <p className="text-xs text-destructive">{resetPasswordError}</p>}
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה ראשונה:</label>
+              <Input type="password" placeholder="קוד מנהל" value={resetPassword} onChange={e => { setResetPassword(e.target.value); setResetPasswordError(''); }}
+                className="h-10 text-sm" />
+            </div>
+            <div>
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה שנייה:</label>
+              <Input type="password" placeholder="הזן שוב לאישור" value={resetPasswordConfirm} onChange={e => { setResetPasswordConfirm(e.target.value); setResetPasswordError(''); }}
+                onKeyDown={e => { if (e.key === 'Enter') handleResetPasswordSubmit(); }} className="h-10 text-sm" />
+            </div>
+            {resetPasswordError && <p className="text-xs text-destructive font-medium">{resetPasswordError}</p>}
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="ghost" size="sm" onClick={() => setShowResetPassword(false)}>ביטול</Button>
-            <Button variant="destructive" size="sm" onClick={handleResetPasswordSubmit}>אישור</Button>
+            <Button variant="destructive" size="sm" onClick={handleResetPasswordSubmit}>אישור איפוס</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
