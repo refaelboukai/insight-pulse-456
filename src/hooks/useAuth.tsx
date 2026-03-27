@@ -195,6 +195,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const signOut = async () => {
     sessionStorage.removeItem(LOCKED_STUDENT_KEY);
     setLockedStudentId(null);
+    setRole(null);
+    setFullName('');
+    setUser(null);
     await supabase.auth.signOut();
   };
 
