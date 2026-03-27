@@ -9,9 +9,7 @@ import GradesForm from '@/components/GradesForm';
 import PedagogyForm from '@/components/PedagogyForm';
 import StudentDashboard from '@/components/StudentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
-import ResetCalmZone from '@/components/ResetCalmZone';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, Leaf, BookOpen, ChevronLeft } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
