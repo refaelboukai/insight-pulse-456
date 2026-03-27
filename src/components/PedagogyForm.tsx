@@ -9,10 +9,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { toast } from 'sonner';
-import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain } from 'lucide-react';
+import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain, FileText, FileSpreadsheet, BarChart3, Download, Share2 } from 'lucide-react';
 import { format } from 'date-fns';
 import LearningStyleResults from '@/components/LearningStyleResults';
 import { g } from '@/lib/genderUtils';
+import { generatePedagogyPdf, generatePedagogyTrackingPdf, type MonthlyGoalRow } from '@/lib/generatePedagogyPdf';
+import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
 
 type Student = { id: string; first_name: string; last_name: string; class_name: string | null; is_active: boolean; gender?: string | null };
 type ManagedSubject = { id: string; name: string; has_sub_subjects: boolean; sub_subjects: string[]; is_active: boolean };
@@ -55,6 +57,9 @@ export default function PedagogyForm() {
   const [exams, setExams] = useState<ExamEntry[]>([]);
   const [newExamDate, setNewExamDate] = useState('');
   const [newExamDesc, setNewExamDesc] = useState('');
+  const [allMonthGoals, setAllMonthGoals] = useState<PedagogicalGoal[]>([]);
+  const [showTracking, setShowTracking] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   useEffect(() => {
     loadStudents();
@@ -186,6 +191,108 @@ export default function PedagogyForm() {
     const { error } = await supabase.from('exam_schedule').delete().eq('id', id);
     if (error) toast.error('שגיאה במחיקה');
     else loadExams();
+  };
+
+  const loadAllMonthGoals = useCallback(async () => {
+    if (!selectedStudentId || !selectedSubjectId) return;
+    const query = supabase.from('pedagogical_goals')
+      .select('*')
+      .eq('student_id', selectedStudentId)
+      .eq('subject_id', selectedSubjectId)
+      .eq('school_year', selectedYear);
+
+    if (selectedSubSubject) {
+      query.eq('sub_subject', selectedSubSubject);
+    } else {
+      query.is('sub_subject', null);
+    }
+
+    const { data } = await query;
+    if (data) setAllMonthGoals(data as PedagogicalGoal[]);
+  }, [selectedStudentId, selectedSubjectId, selectedSubSubject, selectedYear]);
+
+  useEffect(() => {
+    if (showTracking) loadAllMonthGoals();
+  }, [showTracking, loadAllMonthGoals]);
+
+  const getMonthlyRows = (): MonthlyGoalRow[] => {
+    return MONTHS.map(month => {
+      const g = allMonthGoals.find(goal => goal.month === month);
+      return {
+        month,
+        learningStyle: g?.learning_style || null,
+        currentStatus: g?.current_status || null,
+        learningGoals: g?.learning_goals || null,
+        measurementMethods: g?.measurement_methods || null,
+        whatWasDone: g?.what_was_done || null,
+        whatWasNotDone: g?.what_was_not_done || null,
+        teacherNotes: g?.teacher_notes || null,
+        adminNotes: g?.admin_notes || null,
+      };
+    }).filter(r => r.learningStyle || r.currentStatus || r.learningGoals || r.whatWasDone || r.teacherNotes);
+  };
+
+  const selectedStudent_ref = students.find(s => s.id === selectedStudentId);
+  const studentFullName = selectedStudent_ref ? `${selectedStudent_ref.first_name} ${selectedStudent_ref.last_name}` : '';
+
+  const handleExportPdf = async () => {
+    if (!existingGoalId) { toast.error('יש לשמור את היעד לפני הפקת PDF'); return; }
+    setExporting(true);
+    try {
+      const blob = await generatePedagogyPdf({
+        studentName: studentFullName,
+        subjectName: selectedSubject?.name || '',
+        subSubject: selectedSubSubject,
+        month: selectedMonth,
+        schoolYear: selectedYear,
+        learningStyle: goal.learning_style,
+        currentStatus: goal.current_status,
+        learningGoals: goal.learning_goals,
+        measurementMethods: goal.measurement_methods,
+        whatWasDone: goal.what_was_done,
+        whatWasNotDone: goal.what_was_not_done,
+        teacherNotes: goal.teacher_notes,
+        adminNotes: goal.admin_notes,
+      });
+      const fileName = `יעד-פדגוגי-${studentFullName}-${selectedMonth}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: fileName, files: [file] });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
+        URL.revokeObjectURL(url);
+      }
+      toast.success('הדוח הופק בהצלחה');
+    } catch (err) { console.error(err); toast.error('שגיאה בהפקת PDF'); }
+    setExporting(false);
+  };
+
+  const handleExportTrackingPdf = async () => {
+    setExporting(true);
+    try {
+      await loadAllMonthGoals();
+      const rows = getMonthlyRows();
+      if (rows.length === 0) { toast.error('אין נתונים לייצוא'); setExporting(false); return; }
+      const blob = await generatePedagogyTrackingPdf(studentFullName, selectedSubject?.name || '', selectedSubSubject, selectedYear, rows);
+      const fileName = `מעקב-פדגוגי-${studentFullName}-${selectedSubject?.name || ''}.pdf`;
+      const file = new File([blob], fileName, { type: 'application/pdf' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: fileName, files: [file] });
+      } else {
+        const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url);
+      }
+      toast.success('דוח מעקב הופק בהצלחה');
+    } catch (err) { console.error(err); toast.error('שגיאה בהפקת PDF'); }
+    setExporting(false);
+  };
+
+  const handleExportExcel = async () => {
+    await loadAllMonthGoals();
+    const rows = getMonthlyRows();
+    if (rows.length === 0) { toast.error('אין נתונים לייצוא'); return; }
+    exportPedagogyToExcel(studentFullName, selectedSubject?.name || '', selectedSubSubject, selectedYear, rows);
+    toast.success('קובץ Excel הורד בהצלחה');
   };
 
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
@@ -331,6 +438,85 @@ export default function PedagogyForm() {
                       <Save className="h-4 w-4" />
                       {saving ? 'שומר...' : existingGoalId ? 'עדכן יעד' : 'שמור יעד'}
                     </Button>
+
+                    {existingGoalId && (
+                      <div className="flex gap-2 pt-2">
+                        <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={exporting} className="flex-1 gap-1.5 text-xs">
+                          <FileText className="h-3.5 w-3.5" />
+                          הורד PDF
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex-1 gap-1.5 text-xs">
+                          <FileSpreadsheet className="h-3.5 w-3.5" />
+                          הורד Excel
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleExportTrackingPdf} disabled={exporting} className="flex-1 gap-1.5 text-xs">
+                          <BarChart3 className="h-3.5 w-3.5" />
+                          מעקב PDF
+                        </Button>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+
+                {/* Month-to-Month Tracking */}
+                <AccordionItem value="tracking" className="border rounded-lg bg-card">
+                  <AccordionTrigger className="px-4 py-2 text-sm font-semibold hover:no-underline" onClick={() => { if (!showTracking) { setShowTracking(true); } }}>
+                    <span className="flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4 text-primary" />
+                      מעקב חודשי - {selectedSubject?.name} {selectedSubSubject ? `(${selectedSubSubject})` : ''}
+                    </span>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-4 pb-4">
+                    {allMonthGoals.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">אין יעדים פדגוגיים עדיין עבור מקצוע זה</p>
+                    ) : (
+                      <div className="space-y-3">
+                        <div className="overflow-x-auto">
+                          <table className="w-full text-xs border-collapse">
+                            <thead>
+                              <tr>
+                                <th className="p-2 text-right bg-primary text-primary-foreground rounded-tr-lg font-bold">תחום</th>
+                                {MONTHS.filter(m => allMonthGoals.some(g => g.month === m)).map(m => (
+                                  <th key={m} className="p-2 text-center bg-primary text-primary-foreground font-bold min-w-[80px]">{m}</th>
+                                ))}
+                              </tr>
+                            </thead>
+                            <tbody>
+                              {[
+                                { label: 'מצב נוכחי', key: 'current_status' as const },
+                                { label: 'יעדים', key: 'learning_goals' as const },
+                                { label: 'מה נעשה', key: 'what_was_done' as const },
+                                { label: 'פערים', key: 'what_was_not_done' as const },
+                                { label: 'הערות מורה', key: 'teacher_notes' as const },
+                              ].map(({ label, key }) => (
+                                <tr key={key} className="border-b border-border">
+                                  <td className="p-2 font-bold bg-muted/50 whitespace-nowrap">{label}</td>
+                                  {MONTHS.filter(m => allMonthGoals.some(g => g.month === m)).map(m => {
+                                    const mg = allMonthGoals.find(g => g.month === m);
+                                    const val = mg?.[key] || '';
+                                    return (
+                                      <td key={m} className="p-2 border-x border-border text-right align-top">
+                                        <div className="max-h-[80px] overflow-y-auto">{val || <span className="text-muted-foreground">-</span>}</div>
+                                      </td>
+                                    );
+                                  })}
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div className="flex gap-2 justify-center pt-2">
+                          <Button variant="outline" size="sm" onClick={handleExportTrackingPdf} disabled={exporting} className="gap-1.5 text-xs">
+                            <FileText className="h-3.5 w-3.5" />
+                            הורד מעקב PDF
+                          </Button>
+                          <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5 text-xs">
+                            <FileSpreadsheet className="h-3.5 w-3.5" />
+                            הורד מעקב Excel
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </AccordionContent>
                 </AccordionItem>
 
