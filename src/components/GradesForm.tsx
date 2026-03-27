@@ -247,7 +247,7 @@ export default function GradesForm() {
 
   const handleSubmit = async () => {
     if (!selectedStudentId || !subject) {
-      toast.error('נא לבחור תלמיד/ה ומקצוע');
+      toast.error(`נא לבחור ${g(null, 'תלמיד', 'תלמידה')} ומקצוע`);
       return;
     }
     if (totalGrade === null && !verbalEvaluation.trim()) {
