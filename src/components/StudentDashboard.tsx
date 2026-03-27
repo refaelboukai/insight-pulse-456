@@ -162,6 +162,14 @@ export default function StudentDashboard() {
         (subjRes.data as any[]).forEach((s: any) => { map[s.id] = s.name; });
         setManagedSubjects(map);
       }
+      // Load weekly summaries
+      const { data: summariesData } = await supabase
+        .from('weekly_summaries' as any)
+        .select('*')
+        .eq('student_id', selectedStudentId)
+        .order('week_start', { ascending: false })
+        .limit(4);
+      setWeeklySummaries(summariesData || []);
       // Load today's reflection
       const todayStart = `${today}T00:00:00`;
       const todayEnd = `${today}T23:59:59`;
