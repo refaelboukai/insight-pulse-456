@@ -292,8 +292,8 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
           <img src="${sigDataUrl}" style="width:80px;height:auto;margin-bottom:4px;" />
           <div style="font-size:9px;color:${colors.textLight};font-weight:600;">מנהל ביה״ס</div>
         </div>
-        ${signatureLine('מחנכ/ת')}
-        ${signatureLine('התלמיד/ה')}
+        ${signatureLine(g(data.gender, 'מחנך', 'מחנכת'))}
+        ${signatureLine(g(data.gender, 'התלמיד', 'התלמידה'))}
         ${signatureLine('ההורים')}
       </div>
     </div>
