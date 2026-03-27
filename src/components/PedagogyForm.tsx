@@ -8,8 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain, FileText, FileSpreadsheet, BarChart3, Download, Share2 } from 'lucide-react';
+import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain, FileText, FileSpreadsheet, BarChart3, Download, Share2, Users } from 'lucide-react';
 import { format } from 'date-fns';
 import LearningStyleResults from '@/components/LearningStyleResults';
 import { g } from '@/lib/genderUtils';
@@ -60,6 +63,12 @@ export default function PedagogyForm() {
   const [allMonthGoals, setAllMonthGoals] = useState<PedagogicalGoal[]>([]);
   const [showTracking, setShowTracking] = useState(false);
   const [exporting, setExporting] = useState(false);
+
+  // Classmate exam dialog
+  const [showExamClassDialog, setShowExamClassDialog] = useState(false);
+  const [examClassStudents, setExamClassStudents] = useState<Student[]>([]);
+  const [selectedExamStudents, setSelectedExamStudents] = useState<Set<string>>(new Set());
+  const [pendingExamData, setPendingExamData] = useState<{ subjectId: string; subSubject: string | null; date: string; description: string; schoolYear: string } | null>(null);
 
   useEffect(() => {
     loadStudents();
@@ -181,10 +190,65 @@ export default function PedagogyForm() {
       toast.error('שגיאה בהוספת מבחן');
     } else {
       toast.success('מבחן נוסף בהצלחה');
+      loadExams();
+
+      // Ask to add for classmates
+      const currentStudent = students.find(s => s.id === selectedStudentId);
+      if (currentStudent?.class_name) {
+        const classmates = students.filter(
+          s => s.class_name === currentStudent.class_name && s.id !== selectedStudentId
+        );
+        if (classmates.length > 0) {
+          setExamClassStudents(classmates);
+          setSelectedExamStudents(new Set(classmates.map(s => s.id)));
+          setPendingExamData({
+            subjectId: selectedSubjectId,
+            subSubject: selectedSubSubject || null,
+            date: newExamDate,
+            description: newExamDesc,
+            schoolYear: selectedYear,
+          });
+          setShowExamClassDialog(true);
+        }
+      }
+
       setNewExamDate('');
       setNewExamDesc('');
-      loadExams();
     }
+  };
+
+  const handleAddExamToClassmates = async () => {
+    if (!pendingExamData || !user || selectedExamStudents.size === 0) {
+      setShowExamClassDialog(false);
+      return;
+    }
+    const inserts = [...selectedExamStudents].map(sid => ({
+      student_id: sid,
+      subject_id: pendingExamData.subjectId,
+      sub_subject: pendingExamData.subSubject,
+      exam_date: pendingExamData.date,
+      exam_description: pendingExamData.description || null,
+      school_year: pendingExamData.schoolYear,
+      created_by: user.id,
+    }));
+    const { error } = await supabase.from('exam_schedule').insert(inserts);
+    if (error) {
+      toast.error('שגיאה בהוספת מבחנים לתלמידים נוספים');
+      console.error(error);
+    } else {
+      toast.success(`מבחן נוסף ל-${selectedExamStudents.size} תלמידים נוספים!`);
+    }
+    setShowExamClassDialog(false);
+    setPendingExamData(null);
+    setSelectedExamStudents(new Set());
+  };
+
+  const toggleExamStudent = (sid: string) => {
+    setSelectedExamStudents(prev => {
+      const next = new Set(prev);
+      if (next.has(sid)) next.delete(sid); else next.add(sid);
+      return next;
+    });
   };
 
   const handleDeleteExam = async (id: string) => {
@@ -303,7 +367,7 @@ export default function PedagogyForm() {
   };
 
   return (
-    <Card className="shadow-soft border-0">
+    <><Card className="shadow-soft border-0">
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <BookOpen className="h-5 w-5 text-primary" />
@@ -566,5 +630,73 @@ export default function PedagogyForm() {
         )}
       </CardContent>
     </Card>
+
+    {/* Add exam to classmates dialog */}
+    <Dialog open={showExamClassDialog} onOpenChange={setShowExamClassDialog}>
+      <DialogContent className="max-w-sm rounded-2xl p-5" dir="rtl">
+        <DialogHeader>
+          <DialogTitle className="text-base font-bold flex items-center gap-2">
+            <Users className="h-5 w-5 text-primary" />
+            הוסף מבחן לתלמידים נוספים?
+          </DialogTitle>
+          <DialogDescription className="text-sm text-muted-foreground mt-1">
+            המבחן נשמר. האם להוסיף אותו גם לתלמידים אחרים באותה כיתה?
+          </DialogDescription>
+        </DialogHeader>
+        <div className="max-h-48 overflow-y-auto space-y-1 mt-2">
+          {examClassStudents.map(s => (
+            <label
+              key={s.id}
+              className={`flex items-center gap-2 p-2 rounded-lg border cursor-pointer text-sm transition-all ${
+                selectedExamStudents.has(s.id)
+                  ? 'bg-primary/10 border-primary/30'
+                  : 'bg-card border-border'
+              }`}
+            >
+              <Checkbox
+                checked={selectedExamStudents.has(s.id)}
+                onCheckedChange={() => toggleExamStudent(s.id)}
+                className="h-4 w-4"
+              />
+              {s.first_name} {s.last_name}
+            </label>
+          ))}
+        </div>
+        <div className="flex items-center justify-between mt-2">
+          <button
+            onClick={() => {
+              if (selectedExamStudents.size === examClassStudents.length) {
+                setSelectedExamStudents(new Set());
+              } else {
+                setSelectedExamStudents(new Set(examClassStudents.map(s => s.id)));
+              }
+            }}
+            className="text-xs text-primary underline"
+          >
+            {selectedExamStudents.size === examClassStudents.length ? 'בטל הכל' : 'בחר הכל'}
+          </button>
+          <Badge variant="secondary" className="text-xs">
+            {selectedExamStudents.size} נבחרו
+          </Badge>
+        </div>
+        <div className="flex gap-2 mt-3">
+          <Button
+            onClick={() => { setShowExamClassDialog(false); setPendingExamData(null); }}
+            variant="outline"
+            className="flex-1 rounded-lg text-sm"
+          >
+            דלג
+          </Button>
+          <Button
+            onClick={handleAddExamToClassmates}
+            disabled={selectedExamStudents.size === 0}
+            className="flex-1 rounded-lg text-sm btn-primary-gradient border-0"
+          >
+            הוסף ({selectedExamStudents.size})
+          </Button>
+        </div>
+      </DialogContent>
+    </Dialog>
+    </>
   );
 }
