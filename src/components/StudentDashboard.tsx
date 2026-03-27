@@ -730,6 +730,7 @@ export default function StudentDashboard() {
           reminders: 'תזכורות להיום', reflection: 'היום שלי', insights: 'תובנות שלי על היום',
           reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
           exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
+          weekly_summary: 'סיכום שבועי מהמחנכת',
         };
         return [...pinnedPanels].map(key => {
           const card = studentCards.find(c => c.key === key);
