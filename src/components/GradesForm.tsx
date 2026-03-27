@@ -625,7 +625,7 @@ export default function GradesForm() {
             <div className="space-y-2">
               <label className="text-sm font-semibold text-foreground">ממני אלייך – נימה אישית מהמחנכת והמדריכה</label>
               <Textarea
-                placeholder="כתבי מילים אישיות, מחזקות ומעודדות לתלמיד/ה..."
+                placeholder={`כתיבת מילים אישיות, מחזקות ומעודדות ל${g(studentGender, 'תלמיד', 'תלמידה')}...`}
                 value={personalNote}
                 onChange={e => { setPersonalNote(e.target.value); setEvalSaved(false); }}
                 className="min-h-[80px] text-sm"
