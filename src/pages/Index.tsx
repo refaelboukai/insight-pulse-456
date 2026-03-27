@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import ReportForm from '@/components/ReportForm';
 import ExceptionalEventForm from '@/components/ExceptionalEventForm';
+import SharedCalendar from '@/components/SharedCalendar';
 import DailyAttendance from '@/components/DailyAttendance';
 import AdminDashboard from '@/components/AdminDashboard';
 import SupportPlanForm from '@/components/SupportPlanForm';
