@@ -86,12 +86,17 @@ export default function ExceptionalEventForm() {
 
   const resetForm = () => {
     setIncidentType('');
+    setViolenceSubtypes([]);
     setDescription('');
     setSelectedStudents([]);
     setSelectedStaff([]);
     setStaffResponse('');
     setFollowupRequired(false);
     setFollowupNotes('');
+  };
+
+  const toggleViolenceSubtype = (v: string) => {
+    setViolenceSubtypes(prev => prev.includes(v) ? prev.filter(x => x !== v) : [...prev, v]);
   };
 
   const toggleStudent = (id: string) => {
