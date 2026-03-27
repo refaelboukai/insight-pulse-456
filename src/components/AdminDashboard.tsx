@@ -100,6 +100,8 @@ export default function AdminDashboard() {
   const [newLastName, setNewLastName] = useState('');
   const [newClass, setNewClass] = useState('');
   const [customClassName, setCustomClassName] = useState('');
+  const [newMotherName, setNewMotherName] = useState('');
+  const [newFatherName, setNewFatherName] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
