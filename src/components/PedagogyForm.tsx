@@ -190,10 +190,65 @@ export default function PedagogyForm() {
       toast.error('שגיאה בהוספת מבחן');
     } else {
       toast.success('מבחן נוסף בהצלחה');
+      loadExams();
+
+      // Ask to add for classmates
+      const currentStudent = students.find(s => s.id === selectedStudentId);
+      if (currentStudent?.class_name) {
+        const classmates = students.filter(
+          s => s.class_name === currentStudent.class_name && s.id !== selectedStudentId
+        );
+        if (classmates.length > 0) {
+          setExamClassStudents(classmates);
+          setSelectedExamStudents(new Set(classmates.map(s => s.id)));
+          setPendingExamData({
+            subjectId: selectedSubjectId,
+            subSubject: selectedSubSubject || null,
+            date: newExamDate,
+            description: newExamDesc,
+            schoolYear: selectedYear,
+          });
+          setShowExamClassDialog(true);
+        }
+      }
+
       setNewExamDate('');
       setNewExamDesc('');
-      loadExams();
     }
+  };
+
+  const handleAddExamToClassmates = async () => {
+    if (!pendingExamData || !user || selectedExamStudents.size === 0) {
+      setShowExamClassDialog(false);
+      return;
+    }
+    const inserts = [...selectedExamStudents].map(sid => ({
+      student_id: sid,
+      subject_id: pendingExamData.subjectId,
+      sub_subject: pendingExamData.subSubject,
+      exam_date: pendingExamData.date,
+      exam_description: pendingExamData.description || null,
+      school_year: pendingExamData.schoolYear,
+      created_by: user.id,
+    }));
+    const { error } = await supabase.from('exam_schedule').insert(inserts);
+    if (error) {
+      toast.error('שגיאה בהוספת מבחנים לתלמידים נוספים');
+      console.error(error);
+    } else {
+      toast.success(`מבחן נוסף ל-${selectedExamStudents.size} תלמידים נוספים!`);
+    }
+    setShowExamClassDialog(false);
+    setPendingExamData(null);
+    setSelectedExamStudents(new Set());
+  };
+
+  const toggleExamStudent = (sid: string) => {
+    setSelectedExamStudents(prev => {
+      const next = new Set(prev);
+      if (next.has(sid)) next.delete(sid); else next.add(sid);
+      return next;
+    });
   };
 
   const handleDeleteExam = async (id: string) => {
