@@ -68,6 +68,7 @@ export default function AdminDashboard() {
 
   // Events time filter
   const [eventsTimeFilter, setEventsTimeFilter] = useState<'today' | 'week' | 'month'>('today');
+  const [openAccordions, setOpenAccordions] = useState<string[]>([]);
 
   // Reports student filter
   const [reportSelectedStudentId, setReportSelectedStudentId] = useState<string | null>(null);
