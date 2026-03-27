@@ -113,7 +113,9 @@ export default function Index() {
 
       {/* Content */}
       <main className="container mx-auto px-3 sm:px-4 py-4 pb-10 max-w-4xl">
-        {isStudent ? (
+        {isParent ? (
+          <ParentDashboard />
+        ) : isStudent ? (
           <StudentDashboard />
         ) : isAdmin ? (
           <AdminDashboard />
