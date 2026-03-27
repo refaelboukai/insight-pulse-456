@@ -62,7 +62,7 @@ export default function PedagogyForm() {
   }, []);
 
   const loadStudents = async () => {
-    const { data } = await supabase.from('students').select('id, first_name, last_name, class_name, is_active').eq('is_active', true).order('first_name');
+    const { data } = await supabase.from('students').select('id, first_name, last_name, class_name, is_active, gender').eq('is_active', true).order('first_name');
     if (data) setStudents(data);
   };
 
