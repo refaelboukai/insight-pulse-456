@@ -194,7 +194,7 @@ function calculateResults(responses: Record<number, number>) {
   };
 }
 
-export default function LearningStyleQuestionnaire({ studentId, onComplete }: LearningStyleQuestionnaireProps) {
+export default function LearningStyleQuestionnaire({ studentId, onComplete, gender }: LearningStyleQuestionnaireProps) {
   const [currentQ, setCurrentQ] = useState(0);
   const [responses, setResponses] = useState<Record<number, number>>({});
   const [isCompleted, setIsCompleted] = useState(false);
