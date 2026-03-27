@@ -145,17 +145,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: 'שגיאה בכניסה' };
     }
 
-    const sanitizedCode = code.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+    const sanitizedCode = code.trim().replace(/\s/g, '');
 
-    // Check if it's a parent code (starts with P)
-    if (sanitizedCode.startsWith('P')) {
+    // Check if it's a parent code (starts with P or p)
+    if (sanitizedCode.toUpperCase().startsWith('P')) {
       const result = await signInOrCreateShared(PARENT_ACCOUNT, 'parent', 'הורה');
       if (result.error) return result;
 
-      // Look up student by parent_code
+      // Look up student by parent_code (case-insensitive)
       const { data: student } = await (supabase.from('students') as any)
         .select('id, first_name, last_name')
-        .eq('parent_code', sanitizedCode)
+        .ilike('parent_code', sanitizedCode)
         .maybeSingle();
 
       if (!student) {
