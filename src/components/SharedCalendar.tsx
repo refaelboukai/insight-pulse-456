@@ -238,7 +238,107 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
     setImporting(false);
   };
 
-  // Build calendar grid
+  // Excel template download
+  const handleDownloadTemplate = () => {
+    const templateData = [
+      ['כותרת', 'תאריך (DD/MM/YYYY)', 'שעה (HH:MM)', 'תיאור', 'צבע (blue/green/red/purple/orange/yellow)'],
+      ['ישיבת צוות', '15/09/2025', '10:00', 'ישיבת צוות שבועית', 'blue'],
+      ['יום הורים', '20/09/2025', '17:00', 'מפגש הורים כיתתי', 'green'],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(templateData);
+    ws['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 30 }, { wch: 15 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'אירועים');
+    XLSX.writeFile(wb, 'תבנית_לוח_שנה.xlsx');
+    toast.success('תבנית הורדה בהצלחה');
+  };
+
+  // Excel file upload
+  const handleExcelUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    try {
+      const data = await file.arrayBuffer();
+      const wb = XLSX.read(data);
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows: any[][] = XLSX.utils.sheet_to_json(ws, { header: 1 });
+
+      // Skip header row
+      const eventsToInsert: { title: string; event_date: string; event_time: string | null; description: string | null; color: string; created_by: string }[] = [];
+      const validColors = EVENT_COLORS.map(c => c.key);
+
+      for (let i = 1; i < rows.length; i++) {
+        const row = rows[i];
+        if (!row || !row[0] || !row[1]) continue;
+
+        const title = String(row[0]).trim();
+        const rawDate = String(row[1]).trim();
+        const time = row[2] ? String(row[2]).trim() : null;
+        const description = row[3] ? String(row[3]).trim() : null;
+        const color = row[4] && validColors.includes(String(row[4]).trim().toLowerCase()) ? String(row[4]).trim().toLowerCase() : 'blue';
+
+        // Parse date: DD/MM/YYYY or DD.MM.YYYY
+        let eventDate = '';
+        const dateMatch = rawDate.match(/^(\d{1,2})[./](\d{1,2})[./](\d{2,4})$/);
+        if (dateMatch) {
+          const day = dateMatch[1].padStart(2, '0');
+          const month = dateMatch[2].padStart(2, '0');
+          let year = dateMatch[3];
+          if (year.length === 2) year = '20' + year;
+          eventDate = `${year}-${month}-${day}`;
+        } else {
+          // Try YYYY-MM-DD
+          const isoMatch = rawDate.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+          if (isoMatch) {
+            eventDate = rawDate;
+          } else {
+            // Try Excel serial number
+            const serial = Number(rawDate);
+            if (!isNaN(serial) && serial > 40000) {
+              const excelEpoch = new Date(1899, 11, 30);
+              const jsDate = new Date(excelEpoch.getTime() + serial * 86400000);
+              eventDate = jsDate.toISOString().split('T')[0];
+            } else {
+              continue; // Skip invalid date
+            }
+          }
+        }
+
+        if (title && eventDate) {
+          eventsToInsert.push({
+            title,
+            event_date: eventDate,
+            event_time: time,
+            description,
+            color,
+            created_by: user.id,
+          });
+        }
+      }
+
+      if (eventsToInsert.length === 0) {
+        toast.error('לא נמצאו אירועים תקינים בקובץ');
+        return;
+      }
+
+      const { error } = await supabase.from('calendar_events' as any).insert(eventsToInsert as any);
+      if (error) {
+        toast.error('שגיאה בייבוא אירועים');
+        console.error(error);
+      } else {
+        toast.success(`${eventsToInsert.length} אירועים יובאו בהצלחה!`);
+        fetchEvents();
+      }
+    } catch (err) {
+      toast.error('שגיאה בקריאת הקובץ');
+      console.error(err);
+    }
+
+    // Reset file input
+    if (fileInputRef.current) fileInputRef.current.value = '';
+  };
+
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
   const firstDayOfMonth = new Date(year, month, 1).getDay();
