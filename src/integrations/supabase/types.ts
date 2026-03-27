@@ -957,6 +957,7 @@ export type Database = {
           mother_email: string | null
           mother_name: string | null
           mother_phone: string | null
+          parent_code: string
           student_code: string
           updated_at: string
         }
@@ -978,6 +979,7 @@ export type Database = {
           mother_email?: string | null
           mother_name?: string | null
           mother_phone?: string | null
+          parent_code?: string
           student_code: string
           updated_at?: string
         }
@@ -999,6 +1001,7 @@ export type Database = {
           mother_email?: string | null
           mother_name?: string | null
           mother_phone?: string | null
+          parent_code?: string
           student_code?: string
           updated_at?: string
         }
