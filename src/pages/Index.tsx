@@ -9,6 +9,7 @@ import AdminDashboard from '@/components/AdminDashboard';
 import SupportPlanForm from '@/components/SupportPlanForm';
 import GradesForm from '@/components/GradesForm';
 import PedagogyForm from '@/components/PedagogyForm';
+import WeeklySummaryForm from '@/components/WeeklySummaryForm';
 import StudentDashboard from '@/components/StudentDashboard';
 import ParentDashboard from '@/components/ParentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
