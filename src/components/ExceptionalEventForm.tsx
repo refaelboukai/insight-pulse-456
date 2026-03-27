@@ -197,7 +197,29 @@ export default function ExceptionalEventForm() {
             </Select>
           </div>
 
-          <div>
+          {incidentType === 'violence' && (
+            <div className="space-y-2 p-3 rounded-xl bg-destructive/5 border border-destructive/20">
+              <label className="text-sm font-bold block text-destructive">סוג האלימות</label>
+              <div className="flex flex-wrap gap-2">
+                {Object.entries(VIOLENCE_LABELS).map(([key, label]) => (
+                  <button
+                    key={key}
+                    type="button"
+                    onClick={() => toggleViolenceSubtype(key)}
+                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all ${
+                      violenceSubtypes.includes(key)
+                        ? 'bg-destructive text-destructive-foreground shadow-sm'
+                        : 'bg-background border border-border hover:bg-muted'
+                    }`}
+                  >
+                    {label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+
             <label className="text-sm font-bold mb-1.5 flex items-center gap-1.5 text-muted-foreground">
               <MessageCircle className="w-4 h-4" />
               תיאור האירוע
