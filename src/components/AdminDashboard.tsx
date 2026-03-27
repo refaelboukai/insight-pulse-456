@@ -1253,6 +1253,7 @@ export default function AdminDashboard() {
         support: renderSupportContent(),
         'long-absent': renderLongAbsentContent(),
         'monthly-report': renderMonthlyReportContent(),
+        calendar: <SharedCalendar editable />,
         settings: renderSettingsContent(),
       };
       const panelLabels: Record<string, string> = {
