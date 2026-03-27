@@ -13,7 +13,7 @@ import LearningStyleQuestionnaire from '@/components/LearningStyleQuestionnaire'
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
-import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, ChevronLeft, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile, Star, Pin, PinOff } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, ChevronLeft, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile, Star, Pin, PinOff, MessageSquareText } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -87,6 +87,7 @@ export default function StudentDashboard() {
   const [dailyReflection, setDailyReflection] = useState({ class_presence: 3, behavior: 3, social_interaction: 3, academic_tasks: 3 });
   const [reflectionSaving, setReflectionSaving] = useState(false);
   const [reflectionSaved, setReflectionSaved] = useState(false);
+  const [weeklySummaries, setWeeklySummaries] = useState<any[]>([]);
 
   const isLocked = !!lockedStudentId;
 
@@ -161,6 +162,14 @@ export default function StudentDashboard() {
         (subjRes.data as any[]).forEach((s: any) => { map[s.id] = s.name; });
         setManagedSubjects(map);
       }
+      // Load weekly summaries
+      const { data: summariesData } = await supabase
+        .from('weekly_summaries' as any)
+        .select('*')
+        .eq('student_id', selectedStudentId)
+        .order('week_start', { ascending: false })
+        .limit(4);
+      setWeeklySummaries(summariesData || []);
       // Load today's reflection
       const todayStart = `${today}T00:00:00`;
       const todayEnd = `${today}T23:59:59`;
@@ -567,6 +576,26 @@ export default function StudentDashboard() {
 
   const renderSchedulePanel = () => <StudentScheduleView studentId={selectedStudent.id} />;
 
+  const renderWeeklySummaryPanel = () => (
+    <div className="space-y-2">
+      {weeklySummaries.length === 0 ? (
+        <div className="text-center py-8">
+          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3"><MessageSquareText className="h-5 w-5 text-muted-foreground" /></div>
+          <p className="text-sm text-muted-foreground">אין סיכומים שבועיים עדיין</p>
+        </div>
+      ) : (
+        weeklySummaries.map((s: any) => (
+          <div key={s.id} className="p-3 rounded-xl border bg-card space-y-1.5 hover:shadow-sm transition-shadow">
+            <Badge variant="outline" className="text-xs rounded-md">
+              שבוע {new Date(s.week_start).toLocaleDateString('he-IL')}
+            </Badge>
+            <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{s.summary_text}</p>
+          </div>
+        ))
+      )}
+    </div>
+  );
+
   // ===== CARD GRID DEFINITION =====
   type StudentCard = { key: string; icon: React.ElementType; label: string; value?: string | number; iconBg: string; iconColor: string };
 
@@ -580,6 +609,7 @@ export default function StudentDashboard() {
     { key: 'exams', icon: CalendarDays, label: 'לוח מבחנים', value: examSchedule.length, iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
     { key: 'support', icon: HeartHandshake, label: 'תכנית תמיכה', value: assignments.length, iconBg: 'bg-[hsl(145,40%,90%)]', iconColor: 'text-[hsl(145,40%,30%)]' },
     { key: 'schedule', icon: Calendar, label: 'מערכת שעות', iconBg: 'bg-[hsl(220,45%,92%)]', iconColor: 'text-[hsl(220,45%,35%)]' },
+    { key: 'weekly_summary', icon: MessageSquareText, label: 'סיכום שבועי', value: weeklySummaries.length, iconBg: 'bg-[hsl(50,55%,90%)]', iconColor: 'text-[hsl(50,55%,30%)]' },
   ];
 
   // If a panel is open, render it
@@ -594,11 +624,13 @@ export default function StudentDashboard() {
       exams: renderExamsPanel(),
       support: renderSupportPanel(),
       schedule: renderSchedulePanel(),
+      weekly_summary: renderWeeklySummaryPanel(),
     };
     const panelLabels: Record<string, string> = {
       reminders: 'תזכורות להיום', reflection: 'היום שלי', insights: 'תובנות שלי על היום',
       reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
       exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
+      weekly_summary: 'סיכום שבועי מהמחנכת',
     };
     const currentCard = studentCards.find(c => c.key === activePanel);
     const isPinned = pinnedPanels.has(activePanel);
@@ -692,11 +724,13 @@ export default function StudentDashboard() {
           grades: renderGradesPanel, pedagogy: renderPedagogyPanel,
           exams: renderExamsPanel, support: renderSupportPanel,
           schedule: renderSchedulePanel,
+          weekly_summary: renderWeeklySummaryPanel,
         };
         const pinnedLabels: Record<string, string> = {
           reminders: 'תזכורות להיום', reflection: 'היום שלי', insights: 'תובנות שלי על היום',
           reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
           exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
+          weekly_summary: 'סיכום שבועי מהמחנכת',
         };
         return [...pinnedPanels].map(key => {
           const card = studentCards.find(c => c.key === key);

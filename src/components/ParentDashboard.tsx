@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS } from '@/lib/constants';
-import { FileText, Calendar as CalendarIcon, BookOpen, Clock, CheckCircle2, XCircle, CalendarDays } from 'lucide-react';
+import { FileText, Calendar as CalendarIcon, BookOpen, Clock, CheckCircle2, XCircle, CalendarDays, MessageSquareText } from 'lucide-react';
 import { format, startOfDay, subDays, startOfWeek, isWithinInterval, parseISO } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -21,7 +21,8 @@ export default function ParentDashboard() {
   const [exams, setExams] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'reports' | 'exams'>('reports');
+  const [activeTab, setActiveTab] = useState<'reports' | 'exams' | 'summaries'>('reports');
+  const [weeklySummaries, setWeeklySummaries] = useState<any[]>([]);
   const [dateFilter, setDateFilter] = useState<DateFilter>('today');
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
@@ -35,11 +36,12 @@ export default function ParentDashboard() {
     if (!lockedStudentId) return;
     setLoading(true);
 
-    const [studentRes, reportsRes, examsRes, subjectsRes] = await Promise.all([
+    const [studentRes, reportsRes, examsRes, subjectsRes, summariesRes] = await Promise.all([
       (supabase.from('students') as any).select('*').eq('id', lockedStudentId).maybeSingle(),
       supabase.from('lesson_reports').select('*').eq('student_id', lockedStudentId).order('report_date', { ascending: false }).limit(200),
       supabase.from('exam_schedule').select('*').eq('student_id', lockedStudentId).gte('exam_date', new Date().toISOString().split('T')[0]).order('exam_date', { ascending: true }),
       supabase.from('managed_subjects').select('*'),
+      supabase.from('weekly_summaries' as any).select('*').eq('student_id', lockedStudentId).order('week_start', { ascending: false }).limit(4),
     ]);
 
     setStudent(studentRes.data);
@@ -47,6 +49,7 @@ export default function ParentDashboard() {
     const showCalendar = studentRes.data?.parent_show_calendar !== false;
     setAllReports(showReports ? (reportsRes.data || []) : []);
     setExams(showCalendar ? (examsRes.data || []) : []);
+    setWeeklySummaries((summariesRes as any).data || []);
     setSubjects(subjectsRes.data || []);
     if (!showReports && activeTab === 'reports') setActiveTab('exams');
     if (!showCalendar && activeTab === 'exams') setActiveTab('reports');
@@ -174,6 +177,18 @@ export default function ParentDashboard() {
             </p>
           </button>
         )}
+        <button
+          onClick={() => setActiveTab('summaries')}
+          className={`flex-1 rounded-xl p-3 text-center border transition-all ${
+            activeTab === 'summaries' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card hover:shadow-sm'
+          }`}
+        >
+          <MessageSquareText className={`h-5 w-5 mx-auto mb-1 ${activeTab === 'summaries' ? '' : 'text-muted-foreground'}`} />
+          <p className="text-xs font-bold">סיכום שבועי</p>
+          <p className={`text-[10px] mt-0.5 ${activeTab === 'summaries' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+            {weeklySummaries.length} סיכומים
+          </p>
+        </button>
       </div>
 
       {!showReports && !showCalendar && (
@@ -327,6 +342,29 @@ export default function ParentDashboard() {
                 </Card>
               );
             })
+          )}
+        </div>
+      )}
+
+      {/* Weekly Summaries */}
+      {activeTab === 'summaries' && (
+        <div className="space-y-2">
+          {weeklySummaries.length === 0 ? (
+            <Card><CardContent className="p-4 text-center text-muted-foreground text-sm">אין סיכומים שבועיים עדיין</CardContent></Card>
+          ) : (
+            weeklySummaries.map((s: any) => (
+              <Card key={s.id}>
+                <CardContent className="p-3 space-y-2">
+                  <div className="flex items-center gap-2">
+                    <MessageSquareText className="h-3.5 w-3.5 text-primary" />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      שבוע {new Date(s.week_start).toLocaleDateString('he-IL')}
+                    </span>
+                  </div>
+                  <p className="text-sm leading-relaxed text-foreground whitespace-pre-line">{s.summary_text}</p>
+                </CardContent>
+              </Card>
+            ))
           )}
         </div>
       )}
