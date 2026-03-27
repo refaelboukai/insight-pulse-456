@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, Trash2, Pencil, ChevronLeft, ChevronRight, ClipboardPaste, X } from 'lucide-react';
+import { Calendar, Plus, Trash2, Pencil, ChevronLeft, ChevronRight, ClipboardPaste, X, Download, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
+import * as XLSX from 'xlsx';
 
 interface CalendarEvent {
   id: string;
