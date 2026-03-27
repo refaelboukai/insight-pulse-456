@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS } from '@/lib/constants';
-import { FileText, Calendar as CalendarIcon, BookOpen, Clock, CheckCircle2, XCircle, CalendarDays } from 'lucide-react';
+import { FileText, Calendar as CalendarIcon, BookOpen, Clock, CheckCircle2, XCircle, CalendarDays, MessageSquareText } from 'lucide-react';
 import { format, startOfDay, subDays, startOfWeek, isWithinInterval, parseISO } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
