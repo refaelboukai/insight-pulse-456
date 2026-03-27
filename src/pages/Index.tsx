@@ -31,6 +31,7 @@ export default function Index() {
   const { role, fullName, signOut } = useAuth();
   const isAdmin = role === 'admin';
   const isStudent = role === 'student';
+  const isParent = role === 'parent';
   const [absentStudentIds, setAbsentStudentIds] = useState<Set<string>>(new Set());
   const [staffPanel, setStaffPanel] = useState<StaffPanel>(null);
 
