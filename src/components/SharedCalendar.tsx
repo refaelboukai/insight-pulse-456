@@ -65,6 +65,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
 
   // Day detail
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchEvents = async () => {
     const year = currentDate.getFullYear();
