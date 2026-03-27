@@ -8,10 +8,13 @@ import { toast } from 'sonner';
 import { Brain, Save, Sparkles, AlertTriangle } from 'lucide-react';
 import { CATEGORIES } from './LearningStyleQuestionnaire';
 
+import { g, type Gender } from '@/lib/genderUtils';
+
 interface LearningStyleResultsProps {
   studentId: string;
   studentName: string;
-  isEditable?: boolean; // staff can add notes
+  isEditable?: boolean;
+  gender?: Gender;
 }
 
 export default function LearningStyleResults({ studentId, studentName, isEditable = false }: LearningStyleResultsProps) {
