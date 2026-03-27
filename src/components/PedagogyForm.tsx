@@ -245,6 +245,7 @@ export default function PedagogyForm() {
                 ? `${filteredStudents.find(s => s.id === selectedStudentId)!.first_name} ${filteredStudents.find(s => s.id === selectedStudentId)!.last_name}`
                 : ''}
               isEditable={true}
+              gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
             />
 
             {/* Subject + month selection */}
