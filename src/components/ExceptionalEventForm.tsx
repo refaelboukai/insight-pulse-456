@@ -101,10 +101,6 @@ export default function ExceptionalEventForm() {
     setIncidentType('');
     setViolenceSubtypes([]);
     setDescription('');
-    setEventLocation('');
-    setLessonSubject('');
-    setStaffPresent('');
-    setAdditionalInfo('');
     setSelectedStudents([]);
     setSelectedStaff([]);
     setStaffResponse('');
