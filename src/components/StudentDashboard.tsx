@@ -284,7 +284,8 @@ export default function StudentDashboard() {
           </div>
           {!isLocked && (
             <button onClick={() => setSelectedStudentId('')} className="mt-2 text-primary-foreground/70 hover:text-primary-foreground text-xs underline">
-              החלף תלמיד
+              {terms.switchStudent}
+            </button>
             </button>
           )}
         </div>
