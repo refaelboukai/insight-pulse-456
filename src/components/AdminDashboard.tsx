@@ -269,17 +269,29 @@ export default function AdminDashboard() {
     setAssignSupportTypes(prev => prev.includes(t) ? prev.filter(x => x !== t) : [...prev, t]);
   };
 
+  const generateRandomCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let code = '';
+    for (let i = 0; i < 8; i++) code += chars[Math.floor(Math.random() * chars.length)];
+    return code;
+  };
+
   const handleAddStudent = async () => {
-    if (!newFirstName.trim() || !newLastName.trim() || !newClass) { toast.error('נא למלא את כל השדות'); return; }
+    const finalClass = newClass === '__custom__' ? customClassName.trim() : newClass;
+    if (!newFirstName.trim() || !newLastName.trim() || !finalClass) { toast.error('נא למלא את כל השדות'); return; }
     setAddingStudent(true);
-    const code = `${newClass === 'טלי' ? 'T' : 'E'}${String(students.length + 1).padStart(3, '0')}`;
+    const studentCode = generateRandomCode();
+    const parentCode = 'P' + crypto.randomUUID().replace(/-/g, '').slice(0, 7);
     const { error } = await supabase.from('students').insert({
-      student_code: code, first_name: newFirstName.trim(), last_name: newLastName.trim(),
-      grade: newClass, class_name: newClass,
+      student_code: studentCode, parent_code: parentCode,
+      first_name: newFirstName.trim(), last_name: newLastName.trim(),
+      grade: finalClass, class_name: finalClass,
     });
     if (!error) {
-      toast.success(`${newFirstName} ${newLastName} נוסף/ה`);
-      setNewFirstName(''); setNewLastName(''); setNewClass(''); setShowAddStudent(false); fetchAll();
+      toast.success(`${newFirstName} ${newLastName} נוסף/ה — קוד תלמיד: ${studentCode}, קוד הורה: ${parentCode}`);
+      setNewFirstName(''); setNewLastName(''); setNewClass(''); setCustomClassName(''); setShowAddStudent(false); fetchAll();
+    } else {
+      toast.error('שגיאה בהוספת תלמיד');
     }
     setAddingStudent(false);
   };
