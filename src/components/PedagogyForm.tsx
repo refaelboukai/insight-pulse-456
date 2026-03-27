@@ -232,8 +232,8 @@ export default function PedagogyForm() {
     }).filter(r => r.learningStyle || r.currentStatus || r.learningGoals || r.whatWasDone || r.teacherNotes);
   };
 
-  const selectedStudent = filteredStudents.find(s => s.id === selectedStudentId);
-  const studentFullName = selectedStudent ? `${selectedStudent.first_name} ${selectedStudent.last_name}` : '';
+  const selectedStudent_ref = students.find(s => s.id === selectedStudentId);
+  const studentFullName = selectedStudent_ref ? `${selectedStudent_ref.first_name} ${selectedStudent_ref.last_name}` : '';
 
   const handleExportPdf = async () => {
     if (!existingGoalId) { toast.error('יש לשמור את היעד לפני הפקת PDF'); return; }
