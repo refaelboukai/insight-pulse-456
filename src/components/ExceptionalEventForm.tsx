@@ -19,6 +19,7 @@ type Student = Database['public']['Tables']['students']['Row'];
 export default function ExceptionalEventForm() {
   const { user } = useAuth();
   const [incidentType, setIncidentType] = useState<IncidentType | ''>('');
+  const [violenceSubtypes, setViolenceSubtypes] = useState<string[]>([]);
   const [description, setDescription] = useState('');
   const [selectedStudents, setSelectedStudents] = useState<string[]>([]);
   const [selectedStaff, setSelectedStaff] = useState<string[]>([]);
