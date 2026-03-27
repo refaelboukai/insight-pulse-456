@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useState, ReactNode } from 'react
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
-export type AppRole = 'admin' | 'staff' | 'student';
+export type AppRole = 'admin' | 'staff' | 'student' | 'parent';
 
 interface AuthCtx {
   user: User | null;
@@ -15,6 +15,7 @@ interface AuthCtx {
 }
 
 const STUDENT_ACCOUNT = { email: 'student@school.local', password: 'student555secure!' };
+const PARENT_ACCOUNT = { email: 'parent@school.local', password: 'parent777secure!' };
 
 const CODE_MAP: Record<string, { email: string; password: string; name: string; role: AppRole }> = {
   '1001': { email: 'staff@school.local', password: 'staff1001secure!', name: 'צוות חינוכי', role: 'staff' },
@@ -81,6 +82,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
+  const signInOrCreateShared = async (account: { email: string; password: string }, roleName: AppRole, displayName: string) => {
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: account.email,
+      password: account.password,
+    });
+
+    if (signInError) {
+      if (signInError.message.includes('Invalid login credentials')) {
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: account.email,
+          password: account.password,
+          options: { data: { full_name: displayName } },
+        });
+        if (signUpError) return { error: 'שגיאה בכניסה' };
+        if (signUpData.user) {
+          await supabase.from('user_roles').insert({ user_id: signUpData.user.id, role: roleName as any });
+        }
+        const { error: retryError } = await supabase.auth.signInWithPassword({
+          email: account.email,
+          password: account.password,
+        });
+        if (retryError) return { error: 'שגיאה בכניסה' };
+      } else {
+        return { error: 'שגיאה בכניסה' };
+      }
+    }
+    return { error: null };
+  };
+
   const loginWithCode = async (code: string): Promise<{ error: string | null }> => {
     // Check static codes first
     const account = CODE_MAP[code];
@@ -91,7 +121,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
       if (!signInError && signInData.user) {
-        // Admin/staff roles are pre-seeded via database trigger
         return { error: null };
       }
 
@@ -103,7 +132,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         });
 
         if (signUpError) return { error: 'שגיאה ביצירת חשבון' };
-        // Role is auto-assigned via database trigger
 
         const { error: retryError } = await supabase.auth.signInWithPassword({
           email: account.email,
@@ -117,37 +145,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return { error: 'שגיאה בכניסה' };
     }
 
-    // Personal student code — sign in first, then look up student
-    // Sign in with shared student account first (needed for RLS)
-    const { error: signInError } = await supabase.auth.signInWithPassword({
-      email: STUDENT_ACCOUNT.email,
-      password: STUDENT_ACCOUNT.password,
-    });
+    const sanitizedCode = code.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
 
-    if (signInError) {
-      if (signInError.message.includes('Invalid login credentials')) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: STUDENT_ACCOUNT.email,
-          password: STUDENT_ACCOUNT.password,
-          options: { data: { full_name: 'תלמיד/ה' } },
-        });
-        if (signUpError) return { error: 'שגיאה בכניסה' };
-        if (signUpData.user) {
-          await supabase.from('user_roles').insert({ user_id: signUpData.user.id, role: 'student' as any });
-        }
-        const { error: retryError } = await supabase.auth.signInWithPassword({
-          email: STUDENT_ACCOUNT.email,
-          password: STUDENT_ACCOUNT.password,
-        });
-        if (retryError) return { error: 'שגיאה בכניסה' };
-      } else {
-        return { error: 'שגיאה בכניסה' };
+    // Check if it's a parent code (starts with P)
+    if (sanitizedCode.startsWith('P')) {
+      const result = await signInOrCreateShared(PARENT_ACCOUNT, 'parent', 'הורה');
+      if (result.error) return result;
+
+      // Look up student by parent_code
+      const { data: student } = await (supabase.from('students') as any)
+        .select('id, first_name, last_name')
+        .eq('parent_code', sanitizedCode)
+        .maybeSingle();
+
+      if (!student) {
+        await supabase.auth.signOut();
+        return { error: 'קוד שגוי' };
       }
+
+      sessionStorage.setItem(LOCKED_STUDENT_KEY, student.id);
+      setLockedStudentId(student.id);
+      setRole('parent');
+      setFullName(`הורה של ${student.first_name} ${student.last_name}`);
+      return { error: null };
     }
 
-    // Now authenticated — look up student by code
-    // Strip any non-alphanumeric characters (backticks, quotes, etc.)
-    const sanitizedCode = code.toUpperCase().trim().replace(/[^A-Z0-9]/g, '');
+    // Personal student code
+    const result = await signInOrCreateShared(STUDENT_ACCOUNT, 'student', 'תלמיד/ה');
+    if (result.error) return result;
+
     const { data: student } = await supabase
       .from('students')
       .select('id, first_name, last_name')
@@ -155,12 +181,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     if (!student) {
-      // Invalid code — sign out
       await supabase.auth.signOut();
       return { error: 'קוד שגוי' };
     }
 
-    // Lock to this specific student
     sessionStorage.setItem(LOCKED_STUDENT_KEY, student.id);
     setLockedStudentId(student.id);
     setFullName(`${student.first_name} ${student.last_name}`);
