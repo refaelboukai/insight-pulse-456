@@ -289,9 +289,10 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
     );
   }
 
-  const progress = ((currentQ + 1) / QUESTIONS.length) * 100;
-  const currentQuestion = QUESTIONS[currentQ];
-  const allAnswered = Object.keys(responses).length === QUESTIONS.length;
+  const genderedQuestions = gender === 'נ' ? QUESTIONS_FEMALE : QUESTIONS_MALE;
+  const progress = ((currentQ + 1) / genderedQuestions.length) * 100;
+  const currentQuestion = genderedQuestions[currentQ];
+  const allAnswered = Object.keys(responses).length === genderedQuestions.length;
 
   return (
     <div className="card-styled rounded-2xl p-4 space-y-4">
