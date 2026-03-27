@@ -49,6 +49,7 @@ export default function ParentDashboard() {
     const showCalendar = studentRes.data?.parent_show_calendar !== false;
     setAllReports(showReports ? (reportsRes.data || []) : []);
     setExams(showCalendar ? (examsRes.data || []) : []);
+    setWeeklySummaries((summariesRes as any).data || []);
     setSubjects(subjectsRes.data || []);
     if (!showReports && activeTab === 'reports') setActiveTab('exams');
     if (!showCalendar && activeTab === 'exams') setActiveTab('reports');
