@@ -227,7 +227,7 @@ export default function PedagogyForm() {
           <div>
             <Label className="text-xs mb-1 block">{g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'תלמיד', 'תלמידה')}</Label>
             <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder={g(selectedClassFilter ? filteredStudents[0]?.gender : null, 'בחר תלמיד', 'בחרי תלמידה')} /></SelectTrigger>
+              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחירת תלמיד/ה" /></SelectTrigger>
               <SelectContent>
                 {filteredStudents.map(s => (
                   <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
