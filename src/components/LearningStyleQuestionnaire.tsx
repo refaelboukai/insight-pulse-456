@@ -225,7 +225,7 @@ export default function LearningStyleQuestionnaire({ studentId, onComplete, gend
     const newResponses = { ...responses, [currentQ]: value };
     setResponses(newResponses);
 
-    if (currentQ < QUESTIONS.length - 1) {
+    if (currentQ < QUESTIONS_MALE.length - 1) {
       setTimeout(() => setCurrentQ(prev => prev + 1), 200);
     }
   };
