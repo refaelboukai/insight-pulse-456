@@ -17,7 +17,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen, ChevronLeft, Calendar, UserRound, MessageSquareText } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
-type StaffPanel = 'attendance' | 'report' | 'pedagogy' | 'grades' | 'support' | 'event' | 'calendar' | null;
+type StaffPanel = 'attendance' | 'report' | 'pedagogy' | 'grades' | 'support' | 'event' | 'calendar' | 'weekly_summary' | null;
 
 const staffCards: { key: StaffPanel & string; icon: React.ElementType; label: string; iconBg: string; iconColor: string; activeBg: string }[] = [
   { key: 'attendance', icon: ClipboardCheck, label: 'ביקור', iconBg: 'bg-[hsl(168,40%,92%)]', iconColor: 'text-[hsl(168,50%,30%)]', activeBg: 'bg-[hsl(168,40%,92%)]' },
