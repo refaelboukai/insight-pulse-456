@@ -1167,8 +1167,8 @@ export default function AdminDashboard() {
 
       {renderStatCards()}
 
-      <Accordion type="multiple" className="w-full space-y-2">
-        <AccordionItem value="events" className="rounded-2xl border bg-card px-4">
+      <Accordion type="multiple" value={openAccordions} onValueChange={setOpenAccordions} className="w-full space-y-2">
+        <AccordionItem value="events" id="accordion-events" className="rounded-2xl border bg-card px-4">
           <AccordionTrigger className="text-sm font-bold py-3">
             <span className="flex items-center gap-2">
               <ShieldAlert className="h-4 w-4 text-destructive" />
