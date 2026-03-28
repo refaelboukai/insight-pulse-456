@@ -400,19 +400,16 @@ export default function PedagogyForm() {
     if (!selectedStudentId) return;
     setExportingFullSummary(true);
     try {
-      // Load all goals for all subjects
       const { data: allGoals } = await supabase.from('pedagogical_goals')
         .select('*')
         .eq('student_id', selectedStudentId)
         .eq('school_year', selectedYear);
 
-      // Load mapping data
       const { data: mappingData } = await supabase
         .from('student_mappings' as any)
         .select('*')
         .eq('student_id', selectedStudentId);
 
-      // Load exams
       const { data: examData } = await supabase.from('exam_schedule')
         .select('*, managed_subjects(name)')
         .eq('student_id', selectedStudentId)
@@ -420,16 +417,13 @@ export default function PedagogyForm() {
         .order('exam_date');
 
       const mappingLabels: Record<string, string> = { math: 'מתמטיקה', hebrew: 'עברית', language: 'שפה', english: 'אנגלית' };
-      const mappingLines = (mappingData as any[] || [])
-        .filter((m: any) => m.has_mapping)
-        .map((m: any) => `${mappingLabels[m.subject_area] || m.subject_area}: כיתה ${m.grade_level || '—'}׳`)
-        .join('\n') || 'לא בוצע מיפוי';
+      const mappingItems = (mappingData as any[] || [])
+        .map((m: any) => ({
+          label: mappingLabels[m.subject_area] || m.subject_area,
+          done: m.has_mapping,
+          grade: m.grade_level,
+        }));
 
-      // Build text summary
-      let text = `סיכום פדגוגי מלא — ${studentFullName}\nשנת לימודים: ${selectedYear}\n`;
-      text += `\n══════════════════════\nמיפוי לימודי\n══════════════════════\n${mappingLines}\n`;
-
-      // Group goals by subject
       const goalsBySubject: Record<string, any[]> = {};
       (allGoals || []).forEach((g: any) => {
         const subj = subjects.find(s => s.id === g.subject_id);
@@ -438,42 +432,131 @@ export default function PedagogyForm() {
         goalsBySubject[key].push(g);
       });
 
+      // Build HTML for PDF
+      const container = document.createElement('div');
+      container.style.cssText = 'position:fixed;left:-9999px;top:0;width:800px;background:#fff;padding:32px;font-family:Arial,sans-serif;direction:rtl;color:#1a1a1a;';
+      document.body.appendChild(container);
+
+      let logoDataUrl = '';
+      try {
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = rej; img.src = '/logo.png'; });
+        const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
+        c.getContext('2d')!.drawImage(img, 0, 0);
+        logoDataUrl = c.toDataURL('image/jpeg', 0.8);
+      } catch { /* no logo */ }
+
+      const esc = (s: string | null) => (s || '').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+      let html = `<div style="text-align:center;margin-bottom:20px;">`;
+      if (logoDataUrl) html += `<img src="${logoDataUrl}" style="height:60px;margin-bottom:8px;" />`;
+      html += `<h1 style="font-size:22px;margin:0 0 4px;">סיכום פדגוגי מלא</h1>`;
+      html += `<p style="font-size:14px;color:#555;margin:0;">${esc(studentFullName)} | ${esc(selectedYear)} | ${format(new Date(), 'dd/MM/yyyy')}</p></div>`;
+
+      // Mapping section
+      html += `<div style="background:#f0f7ff;border-radius:8px;padding:12px 16px;margin-bottom:16px;">`;
+      html += `<h2 style="font-size:15px;margin:0 0 8px;color:#2563eb;">📋 מיפוי לימודי</h2>`;
+      html += `<div style="display:flex;gap:12px;flex-wrap:wrap;">`;
+      for (const item of mappingItems) {
+        const bg = item.done ? '#dcfce7' : '#fef2f2';
+        const color = item.done ? '#166534' : '#991b1b';
+        html += `<div style="background:${bg};border-radius:6px;padding:6px 12px;font-size:13px;color:${color};font-weight:600;">`;
+        html += `${esc(item.label)}: ${item.done ? `כיתה ${esc(item.grade)}׳` : 'לא בוצע'}</div>`;
+      }
+      html += `</div></div>`;
+
+      // Goals by subject
       for (const [subjName, goals] of Object.entries(goalsBySubject)) {
-        text += `\n══════════════════════\n${subjName}\n══════════════════════\n`;
-        const sorted = goals.sort((a, b) => MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month));
-        for (const g of sorted) {
-          text += `\n📅 ${g.month}:\n`;
-          if (g.current_status) text += `  מצב נוכחי: ${g.current_status}\n`;
-          if (g.learning_goals) text += `  יעדים: ${g.learning_goals}\n`;
-          if (g.measurement_methods) text += `  דרכי מדידה: ${g.measurement_methods}\n`;
-          if (g.what_was_done) text += `  מה בוצע: ${g.what_was_done}\n`;
-          if (g.what_was_not_done) text += `  מה לא בוצע: ${g.what_was_not_done}\n`;
-          if (g.teacher_notes) text += `  הערות מורה: ${g.teacher_notes}\n`;
-          if (g.admin_notes) text += `  הערות מנהל: ${g.admin_notes}\n`;
+        html += `<div style="border:1px solid #e5e7eb;border-radius:8px;margin-bottom:14px;overflow:hidden;">`;
+        html += `<div style="background:#f8fafc;padding:8px 14px;border-bottom:1px solid #e5e7eb;"><h3 style="margin:0;font-size:14px;color:#1e40af;">📚 ${esc(subjName)}</h3></div>`;
+        const sorted = goals.sort((a: any, b: any) => MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month));
+        html += `<table style="width:100%;border-collapse:collapse;font-size:11px;">`;
+        html += `<thead><tr style="background:#f1f5f9;">`;
+        for (const h of ['חודש', 'מצב נוכחי', 'יעדים', 'דרכי מדידה', 'בוצע', 'לא בוצע', 'הערות']) {
+          html += `<th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;font-weight:600;">${h}</th>`;
         }
+        html += `</tr></thead><tbody>`;
+        for (const g of sorted) {
+          html += `<tr>`;
+          html += `<td style="padding:5px 8px;border:1px solid #e5e7eb;font-weight:600;white-space:nowrap;">${esc(g.month)}</td>`;
+          html += `<td style="padding:5px 8px;border:1px solid #e5e7eb;">${esc(g.current_status)}</td>`;
+          html += `<td style="padding:5px 8px;border:1px solid #e5e7eb;">${esc(g.learning_goals)}</td>`;
+          html += `<td style="padding:5px 8px;border:1px solid #e5e7eb;">${esc(g.measurement_methods)}</td>`;
+          html += `<td style="padding:5px 8px;border:1px solid #e5e7eb;">${esc(g.what_was_done)}</td>`;
+          html += `<td style="padding:5px 8px;border:1px solid #e5e7eb;">${esc(g.what_was_not_done)}</td>`;
+          html += `<td style="padding:5px 8px;border:1px solid #e5e7eb;">${esc(g.teacher_notes)}${g.admin_notes ? `<br/><span style="color:#7c3aed;">${esc(g.admin_notes)}</span>` : ''}</td>`;
+          html += `</tr>`;
+        }
+        html += `</tbody></table></div>`;
       }
 
+      // Exams
       if ((examData || []).length > 0) {
-        text += `\n══════════════════════\nלוח מבחנים\n══════════════════════\n`;
+        html += `<div style="border:1px solid #e5e7eb;border-radius:8px;margin-bottom:14px;overflow:hidden;">`;
+        html += `<div style="background:#fef3c7;padding:8px 14px;border-bottom:1px solid #e5e7eb;"><h3 style="margin:0;font-size:14px;color:#92400e;">📝 לוח מבחנים</h3></div>`;
+        html += `<table style="width:100%;border-collapse:collapse;font-size:12px;">`;
+        html += `<thead><tr style="background:#fffbeb;"><th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">תאריך</th><th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">מקצוע</th><th style="padding:6px 8px;border:1px solid #e5e7eb;text-align:right;">תיאור</th></tr></thead><tbody>`;
         (examData as any[]).forEach((e: any) => {
           const subj = (e as any).managed_subjects?.name || '';
-          text += `${format(new Date(e.exam_date), 'dd/MM/yyyy')} — ${subj}${e.sub_subject ? ` (${e.sub_subject})` : ''}${e.exam_description ? `: ${e.exam_description}` : ''}\n`;
+          html += `<tr><td style="padding:5px 8px;border:1px solid #e5e7eb;">${format(new Date(e.exam_date), 'dd/MM/yyyy')}</td>`;
+          html += `<td style="padding:5px 8px;border:1px solid #e5e7eb;">${esc(subj)}${e.sub_subject ? ` (${esc(e.sub_subject)})` : ''}</td>`;
+          html += `<td style="padding:5px 8px;border:1px solid #e5e7eb;">${esc(e.exam_description)}</td></tr>`;
         });
+        html += `</tbody></table></div>`;
       }
 
-      // Download or share
-      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-      const fileName = `סיכום-פדגוגי-${studentFullName}-${selectedYear}.txt`;
-      const file = new File([blob], fileName, { type: 'text/plain' });
+      container.innerHTML = html;
+
+      const { default: html2canvas } = await import('html2canvas');
+      const { default: jsPDF } = await import('jspdf');
+      const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
+      document.body.removeChild(container);
+
+      const imgW = canvas.width;
+      const imgH = canvas.height;
+      const pdfW = 297; // A4 landscape width mm
+      const pdfH = 210;
+      const ratio = (pdfW - 20) / imgW;
+      const scaledH = imgH * ratio;
+
+      const pdf = new jsPDF({ orientation: scaledH > pdfH ? 'portrait' : 'landscape', unit: 'mm', format: 'a4' });
+      const pageH = scaledH > pdfH ? 297 : 210;
+      const pageW = scaledH > pdfH ? 210 : 297;
+      const contentW = pageW - 20;
+      const contentRatio = contentW / imgW;
+      const totalH = imgH * contentRatio;
+
+      let yOffset = 0;
+      let page = 0;
+      while (yOffset < totalH) {
+        if (page > 0) pdf.addPage();
+        const srcY = (yOffset / contentRatio);
+        const srcH = Math.min((pageH - 20) / contentRatio, imgH - srcY);
+        const drawH = srcH * contentRatio;
+
+        const sliceCanvas = document.createElement('canvas');
+        sliceCanvas.width = imgW;
+        sliceCanvas.height = Math.ceil(srcH);
+        sliceCanvas.getContext('2d')!.drawImage(canvas, 0, srcY, imgW, srcH, 0, 0, imgW, srcH);
+
+        pdf.addImage(sliceCanvas.toDataURL('image/jpeg', 0.95), 'JPEG', 10, 10, contentW, drawH);
+        yOffset += pageH - 20;
+        page++;
+      }
+
+      const pdfBlob = pdf.output('blob');
+      const fileName = `סיכום-פדגוגי-${studentFullName}-${selectedYear}.pdf`;
+      const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
       if (navigator.share && navigator.canShare?.({ files: [file] })) {
         await navigator.share({ title: fileName, files: [file] });
       } else {
-        const url = URL.createObjectURL(blob);
+        const url = URL.createObjectURL(pdfBlob);
         const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
         URL.revokeObjectURL(url);
       }
-      toast.success('סיכום פדגוגי מלא הופק');
-    } catch (err) { console.error(err); toast.error('שגיאה בהפקת סיכום'); }
+      toast.success('סיכום פדגוגי PDF הופק');
+    } catch (err) { console.error(err); toast.error('שגיאה בהפקת PDF'); }
     setExportingFullSummary(false);
   };
 
