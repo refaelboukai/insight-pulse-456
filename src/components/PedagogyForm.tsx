@@ -19,6 +19,7 @@ import { g } from '@/lib/genderUtils';
 import { generatePedagogyPdf, generatePedagogyTrackingPdf, type MonthlyGoalRow } from '@/lib/generatePedagogyPdf';
 import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
 import AcademicMappingSection from '@/components/AcademicMappingSection';
+import { shareOrDownload, downloadBlob } from '@/lib/downloadFile';
 import logoImport from '@/assets/logo.jpeg';
 
 type Student = { id: string; first_name: string; last_name: string; class_name: string | null; is_active: boolean; gender?: string | null };
@@ -416,14 +417,7 @@ export default function PedagogyForm() {
         adminNotes: goal.admin_notes,
       });
       const fileName = `יעד-פדגוגי-${studentFullName}-${selectedMonth}.pdf`;
-      const file = new File([blob], fileName, { type: 'application/pdf' });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: fileName, files: [file] });
-      } else {
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
-        URL.revokeObjectURL(url);
-      }
+      await shareOrDownload(blob, fileName);
       toast.success('הדוח הופק בהצלחה');
     } catch (err) { console.error(err); toast.error('שגיאה בהפקת PDF'); }
     setExporting(false);
@@ -437,12 +431,7 @@ export default function PedagogyForm() {
       if (rows.length === 0) { toast.error('אין נתונים לייצוא'); setExporting(false); return; }
       const blob = await generatePedagogyTrackingPdf(studentFullName, selectedSubject?.name || '', selectedSubSubject, selectedYear, rows);
       const fileName = `מעקב-פדגוגי-${studentFullName}-${selectedSubject?.name || ''}.pdf`;
-      const file = new File([blob], fileName, { type: 'application/pdf' });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: fileName, files: [file] });
-      } else {
-        const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url);
-      }
+      await shareOrDownload(blob, fileName);
       toast.success('דוח מעקב הופק בהצלחה');
     } catch (err) { console.error(err); toast.error('שגיאה בהפקת PDF'); }
     setExporting(false);
@@ -609,14 +598,7 @@ export default function PedagogyForm() {
 
       const pdfBlob = pdf.output('blob');
       const fileName = `סיכום-פדגוגי-${studentFullName}-${selectedYear}.pdf`;
-      const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: fileName, files: [file] });
-      } else {
-        const url = URL.createObjectURL(pdfBlob);
-        const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
-        URL.revokeObjectURL(url);
-      }
+      await shareOrDownload(pdfBlob, fileName);
       toast.success('סיכום פדגוגי PDF הופק');
     } catch (err) { console.error(err); toast.error('שגיאה בהפקת PDF'); }
     setExportingFullSummary(false);
@@ -755,9 +737,7 @@ export default function PedagogyForm() {
                   }).filter(r => r.currentStatus || r.learningGoals || r.whatWasDone);
                   if (rows.length > 0) {
                     const blob = await generatePedagogyTrackingPdf(sData.name, mySubjectFilter, null, selectedYear, rows);
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a'); a.href = url; a.download = `מעקב-${sData.name}-${mySubjectFilter}.pdf`; a.click();
-                    URL.revokeObjectURL(url);
+                    downloadBlob(blob, `מעקב-${sData.name}-${mySubjectFilter}.pdf`);
                   }
                 }
                 toast.success('קבצי PDF הורדו');

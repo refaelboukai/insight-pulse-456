@@ -29,6 +29,7 @@ import { generatePedagogyPdf, generatePedagogyTrackingPdf, type MonthlyGoalRow }
 import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
 import { toast } from 'sonner';
 import { exportReportsToExcel, exportFullActivityToExcel } from '@/lib/exportReportsToExcel';
+import { shareOrDownload, shareOrDownloadText, downloadBlob } from '@/lib/downloadFile';
 import SharedCalendar from '@/components/SharedCalendar';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -337,23 +338,7 @@ export default function AdminDashboard() {
   const shareMonthlyReport = async () => {
     if (!monthlyReport) return;
     const title = reportStudentId ? `דוח חודשי - ${studentName(reportStudentId)}` : 'דוח חודשי - כלל התלמידים';
-    if (navigator.share) {
-      try {
-        const blob = new Blob([monthlyReport], { type: 'text/plain;charset=utf-8' });
-        const file = new File([blob], `דוח_חודשי.txt`, { type: 'text/plain' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ title, files: [file] }); }
-        else { await navigator.share({ title, text: monthlyReport }); }
-        return;
-      } catch (e) { if ((e as Error).name === 'AbortError') return; }
-    }
-    // Fallback: download as text file on desktop
-    const blob = new Blob([monthlyReport], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `דוח_חודשי.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    await shareOrDownloadText(monthlyReport, `דוח_חודשי.txt`, title);
     toast.info('הדוח הורד בהצלחה');
   };
 
@@ -456,9 +441,7 @@ export default function AdminDashboard() {
         socialEmotionalSummary: latestEval?.social_emotional_summary || null,
       });
       const semSuffix = reportCardSemester === 'all' ? 'שנתי' : SEMESTER_LABELS[reportCardSemester];
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `תעודה_${semSuffix}_${student.first_name}_${student.last_name}.pdf`; a.click();
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `תעודה_${semSuffix}_${student.first_name}_${student.last_name}.pdf`);
       toast.success(`תעודה הופקה עבור ${student.first_name}`);
     } catch { toast.error('שגיאה בהפקת התעודה'); } finally { setGeneratingCard(null); }
   };
@@ -543,9 +526,7 @@ export default function AdminDashboard() {
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
         const blob = pdf.output('blob');
         const fileName = `יעדים-פדגוגיים-${sName}-${selectedYear}.pdf`;
-        const file = new File([blob], fileName, { type: 'application/pdf' });
-        if (navigator.share && navigator.canShare?.({ files: [file] })) { await navigator.share({ title: fileName, files: [file] }); }
-        else { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); }
+        await shareOrDownload(blob, fileName);
         toast.success('דוח PDF הופק');
       }
     } catch { toast.error('שגיאה בייצוא'); }
@@ -719,9 +700,7 @@ export default function AdminDashboard() {
                       };
                       const blob = await generateEventPdf(eventData);
                       const fileName = `אירוע-חריג-${eventData.date}.pdf`;
-                      const file = new File([blob], fileName, { type: 'application/pdf' });
-                      if (navigator.share && navigator.canShare?.({ files: [file] })) { await navigator.share({ title: fileName, files: [file] }); }
-                      else { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); }
+                      await shareOrDownload(blob, fileName);
                     } catch { toast.error('שגיאה בהפקת הדוח'); }
                   }}>
                     <Share2 className="h-3 w-3" /> שתף
