@@ -6,7 +6,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { ABSENCE_REASON_LABELS, LONG_ABSENT_REASONS } from '@/lib/constants';
-import { CheckCircle2, XCircle, ClipboardCheck, ChevronDown, ChevronUp, Phone, Home, BookOpen, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, XCircle, ClipboardCheck, ChevronDown, ChevronUp, Phone, Home, BookOpen, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { Database } from '@/integrations/supabase/types';
 
 type Student = Database['public']['Tables']['students']['Row'];
@@ -50,6 +51,8 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
   const [longAbsentStudents, setLongAbsentStudents] = useState<LongAbsentStudent[]>([]);
   const [followups, setFollowups] = useState<Map<string, FollowupRecord>>(new Map());
   const [longAbsentExpanded, setLongAbsentExpanded] = useState(false);
+  const [interventionLoading, setInterventionLoading] = useState<string | null>(null);
+  const [interventions, setInterventions] = useState<Map<string, string>>(new Map());
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
@@ -317,6 +320,23 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
     }
   };
 
+  const getIntervention = async (studentId: string, studentName: string, reason: string, consecutiveDays: number) => {
+    setInterventionLoading(studentId);
+    try {
+      const { data, error } = await supabase.functions.invoke('intervention-recommendations', {
+        body: { studentId, studentName, reason, consecutiveDays },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setInterventions(prev => new Map(prev).set(studentId, data.recommendations));
+    } catch (e) {
+      toast.error('שגיאה בייצור המלצות');
+      console.error(e);
+    } finally {
+      setInterventionLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
@@ -579,6 +599,27 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
                         </div>
                       </label>
                     </div>
+
+                    {/* AI Intervention Recommendations */}
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="w-full gap-1.5 text-xs"
+                      disabled={interventionLoading === student.id}
+                      onClick={() => getIntervention(student.id, `${student.first_name} ${student.last_name}`, reason, consecutiveDays)}
+                    >
+                      {interventionLoading === student.id ? (
+                        <><Loader2 className="h-3 w-3 animate-spin" /> מייצר המלצות...</>
+                      ) : (
+                        <><Sparkles className="h-3 w-3" /> המלצות התערבות AI</>
+                      )}
+                    </Button>
+                    {interventions.has(student.id) && (
+                      <div className="rounded-lg border border-primary/20 bg-primary/5 p-3">
+                        <p className="text-[10px] font-semibold text-primary mb-1.5 flex items-center gap-1"><Sparkles className="h-3 w-3" /> המלצות AI</p>
+                        <div className="text-xs leading-relaxed whitespace-pre-wrap">{interventions.get(student.id)}</div>
+                      </div>
+                    )}
                   </div>
                 );
               })}

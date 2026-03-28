@@ -64,6 +64,8 @@ export default function PedagogyForm() {
   const [showTracking, setShowTracking] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [loadingStyleAi, setLoadingStyleAi] = useState(false);
+  const [loadingGoalSuggestion, setLoadingGoalSuggestion] = useState(false);
+  const [goalSuggestion, setGoalSuggestion] = useState<string | null>(null);
 
   // Classmate exam dialog
   const [showExamClassDialog, setShowExamClassDialog] = useState(false);
@@ -256,6 +258,37 @@ export default function PedagogyForm() {
     const { error } = await supabase.from('exam_schedule').delete().eq('id', id);
     if (error) toast.error('שגיאה במחיקה');
     else loadExams();
+  };
+
+  const handleSuggestGoals = async () => {
+    if (!selectedStudentId || !selectedSubjectId) {
+      toast.error('יש לבחור תלמיד ומקצוע');
+      return;
+    }
+    const student = filteredStudents.find(s => s.id === selectedStudentId);
+    const subject = subjects.find(s => s.id === selectedSubjectId);
+    if (!student || !subject) return;
+    setLoadingGoalSuggestion(true);
+    setGoalSuggestion(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-goals', {
+        body: {
+          studentId: selectedStudentId,
+          studentName: `${student.first_name} ${student.last_name}`,
+          subjectName: subject.name,
+          currentMonth: selectedMonth,
+          currentGoal: existingGoalId ? goal : null,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setGoalSuggestion(data.suggestions);
+    } catch (e) {
+      toast.error('שגיאה בייצור הצעת יעדים');
+      console.error(e);
+    } finally {
+      setLoadingGoalSuggestion(false);
+    }
   };
 
   const loadAllMonthGoals = useCallback(async () => {
@@ -495,6 +528,21 @@ export default function PedagogyForm() {
                         <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.admin_notes || ''} onChange={e => updateField('admin_notes', e.target.value)} placeholder="הערות הנהלה..." />
                       </div>
                     )}
+                    {/* AI Goal Suggestion */}
+                    <Button onClick={handleSuggestGoals} disabled={loadingGoalSuggestion} variant="outline" className="w-full gap-2">
+                      {loadingGoalSuggestion ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> מייצר הצעת יעדים...</>
+                      ) : (
+                        <><Lightbulb className="h-4 w-4" /> הצעת יעדים מ-AI</>
+                      )}
+                    </Button>
+                    {goalSuggestion && (
+                      <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+                        <p className="text-xs font-semibold text-primary mb-1.5 flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" /> הצעת AI ליעדים</p>
+                        <div className="text-xs leading-relaxed whitespace-pre-wrap">{goalSuggestion}</div>
+                      </div>
+                    )}
+
                     <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
                       <Save className="h-4 w-4" />
                       {saving ? 'שומר...' : existingGoalId ? 'עדכן יעד' : 'שמור יעד'}

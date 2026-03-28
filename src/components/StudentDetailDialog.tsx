@@ -12,7 +12,7 @@ import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
   VIOLENCE_LABELS, ABSENCE_REASON_LABELS,
 } from '@/lib/constants';
-import { CalendarIcon, CheckCircle2, Clock, XCircle, FileText, ClipboardCheck, Sparkles, Download, Loader2, Share2 } from 'lucide-react';
+import { CalendarIcon, CheckCircle2, Clock, XCircle, FileText, ClipboardCheck, Sparkles, Download, Loader2, Share2, Brain } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
 import { g } from '@/lib/genderUtils';
@@ -33,6 +33,8 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
   const [loading, setLoading] = useState(false);
   const [aiSummary, setAiSummary] = useState<string | null>(null);
   const [generatingSummary, setGeneratingSummary] = useState(false);
+  const [patterns, setPatterns] = useState<string | null>(null);
+  const [generatingPatterns, setGeneratingPatterns] = useState(false);
   const [summaryPeriod, setSummaryPeriod] = useState<'today' | 'week' | '2weeks' | 'month' | 'all' | 'custom'>('all');
   const [customFromDate, setCustomFromDate] = useState<Date | undefined>(undefined);
   const [customToDate, setCustomToDate] = useState<Date | undefined>(undefined);
@@ -197,6 +199,25 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     window.open(whatsappUrl, '_blank');
   };
 
+  const generatePatterns = async () => {
+    if (!student) return;
+    setGeneratingPatterns(true);
+    setPatterns(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('detect-patterns', {
+        body: { studentId: student.id, studentName: `${student.first_name} ${student.last_name}` },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setPatterns(data.patterns);
+    } catch (e) {
+      toast.error('שגיאה בזיהוי דפוסים');
+      console.error(e);
+    } finally {
+      setGeneratingPatterns(false);
+    }
+  };
+
   const quickDays = [0, 1, 2, 3, 4].map(d => {
     const date = new Date();
     date.setDate(date.getDate() - d);
@@ -319,6 +340,26 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
             <div className="text-xs leading-relaxed whitespace-pre-wrap text-foreground">
               {aiSummary}
             </div>
+          </div>
+        )}
+
+        {/* Pattern Recognition */}
+        <div className="flex gap-2">
+          <Button onClick={generatePatterns} disabled={generatingPatterns} size="sm" variant="outline" className="gap-1.5 flex-1">
+            {generatingPatterns ? (
+              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> מנתח דפוסים...</>
+            ) : (
+              <><Brain className="h-3.5 w-3.5" /> זיהוי דפוסים (14 ימים)</>
+            )}
+          </Button>
+        </div>
+        {patterns && (
+          <div className="rounded-xl border border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/20 p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Brain className="h-3.5 w-3.5 text-amber-600" />
+              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">דפוסים שזוהו</p>
+            </div>
+            <div className="text-xs leading-relaxed whitespace-pre-wrap text-foreground">{patterns}</div>
           </div>
         )}
 
