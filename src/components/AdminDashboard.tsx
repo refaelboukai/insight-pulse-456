@@ -187,6 +187,15 @@ export default function AdminDashboard() {
     if (reflectionsRes.data) setDailyReflections(reflectionsRes.data as any[]);
     if (insightsRes.data) setStudentInsights(insightsRes.data as any[]);
     if (studentsRes.data) loadLongAbsent(studentsRes.data);
+    
+    // Fetch pedagogy data
+    const [pedGoalsRes, learnProfilesRes] = await Promise.all([
+      supabase.from('pedagogical_goals').select('student_id, subject_id').eq('school_year', selectedYear),
+      supabase.from('learning_style_profiles').select('student_id, is_completed'),
+    ]);
+    if (pedGoalsRes.data) setPedagogyGoals(pedGoalsRes.data);
+    if (learnProfilesRes.data) setLearningProfiles(learnProfilesRes.data);
+    
     setLoading(false);
   };
 
