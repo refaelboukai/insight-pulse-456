@@ -346,7 +346,15 @@ export default function AdminDashboard() {
         return;
       } catch (e) { if ((e as Error).name === 'AbortError') return; }
     }
-    window.open(`https://wa.me/?text=${encodeURIComponent(monthlyReport)}`, '_blank');
+    // Fallback: download as text file on desktop
+    const blob = new Blob([monthlyReport], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `דוח_חודשי.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.info('הדוח הורד בהצלחה');
   };
 
   const handleResetPasswordSubmit = () => {
