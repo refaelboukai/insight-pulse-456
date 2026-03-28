@@ -634,7 +634,7 @@ export default function StudentDashboard() {
     { key: 'pedagogy', icon: BookOpen, label: 'יעדים פדגוגיים', value: pedagogyGoals.length, iconBg: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,35%)]' },
     { key: 'exams', icon: CalendarDays, label: 'לוח מבחנים', value: examSchedule.length, iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
     { key: 'support', icon: HeartHandshake, label: 'תכנית תמיכה', value: assignments.length, iconBg: 'bg-[hsl(145,40%,90%)]', iconColor: 'text-[hsl(145,40%,30%)]' },
-    { key: 'schedule', icon: Calendar, label: 'מערכת שעות', iconBg: 'bg-[hsl(220,45%,92%)]', iconColor: 'text-[hsl(220,45%,35%)]' },
+    ...(hasSchedule ? [{ key: 'schedule', icon: Calendar, label: 'מערכת שעות', iconBg: 'bg-[hsl(220,45%,92%)]', iconColor: 'text-[hsl(220,45%,35%)]' }] : []),
     ...(weeklySummaries.length > 0 ? [{ key: 'weekly_summary', icon: MessageSquareText, label: 'סיכום מחנכות', value: weeklySummaries.length, iconBg: 'bg-[hsl(50,55%,90%)]', iconColor: 'text-[hsl(50,55%,30%)]' }] : []),
   ];
 
