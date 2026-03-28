@@ -954,6 +954,8 @@ export default function PedagogyForm() {
               </Select>
             </div>
 
+            {/* Mapping status indicator */}
+            <MappingStatusBadge studentId={selectedStudentId} gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender} />
             {/* Learning style recommendations only for goal planning context */}
             <LearningStyleResults
               studentId={selectedStudentId}
