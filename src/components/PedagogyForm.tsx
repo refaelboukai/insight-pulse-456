@@ -733,8 +733,6 @@ export default function PedagogyForm() {
     );
   };
 
-  // Import ChevronLeft for back button
-  const { ChevronLeft: ChevronLeftIcon } = require('lucide-react');
 
   return (
     <><Card className="shadow-soft border-0">
