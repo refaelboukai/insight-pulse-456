@@ -19,6 +19,7 @@ import { g } from '@/lib/genderUtils';
 import { generatePedagogyPdf, generatePedagogyTrackingPdf, type MonthlyGoalRow } from '@/lib/generatePedagogyPdf';
 import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
 import AcademicMappingSection from '@/components/AcademicMappingSection';
+import { shareOrDownload, downloadBlob } from '@/lib/downloadFile';
 import logoImport from '@/assets/logo.jpeg';
 
 type Student = { id: string; first_name: string; last_name: string; class_name: string | null; is_active: boolean; gender?: string | null };
