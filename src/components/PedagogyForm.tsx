@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain, FileText, FileSpreadsheet, BarChart3, Download, Share2, Users, Loader2, Lightbulb, ChevronLeft } from 'lucide-react';
+import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain, FileText, FileSpreadsheet, BarChart3, Download, Share2, Users, Loader2, Lightbulb, ChevronLeft, ClipboardCheck } from 'lucide-react';
 import { format } from 'date-fns';
 import LearningStyleResults from '@/components/LearningStyleResults';
 import { g } from '@/lib/genderUtils';
@@ -41,6 +41,23 @@ const MONTHS = [
   'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
 ];
 
+function MappingStatusBadge({ studentId, gender }: { studentId: string; gender?: string | null }) {
+  const [hasMappings, setHasMappings] = useState<boolean | null>(null);
+  useEffect(() => {
+    supabase.from('student_mappings').select('has_mapping').eq('student_id', studentId).then(({ data }) => {
+      const has = (data || []).some((r: any) => r.has_mapping);
+      setHasMappings(has);
+    });
+  }, [studentId]);
+  if (hasMappings === null) return null;
+  if (hasMappings) return null; // Don't show anything if mapping exists
+  return (
+    <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-lg flex items-center gap-1.5">
+      <ClipboardCheck className="h-3.5 w-3.5" />
+      {g(gender, 'התלמיד לא ביצע', 'התלמידה לא ביצעה')} מיפוי לימודי.
+    </div>
+  );
+}
 export default function PedagogyForm() {
   const { user, role } = useAuth();
   const isAdmin = role === 'admin';
@@ -954,14 +971,16 @@ export default function PedagogyForm() {
               </Select>
             </div>
 
-            {/* Compact student info: mapping + learning style */}
-            <AcademicMappingSection studentId={selectedStudentId} />
+            {/* Mapping status indicator */}
+            <MappingStatusBadge studentId={selectedStudentId} gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender} />
+            {/* Learning style recommendations only for goal planning context */}
             <LearningStyleResults
               studentId={selectedStudentId}
               studentName={studentFullName}
               isEditable={false}
               gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
               compact={true}
+              recommendationsOnly={true}
             />
 
             <Accordion type="multiple" defaultValue={['goals', 'exams']} className="space-y-2">

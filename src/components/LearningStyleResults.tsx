@@ -16,9 +16,10 @@ interface LearningStyleResultsProps {
   isEditable?: boolean;
   gender?: Gender;
   compact?: boolean;
+  recommendationsOnly?: boolean;
 }
 
-export default function LearningStyleResults({ studentId, studentName, isEditable = false, gender, compact = false }: LearningStyleResultsProps) {
+export default function LearningStyleResults({ studentId, studentName, isEditable = false, gender, compact = false, recommendationsOnly = false }: LearningStyleResultsProps) {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [staffNotes, setStaffNotes] = useState('');
@@ -65,8 +66,9 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
   if (loading) return null;
   if (!profile || !profile.is_completed) {
     return (
-      <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-lg">
-        {g(gender, 'התלמיד טרם מילא', 'התלמידה טרם מילאה')} את שאלון סגנון הלמידה.
+      <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-lg flex items-center gap-1.5">
+        <Brain className="h-3.5 w-3.5" />
+        {g(gender, 'התלמיד לא ביצע', 'התלמידה לא ביצעה')} שאלון סגנון למידה.
       </div>
     );
   }
@@ -81,6 +83,40 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
     if (avg >= 2) return { label: 'נמוך — פחות מתאים', color: 'text-amber-700' };
     return { label: 'נמוך מאוד', color: 'text-red-700' };
   };
+
+  // Recommendations-only mode for pedagogy goals context
+  if (recommendationsOnly) {
+    const hasRecommendations = results.recommendations?.length > 0 || results.aiRecommendations;
+    if (!hasRecommendations) {
+      return (
+        <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-lg flex items-center gap-1.5">
+          <Brain className="h-3.5 w-3.5" />
+          {g(gender, 'התלמיד ביצע', 'התלמידה ביצעה')} שאלון למידה, אך אין עדיין המלצות. ניתן ליצור המלצות בפרופיל התלמיד.
+        </div>
+      );
+    }
+    return (
+      <div className="space-y-2 border rounded-lg p-3 bg-primary/5 border-primary/20">
+        <div className="flex items-center gap-2">
+          <Lightbulb className="h-4 w-4 text-primary" />
+          <span className="font-semibold text-xs text-primary">המלצות מסגנון למידה</span>
+        </div>
+        {results.recommendations?.length > 0 && (
+          <ul className="space-y-1">
+            {results.recommendations.map((r: string, i: number) => (
+              <li key={i} className="text-xs flex items-start gap-1.5">
+                <Sparkles className="h-3 w-3 text-primary mt-0.5 shrink-0" />
+                {r}
+              </li>
+            ))}
+          </ul>
+        )}
+        {results.aiRecommendations && (
+          <p className="text-xs text-foreground/80 whitespace-pre-line leading-relaxed">{results.aiRecommendations}</p>
+        )}
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-3 border rounded-xl p-3 bg-card">
