@@ -737,12 +737,25 @@ export default function PedagogyForm() {
   return (
     <><Card className="shadow-soft border-0">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2">
-          <BookOpen className="h-5 w-5 text-primary" />
-          יעדים פדגוגיים
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-lg flex items-center gap-2">
+            <BookOpen className="h-5 w-5 text-primary" />
+            יעדים פדגוגיים
+          </CardTitle>
+          <div className="flex gap-1 p-0.5 rounded-lg bg-muted/40 border">
+            <button onClick={() => setTeacherView('form')}
+              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all ${teacherView === 'form' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
+              הזנת יעדים
+            </button>
+            <button onClick={() => setTeacherView('my-subjects')}
+              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all ${teacherView === 'my-subjects' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
+              המקצועות שלי
+            </button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
+        {teacherView === 'my-subjects' ? renderTeacherSubjectView() : (<>
         {/* Year + Student selection */}
         <div className="grid grid-cols-3 gap-3">
           <div>
