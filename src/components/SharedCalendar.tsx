@@ -97,12 +97,19 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       .lte('exam_date', to)
       .order('exam_date');
 
-    // Fetch students for birthdays
-    const { data: studentsData } = await supabase
-      .from('students')
-      .select('id, first_name, last_name, date_of_birth')
-      .eq('is_active', true)
-      .not('date_of_birth', 'is', null);
+    // Fetch students and staff for birthdays
+    const [{ data: studentsData }, { data: staffData }] = await Promise.all([
+      supabase
+        .from('students')
+        .select('id, first_name, last_name, date_of_birth')
+        .eq('is_active', true)
+        .not('date_of_birth', 'is', null),
+      supabase
+        .from('staff_members')
+        .select('id, name, date_of_birth')
+        .eq('is_active', true)
+        .not('date_of_birth', 'is', null),
+    ]);
 
     // Hebrew holidays
     const holidays = getJewishHolidaysForMonth(year, month);
@@ -126,10 +133,31 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       created_at: '',
     }));
 
-    // Birthday events
-    const bdays = getBirthdaysForMonth(studentsData || [], year, month);
-    setBirthdays(bdays);
-    const birthdayEvents: CalendarEvent[] = bdays.map(b => ({
+    // Birthday events - students
+    const studentBdays = getBirthdaysForMonth(studentsData || [], year, month);
+    // Birthday events - staff
+    const currentYear = new Date().getFullYear();
+    const staffBdays: BirthdayEntry[] = (staffData || [])
+      .filter((s: any) => {
+        if (!s.date_of_birth) return false;
+        const dob = new Date(s.date_of_birth);
+        return dob.getMonth() === month;
+      })
+      .map((s: any) => {
+        const dob = new Date(s.date_of_birth);
+        return {
+          id: s.id,
+          name: s.name,
+          date_of_birth: s.date_of_birth,
+          dayOfMonth: dob.getDate(),
+          age: currentYear - dob.getFullYear(),
+        };
+      });
+
+    const allBdays = [...studentBdays, ...staffBdays].sort((a, b) => a.dayOfMonth - b.dayOfMonth);
+    setBirthdays(allBdays);
+
+    const birthdayEvents: CalendarEvent[] = allBdays.map(b => ({
       id: `bday-${b.id}`,
       title: `🎂 יום הולדת: ${b.name}`,
       event_date: `${year}-${String(month + 1).padStart(2, '0')}-${String(b.dayOfMonth).padStart(2, '0')}`,
