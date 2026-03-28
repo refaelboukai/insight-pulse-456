@@ -455,6 +455,9 @@ export default function PedagogyForm() {
               gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
             />
 
+            {/* Academic Mapping */}
+            <AcademicMappingSection studentId={selectedStudentId} />
+
             {/* Subject + month selection */}
             <div className="grid grid-cols-3 gap-3">
               <div>
