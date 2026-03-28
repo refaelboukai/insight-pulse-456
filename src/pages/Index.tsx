@@ -13,6 +13,7 @@ import WeeklySummaryForm from '@/components/WeeklySummaryForm';
 import StudentDashboard from '@/components/StudentDashboard';
 import ParentDashboard from '@/components/ParentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
+import BirthdayBanner from '@/components/BirthdayBanner';
 import { Button } from '@/components/ui/button';
 import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen, ChevronLeft, Calendar, UserRound, MessageSquareText } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
@@ -43,6 +44,7 @@ export default function Index() {
       return (
         <div className="space-y-4" dir="rtl">
           <DailyReminderBanner />
+          <BirthdayBanner />
           <div className="grid grid-cols-3 gap-2.5">
             {staffCards.map(card => (
               <button key={card.key} onClick={() => setStaffPanel(card.key as StaffPanel)}

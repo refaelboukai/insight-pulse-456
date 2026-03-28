@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, Trash2, Pencil, ChevronLeft, ChevronRight, ClipboardPaste, X, Download, Upload } from 'lucide-react';
+import { Calendar, Plus, Trash2, Pencil, ChevronLeft, ChevronRight, ClipboardPaste, X, Download, Upload, Cake } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import * as XLSX from 'xlsx';
+import { getHebrewDay, getJewishHolidaysForMonth, getBirthdaysForMonth, type BirthdayEntry } from '@/lib/hebrewCalendar';
+import { HDate } from '@hebcal/core';
 
 interface CalendarEvent {
   id: string;
@@ -67,6 +69,10 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Hebrew holidays and birthdays
+  const [hebrewHolidays, setHebrewHolidays] = useState<Map<string, string[]>>(new Map());
+  const [birthdays, setBirthdays] = useState<BirthdayEntry[]>([]);
+
   const fetchEvents = async () => {
     const year = currentDate.getFullYear();
     const month = currentDate.getMonth();
@@ -91,6 +97,49 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       .lte('exam_date', to)
       .order('exam_date');
 
+    // Fetch students for birthdays
+    const { data: studentsData } = await supabase
+      .from('students')
+      .select('id, first_name, last_name, date_of_birth')
+      .eq('is_active', true)
+      .not('date_of_birth', 'is', null);
+
+    // Hebrew holidays
+    const holidays = getJewishHolidaysForMonth(year, month);
+    const holidayMap = new Map<string, string[]>();
+    for (const h of holidays) {
+      const existing = holidayMap.get(h.date) || [];
+      existing.push(`${h.emoji} ${h.title}`);
+      holidayMap.set(h.date, existing);
+    }
+    setHebrewHolidays(holidayMap);
+
+    // Holiday events as CalendarEvent entries
+    const holidayEvents: CalendarEvent[] = holidays.map((h, i) => ({
+      id: `holiday-${h.date}-${i}`,
+      title: `${h.emoji} ${h.title}`,
+      event_date: h.date,
+      event_time: null,
+      description: h.isYomTov ? 'יום טוב' : h.isErev ? 'ערב חג' : null,
+      color: h.isYomTov ? 'purple' : h.isErev ? 'yellow' : 'blue',
+      created_by: '',
+      created_at: '',
+    }));
+
+    // Birthday events
+    const bdays = getBirthdaysForMonth(studentsData || [], year, month);
+    setBirthdays(bdays);
+    const birthdayEvents: CalendarEvent[] = bdays.map(b => ({
+      id: `bday-${b.id}`,
+      title: `🎂 יום הולדת: ${b.name}`,
+      event_date: `${year}-${String(month + 1).padStart(2, '0')}-${String(b.dayOfMonth).padStart(2, '0')}`,
+      event_time: null,
+      description: `בן/בת ${b.age}`,
+      color: 'green',
+      created_by: '',
+      created_at: '',
+    }));
+
     // Convert exams to CalendarEvent format
     const examEvents: CalendarEvent[] = (examData || []).map((exam: any) => {
       const studentName = exam.students ? `${exam.students.first_name} ${exam.students.last_name}` : '';
@@ -109,7 +158,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       };
     });
 
-    const allEvents = [...((calData as any as CalendarEvent[]) || []), ...examEvents]
+    const allEvents = [...((calData as any as CalendarEvent[]) || []), ...examEvents, ...holidayEvents, ...birthdayEvents]
       .sort((a, b) => a.event_date.localeCompare(b.event_date));
 
     setEvents(allEvents);
@@ -425,11 +474,16 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                   isSelected ? 'bg-primary/10' : 'hover:bg-muted/40'
                 }`}
               >
-                <span className={`text-[11px] font-medium inline-flex items-center justify-center w-5 h-5 rounded-full ${
-                  isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
-                }`}>
-                  {day}
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[8px] text-muted-foreground leading-none">
+                    {getHebrewDay(year, month, day)}
+                  </span>
+                  <span className={`text-[11px] font-medium inline-flex items-center justify-center w-5 h-5 rounded-full ${
+                    isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
+                  }`}>
+                    {day}
+                  </span>
+                </div>
                 {dayEvents.length > 0 && (
                   <div className="flex gap-0.5 mt-0.5 flex-wrap">
                     {dayEvents.slice(0, 3).map(ev => (
@@ -479,7 +533,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                         <p className="text-[10px] text-foreground/60 mr-3.5 mt-0.5 whitespace-pre-line">{ev.description}</p>
                       )}
                     </div>
-                    {editable && !ev.id.startsWith('exam-') && (
+                    {editable && !ev.id.startsWith('exam-') && !ev.id.startsWith('holiday-') && !ev.id.startsWith('bday-') && (
                       <div className="flex gap-0.5 shrink-0">
                         <button onClick={(e) => { e.stopPropagation(); openEditDialog(ev); }} className="p-1 rounded hover:bg-background/50">
                           <Pencil className="h-3 w-3 text-muted-foreground" />
