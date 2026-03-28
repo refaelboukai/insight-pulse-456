@@ -1455,25 +1455,25 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Main View Tabs - BIGGER with pastel active colors */}
-      <div className="grid grid-cols-3 gap-2 p-1.5 rounded-2xl bg-muted/40 border">
+      {/* Main View Tabs - BIGGER with prominent pastel active colors and clear separations */}
+      <div className="grid grid-cols-3 gap-2.5 p-2 rounded-2xl bg-muted/50 border-2 border-border/60">
         {[
-          { key: 'management' as const, label: 'הנהלה', icon: Building2, activeBg: 'bg-violet-100 dark:bg-violet-950/40', activeText: 'text-violet-700 dark:text-violet-300', activeBorder: 'border-violet-300 dark:border-violet-700' },
-          { key: 'tali' as const, label: 'כיתת טלי', icon: Users, activeBg: 'bg-emerald-100 dark:bg-emerald-950/40', activeText: 'text-emerald-700 dark:text-emerald-300', activeBorder: 'border-emerald-300 dark:border-emerald-700' },
-          { key: 'eden' as const, label: 'כיתת עדן', icon: Users, activeBg: 'bg-sky-100 dark:bg-sky-950/40', activeText: 'text-sky-700 dark:text-sky-300', activeBorder: 'border-sky-300 dark:border-sky-700' },
+          { key: 'management' as const, label: 'הנהלה', icon: Building2, activeBg: 'bg-violet-100 dark:bg-violet-950/40', activeText: 'text-violet-700 dark:text-violet-300', activeBorder: 'border-violet-400 dark:border-violet-600', emoji: '🏢' },
+          { key: 'tali' as const, label: 'כיתת טלי', icon: Users, activeBg: 'bg-emerald-100 dark:bg-emerald-950/40', activeText: 'text-emerald-700 dark:text-emerald-300', activeBorder: 'border-emerald-400 dark:border-emerald-600', emoji: '🌿' },
+          { key: 'eden' as const, label: 'כיתת עדן', icon: Users, activeBg: 'bg-sky-100 dark:bg-sky-950/40', activeText: 'text-sky-700 dark:text-sky-300', activeBorder: 'border-sky-400 dark:border-sky-600', emoji: '🌊' },
         ].map(tab => (
           <button key={tab.key} onClick={() => {
             setMainView(tab.key);
             setActivePanel(null);
             setReportSelectedStudentId(null);
           }}
-            className={`flex items-center justify-center gap-2 py-3.5 px-3 rounded-xl text-sm font-bold transition-all ${
+            className={`flex flex-col items-center justify-center gap-1 py-4 px-3 rounded-xl text-base font-bold transition-all ${
               mainView === tab.key
-                ? `${tab.activeBg} ${tab.activeBorder} border shadow-sm`
-                : 'hover:bg-background/50 border border-transparent'
+                ? `${tab.activeBg} ${tab.activeBorder} border-2 shadow-md ring-1 ring-black/5`
+                : 'hover:bg-background/60 border-2 border-transparent'
             }`}>
-            <tab.icon className={`h-5 w-5 ${mainView === tab.key ? tab.activeText : 'text-muted-foreground'}`} />
-            <span className={mainView === tab.key ? tab.activeText : 'text-muted-foreground'}>{tab.label}</span>
+            <span className="text-lg">{tab.emoji}</span>
+            <span className={`text-sm ${mainView === tab.key ? tab.activeText : 'text-muted-foreground'}`}>{tab.label}</span>
           </button>
         ))}
       </div>
