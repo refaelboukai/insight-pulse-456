@@ -466,61 +466,6 @@ export default function PedagogyForm() {
                   </AccordionTrigger>
                   <AccordionContent className="px-4 pb-4 space-y-3">
                     <div>
-                      <div className="flex items-center justify-between mb-1">
-                        <Label className="text-xs">סגנון הלמידה</Label>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          className="h-6 text-[10px] gap-1 text-primary hover:text-primary"
-                          disabled={loadingStyleAi}
-                          onClick={async () => {
-                            setLoadingStyleAi(true);
-                            try {
-                              const { data: profile } = await supabase
-                                .from('learning_style_profiles')
-                                .select('results')
-                                .eq('student_id', selectedStudentId)
-                                .eq('is_completed', true)
-                                .maybeSingle();
-                              if (!profile) {
-                                toast.error('לא נמצא פרופיל סגנון למידה לתלמיד/ה');
-                                return;
-                              }
-                              const results = profile.results as any;
-                              const student = filteredStudents.find(s => s.id === selectedStudentId);
-                              const { data, error } = await supabase.functions.invoke('learning-style-recommendations', {
-                                body: {
-                                  studentName: student ? `${student.first_name} ${student.last_name}` : '',
-                                  dominant: results?.dominant || [],
-                                  averages: results?.averages || {},
-                                  challenges: results?.challenges || [],
-                                  staffNotes: results?.staffNotes || '',
-                                  gender: student?.gender || 'male',
-                                },
-                              });
-                              if (error) throw error;
-                              if (data?.error) {
-                                toast.error(data.error);
-                              } else if (data?.recommendations) {
-                                updateField('learning_style', data.recommendations);
-                                toast.success('סגנון הלמידה מולא מ-AI');
-                              }
-                            } catch (e: any) {
-                              toast.error('שגיאה בשליפת סגנון למידה');
-                              console.error(e);
-                            } finally {
-                              setLoadingStyleAi(false);
-                            }
-                          }}
-                        >
-                          {loadingStyleAi ? <Loader2 className="h-3 w-3 animate-spin" /> : <Lightbulb className="h-3 w-3" />}
-                          {loadingStyleAi ? 'טוען...' : 'מלא מ-AI'}
-                        </Button>
-                      </div>
-                      <Textarea className="mt-0 text-sm min-h-[60px]" value={goal.learning_style || ''} onChange={e => updateField('learning_style', e.target.value)} placeholder={`${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'תאר', 'תארי')} את סגנון הלמידה של ${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'התלמיד', 'התלמידה')}...`} />
-                    </div>
-                    <div>
                       <Label className="text-xs">מצב נוכחי</Label>
                       <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.current_status || ''} onChange={e => updateField('current_status', e.target.value)} placeholder={`מהו המצב הנוכחי של ${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'התלמיד', 'התלמידה')} במקצוע...`} />
                     </div>
