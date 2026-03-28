@@ -437,58 +437,75 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
 
   const selectedDayEvents = selectedDay ? events.filter(e => e.event_date === selectedDay) : [];
 
+  // Check if a day is Shabbat (Saturday)
+  const isShabbat = (day: number) => new Date(year, month, day).getDay() === 6;
+  // Check if day has a holiday
+  const getDayHolidays = (day: number) => {
+    const dateStr = getDayStr(day);
+    return hebrewHolidays.get(dateStr) || [];
+  };
+
   return (
-    <div className="space-y-3">
+    <div className="space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <button onClick={nextMonth} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-            <ChevronRight className="h-4 w-4" />
-          </button>
-          <h3 className="text-sm font-bold min-w-[120px] text-center">
-            {HEBREW_MONTHS[month]} {year}
-          </h3>
-          <button onClick={prevMonth} className="p-1.5 rounded-lg hover:bg-muted transition-colors">
-            <ChevronLeft className="h-4 w-4" />
-          </button>
-        </div>
-        {editable && (
-          <div className="flex gap-1 flex-wrap justify-end">
-            <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={handleDownloadTemplate}>
-              <Download className="h-3 w-3" /> תבנית
-            </Button>
-            <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => fileInputRef.current?.click()}>
-              <Upload className="h-3 w-3" /> טען אקסל
-            </Button>
-            <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleExcelUpload} />
-            <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={() => { setShowPaste(true); setPasteText(''); setParsedEvents([]); }}>
-              <ClipboardPaste className="h-3 w-3" /> הדבק
-            </Button>
-            <Button size="sm" className="h-7 text-[10px] gap-1" onClick={() => openAddDialog()}>
-              <Plus className="h-3 w-3" /> הוסף
-            </Button>
+      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-1">
+            <button onClick={nextMonth} className="p-2 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
+              <ChevronRight className="h-4 w-4 text-primary" />
+            </button>
+            <div className="text-center min-w-[130px]">
+              <h3 className="text-base font-bold text-foreground">{HEBREW_MONTHS[month]}</h3>
+              <p className="text-[10px] text-muted-foreground">{year}</p>
+            </div>
+            <button onClick={prevMonth} className="p-2 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
+              <ChevronLeft className="h-4 w-4 text-primary" />
+            </button>
           </div>
-        )}
+          {editable && (
+            <div className="flex gap-1 flex-wrap justify-end">
+              <Button size="sm" variant="ghost" className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-primary" onClick={handleDownloadTemplate}>
+                <Download className="h-3 w-3" />
+              </Button>
+              <Button size="sm" variant="ghost" className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-primary" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="h-3 w-3" />
+              </Button>
+              <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleExcelUpload} />
+              <Button size="sm" variant="ghost" className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-primary" onClick={() => { setShowPaste(true); setPasteText(''); setParsedEvents([]); }}>
+                <ClipboardPaste className="h-3 w-3" />
+              </Button>
+              <Button size="sm" className="h-7 text-[10px] gap-1 rounded-lg" onClick={() => openAddDialog()}>
+                <Plus className="h-3 w-3" /> הוסף
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Calendar Grid */}
-      <div className="rounded-xl border bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm">
         {/* Day headers */}
-        <div className="grid grid-cols-7 bg-muted/50">
-          {HEBREW_DAYS.map(d => (
-            <div key={d} className="text-center text-[10px] font-semibold text-muted-foreground py-1.5">{d}</div>
+        <div className="grid grid-cols-7 bg-primary/5">
+          {HEBREW_DAYS.map((d, idx) => (
+            <div key={d} className={`text-center text-[10px] font-bold py-2 ${idx === 6 ? 'text-primary' : 'text-muted-foreground'}`}>
+              {d}
+            </div>
           ))}
         </div>
 
         {/* Day cells */}
-        <div className="grid grid-cols-7">
+        <div className="grid grid-cols-7 gap-px bg-border/20">
           {calendarDays.map((day, i) => {
-            if (!day) return <div key={i} className="border-t border-border/30 min-h-[52px] bg-muted/10" />;
+            if (!day) return <div key={i} className="min-h-[56px] bg-muted/5" />;
 
             const dayStr = getDayStr(day);
             const dayEvents = getEventsForDay(day);
             const isToday = dayStr === todayStr;
             const isSelected = dayStr === selectedDay;
+            const isSat = isShabbat(day);
+            const holidays = getDayHolidays(day);
+            const hasHoliday = holidays.length > 0;
+            const hasBirthday = dayEvents.some(e => e.id.startsWith('bday-'));
 
             return (
               <button
@@ -498,30 +515,40 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                     setSelectedDay(dayStr === selectedDay ? null : dayStr);
                   }
                 }}
-                className={`border-t border-border/30 min-h-[52px] p-1 text-right transition-colors relative ${
-                  isSelected ? 'bg-primary/10' : 'hover:bg-muted/40'
-                }`}
+                className={`min-h-[56px] p-1 text-right transition-all relative bg-card
+                  ${isSelected ? 'bg-primary/8 ring-1 ring-primary/30 ring-inset' : 'hover:bg-muted/30'}
+                  ${isSat ? 'bg-primary/3' : ''}
+                  ${hasHoliday ? 'bg-amber-50/50 dark:bg-amber-950/10' : ''}
+                `}
               >
-                <div className="flex items-center justify-between">
-                  <span className="text-[8px] text-muted-foreground leading-none">
+                {/* Date numbers row */}
+                <div className="flex items-start justify-between mb-0.5">
+                  <span className="text-[7px] text-muted-foreground/60 leading-none mt-0.5 font-medium">
                     {getHebrewDay(year, month, day)}
                   </span>
-                  <span className={`text-[11px] font-medium inline-flex items-center justify-center w-5 h-5 rounded-full ${
-                    isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
-                  }`}>
+                  <span className={`text-[11px] font-semibold leading-none inline-flex items-center justify-center rounded-full
+                    ${isToday ? 'w-6 h-6 bg-primary text-primary-foreground shadow-sm' : 
+                      isSat ? 'text-primary' : 'text-foreground'}`}>
                     {day}
                   </span>
                 </div>
-                {dayEvents.length > 0 && (
-                  <div className="flex gap-0.5 mt-0.5 flex-wrap">
-                    {dayEvents.slice(0, 3).map(ev => (
-                      <div key={ev.id} className={`w-1.5 h-1.5 rounded-full ${getColorConfig(ev.color).dot}`} />
-                    ))}
-                    {dayEvents.length > 3 && (
-                      <span className="text-[8px] text-muted-foreground">+{dayEvents.length - 3}</span>
-                    )}
-                  </div>
-                )}
+
+                {/* Event dots & indicators */}
+                <div className="flex flex-col gap-0.5 mt-auto">
+                  {hasBirthday && (
+                    <span className="text-[8px] leading-none">🎂</span>
+                  )}
+                  {dayEvents.filter(e => !e.id.startsWith('bday-')).length > 0 && (
+                    <div className="flex gap-[2px] flex-wrap">
+                      {dayEvents.filter(e => !e.id.startsWith('bday-')).slice(0, 4).map(ev => (
+                        <div key={ev.id} className={`w-[5px] h-[5px] rounded-full ${getColorConfig(ev.color).dot} opacity-80`} />
+                      ))}
+                      {dayEvents.filter(e => !e.id.startsWith('bday-')).length > 4 && (
+                        <span className="text-[7px] text-muted-foreground font-medium">+{dayEvents.filter(e => !e.id.startsWith('bday-')).length - 4}</span>
+                      )}
+                    </div>
+                  )}
+                </div>
               </button>
             );
           })}
@@ -530,43 +557,51 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
 
       {/* Selected day detail */}
       {selectedDay && (
-        <div className="rounded-xl border bg-card p-3 space-y-2 animate-fade-in">
+        <div className="rounded-2xl border border-border/50 bg-card p-4 space-y-3 animate-fade-in shadow-sm">
           <div className="flex items-center justify-between">
-            <h4 className="text-xs font-bold">
-              {new Date(selectedDay + 'T00:00:00').toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
-            </h4>
+            <div>
+              <h4 className="text-sm font-bold text-foreground">
+                {new Date(selectedDay + 'T00:00:00').toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long' })}
+              </h4>
+              <p className="text-[10px] text-muted-foreground mt-0.5">
+                {(() => {
+                  const d = new Date(selectedDay + 'T00:00:00');
+                  return getHebrewDay(d.getFullYear(), d.getMonth(), d.getDate());
+                })()}
+              </p>
+            </div>
             {editable && (
-              <Button size="sm" variant="ghost" className="h-6 text-[10px] gap-1" onClick={() => openAddDialog(selectedDay)}>
+              <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1 rounded-lg" onClick={() => openAddDialog(selectedDay)}>
                 <Plus className="h-3 w-3" /> הוסף אירוע
               </Button>
             )}
           </div>
           {selectedDayEvents.length === 0 ? (
-            <p className="text-xs text-muted-foreground text-center py-2">אין אירועים ביום זה</p>
+            <p className="text-xs text-muted-foreground text-center py-4">✨ אין אירועים ביום זה</p>
           ) : (
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               {selectedDayEvents.map(ev => {
                 const color = getColorConfig(ev.color);
                 return (
-                  <div key={ev.id} className={`rounded-lg p-2.5 ${color.bg} flex items-start justify-between gap-2`}>
+                  <div key={ev.id} className={`rounded-xl p-3 ${color.bg} flex items-start justify-between gap-2 transition-all`}>
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-1.5">
-                        <div className={`w-2 h-2 rounded-full shrink-0 ${color.dot}`} />
-                        <p className={`text-xs font-bold ${color.text} truncate`}>{ev.title}</p>
+                      <div className="flex items-center gap-2">
+                        <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${color.dot}`} />
+                        <p className={`text-xs font-bold ${color.text}`}>{ev.title}</p>
                       </div>
                       {ev.event_time && (
-                        <p className={`text-[10px] ${color.text} opacity-70 mr-3.5`}>{ev.event_time}</p>
+                        <p className={`text-[10px] ${color.text} opacity-70 mr-4 mt-0.5`}>🕐 {ev.event_time}</p>
                       )}
                       {ev.description && (
-                        <p className="text-[10px] text-foreground/60 mr-3.5 mt-0.5 whitespace-pre-line">{ev.description}</p>
+                        <p className="text-[10px] text-foreground/50 mr-4 mt-1 whitespace-pre-line leading-relaxed">{ev.description}</p>
                       )}
                     </div>
                     {editable && !ev.id.startsWith('exam-') && !ev.id.startsWith('holiday-') && !ev.id.startsWith('bday-') && (
                       <div className="flex gap-0.5 shrink-0">
-                        <button onClick={(e) => { e.stopPropagation(); openEditDialog(ev); }} className="p-1 rounded hover:bg-background/50">
+                        <button onClick={(e) => { e.stopPropagation(); openEditDialog(ev); }} className="p-1.5 rounded-lg hover:bg-background/60 transition-colors">
                           <Pencil className="h-3 w-3 text-muted-foreground" />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); handleDelete(ev.id); }} className="p-1 rounded hover:bg-background/50">
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(ev.id); }} className="p-1.5 rounded-lg hover:bg-background/60 transition-colors">
                           <Trash2 className="h-3 w-3 text-destructive" />
                         </button>
                       </div>
@@ -582,28 +617,32 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       {/* Upcoming events list */}
       {(() => {
         const upcoming = events
-          .filter(e => e.event_date >= todayStr)
+          .filter(e => e.event_date >= todayStr && !e.id.startsWith('holiday-'))
           .sort((a, b) => a.event_date.localeCompare(b.event_date) || (a.event_time || '').localeCompare(b.event_time || ''));
 
         if (upcoming.length === 0) return null;
         return (
-          <div className="space-y-1.5">
-            <h4 className="text-xs font-bold text-muted-foreground">אירועים קרובים</h4>
-            {upcoming.slice(0, 5).map(ev => {
-              const color = getColorConfig(ev.color);
-              return (
-                <div key={ev.id} className={`rounded-lg p-2 ${color.bg} flex items-center gap-2`}>
-                  <div className={`w-2 h-2 rounded-full shrink-0 ${color.dot}`} />
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-[11px] font-bold ${color.text} truncate`}>{ev.title}</p>
-                    <p className={`text-[10px] ${color.text} opacity-70`}>
-                      {new Date(ev.event_date + 'T00:00:00').toLocaleDateString('he-IL', { day: 'numeric', month: 'short' })}
-                      {ev.event_time && ` · ${ev.event_time}`}
-                    </p>
+          <div className="space-y-2">
+            <h4 className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
+              <Calendar className="h-3.5 w-3.5" /> אירועים קרובים
+            </h4>
+            <div className="space-y-1.5">
+              {upcoming.slice(0, 5).map(ev => {
+                const color = getColorConfig(ev.color);
+                return (
+                  <div key={ev.id} className={`rounded-xl p-2.5 ${color.bg} flex items-center gap-2.5 transition-all hover:shadow-sm`}>
+                    <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${color.dot}`} />
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[11px] font-bold ${color.text} truncate`}>{ev.title}</p>
+                      <p className={`text-[10px] ${color.text} opacity-60`}>
+                        {new Date(ev.event_date + 'T00:00:00').toLocaleDateString('he-IL', { weekday: 'short', day: 'numeric', month: 'short' })}
+                        {ev.event_time && ` · ${ev.event_time}`}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </div>
         );
       })()}
