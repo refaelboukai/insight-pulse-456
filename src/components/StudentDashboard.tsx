@@ -627,16 +627,14 @@ export default function StudentDashboard() {
   type StudentCard = { key: string; icon: React.ElementType; label: string; value?: string | number; iconBg: string; iconColor: string };
 
   const studentCards: StudentCard[] = [
-    { key: 'reminders', icon: CalendarDays, label: 'תזכורות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
     { key: 'reflection', icon: Smile, label: 'היום שלי', iconBg: 'bg-primary/10', iconColor: 'text-primary', value: reflectionSaved ? '✓' : undefined },
-    { key: 'insights', icon: PenLine, label: 'תובנות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
     { key: 'reports', icon: FileText, label: 'דיווחים', value: reports.length, iconBg: 'bg-primary/10', iconColor: 'text-primary' },
     { key: 'grades', icon: GraduationCap, label: 'ציונים', value: grades.length, iconBg: 'bg-[hsl(35,60%,90%)]', iconColor: 'text-[hsl(35,60%,30%)]' },
     { key: 'pedagogy', icon: BookOpen, label: 'יעדים פדגוגיים', value: pedagogyGoals.length, iconBg: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,35%)]' },
     { key: 'exams', icon: CalendarDays, label: 'לוח מבחנים', value: examSchedule.length, iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
     { key: 'support', icon: HeartHandshake, label: 'תכנית תמיכה', value: assignments.length, iconBg: 'bg-[hsl(145,40%,90%)]', iconColor: 'text-[hsl(145,40%,30%)]' },
     { key: 'schedule', icon: Calendar, label: 'מערכת שעות', iconBg: 'bg-[hsl(220,45%,92%)]', iconColor: 'text-[hsl(220,45%,35%)]' },
-    { key: 'weekly_summary', icon: MessageSquareText, label: 'סיכום מחנכות', value: weeklySummaries.length, iconBg: 'bg-[hsl(50,55%,90%)]', iconColor: 'text-[hsl(50,55%,30%)]' },
+    ...(weeklySummaries.length > 0 ? [{ key: 'weekly_summary', icon: MessageSquareText, label: 'סיכום מחנכות', value: weeklySummaries.length, iconBg: 'bg-[hsl(50,55%,90%)]', iconColor: 'text-[hsl(50,55%,30%)]' }] : []),
   ];
 
   // If a panel is open, render it
