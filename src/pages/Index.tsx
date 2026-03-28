@@ -13,6 +13,7 @@ import WeeklySummaryForm from '@/components/WeeklySummaryForm';
 import StudentDashboard from '@/components/StudentDashboard';
 import ParentDashboard from '@/components/ParentDashboard';
 import DailyReminderBanner from '@/components/DailyReminderBanner';
+import BirthdayBanner from '@/components/BirthdayBanner';
 import { Button } from '@/components/ui/button';
 import { LogOut, FileText, AlertTriangle, Shield, ClipboardCheck, HeartHandshake, GraduationCap, User, BookOpen, ChevronLeft, Calendar, UserRound, MessageSquareText } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
