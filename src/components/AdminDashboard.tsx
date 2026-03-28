@@ -338,23 +338,7 @@ export default function AdminDashboard() {
   const shareMonthlyReport = async () => {
     if (!monthlyReport) return;
     const title = reportStudentId ? `דוח חודשי - ${studentName(reportStudentId)}` : 'דוח חודשי - כלל התלמידים';
-    if (navigator.share) {
-      try {
-        const blob = new Blob([monthlyReport], { type: 'text/plain;charset=utf-8' });
-        const file = new File([blob], `דוח_חודשי.txt`, { type: 'text/plain' });
-        if (navigator.canShare && navigator.canShare({ files: [file] })) { await navigator.share({ title, files: [file] }); }
-        else { await navigator.share({ title, text: monthlyReport }); }
-        return;
-      } catch (e) { if ((e as Error).name === 'AbortError') return; }
-    }
-    // Fallback: download as text file on desktop
-    const blob = new Blob([monthlyReport], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `דוח_חודשי.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    await shareOrDownloadText(monthlyReport, `דוח_חודשי.txt`, title);
     toast.info('הדוח הורד בהצלחה');
   };
 
