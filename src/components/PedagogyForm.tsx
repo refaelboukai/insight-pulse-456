@@ -58,7 +58,7 @@ function MappingStatusBadge({ studentId, gender }: { studentId: string; gender?:
     </div>
   );
 }
-
+export default function PedagogyForm() {
   const { user, role } = useAuth();
   const isAdmin = role === 'admin';
 
