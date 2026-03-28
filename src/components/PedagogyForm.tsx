@@ -1037,6 +1037,7 @@ export default function PedagogyForm() {
             )}
           </>
         )}
+        </>)}
       </CardContent>
     </Card>
 
