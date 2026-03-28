@@ -172,30 +172,8 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     const title = `סיכום תפקוד - ${student.first_name} ${student.last_name}`;
     const text = aiSummary;
 
-    // Try native share (works on mobile + modern browsers)
-    if (navigator.share) {
-      try {
-        const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-        const file = new File([blob], `סיכום_${student.first_name}_${student.last_name}.txt`, { type: 'text/plain' });
-        
-        if (navigator.canShare && navigator.canShare({ files: [file] })) {
-          await navigator.share({ title, files: [file] });
-        } else {
-          await navigator.share({ title, text });
-        }
-        return;
-      } catch (e) {
-        if ((e as Error).name === 'AbortError') return;
-      }
-    }
-    // Fallback: download as file on desktop
-    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `סיכום_${student.first_name}_${student.last_name}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    const { shareOrDownloadText } = await import('@/lib/downloadFile');
+    await shareOrDownloadText(text, `סיכום_${student.first_name}_${student.last_name}.txt`, title);
     toast.info('הקובץ הורד בהצלחה');
   };
 
