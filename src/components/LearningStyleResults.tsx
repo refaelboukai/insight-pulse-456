@@ -18,7 +18,7 @@ interface LearningStyleResultsProps {
   compact?: boolean;
 }
 
-export default function LearningStyleResults({ studentId, studentName, isEditable = false, gender }: LearningStyleResultsProps) {
+export default function LearningStyleResults({ studentId, studentName, isEditable = false, gender, compact = false }: LearningStyleResultsProps) {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [staffNotes, setStaffNotes] = useState('');
