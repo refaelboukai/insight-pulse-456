@@ -1,5 +1,6 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import logoImport from '@/assets/logo.jpeg';
 
 interface PedagogyGoalData {
   studentName: string;
@@ -22,11 +23,15 @@ function preloadImageAsDataUrl(src: string): Promise<string> {
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
-      const canvas = document.createElement('canvas');
-      canvas.width = img.width;
-      canvas.height = img.height;
-      canvas.getContext('2d')!.drawImage(img, 0, 0);
-      resolve(canvas.toDataURL('image/jpeg', 0.85));
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        canvas.getContext('2d')!.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 0.85));
+      } catch {
+        resolve(src);
+      }
     };
     img.onerror = () => resolve(src);
     img.src = src;
@@ -34,12 +39,11 @@ function preloadImageAsDataUrl(src: string): Promise<string> {
 }
 
 export async function generatePedagogyPdf(data: PedagogyGoalData): Promise<Blob> {
-  const logoSrc = '/logo.png';
   let logoDataUrl: string;
   try {
-    logoDataUrl = await preloadImageAsDataUrl(logoSrc);
+    logoDataUrl = await preloadImageAsDataUrl(logoImport);
   } catch {
-    logoDataUrl = logoSrc;
+    logoDataUrl = '';
   }
 
   const subjectTitle = data.subSubject ? `${data.subjectName} (${data.subSubject})` : data.subjectName;
