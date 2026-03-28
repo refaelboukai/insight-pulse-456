@@ -41,20 +41,55 @@ const MONTHS = [
   'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
 ];
 
-function MappingStatusBadge({ studentId, gender }: { studentId: string; gender?: string | null }) {
-  const [hasMappings, setHasMappings] = useState<boolean | null>(null);
+// Map subject names to relevant academic mapping areas
+const TEXT_HEAVY_SUBJECTS = ['היסטוריה', 'ספרות', 'תנ"ך', 'תנך', 'אזרחות', 'גיאוגרפיה', 'סוציולוגיה', 'פילוסופיה', 'מדעי החברה'];
+function getRelevantMappingArea(subjectName: string): string | null {
+  const lower = subjectName.trim();
+  if (lower === 'מתמטיקה') return 'math';
+  if (lower === 'אנגלית') return 'english';
+  if (lower === 'עברית') return 'hebrew';
+  if (lower === 'לשון' || lower === 'שפה' || TEXT_HEAVY_SUBJECTS.some(t => lower.includes(t))) return 'language';
+  return null;
+}
+const MAPPING_AREA_LABELS: Record<string, string> = { math: 'מתמטיקה', hebrew: 'עברית', language: 'שפה', english: 'אנגלית' };
+
+function SubjectMappingBadge({ studentId, subjectName, gender }: { studentId: string; subjectName: string; gender?: string | null }) {
+  const [mappingData, setMappingData] = useState<any[] | null>(null);
+  const mappingArea = getRelevantMappingArea(subjectName);
+
   useEffect(() => {
-    supabase.from('student_mappings').select('has_mapping').eq('student_id', studentId).then(({ data }) => {
-      const has = (data || []).some((r: any) => r.has_mapping);
-      setHasMappings(has);
+    supabase.from('student_mappings').select('*').eq('student_id', studentId).then(({ data }) => {
+      setMappingData(data || []);
     });
   }, [studentId]);
-  if (hasMappings === null) return null;
-  if (hasMappings) return null;
+
+  if (mappingData === null) return null;
+  if (!mappingArea) {
+    // No relevant mapping for this subject type
+    const hasAny = mappingData.some((r: any) => r.has_mapping);
+    if (hasAny) return null;
+    return (
+      <div className="text-xs p-2.5 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-1.5">
+        <ClipboardCheck className="h-3.5 w-3.5" />
+        {g(gender, 'התלמיד לא ביצע', 'התלמידה לא ביצעה')} מיפוי לימודי.
+      </div>
+    );
+  }
+
+  const relevant = mappingData.find((r: any) => r.subject_area === mappingArea);
+  if (!relevant || !relevant.has_mapping) {
+    return (
+      <div className="text-xs p-2.5 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-1.5">
+        <ClipboardCheck className="h-3.5 w-3.5" />
+        {g(gender, 'התלמיד לא ביצע', 'התלמידה לא ביצעה')} מיפוי לימודי בתחום {MAPPING_AREA_LABELS[mappingArea]}.
+      </div>
+    );
+  }
+
   return (
-    <div className="text-xs p-2 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-1.5">
+    <div className="text-xs p-2.5 bg-emerald-50 border border-emerald-200 text-emerald-700 rounded-lg flex items-center gap-1.5 font-medium">
       <ClipboardCheck className="h-3.5 w-3.5" />
-      {g(gender, 'התלמיד לא ביצע', 'התלמידה לא ביצעה')} מיפוי לימודי.
+      מיפוי {MAPPING_AREA_LABELS[mappingArea]}: רמת כיתה {relevant.grade_level}׳
     </div>
   );
 }
@@ -970,8 +1005,8 @@ export default function PedagogyForm() {
               </Select>
             </div>
 
-            {/* Mapping status indicator */}
-            <MappingStatusBadge studentId={selectedStudentId} gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender} />
+            {/* Mapping level for this subject */}
+            <SubjectMappingBadge studentId={selectedStudentId} subjectName={selectedSubject?.name || ''} gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender} />
             {/* Learning style recommendations only for goal planning context */}
             <LearningStyleResults
               studentId={selectedStudentId}
