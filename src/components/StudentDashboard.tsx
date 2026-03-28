@@ -412,6 +412,33 @@ export default function StudentDashboard() {
           </Button>
         </>
       )}
+
+      {/* Insights section integrated into reflection */}
+      <div className="border-t border-border/40 pt-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <PenLine className="h-4 w-4 text-accent" />
+          <span className="text-sm font-bold">תובנות שלי על היום</span>
+        </div>
+        <Textarea value={insightText} onChange={(e) => setInsightText(e.target.value)}
+          placeholder={`${terms.write} כאן מה עבר עליך היום, מה למדת על עצמך, מה הרגשת...`}
+          className="min-h-[100px] rounded-xl border-muted text-sm resize-none" disabled={insightSaved} />
+        {!insightSaved ? (
+          <Button size="sm" className="w-full btn-primary-gradient text-primary-foreground rounded-lg h-9" disabled={insightSaving || !insightText.trim()}
+            onClick={async () => {
+              if (!selectedStudentId || !selectedStudent) return;
+              setInsightSaving(true);
+              const { error } = await (supabase.from as any)('student_insights').insert({ student_id: selectedStudentId, content: insightText.trim() });
+              setInsightSaving(false);
+              if (error) { toast.error('שגיאה בשמירה'); return; }
+              setInsightSaved(true);
+              toast.success('התובנה נשמרה!');
+            }}>
+            {insightSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'שמור תובנה'}
+          </Button>
+        ) : (
+          <p className="text-xs text-center text-muted-foreground">✓ התובנה נשמרה להיום</p>
+        )}
+      </div>
     </div>
   );
 
