@@ -37,6 +37,8 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
         setProfile(data);
         const existingNotes = (data.results as any)?.staffNotes || '';
         setStaffNotes(existingNotes);
+        const existingAi = (data.results as any)?.aiRecommendations || '';
+        setAiRecommendations(existingAi);
       }
       setLoading(false);
     };
@@ -157,6 +159,10 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
                   toast.error(data.error);
                 } else {
                   setAiRecommendations(data.recommendations);
+                  // Persist to DB
+                  const updatedResults = { ...profile.results, aiRecommendations: data.recommendations };
+                  await supabase.from('learning_style_profiles').update({ results: updatedResults }).eq('id', profile.id);
+                  setProfile({ ...profile, results: updatedResults });
                 }
               } catch (e: any) {
                 toast.error('שגיאה בייצור ההמלצות');
@@ -169,7 +175,7 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
             className="gap-1.5 text-xs"
           >
             {loadingAi ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Lightbulb className="h-3.5 w-3.5" />}
-            {loadingAi ? 'מייצר המלצות...' : 'צור המלצות AI למורה'}
+            {loadingAi ? 'מייצר המלצות...' : aiRecommendations ? 'חדש המלצות AI' : 'צור המלצות AI למורה'}
           </Button>
 
           {aiRecommendations && (
@@ -203,6 +209,18 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
         <div className="pt-2 border-t">
           <span className="text-xs font-medium text-muted-foreground">הערות הצוות:</span>
           <p className="text-xs text-foreground/80 mt-1 bg-muted/50 rounded-lg p-2">{results.staffNotes}</p>
+        </div>
+      )}
+
+      {/* Show saved AI recommendations in read-only mode */}
+      {!isEditable && results.aiRecommendations && (
+        <div className="pt-2 border-t">
+          <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-1">
+            <span className="text-xs font-bold text-primary flex items-center gap-1">
+              <Lightbulb className="h-3.5 w-3.5" /> המלצות AI
+            </span>
+            <p className="text-xs text-foreground/80 whitespace-pre-line leading-relaxed">{results.aiRecommendations}</p>
+          </div>
         </div>
       )}
     </div>
