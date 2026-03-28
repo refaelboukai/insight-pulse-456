@@ -528,6 +528,21 @@ export default function PedagogyForm() {
                         <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.admin_notes || ''} onChange={e => updateField('admin_notes', e.target.value)} placeholder="הערות הנהלה..." />
                       </div>
                     )}
+                    {/* AI Goal Suggestion */}
+                    <Button onClick={handleSuggestGoals} disabled={loadingGoalSuggestion} variant="outline" className="w-full gap-2">
+                      {loadingGoalSuggestion ? (
+                        <><Loader2 className="h-4 w-4 animate-spin" /> מייצר הצעת יעדים...</>
+                      ) : (
+                        <><Lightbulb className="h-4 w-4" /> הצעת יעדים מ-AI</>
+                      )}
+                    </Button>
+                    {goalSuggestion && (
+                      <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+                        <p className="text-xs font-semibold text-primary mb-1.5 flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" /> הצעת AI ליעדים</p>
+                        <div className="text-xs leading-relaxed whitespace-pre-wrap">{goalSuggestion}</div>
+                      </div>
+                    )}
+
                     <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
                       <Save className="h-4 w-4" />
                       {saving ? 'שומר...' : existingGoalId ? 'עדכן יעד' : 'שמור יעד'}
