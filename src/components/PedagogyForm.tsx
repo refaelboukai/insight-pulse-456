@@ -57,6 +57,13 @@ export default function PedagogyForm() {
   const [saving, setSaving] = useState(false);
   const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
 
+  // Teacher's subject sub-screen
+  const [teacherView, setTeacherView] = useState<'form' | 'my-subjects'>('form');
+  const [myGoals, setMyGoals] = useState<any[]>([]);
+  const [mySubjectFilter, setMySubjectFilter] = useState<string | null>(null);
+  const [myClassFilter, setMyClassFilter] = useState<string | null>(null);
+  const [loadingMyGoals, setLoadingMyGoals] = useState(false);
+
   // Exam schedule
   const [exams, setExams] = useState<ExamEntry[]>([]);
   const [newExamDate, setNewExamDate] = useState('');

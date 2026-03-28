@@ -515,7 +515,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                     setSelectedDay(dayStr === selectedDay ? null : dayStr);
                   }
                 }}
-                className={`min-h-[56px] p-1 text-right transition-all relative bg-card
+                className={`min-h-[64px] sm:min-h-[72px] p-1.5 text-right transition-all relative bg-card
                   ${isSelected ? 'bg-primary/8 ring-1 ring-primary/30 ring-inset' : 'hover:bg-muted/30'}
                   ${isSat ? 'bg-primary/3' : ''}
                   ${hasHoliday ? 'bg-amber-50/50 dark:bg-amber-950/10' : ''}
