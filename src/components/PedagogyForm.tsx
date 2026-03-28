@@ -528,6 +528,20 @@ export default function PedagogyForm() {
 
         {selectedStudentId && (
           <>
+            {/* Full pedagogy summary export */}
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                onClick={handleExportFullSummary}
+                disabled={exportingFullSummary}
+              >
+                {exportingFullSummary ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                סיכום פדגוגי מלא
+              </Button>
+            </div>
+
             {/* Academic Mapping - above learning style */}
             <AcademicMappingSection studentId={selectedStudentId} />
 
