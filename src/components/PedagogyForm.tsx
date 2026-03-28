@@ -761,63 +761,103 @@ export default function PedagogyForm() {
   return (
     <><Card className="shadow-soft border-0">
       <CardHeader className="pb-3">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-2">
           <CardTitle className="text-lg flex items-center gap-2">
             <BookOpen className="h-5 w-5 text-primary" />
-            יעדים פדגוגיים
+            פדגוגיה
           </CardTitle>
           <div className="flex gap-1 p-0.5 rounded-lg bg-muted/40 border">
-            <button onClick={() => setTeacherView('form')}
-              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all ${teacherView === 'form' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
-              הזנת יעדים
+            <button onClick={() => setTeacherView('profile')}
+              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all flex-1 ${teacherView === 'profile' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
+              פרופיל תלמיד
+            </button>
+            <button onClick={() => setTeacherView('goals')}
+              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all flex-1 ${teacherView === 'goals' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
+              יעדים פדגוגיים
             </button>
             <button onClick={() => setTeacherView('my-subjects')}
-              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all ${teacherView === 'my-subjects' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
-              המקצועות שלי
+              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all flex-1 ${teacherView === 'my-subjects' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
+              מקצועות
             </button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {teacherView === 'my-subjects' ? renderTeacherSubjectView() : (<>
-        {/* Year + Student selection */}
-        <div className="grid grid-cols-3 gap-3">
-          <div>
-            <Label className="text-xs mb-1 block">שנת לימודים</Label>
-            <Select value={selectedYear} onValueChange={setSelectedYear}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-              <SelectContent>
-                {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-              </SelectContent>
-            </Select>
+        {/* Student selection - shared between profile and goals tabs */}
+        {teacherView !== 'my-subjects' && (
+          <div className="grid grid-cols-3 gap-3">
+            <div>
+              <Label className="text-xs mb-1 block">שנת לימודים</Label>
+              <Select value={selectedYear} onValueChange={setSelectedYear}>
+                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">כיתה</Label>
+              <Select value={selectedClass || ''} onValueChange={v => { setSelectedClass(v || null); setSelectedStudentId(''); }}>
+                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר כיתה" /></SelectTrigger>
+                <SelectContent>
+                  {CLASS_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label className="text-xs mb-1 block">{g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'תלמיד', 'תלמידה')}</Label>
+              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחירת תלמיד/ה" /></SelectTrigger>
+                <SelectContent>
+                  {filteredStudents.map(s => (
+                    <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-          <div>
-            <Label className="text-xs mb-1 block">כיתה</Label>
-            <Select value={selectedClass || ''} onValueChange={v => { setSelectedClass(v || null); setSelectedStudentId(''); }}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר כיתה" /></SelectTrigger>
-              <SelectContent>
-                {CLASS_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
-          <div>
-            <Label className="text-xs mb-1 block">{g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'תלמיד', 'תלמידה')}</Label>
-            <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-              <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחירת תלמיד/ה" /></SelectTrigger>
-              <SelectContent>
-                {filteredStudents.map(s => (
-                  <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
+        )}
 
-        {selectedStudentId && (
-          <>
+        {/* Tab 1: Student Profile */}
+        {teacherView === 'profile' && selectedStudentId && (
+          <div className="space-y-4">
             {/* Full pedagogy summary export */}
             <div className="flex justify-end">
               <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                onClick={handleExportFullSummary}
+                disabled={exportingFullSummary}
+              >
+                {exportingFullSummary ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                סיכום פדגוגי מלא
+              </Button>
+            </div>
+
+            {/* Academic Mapping */}
+            <AcademicMappingSection studentId={selectedStudentId} />
+
+            {/* Learning Style Profile */}
+            <LearningStyleResults
+              studentId={selectedStudentId}
+              studentName={filteredStudents.find(s => s.id === selectedStudentId)
+                ? `${filteredStudents.find(s => s.id === selectedStudentId)!.first_name} ${filteredStudents.find(s => s.id === selectedStudentId)!.last_name}`
+                : ''}
+              isEditable={true}
+              gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
+            />
+          </div>
+        )}
+
+        {teacherView === 'profile' && !selectedStudentId && (
+          <p className="text-sm text-muted-foreground text-center py-8">בחר תלמיד כדי לצפות בפרופיל</p>
+        )}
+
+        {/* Tab 2: Pedagogical Goals */}
+        {teacherView === 'goals' && (<>
+        {selectedStudentId && (
+          <>
                 variant="outline"
                 size="sm"
                 className="h-8 text-xs gap-1.5"
