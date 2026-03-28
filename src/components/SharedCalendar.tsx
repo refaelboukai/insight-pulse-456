@@ -614,7 +614,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
         </div>
       )}
 
-      {/* Upcoming events list */}
+      {/* Upcoming events - collapsible */}
       {(() => {
         const upcoming = events
           .filter(e => e.event_date >= todayStr && !e.id.startsWith('holiday-'))
@@ -622,12 +622,15 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
 
         if (upcoming.length === 0) return null;
         return (
-          <div className="space-y-2">
-            <h4 className="text-xs font-bold text-muted-foreground flex items-center gap-1.5">
-              <Calendar className="h-3.5 w-3.5" /> אירועים קרובים
-            </h4>
-            <div className="space-y-1.5">
-              {upcoming.slice(0, 5).map(ev => {
+          <details className="rounded-2xl border border-border/50 bg-card shadow-sm overflow-hidden group">
+            <summary className="flex items-center gap-1.5 cursor-pointer p-3 hover:bg-muted/30 transition-colors list-none [&::-webkit-details-marker]:hidden">
+              <ChevronLeft className="h-3.5 w-3.5 text-muted-foreground transition-transform group-open:-rotate-90" />
+              <Calendar className="h-3.5 w-3.5 text-primary" />
+              <span className="text-xs font-bold text-muted-foreground">אירועים קרובים</span>
+              <Badge variant="secondary" className="text-[9px] h-4 px-1.5 mr-auto">{upcoming.length}</Badge>
+            </summary>
+            <div className="px-3 pb-3 space-y-1.5">
+              {upcoming.slice(0, 8).map(ev => {
                 const color = getColorConfig(ev.color);
                 return (
                   <div key={ev.id} className={`rounded-xl p-2.5 ${color.bg} flex items-center gap-2.5 transition-all hover:shadow-sm`}>
@@ -643,7 +646,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                 );
               })}
             </div>
-          </div>
+          </details>
         );
       })()}
 
