@@ -485,9 +485,9 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       {/* Calendar Grid */}
       <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm">
         {/* Day headers */}
-        <div className="grid grid-cols-7 bg-primary/5">
+        <div className="grid bg-primary/5" style={{ gridTemplateColumns: 'repeat(5, 1fr) 0.6fr 0.6fr' }}>
           {HEBREW_DAYS.map((d, idx) => (
-            <div key={d} className={`text-center text-[10px] font-bold py-2 ${idx === 6 ? 'text-primary' : 'text-muted-foreground'}`}>
+            <div key={d} className={`text-center text-[10px] font-bold py-2 ${idx === 6 ? 'text-primary' : idx === 5 ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
               {d}
             </div>
           ))}
