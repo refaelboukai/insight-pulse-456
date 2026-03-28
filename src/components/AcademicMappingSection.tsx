@@ -4,17 +4,17 @@ import { useAuth } from '@/hooks/useAuth';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import { ClipboardCheck } from 'lucide-react';
 
 const MAPPING_SUBJECTS = [
   { key: 'math', label: 'מתמטיקה' },
   { key: 'hebrew', label: 'עברית' },
+  { key: 'language', label: 'שפה' },
   { key: 'english', label: 'אנגלית' },
 ] as const;
 
-const GRADE_LEVELS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט'];
+const GRADE_LEVELS = ['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ז', 'ח', 'ט', 'י', 'יא', 'יב'];
 
 type MappingRow = {
   id?: string;
@@ -80,7 +80,7 @@ export default function AcademicMappingSection({ studentId }: Props) {
         <ClipboardCheck className="h-4 w-4 text-primary" />
         מיפוי לימודי
       </div>
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
         {MAPPING_SUBJECTS.map(({ key, label }) => {
           const m = mappings[key];
           const hasMapping = m?.has_mapping ?? false;
