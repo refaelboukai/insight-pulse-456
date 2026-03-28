@@ -64,6 +64,8 @@ export default function PedagogyForm() {
   const [showTracking, setShowTracking] = useState(false);
   const [exporting, setExporting] = useState(false);
   const [loadingStyleAi, setLoadingStyleAi] = useState(false);
+  const [loadingGoalSuggestion, setLoadingGoalSuggestion] = useState(false);
+  const [goalSuggestion, setGoalSuggestion] = useState<string | null>(null);
 
   // Classmate exam dialog
   const [showExamClassDialog, setShowExamClassDialog] = useState(false);
