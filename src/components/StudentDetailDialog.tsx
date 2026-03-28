@@ -199,6 +199,25 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     window.open(whatsappUrl, '_blank');
   };
 
+  const generatePatterns = async () => {
+    if (!student) return;
+    setGeneratingPatterns(true);
+    setPatterns(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('detect-patterns', {
+        body: { studentId: student.id, studentName: `${student.first_name} ${student.last_name}` },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setPatterns(data.patterns);
+    } catch (e) {
+      toast.error('שגיאה בזיהוי דפוסים');
+      console.error(e);
+    } finally {
+      setGeneratingPatterns(false);
+    }
+  };
+
   const quickDays = [0, 1, 2, 3, 4].map(d => {
     const date = new Date();
     date.setDate(date.getDate() - d);
