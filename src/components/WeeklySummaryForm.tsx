@@ -28,6 +28,7 @@ export default function WeeklySummaryForm() {
   const [summaryText, setSummaryText] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [savedIds, setSavedIds] = useState<Set<string>>(new Set());
+  const [enriching, setEnriching] = useState(false);
   const weekStart = getWeekStart();
 
   useEffect(() => {
