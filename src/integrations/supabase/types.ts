@@ -903,6 +903,47 @@ export type Database = {
           },
         ]
       }
+      student_mappings: {
+        Row: {
+          created_at: string
+          grade_level: string | null
+          has_mapping: boolean
+          id: string
+          student_id: string
+          subject_area: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          grade_level?: string | null
+          has_mapping?: boolean
+          id?: string
+          student_id: string
+          subject_area: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          grade_level?: string | null
+          has_mapping?: boolean
+          id?: string
+          student_id?: string
+          subject_area?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "student_mappings_student_id_fkey"
+            columns: ["student_id"]
+            isOneToOne: false
+            referencedRelation: "students"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       student_schedules: {
         Row: {
           created_at: string
