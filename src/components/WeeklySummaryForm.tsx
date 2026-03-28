@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Send, CheckCircle2, Loader2 } from 'lucide-react';
+import { Send, CheckCircle2, Loader2, Sparkles } from 'lucide-react';
 
 type Student = {
   id: string;
