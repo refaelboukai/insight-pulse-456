@@ -1467,12 +1467,12 @@ export default function AdminDashboard() {
             setActivePanel(null);
             setReportSelectedStudentId(null);
           }}
-            className={`flex flex-col items-center justify-center gap-1 py-4 px-3 rounded-xl text-base font-bold transition-all ${
+            className={`flex items-center justify-center gap-2 py-4 px-3 rounded-xl text-base font-bold transition-all ${
               mainView === tab.key
                 ? `${tab.activeBg} ${tab.activeBorder} border-2 shadow-md ring-1 ring-black/5`
                 : 'hover:bg-background/60 border-2 border-transparent'
             }`}>
-            <span className="text-lg">{tab.emoji}</span>
+            <tab.icon className={`h-5 w-5 ${mainView === tab.key ? tab.activeText : 'text-muted-foreground'}`} />
             <span className={`text-sm ${mainView === tab.key ? tab.activeText : 'text-muted-foreground'}`}>{tab.label}</span>
           </button>
         ))}
