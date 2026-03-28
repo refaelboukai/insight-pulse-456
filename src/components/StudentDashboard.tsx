@@ -88,6 +88,7 @@ export default function StudentDashboard() {
   const [reflectionSaving, setReflectionSaving] = useState(false);
   const [reflectionSaved, setReflectionSaved] = useState(false);
   const [weeklySummaries, setWeeklySummaries] = useState<any[]>([]);
+  const [hasSchedule, setHasSchedule] = useState(false);
 
   const isLocked = !!lockedStudentId;
 
