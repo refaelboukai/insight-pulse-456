@@ -742,15 +742,15 @@ export default function StudentDashboard() {
       {/* Pinned panels */}
       {pinnedPanels.size > 0 && (() => {
         const pinnedRenderers: Record<string, () => React.ReactNode> = {
-          reminders: renderRemindersPanel, reflection: renderReflectionPanel,
-          insights: renderInsightsPanel, reports: renderReportsPanel,
+          reflection: renderReflectionPanel,
+          reports: renderReportsPanel,
           grades: renderGradesPanel, pedagogy: renderPedagogyPanel,
           exams: renderExamsPanel, support: renderSupportPanel,
           schedule: renderSchedulePanel,
           weekly_summary: renderWeeklySummaryPanel,
         };
         const pinnedLabels: Record<string, string> = {
-          reminders: 'תזכורות להיום', reflection: 'היום שלי', insights: 'תובנות שלי על היום',
+          reflection: 'היום שלי',
           reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
           exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
           weekly_summary: 'סיכום שבועי מהמחנכת',
