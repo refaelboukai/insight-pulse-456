@@ -81,14 +81,16 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
       </div>
 
       {/* Category averages */}
-      <div className="grid grid-cols-3 gap-2">
-        {Object.entries(averages).map(([cat, avg]) => (
-          <div key={cat} className="text-center p-2 rounded-lg bg-muted/50">
-            <span className="text-[10px] text-muted-foreground block">{catLabels[cat] || cat}</span>
-            <span className="font-bold text-sm">{String(avg)}</span>
-          </div>
-        ))}
-      </div>
+      {!compact && (
+        <div className="grid grid-cols-3 gap-2">
+          {Object.entries(averages).map(([cat, avg]) => (
+            <div key={cat} className="text-center p-2 rounded-lg bg-muted/50">
+              <span className="text-[10px] text-muted-foreground block">{catLabels[cat] || cat}</span>
+              <span className="font-bold text-sm">{String(avg)}</span>
+            </div>
+          ))}
+        </div>
+      )}
 
       {/* Dominant styles */}
       {results.dominant && (
