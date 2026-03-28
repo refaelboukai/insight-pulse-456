@@ -51,6 +51,8 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
   const [longAbsentStudents, setLongAbsentStudents] = useState<LongAbsentStudent[]>([]);
   const [followups, setFollowups] = useState<Map<string, FollowupRecord>>(new Map());
   const [longAbsentExpanded, setLongAbsentExpanded] = useState(false);
+  const [interventionLoading, setInterventionLoading] = useState<string | null>(null);
+  const [interventions, setInterventions] = useState<Map<string, string>>(new Map());
   const today = new Date().toISOString().split('T')[0];
 
   useEffect(() => {
