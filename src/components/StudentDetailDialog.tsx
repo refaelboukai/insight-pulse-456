@@ -179,7 +179,6 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
     // Try native share (works on mobile + modern browsers)
     if (navigator.share) {
       try {
-        // Try sharing as file first
         const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
         const file = new File([blob], `סיכום_${student.first_name}_${student.last_name}.txt`, { type: 'text/plain' });
         
@@ -190,13 +189,18 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
         }
         return;
       } catch (e) {
-        // User cancelled or share failed — fall through to WhatsApp
         if ((e as Error).name === 'AbortError') return;
       }
     }
-    // Fallback: open WhatsApp
-    const whatsappUrl = `https://wa.me/?text=${encodeURIComponent(text)}`;
-    window.open(whatsappUrl, '_blank');
+    // Fallback: download as file on desktop
+    const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `סיכום_${student.first_name}_${student.last_name}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.info('הקובץ הורד בהצלחה');
   };
 
   const generatePatterns = async () => {

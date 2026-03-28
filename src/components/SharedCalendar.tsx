@@ -446,36 +446,36 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
   };
 
   return (
-    <div className="space-y-3 -mx-3 sm:mx-0">
+    <div className="space-y-4 -mx-3 sm:mx-0">
       {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-3 mx-3 sm:mx-0">
+      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-4 mx-3 sm:mx-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1">
-            <button onClick={nextMonth} className="p-2.5 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
-              <ChevronRight className="h-5 w-5 text-primary" />
+          <div className="flex items-center gap-2">
+            <button onClick={nextMonth} className="p-3 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
+              <ChevronRight className="h-6 w-6 text-primary" />
             </button>
-            <div className="text-center min-w-[140px]">
-              <h3 className="text-lg font-bold text-foreground">{HEBREW_MONTHS[month]}</h3>
-              <p className="text-xs text-muted-foreground">{year}</p>
+            <div className="text-center min-w-[160px]">
+              <h3 className="text-xl font-bold text-foreground">{HEBREW_MONTHS[month]}</h3>
+              <p className="text-sm text-muted-foreground">{year}</p>
             </div>
-            <button onClick={prevMonth} className="p-2.5 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
-              <ChevronLeft className="h-5 w-5 text-primary" />
+            <button onClick={prevMonth} className="p-3 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
+              <ChevronLeft className="h-6 w-6 text-primary" />
             </button>
           </div>
           {editable && (
-            <div className="flex gap-1 flex-wrap justify-end">
-              <Button size="sm" variant="ghost" className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-primary" onClick={handleDownloadTemplate}>
-                <Download className="h-3 w-3" />
+            <div className="flex gap-1.5 flex-wrap justify-end">
+              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-muted-foreground hover:text-primary" onClick={handleDownloadTemplate}>
+                <Download className="h-3.5 w-3.5" />
               </Button>
-              <Button size="sm" variant="ghost" className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-primary" onClick={() => fileInputRef.current?.click()}>
-                <Upload className="h-3 w-3" />
+              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-muted-foreground hover:text-primary" onClick={() => fileInputRef.current?.click()}>
+                <Upload className="h-3.5 w-3.5" />
               </Button>
               <input ref={fileInputRef} type="file" accept=".xlsx,.xls" className="hidden" onChange={handleExcelUpload} />
-              <Button size="sm" variant="ghost" className="h-7 text-[10px] gap-1 text-muted-foreground hover:text-primary" onClick={() => { setShowPaste(true); setPasteText(''); setParsedEvents([]); }}>
-                <ClipboardPaste className="h-3 w-3" />
+              <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-muted-foreground hover:text-primary" onClick={() => { setShowPaste(true); setPasteText(''); setParsedEvents([]); }}>
+                <ClipboardPaste className="h-3.5 w-3.5" />
               </Button>
-              <Button size="sm" className="h-7 text-[10px] gap-1 rounded-lg" onClick={() => openAddDialog()}>
-                <Plus className="h-3 w-3" /> הוסף
+              <Button size="sm" className="h-8 text-xs gap-1.5 rounded-lg" onClick={() => openAddDialog()}>
+                <Plus className="h-3.5 w-3.5" /> הוסף
               </Button>
             </div>
           )}
@@ -483,20 +483,20 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       </div>
 
       {/* Calendar Grid */}
-      <div className="sm:rounded-2xl border-y sm:border border-border/50 bg-card overflow-hidden shadow-sm">
+      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm mx-3 sm:mx-0">
         {/* Day headers */}
-        <div className="grid bg-primary/5" style={{ gridTemplateColumns: 'repeat(5, 1fr) 0.6fr 0.6fr' }}>
+        <div className="grid grid-cols-7 bg-primary/8">
           {HEBREW_DAYS.map((d, idx) => (
-            <div key={d} className={`text-center text-xs font-bold py-2.5 ${idx === 6 ? 'text-primary' : idx === 5 ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
+            <div key={d} className={`text-center text-sm font-bold py-3 ${idx === 6 ? 'text-primary' : idx === 5 ? 'text-muted-foreground/70' : 'text-foreground/70'}`}>
               {d}
             </div>
           ))}
         </div>
 
         {/* Day cells */}
-        <div className="grid gap-px bg-border/20" style={{ gridTemplateColumns: 'repeat(5, 1fr) 0.6fr 0.6fr' }}>
+        <div className="grid grid-cols-7 gap-px bg-border/30">
           {calendarDays.map((day, i) => {
-            if (!day) return <div key={i} className="min-h-[64px] sm:min-h-[72px] bg-muted/5" />;
+            if (!day) return <div key={i} className="min-h-[80px] sm:min-h-[100px] lg:min-h-[110px] bg-muted/5" />;
 
             const dayStr = getDayStr(day);
             const dayEvents = getEventsForDay(day);
@@ -506,6 +506,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
             const holidays = getDayHolidays(day);
             const hasHoliday = holidays.length > 0;
             const hasBirthday = dayEvents.some(e => e.id.startsWith('bday-'));
+            const nonBdayEvents = dayEvents.filter(e => !e.id.startsWith('bday-'));
 
             return (
               <button
@@ -515,37 +516,49 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                     setSelectedDay(dayStr === selectedDay ? null : dayStr);
                   }
                 }}
-                className={`min-h-[64px] sm:min-h-[72px] p-1.5 text-right transition-all relative bg-card
-                  ${isSelected ? 'bg-primary/8 ring-1 ring-primary/30 ring-inset' : 'hover:bg-muted/30'}
+                className={`min-h-[80px] sm:min-h-[100px] lg:min-h-[110px] p-2 sm:p-2.5 text-right transition-all relative bg-card flex flex-col
+                  ${isSelected ? 'bg-primary/8 ring-2 ring-primary/40 ring-inset z-10' : 'hover:bg-muted/30'}
                   ${isSat ? 'bg-primary/3' : ''}
                   ${hasHoliday ? 'bg-amber-50/50 dark:bg-amber-950/10' : ''}
                 `}
               >
                 {/* Date numbers row */}
-                <div className="flex items-start justify-between mb-0.5">
-                  <span className="text-[7px] text-muted-foreground/60 leading-none mt-0.5 font-medium">
+                <div className="flex items-start justify-between mb-1">
+                  <span className="text-[9px] sm:text-[10px] text-muted-foreground/60 leading-none mt-0.5 font-medium">
                     {getHebrewDay(year, month, day)}
                   </span>
-                  <span className={`text-[11px] font-semibold leading-none inline-flex items-center justify-center rounded-full
-                    ${isToday ? 'w-6 h-6 bg-primary text-primary-foreground shadow-sm' : 
+                  <span className={`text-sm sm:text-base font-bold leading-none inline-flex items-center justify-center rounded-full
+                    ${isToday ? 'w-7 h-7 sm:w-8 sm:h-8 bg-primary text-primary-foreground shadow-md' : 
                       isSat ? 'text-primary' : 'text-foreground'}`}>
                     {day}
                   </span>
                 </div>
 
-                {/* Event dots & indicators */}
-                <div className="flex flex-col gap-0.5 mt-auto">
+                {/* Event dots & mini labels */}
+                <div className="flex flex-col gap-0.5 mt-auto flex-1 justify-end">
                   {hasBirthday && (
-                    <span className="text-[8px] leading-none">🎂</span>
+                    <span className="text-[10px] sm:text-xs leading-none">🎂</span>
                   )}
-                  {dayEvents.filter(e => !e.id.startsWith('bday-')).length > 0 && (
-                    <div className="flex gap-[2px] flex-wrap">
-                      {dayEvents.filter(e => !e.id.startsWith('bday-')).slice(0, 4).map(ev => (
-                        <div key={ev.id} className={`w-[5px] h-[5px] rounded-full ${getColorConfig(ev.color).dot} opacity-80`} />
+                  {nonBdayEvents.length > 0 && (
+                    <div className="flex flex-col gap-[3px]">
+                      {nonBdayEvents.slice(0, 2).map(ev => (
+                        <div key={ev.id} className="flex items-center gap-1">
+                          <div className={`w-[6px] h-[6px] sm:w-2 sm:h-2 rounded-full shrink-0 ${getColorConfig(ev.color).dot}`} />
+                          <span className="text-[8px] sm:text-[10px] text-foreground/60 truncate leading-tight hidden sm:inline">{ev.title.substring(0, 12)}</span>
+                        </div>
                       ))}
-                      {dayEvents.filter(e => !e.id.startsWith('bday-')).length > 4 && (
-                        <span className="text-[7px] text-muted-foreground font-medium">+{dayEvents.filter(e => !e.id.startsWith('bday-')).length - 4}</span>
+                      {nonBdayEvents.length > 2 && (
+                        <span className="text-[8px] sm:text-[10px] text-muted-foreground font-semibold">+{nonBdayEvents.length - 2}</span>
                       )}
+                      {/* Mobile: just dots when no room for text */}
+                      <div className="flex gap-[3px] flex-wrap sm:hidden">
+                        {nonBdayEvents.slice(0, 5).map(ev => (
+                          <div key={ev.id} className={`w-[6px] h-[6px] rounded-full ${getColorConfig(ev.color).dot}`} />
+                        ))}
+                        {nonBdayEvents.length > 5 && (
+                          <span className="text-[8px] text-muted-foreground font-medium">+{nonBdayEvents.length - 5}</span>
+                        )}
+                      </div>
                     </div>
                   )}
                 </div>
