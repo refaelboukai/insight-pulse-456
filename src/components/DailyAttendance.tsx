@@ -6,7 +6,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
 import { ABSENCE_REASON_LABELS, LONG_ABSENT_REASONS } from '@/lib/constants';
-import { CheckCircle2, XCircle, ClipboardCheck, ChevronDown, ChevronUp, Phone, Home, BookOpen, AlertTriangle } from 'lucide-react';
+import { CheckCircle2, XCircle, ClipboardCheck, ChevronDown, ChevronUp, Phone, Home, BookOpen, AlertTriangle, Sparkles, Loader2 } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import type { Database } from '@/integrations/supabase/types';
 
 type Student = Database['public']['Tables']['students']['Row'];
