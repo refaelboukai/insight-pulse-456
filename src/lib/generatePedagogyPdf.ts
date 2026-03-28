@@ -119,12 +119,11 @@ export async function generatePedagogyTrackingPdf(
   schoolYear: string,
   rows: MonthlyGoalRow[]
 ): Promise<Blob> {
-  const logoSrc = '/logo.png';
   let logoDataUrl: string;
   try {
-    logoDataUrl = await preloadImageAsDataUrl(logoSrc);
+    logoDataUrl = await preloadImageAsDataUrl(logoImport);
   } catch {
-    logoDataUrl = logoSrc;
+    logoDataUrl = '';
   }
 
   const subjectTitle = subSubject ? `${subjectName} (${subSubject})` : subjectName;
