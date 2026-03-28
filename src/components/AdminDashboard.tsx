@@ -1458,9 +1458,9 @@ export default function AdminDashboard() {
       {/* Main View Tabs - BIGGER with prominent pastel active colors and clear separations */}
       <div className="grid grid-cols-3 gap-2.5 p-2 rounded-2xl bg-muted/50 border-2 border-border/60">
         {[
-          { key: 'management' as const, label: 'הנהלה', icon: Building2, activeBg: 'bg-violet-100 dark:bg-violet-950/40', activeText: 'text-violet-700 dark:text-violet-300', activeBorder: 'border-violet-400 dark:border-violet-600', emoji: '🏢' },
-          { key: 'tali' as const, label: 'כיתת טלי', icon: Users, activeBg: 'bg-emerald-100 dark:bg-emerald-950/40', activeText: 'text-emerald-700 dark:text-emerald-300', activeBorder: 'border-emerald-400 dark:border-emerald-600', emoji: '🌿' },
-          { key: 'eden' as const, label: 'כיתת עדן', icon: Users, activeBg: 'bg-sky-100 dark:bg-sky-950/40', activeText: 'text-sky-700 dark:text-sky-300', activeBorder: 'border-sky-400 dark:border-sky-600', emoji: '🌊' },
+          { key: 'management' as const, label: 'הנהלה', icon: Building2, activeBg: 'bg-violet-100 dark:bg-violet-950/40', activeText: 'text-violet-700 dark:text-violet-300', activeBorder: 'border-violet-400 dark:border-violet-600' },
+          { key: 'tali' as const, label: 'כיתת טלי', icon: Users, activeBg: 'bg-emerald-100 dark:bg-emerald-950/40', activeText: 'text-emerald-700 dark:text-emerald-300', activeBorder: 'border-emerald-400 dark:border-emerald-600' },
+          { key: 'eden' as const, label: 'כיתת עדן', icon: Users, activeBg: 'bg-sky-100 dark:bg-sky-950/40', activeText: 'text-sky-700 dark:text-sky-300', activeBorder: 'border-sky-400 dark:border-sky-600' },
         ].map(tab => (
           <button key={tab.key} onClick={() => {
             setMainView(tab.key);
