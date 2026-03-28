@@ -19,7 +19,7 @@ interface LearningStyleResultsProps {
   recommendationsOnly?: boolean;
 }
 
-export default function LearningStyleResults({ studentId, studentName, isEditable = false, gender, compact = false }: LearningStyleResultsProps) {
+export default function LearningStyleResults({ studentId, studentName, isEditable = false, gender, compact = false, recommendationsOnly = false }: LearningStyleResultsProps) {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [staffNotes, setStaffNotes] = useState('');
