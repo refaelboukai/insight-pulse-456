@@ -430,12 +430,7 @@ export default function PedagogyForm() {
       if (rows.length === 0) { toast.error('אין נתונים לייצוא'); setExporting(false); return; }
       const blob = await generatePedagogyTrackingPdf(studentFullName, selectedSubject?.name || '', selectedSubSubject, selectedYear, rows);
       const fileName = `מעקב-פדגוגי-${studentFullName}-${selectedSubject?.name || ''}.pdf`;
-      const file = new File([blob], fileName, { type: 'application/pdf' });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: fileName, files: [file] });
-      } else {
-        const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url);
-      }
+      await shareOrDownload(blob, fileName);
       toast.success('דוח מעקב הופק בהצלחה');
     } catch (err) { console.error(err); toast.error('שגיאה בהפקת PDF'); }
     setExporting(false);
