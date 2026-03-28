@@ -690,8 +690,7 @@ export default function PedagogyForm() {
                     </button>
                     {isExpanded && (
                       <div className="border-t p-3 space-y-3 bg-muted/10">
-                        {/* Academic Mapping */}
-                        <AcademicMappingSection studentId={sid} />
+                        {/* Learning Style - compact (AI summary only) */}
                         {/* Learning Style - compact (AI summary only) */}
                         <LearningStyleResults
                           studentId={sid}
