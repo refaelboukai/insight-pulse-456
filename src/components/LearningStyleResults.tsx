@@ -22,6 +22,8 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
   const [loading, setLoading] = useState(true);
   const [staffNotes, setStaffNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [aiRecommendations, setAiRecommendations] = useState('');
+  const [loadingAi, setLoadingAi] = useState(false);
 
   useEffect(() => {
     const load = async () => {
