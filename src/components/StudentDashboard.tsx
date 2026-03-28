@@ -171,6 +171,14 @@ export default function StudentDashboard() {
         .order('week_start', { ascending: false })
         .limit(4);
       setWeeklySummaries(summariesData || []);
+      // Check if student has an enabled schedule
+      const { data: scheduleData } = await supabase
+        .from('student_schedules')
+        .select('id')
+        .eq('student_id', selectedStudentId)
+        .eq('is_enabled', true)
+        .maybeSingle();
+      setHasSchedule(!!scheduleData);
       // Load today's reflection
       const todayStart = `${today}T00:00:00`;
       const todayEnd = `${today}T23:59:59`;
