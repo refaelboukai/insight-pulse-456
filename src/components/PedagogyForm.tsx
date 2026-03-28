@@ -855,33 +855,8 @@ export default function PedagogyForm() {
         )}
 
         {/* Tab 2: Pedagogical Goals */}
-        {teacherView === 'goals' && (<>
-        {selectedStudentId && (
+        {teacherView === 'goals' && selectedStudentId && (
           <>
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs gap-1.5"
-                onClick={handleExportFullSummary}
-                disabled={exportingFullSummary}
-              >
-                {exportingFullSummary ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
-                סיכום פדגוגי מלא
-              </Button>
-            </div>
-
-            {/* Academic Mapping - above learning style */}
-            <AcademicMappingSection studentId={selectedStudentId} />
-
-            {/* Learning Style Profile */}
-            <LearningStyleResults
-              studentId={selectedStudentId}
-              studentName={filteredStudents.find(s => s.id === selectedStudentId)
-                ? `${filteredStudents.find(s => s.id === selectedStudentId)!.first_name} ${filteredStudents.find(s => s.id === selectedStudentId)!.last_name}`
-                : ''}
-              isEditable={true}
-              gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
-            />
-
             {/* Subject + month selection */}
             <div className="grid grid-cols-3 gap-3">
               <div>
@@ -1101,7 +1076,13 @@ export default function PedagogyForm() {
             )}
           </>
         )}
-        </>)}
+
+        {teacherView === 'goals' && !selectedStudentId && (
+          <p className="text-sm text-muted-foreground text-center py-8">בחר תלמיד כדי להזין יעדים</p>
+        )}
+
+        {/* Tab 3: My Subjects */}
+        {teacherView === 'my-subjects' && renderTeacherSubjectView()}
       </CardContent>
     </Card>
 
