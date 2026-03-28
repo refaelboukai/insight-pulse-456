@@ -75,6 +75,13 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
   const averages = results?.averages || {};
   const catLabels = CATEGORIES as Record<string, string>;
 
+  const getScoreLabel = (avg: number): { label: string; color: string } => {
+    if (avg >= 4) return { label: 'גבוה — מעדיף מאוד', color: 'text-green-700' };
+    if (avg >= 3) return { label: 'בינוני — מתפקד היטב', color: 'text-blue-700' };
+    if (avg >= 2) return { label: 'נמוך — פחות מתאים', color: 'text-amber-700' };
+    return { label: 'נמוך מאוד', color: 'text-red-700' };
+  };
+
   return (
     <div className="space-y-3 border rounded-xl p-3 bg-card">
       <div className="flex items-center gap-2">
