@@ -445,6 +445,9 @@ export default function PedagogyForm() {
 
         {selectedStudentId && (
           <>
+            {/* Academic Mapping - above learning style */}
+            <AcademicMappingSection studentId={selectedStudentId} />
+
             {/* Learning Style Profile */}
             <LearningStyleResults
               studentId={selectedStudentId}
@@ -454,9 +457,6 @@ export default function PedagogyForm() {
               isEditable={true}
               gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
             />
-
-            {/* Academic Mapping */}
-            <AcademicMappingSection studentId={selectedStudentId} />
 
             {/* Subject + month selection */}
             <div className="grid grid-cols-3 gap-3">
