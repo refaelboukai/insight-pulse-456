@@ -597,14 +597,7 @@ export default function PedagogyForm() {
 
       const pdfBlob = pdf.output('blob');
       const fileName = `סיכום-פדגוגי-${studentFullName}-${selectedYear}.pdf`;
-      const file = new File([pdfBlob], fileName, { type: 'application/pdf' });
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({ title: fileName, files: [file] });
-      } else {
-        const url = URL.createObjectURL(pdfBlob);
-        const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
-        URL.revokeObjectURL(url);
-      }
+      await shareOrDownload(pdfBlob, fileName);
       toast.success('סיכום פדגוגי PDF הופק');
     } catch (err) { console.error(err); toast.error('שגיאה בהפקת PDF'); }
     setExportingFullSummary(false);
