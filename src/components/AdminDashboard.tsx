@@ -143,6 +143,10 @@ export default function AdminDashboard() {
   const [reflectionCustomTo, setReflectionCustomTo] = useState<Record<string, string>>({});
   const [reflectionVisibility, setReflectionVisibility] = useState<Record<string, boolean>>({});
 
+  // Pedagogy stats
+  const [pedagogyGoals, setPedagogyGoals] = useState<any[]>([]);
+  const [learningProfiles, setLearningProfiles] = useState<any[]>([]);
+
   const fetchAll = async () => {
     const { from: yearFrom, to: yearTo } = getYearDateRange(selectedYear);
     const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes, reflectionsRes, insightsRes] = await Promise.all([
