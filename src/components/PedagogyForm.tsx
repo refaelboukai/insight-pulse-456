@@ -41,7 +41,24 @@ const MONTHS = [
   'ינואר', 'פברואר', 'מרץ', 'אפריל', 'מאי', 'יוני',
 ];
 
-export default function PedagogyForm() {
+function MappingStatusBadge({ studentId, gender }: { studentId: string; gender?: string | null }) {
+  const [hasMappings, setHasMappings] = useState<boolean | null>(null);
+  useEffect(() => {
+    supabase.from('student_mappings').select('has_mapping').eq('student_id', studentId).then(({ data }) => {
+      const has = (data || []).some((r: any) => r.has_mapping);
+      setHasMappings(has);
+    });
+  }, [studentId]);
+  if (hasMappings === null) return null;
+  if (hasMappings) return null; // Don't show anything if mapping exists
+  return (
+    <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-lg flex items-center gap-1.5">
+      <ClipboardCheck className="h-3.5 w-3.5" />
+      {g(gender, 'התלמיד לא ביצע', 'התלמידה לא ביצעה')} מיפוי לימודי.
+    </div>
+  );
+}
+
   const { user, role } = useAuth();
   const isAdmin = role === 'admin';
 
