@@ -58,7 +58,8 @@ export default function PedagogyForm() {
   const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
 
   // Teacher's subject sub-screen
-  const [teacherView, setTeacherView] = useState<'profile' | 'goals' | 'my-subjects'>('profile');
+  const [teacherView, setTeacherView] = useState<'profile' | 'goals'>('profile');
+  const [goalsStep, setGoalsStep] = useState<'subjects' | 'students' | 'form'>('subjects');
   const [myGoals, setMyGoals] = useState<any[]>([]);
   const [mySubjectFilter, setMySubjectFilter] = useState<string | null>(null);
   const [myClassFilter, setMyClassFilter] = useState<string | null>(null);
@@ -587,8 +588,8 @@ export default function PedagogyForm() {
   }, [user, selectedYear]);
 
   useEffect(() => {
-    if (teacherView === 'my-subjects') loadMyGoals();
-  }, [teacherView, loadMyGoals]);
+    if (teacherView === 'goals' && goalsStep === 'subjects') loadMyGoals();
+  }, [teacherView, goalsStep, loadMyGoals]);
 
   // Group goals by subject for teacher view
   const mySubjectsGrouped = (() => {
@@ -771,318 +772,379 @@ export default function PedagogyForm() {
               className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all flex-1 ${teacherView === 'profile' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
               פרופיל תלמיד
             </button>
-            <button onClick={() => setTeacherView('goals')}
+            <button onClick={() => { setTeacherView('goals'); setGoalsStep('subjects'); }}
               className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all flex-1 ${teacherView === 'goals' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
               יעדים פדגוגיים
-            </button>
-            <button onClick={() => setTeacherView('my-subjects')}
-              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all flex-1 ${teacherView === 'my-subjects' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
-              מקצועות
             </button>
           </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
-        {/* Student selection - shared between profile and goals tabs */}
-        {teacherView !== 'my-subjects' && (
-          <div className="grid grid-cols-3 gap-3">
-            <div>
-              <Label className="text-xs mb-1 block">שנת לימודים</Label>
-              <Select value={selectedYear} onValueChange={setSelectedYear}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs mb-1 block">כיתה</Label>
-              <Select value={selectedClass || ''} onValueChange={v => { setSelectedClass(v || null); setSelectedStudentId(''); }}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר כיתה" /></SelectTrigger>
-                <SelectContent>
-                  {CLASS_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs mb-1 block">{g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'תלמיד', 'תלמידה')}</Label>
-              <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
-                <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחירת תלמיד/ה" /></SelectTrigger>
-                <SelectContent>
-                  {filteredStudents.map(s => (
-                    <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-        )}
-
-        {/* Tab 1: Student Profile */}
-        {teacherView === 'profile' && selectedStudentId && (
-          <div className="space-y-4">
-            {/* Full pedagogy summary export */}
-            <div className="flex justify-end">
-              <Button
-                variant="outline"
-                size="sm"
-                className="h-8 text-xs gap-1.5"
-                onClick={handleExportFullSummary}
-                disabled={exportingFullSummary}
-              >
-                {exportingFullSummary ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
-                סיכום פדגוגי מלא
-              </Button>
-            </div>
-
-            {/* Academic Mapping */}
-            <AcademicMappingSection studentId={selectedStudentId} />
-
-            {/* Learning Style Profile */}
-            <LearningStyleResults
-              studentId={selectedStudentId}
-              studentName={filteredStudents.find(s => s.id === selectedStudentId)
-                ? `${filteredStudents.find(s => s.id === selectedStudentId)!.first_name} ${filteredStudents.find(s => s.id === selectedStudentId)!.last_name}`
-                : ''}
-              isEditable={true}
-              gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
-            />
-          </div>
-        )}
-
-        {teacherView === 'profile' && !selectedStudentId && (
-          <p className="text-sm text-muted-foreground text-center py-8">בחר תלמיד כדי לצפות בפרופיל</p>
-        )}
-
-        {/* Tab 2: Pedagogical Goals */}
-        {teacherView === 'goals' && selectedStudentId && (
+        {/* ========== Tab 1: Student Profile ========== */}
+        {teacherView === 'profile' && (
           <>
-            {/* Subject + month selection */}
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <Label className="text-xs mb-1 block">מקצוע</Label>
-                <Select value={selectedSubjectId} onValueChange={v => { setSelectedSubjectId(v); setSelectedSubSubject(null); }}>
-                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר מקצוע" /></SelectTrigger>
+                <Label className="text-xs mb-1 block">שנת לימודים</Label>
+                <Select value={selectedYear} onValueChange={setSelectedYear}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
                   <SelectContent>
-                    {subjects.map(s => <SelectItem key={s.id} value={s.id}>{s.name}</SelectItem>)}
+                    {SCHOOL_YEARS.map(y => <SelectItem key={y} value={y}>{y}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
-              {selectedSubject?.has_sub_subjects && selectedSubject.sub_subjects.length > 0 && (
-                <div>
-                  <Label className="text-xs mb-1 block">תת-מקצוע</Label>
-                  <Select value={selectedSubSubject || ''} onValueChange={v => setSelectedSubSubject(v || null)}>
-                    <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר" /></SelectTrigger>
-                    <SelectContent>
-                      {selectedSubject.sub_subjects.map(ss => <SelectItem key={ss} value={ss}>{ss}</SelectItem>)}
-                    </SelectContent>
-                  </Select>
-                </div>
-              )}
               <div>
-                <Label className="text-xs mb-1 block">חודש</Label>
-                <Select value={selectedMonth} onValueChange={setSelectedMonth}>
-                  <SelectTrigger className="h-9 text-sm"><SelectValue /></SelectTrigger>
+                <Label className="text-xs mb-1 block">כיתה</Label>
+                <Select value={selectedClass || ''} onValueChange={v => { setSelectedClass(v || null); setSelectedStudentId(''); }}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר כיתה" /></SelectTrigger>
                   <SelectContent>
-                    {MONTHS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                    {CLASS_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="text-xs mb-1 block">{g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'תלמיד', 'תלמידה')}</Label>
+                <Select value={selectedStudentId} onValueChange={setSelectedStudentId}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחירת תלמיד/ה" /></SelectTrigger>
+                  <SelectContent>
+                    {filteredStudents.map(s => (
+                      <SelectItem key={s.id} value={s.id}>{s.first_name} {s.last_name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {selectedSubjectId && (
-              <Accordion type="multiple" defaultValue={['goals', 'exams']} className="space-y-2">
-                {/* Pedagogical Goals */}
-                <AccordionItem value="goals" className="border rounded-lg bg-card">
-                  <AccordionTrigger className="px-4 py-2 text-sm font-semibold hover:no-underline">
-                    <span className="flex items-center gap-2">
-                      <BookOpen className="h-4 w-4 text-primary" />
-                      יעד פדגוגי - {selectedSubject?.name} {selectedSubSubject ? `(${selectedSubSubject})` : ''} - {selectedMonth}
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4 space-y-3">
-                    <div>
-                      <Label className="text-xs">מצב נוכחי</Label>
-                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.current_status || ''} onChange={e => updateField('current_status', e.target.value)} placeholder={`מהו המצב הנוכחי של ${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'התלמיד', 'התלמידה')} במקצוע...`} />
-                    </div>
-                    <div>
-                      <Label className="text-xs">יעדים לימודיים</Label>
-                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.learning_goals || ''} onChange={e => updateField('learning_goals', e.target.value)} placeholder="מהם היעדים הלימודיים..." />
-                    </div>
-                    <div>
-                      <Label className="text-xs">דרכי מדידה</Label>
-                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.measurement_methods || ''} onChange={e => updateField('measurement_methods', e.target.value)} placeholder="כיצד נמדוד את ההתקדמות..." />
-                    </div>
-                    <div>
-                      <Label className="text-xs">מה נעשה (ביצוע בפועל)</Label>
-                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.what_was_done || ''} onChange={e => updateField('what_was_done', e.target.value)} placeholder="מה בוצע בפועל..." />
-                    </div>
-                    <div>
-                      <Label className="text-xs">מה לא נעשה ומדוע (פערים)</Label>
-                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.what_was_not_done || ''} onChange={e => updateField('what_was_not_done', e.target.value)} placeholder="מה לא בוצע ומה הסיבות..." />
-                    </div>
-                    <div>
-                      <Label className="text-xs">הערות מורה</Label>
-                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.teacher_notes || ''} onChange={e => updateField('teacher_notes', e.target.value)} placeholder="הערות נוספות..." />
-                    </div>
-                    {isAdmin && (
-                      <div>
-                        <Label className="text-xs">הערות מנהל/סגנית</Label>
-                        <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.admin_notes || ''} onChange={e => updateField('admin_notes', e.target.value)} placeholder="הערות הנהלה..." />
-                      </div>
-                    )}
-                    {/* AI Goal Suggestion */}
-                    <Button onClick={handleSuggestGoals} disabled={loadingGoalSuggestion} variant="outline" className="w-full gap-2">
-                      {loadingGoalSuggestion ? (
-                        <><Loader2 className="h-4 w-4 animate-spin" /> מייצר הצעת יעדים...</>
-                      ) : (
-                        <><Lightbulb className="h-4 w-4" /> הצעת יעדים מ-AI</>
-                      )}
-                    </Button>
-                    {goalSuggestion && (
-                      <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
-                        <p className="text-xs font-semibold text-primary mb-1.5 flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" /> הצעת AI ליעדים</p>
-                        <div className="text-xs leading-relaxed whitespace-pre-wrap">{goalSuggestion}</div>
-                      </div>
-                    )}
-
-                    <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
-                      <Save className="h-4 w-4" />
-                      {saving ? 'שומר...' : existingGoalId ? 'עדכן יעד' : 'שמור יעד'}
-                    </Button>
-
-                    {existingGoalId && (
-                      <div className="flex gap-2 pt-2">
-                        <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={exporting} className="flex-1 gap-1.5 text-xs">
-                          <FileText className="h-3.5 w-3.5" />
-                          הורד PDF
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex-1 gap-1.5 text-xs">
-                          <FileSpreadsheet className="h-3.5 w-3.5" />
-                          הורד Excel
-                        </Button>
-                        <Button variant="outline" size="sm" onClick={handleExportTrackingPdf} disabled={exporting} className="flex-1 gap-1.5 text-xs">
-                          <BarChart3 className="h-3.5 w-3.5" />
-                          מעקב PDF
-                        </Button>
-                      </div>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-
-                {/* Month-to-Month Tracking */}
-                <AccordionItem value="tracking" className="border rounded-lg bg-card">
-                  <AccordionTrigger className="px-4 py-2 text-sm font-semibold hover:no-underline" onClick={() => { if (!showTracking) { setShowTracking(true); } }}>
-                    <span className="flex items-center gap-2">
-                      <BarChart3 className="h-4 w-4 text-primary" />
-                      מעקב חודשי - {selectedSubject?.name} {selectedSubSubject ? `(${selectedSubSubject})` : ''}
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4">
-                    {allMonthGoals.length === 0 ? (
-                      <p className="text-sm text-muted-foreground text-center py-4">אין יעדים פדגוגיים עדיין עבור מקצוע זה</p>
-                    ) : (
-                      <div className="space-y-3">
-                        <div className="overflow-x-auto">
-                          <table className="w-full text-xs border-collapse">
-                            <thead>
-                              <tr>
-                                <th className="p-2 text-right bg-primary text-primary-foreground rounded-tr-lg font-bold">תחום</th>
-                                {MONTHS.filter(m => allMonthGoals.some(g => g.month === m)).map(m => (
-                                  <th key={m} className="p-2 text-center bg-primary text-primary-foreground font-bold min-w-[80px]">{m}</th>
-                                ))}
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {[
-                                { label: 'מצב נוכחי', key: 'current_status' as const },
-                                { label: 'יעדים', key: 'learning_goals' as const },
-                                { label: 'מה נעשה', key: 'what_was_done' as const },
-                                { label: 'פערים', key: 'what_was_not_done' as const },
-                                { label: 'הערות מורה', key: 'teacher_notes' as const },
-                              ].map(({ label, key }) => (
-                                <tr key={key} className="border-b border-border">
-                                  <td className="p-2 font-bold bg-muted/50 whitespace-nowrap">{label}</td>
-                                  {MONTHS.filter(m => allMonthGoals.some(g => g.month === m)).map(m => {
-                                    const mg = allMonthGoals.find(g => g.month === m);
-                                    const val = mg?.[key] || '';
-                                    return (
-                                      <td key={m} className="p-2 border-x border-border text-right align-top">
-                                        <div className="max-h-[80px] overflow-y-auto">{val || <span className="text-muted-foreground">-</span>}</div>
-                                      </td>
-                                    );
-                                  })}
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
-                        </div>
-                        <div className="flex gap-2 justify-center pt-2">
-                          <Button variant="outline" size="sm" onClick={handleExportTrackingPdf} disabled={exporting} className="gap-1.5 text-xs">
-                            <FileText className="h-3.5 w-3.5" />
-                            הורד מעקב PDF
-                          </Button>
-                          <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5 text-xs">
-                            <FileSpreadsheet className="h-3.5 w-3.5" />
-                            הורד מעקב Excel
-                          </Button>
-                        </div>
-                      </div>
-                    )}
-                  </AccordionContent>
-                </AccordionItem>
-
-                {/* Exam Schedule */}
-                <AccordionItem value="exams" className="border rounded-lg bg-card">
-                  <AccordionTrigger className="px-4 py-2 text-sm font-semibold hover:no-underline">
-                    <span className="flex items-center gap-2">
-                      <CalendarDays className="h-4 w-4 text-primary" />
-                      לוח מבחנים - {selectedSubject?.name} {selectedSubSubject ? `(${selectedSubSubject})` : ''}
-                    </span>
-                  </AccordionTrigger>
-                  <AccordionContent className="px-4 pb-4 space-y-3">
-                    {exams.length > 0 && (
-                      <div className="space-y-2">
-                        {exams.map(exam => (
-                          <div key={exam.id} className="flex items-center justify-between bg-muted/50 rounded-lg p-2 text-sm">
-                            <div>
-                              <span className="font-medium">{format(new Date(exam.exam_date), 'dd/MM/yyyy')}</span>
-                              {exam.exam_description && <span className="text-muted-foreground mr-2">- {exam.exam_description}</span>}
-                            </div>
-                            <Button variant="ghost" size="sm" onClick={() => handleDeleteExam(exam.id)}>
-                              <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    <div className="flex gap-2 items-end">
-                      <div className="flex-1">
-                        <Label className="text-xs">תאריך מבחן</Label>
-                        <Input type="date" className="mt-1 h-9 text-sm" value={newExamDate} onChange={e => setNewExamDate(e.target.value)} />
-                      </div>
-                      <div className="flex-1">
-                        <Label className="text-xs">תיאור (אופציונלי)</Label>
-                        <Input className="mt-1 h-9 text-sm" value={newExamDesc} onChange={e => setNewExamDesc(e.target.value)} placeholder="סוג המבחן..." />
-                      </div>
-                      <Button size="sm" onClick={handleAddExam} className="gap-1 h-9">
-                        <Plus className="h-3.5 w-3.5" />
-                        הוסף
-                      </Button>
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
+            {selectedStudentId ? (
+              <div className="space-y-4">
+                <div className="flex justify-end">
+                  <Button variant="outline" size="sm" className="h-8 text-xs gap-1.5" onClick={handleExportFullSummary} disabled={exportingFullSummary}>
+                    {exportingFullSummary ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                    סיכום פדגוגי מלא
+                  </Button>
+                </div>
+                <AcademicMappingSection studentId={selectedStudentId} />
+                <LearningStyleResults
+                  studentId={selectedStudentId}
+                  studentName={filteredStudents.find(s => s.id === selectedStudentId)
+                    ? `${filteredStudents.find(s => s.id === selectedStudentId)!.first_name} ${filteredStudents.find(s => s.id === selectedStudentId)!.last_name}`
+                    : ''}
+                  isEditable={true}
+                  gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
+                />
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground text-center py-8">בחר תלמיד כדי לצפות בפרופיל</p>
             )}
           </>
         )}
 
-        {teacherView === 'goals' && !selectedStudentId && (
-          <p className="text-sm text-muted-foreground text-center py-8">בחר תלמיד כדי להזין יעדים</p>
+        {/* ========== Tab 2: Pedagogical Goals — Subject-first flow ========== */}
+        {teacherView === 'goals' && goalsStep === 'subjects' && (
+          <div className="space-y-3">
+            {loadingMyGoals ? (
+              <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>
+            ) : subjects.length === 0 ? (
+              <p className="text-sm text-muted-foreground text-center py-8">אין מקצועות מוגדרים. הוסף מקצועות בדשבורד.</p>
+            ) : (
+              <>
+                <p className="text-xs text-muted-foreground">בחר מקצוע להזנת יעדים:</p>
+                <div className="grid grid-cols-2 gap-2">
+                  {subjects.map(subj => {
+                    const goalsCount = myGoals.filter(g => g.subject_id === subj.id).length;
+                    const studentCount = new Set(myGoals.filter(g => g.subject_id === subj.id).map(g => g.student_id)).size;
+                    return (
+                      <button key={subj.id} onClick={() => { setSelectedSubjectId(subj.id); setSelectedSubSubject(null); setGoalsStep('students'); setSelectedStudentId(''); setMyClassFilter(null); }}
+                        className="rounded-xl border bg-card p-3 text-right hover:shadow-md hover:border-primary/20 transition-all active:scale-[0.97]">
+                        <div className="w-10 h-10 rounded-xl mb-2 flex items-center justify-center bg-primary/10">
+                          <BookOpen className="h-5 w-5 text-primary" />
+                        </div>
+                        <p className="text-sm font-bold">{subj.name}</p>
+                        {goalsCount > 0 && (
+                          <p className="text-[10px] text-muted-foreground">{studentCount} תלמידים · {goalsCount} יעדים</p>
+                        )}
+                      </button>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
         )}
 
-        {/* Tab 3: My Subjects */}
-        {teacherView === 'my-subjects' && renderTeacherSubjectView()}
+        {/* Goals Step 2: Student list for selected subject */}
+        {teacherView === 'goals' && goalsStep === 'students' && (
+          <div className="space-y-3">
+            <button onClick={() => { setGoalsStep('subjects'); setSelectedSubjectId(''); }}
+              className="flex items-center gap-2 text-sm font-bold text-primary bg-primary/10 px-4 py-2.5 rounded-xl hover:bg-primary/15 transition-all w-full">
+              <ChevronLeft className="h-4 w-4" />
+              חזרה למקצועות
+            </button>
+            <h3 className="text-sm font-bold flex items-center gap-2">
+              <BookOpen className="h-4 w-4 text-primary" />
+              {selectedSubject?.name}
+              {selectedSubject?.has_sub_subjects && selectedSubject.sub_subjects.length > 0 && selectedSubSubject && ` — ${selectedSubSubject}`}
+            </h3>
+
+            {/* Sub-subject selector if needed */}
+            {selectedSubject?.has_sub_subjects && selectedSubject.sub_subjects.length > 0 && (
+              <div>
+                <Label className="text-xs mb-1 block">תת-מקצוע</Label>
+                <Select value={selectedSubSubject || ''} onValueChange={v => setSelectedSubSubject(v || null)}>
+                  <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר תת-מקצוע" /></SelectTrigger>
+                  <SelectContent>
+                    {selectedSubject.sub_subjects.map(ss => <SelectItem key={ss} value={ss}>{ss}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {/* Class filter + Student list */}
+            <div className="flex gap-1.5">
+              <button onClick={() => { setMyClassFilter(null); setSelectedClass(null); }}
+                className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${!myClassFilter ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
+                הכל
+              </button>
+              {CLASS_OPTIONS.map(cls => (
+                <button key={cls} onClick={() => { setMyClassFilter(cls); setSelectedClass(cls); }}
+                  className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${myClassFilter === cls ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
+                  {cls}
+                </button>
+              ))}
+            </div>
+
+            <div className="space-y-1.5">
+              {(myClassFilter ? students.filter(s => s.is_active && s.class_name === myClassFilter) : students.filter(s => s.is_active))
+                .map(s => {
+                  const hasGoals = myGoals.some(g => g.subject_id === selectedSubjectId && g.student_id === s.id);
+                  return (
+                    <button key={s.id} onClick={() => { setSelectedStudentId(s.id); setGoalsStep('form'); }}
+                      className="w-full flex items-center justify-between rounded-lg border bg-card p-3 hover:shadow-sm hover:border-primary/20 transition-all text-right">
+                      <div>
+                        <p className="text-sm font-bold">{s.first_name} {s.last_name}</p>
+                        {s.class_name && <Badge variant="secondary" className="text-[9px] h-4 px-1.5">{s.class_name}</Badge>}
+                      </div>
+                      {hasGoals && <Badge variant="outline" className="text-[9px] bg-green-50 text-green-700 border-green-200">יש יעדים</Badge>}
+                    </button>
+                  );
+                })}
+            </div>
+          </div>
+        )}
+
+        {/* Goals Step 3: Goal form for selected student+subject */}
+        {teacherView === 'goals' && goalsStep === 'form' && selectedStudentId && selectedSubjectId && (
+          <div className="space-y-4">
+            <button onClick={() => setGoalsStep('students')}
+              className="flex items-center gap-2 text-sm font-bold text-primary bg-primary/10 px-4 py-2.5 rounded-xl hover:bg-primary/15 transition-all w-full">
+              <ChevronLeft className="h-4 w-4" />
+              חזרה לרשימת תלמידים — {selectedSubject?.name}
+            </button>
+
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-bold">{studentFullName}</p>
+                <p className="text-xs text-muted-foreground">{selectedSubject?.name}{selectedSubSubject ? ` — ${selectedSubSubject}` : ''}</p>
+              </div>
+              <Select value={selectedMonth} onValueChange={setSelectedMonth}>
+                <SelectTrigger className="h-8 text-xs w-28"><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {MONTHS.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Compact student info: mapping + learning style */}
+            <AcademicMappingSection studentId={selectedStudentId} />
+            <LearningStyleResults
+              studentId={selectedStudentId}
+              studentName={studentFullName}
+              isEditable={false}
+              gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
+              compact={true}
+            />
+
+            <Accordion type="multiple" defaultValue={['goals', 'exams']} className="space-y-2">
+              {/* Pedagogical Goals */}
+              <AccordionItem value="goals" className="border rounded-lg bg-card">
+                <AccordionTrigger className="px-4 py-2 text-sm font-semibold hover:no-underline">
+                  <span className="flex items-center gap-2">
+                    <BookOpen className="h-4 w-4 text-primary" />
+                    יעד פדגוגי - {selectedMonth}
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 space-y-3">
+                  <div>
+                    <Label className="text-xs">מצב נוכחי</Label>
+                    <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.current_status || ''} onChange={e => updateField('current_status', e.target.value)} placeholder={`מהו המצב הנוכחי של ${g(filteredStudents.find(s => s.id === selectedStudentId)?.gender, 'התלמיד', 'התלמידה')} במקצוע...`} />
+                  </div>
+                  <div>
+                    <Label className="text-xs">יעדים לימודיים</Label>
+                    <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.learning_goals || ''} onChange={e => updateField('learning_goals', e.target.value)} placeholder="מהם היעדים הלימודיים..." />
+                  </div>
+                  <div>
+                    <Label className="text-xs">דרכי מדידה</Label>
+                    <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.measurement_methods || ''} onChange={e => updateField('measurement_methods', e.target.value)} placeholder="כיצד נמדוד את ההתקדמות..." />
+                  </div>
+                  <div>
+                    <Label className="text-xs">מה נעשה (ביצוע בפועל)</Label>
+                    <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.what_was_done || ''} onChange={e => updateField('what_was_done', e.target.value)} placeholder="מה בוצע בפועל..." />
+                  </div>
+                  <div>
+                    <Label className="text-xs">מה לא נעשה ומדוע (פערים)</Label>
+                    <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.what_was_not_done || ''} onChange={e => updateField('what_was_not_done', e.target.value)} placeholder="מה לא בוצע ומה הסיבות..." />
+                  </div>
+                  <div>
+                    <Label className="text-xs">הערות מורה</Label>
+                    <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.teacher_notes || ''} onChange={e => updateField('teacher_notes', e.target.value)} placeholder="הערות נוספות..." />
+                  </div>
+                  {isAdmin && (
+                    <div>
+                      <Label className="text-xs">הערות מנהל/סגנית</Label>
+                      <Textarea className="mt-1 text-sm min-h-[60px]" value={goal.admin_notes || ''} onChange={e => updateField('admin_notes', e.target.value)} placeholder="הערות הנהלה..." />
+                    </div>
+                  )}
+                  <Button onClick={handleSuggestGoals} disabled={loadingGoalSuggestion} variant="outline" className="w-full gap-2">
+                    {loadingGoalSuggestion ? (
+                      <><Loader2 className="h-4 w-4 animate-spin" /> מייצר הצעת יעדים...</>
+                    ) : (
+                      <><Lightbulb className="h-4 w-4" /> הצעת יעדים מ-AI</>
+                    )}
+                  </Button>
+                  {goalSuggestion && (
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+                      <p className="text-xs font-semibold text-primary mb-1.5 flex items-center gap-1"><Lightbulb className="h-3.5 w-3.5" /> הצעת AI ליעדים</p>
+                      <div className="text-xs leading-relaxed whitespace-pre-wrap">{goalSuggestion}</div>
+                    </div>
+                  )}
+                  <Button onClick={handleSave} disabled={saving} className="w-full gap-2">
+                    <Save className="h-4 w-4" />
+                    {saving ? 'שומר...' : existingGoalId ? 'עדכן יעד' : 'שמור יעד'}
+                  </Button>
+                  {existingGoalId && (
+                    <div className="flex gap-2 pt-2">
+                      <Button variant="outline" size="sm" onClick={handleExportPdf} disabled={exporting} className="flex-1 gap-1.5 text-xs">
+                        <FileText className="h-3.5 w-3.5" />
+                        PDF
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleExportExcel} className="flex-1 gap-1.5 text-xs">
+                        <FileSpreadsheet className="h-3.5 w-3.5" />
+                        Excel
+                      </Button>
+                      <Button variant="outline" size="sm" onClick={handleExportTrackingPdf} disabled={exporting} className="flex-1 gap-1.5 text-xs">
+                        <BarChart3 className="h-3.5 w-3.5" />
+                        מעקב
+                      </Button>
+                    </div>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Month-to-Month Tracking */}
+              <AccordionItem value="tracking" className="border rounded-lg bg-card">
+                <AccordionTrigger className="px-4 py-2 text-sm font-semibold hover:no-underline" onClick={() => { if (!showTracking) { setShowTracking(true); } }}>
+                  <span className="flex items-center gap-2">
+                    <BarChart3 className="h-4 w-4 text-primary" />
+                    מעקב חודשי
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4">
+                  {allMonthGoals.length === 0 ? (
+                    <p className="text-sm text-muted-foreground text-center py-4">אין יעדים פדגוגיים עדיין</p>
+                  ) : (
+                    <div className="space-y-3">
+                      <div className="overflow-x-auto">
+                        <table className="w-full text-xs border-collapse">
+                          <thead>
+                            <tr>
+                              <th className="p-2 text-right bg-primary text-primary-foreground rounded-tr-lg font-bold">תחום</th>
+                              {MONTHS.filter(m => allMonthGoals.some(g => g.month === m)).map(m => (
+                                <th key={m} className="p-2 text-center bg-primary text-primary-foreground font-bold min-w-[80px]">{m}</th>
+                              ))}
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {[
+                              { label: 'מצב נוכחי', key: 'current_status' as const },
+                              { label: 'יעדים', key: 'learning_goals' as const },
+                              { label: 'מה נעשה', key: 'what_was_done' as const },
+                              { label: 'פערים', key: 'what_was_not_done' as const },
+                              { label: 'הערות מורה', key: 'teacher_notes' as const },
+                            ].map(({ label, key }) => (
+                              <tr key={key} className="border-b border-border">
+                                <td className="p-2 font-bold bg-muted/50 whitespace-nowrap">{label}</td>
+                                {MONTHS.filter(m => allMonthGoals.some(g => g.month === m)).map(m => {
+                                  const mg = allMonthGoals.find(g => g.month === m);
+                                  const val = mg?.[key] || '';
+                                  return (
+                                    <td key={m} className="p-2 border-x border-border text-right align-top">
+                                      <div className="max-h-[80px] overflow-y-auto">{val || <span className="text-muted-foreground">-</span>}</div>
+                                    </td>
+                                  );
+                                })}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+                      <div className="flex gap-2 justify-center pt-2">
+                        <Button variant="outline" size="sm" onClick={handleExportTrackingPdf} disabled={exporting} className="gap-1.5 text-xs">
+                          <FileText className="h-3.5 w-3.5" />
+                          מעקב PDF
+                        </Button>
+                        <Button variant="outline" size="sm" onClick={handleExportExcel} className="gap-1.5 text-xs">
+                          <FileSpreadsheet className="h-3.5 w-3.5" />
+                          מעקב Excel
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </AccordionContent>
+              </AccordionItem>
+
+              {/* Exam Schedule */}
+              <AccordionItem value="exams" className="border rounded-lg bg-card">
+                <AccordionTrigger className="px-4 py-2 text-sm font-semibold hover:no-underline">
+                  <span className="flex items-center gap-2">
+                    <CalendarDays className="h-4 w-4 text-primary" />
+                    לוח מבחנים
+                  </span>
+                </AccordionTrigger>
+                <AccordionContent className="px-4 pb-4 space-y-3">
+                  {exams.length > 0 && (
+                    <div className="space-y-2">
+                      {exams.map(exam => (
+                        <div key={exam.id} className="flex items-center justify-between bg-muted/50 rounded-lg p-2 text-sm">
+                          <div>
+                            <span className="font-medium">{format(new Date(exam.exam_date), 'dd/MM/yyyy')}</span>
+                            {exam.exam_description && <span className="text-muted-foreground mr-2">- {exam.exam_description}</span>}
+                          </div>
+                          <Button variant="ghost" size="sm" onClick={() => handleDeleteExam(exam.id)}>
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  <div className="flex gap-2 items-end">
+                    <div className="flex-1">
+                      <Label className="text-xs">תאריך מבחן</Label>
+                      <Input type="date" className="mt-1 h-9 text-sm" value={newExamDate} onChange={e => setNewExamDate(e.target.value)} />
+                    </div>
+                    <div className="flex-1">
+                      <Label className="text-xs">תיאור (אופציונלי)</Label>
+                      <Input className="mt-1 h-9 text-sm" value={newExamDesc} onChange={e => setNewExamDesc(e.target.value)} placeholder="סוג המבחן..." />
+                    </div>
+                    <Button size="sm" onClick={handleAddExam} className="gap-1 h-9">
+                      <Plus className="h-3.5 w-3.5" />
+                      הוסף
+                    </Button>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        )}
       </CardContent>
     </Card>
 
