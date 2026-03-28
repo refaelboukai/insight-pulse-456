@@ -640,9 +640,7 @@ export default function StudentDashboard() {
   // If a panel is open, render it
   if (activePanel) {
     const panelContent: Record<string, React.ReactNode> = {
-      reminders: renderRemindersPanel(),
       reflection: renderReflectionPanel(),
-      insights: renderInsightsPanel(),
       reports: renderReportsPanel(),
       grades: renderGradesPanel(),
       pedagogy: renderPedagogyPanel(),
@@ -652,7 +650,7 @@ export default function StudentDashboard() {
       weekly_summary: renderWeeklySummaryPanel(),
     };
     const panelLabels: Record<string, string> = {
-      reminders: 'תזכורות להיום', reflection: 'היום שלי', insights: 'תובנות שלי על היום',
+      reflection: 'היום שלי',
       reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
       exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
       weekly_summary: 'סיכום שבועי מהמחנכת',
