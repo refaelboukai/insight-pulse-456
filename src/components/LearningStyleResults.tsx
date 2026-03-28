@@ -159,6 +159,10 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
                   toast.error(data.error);
                 } else {
                   setAiRecommendations(data.recommendations);
+                  // Persist to DB
+                  const updatedResults = { ...profile.results, aiRecommendations: data.recommendations };
+                  await supabase.from('learning_style_profiles').update({ results: updatedResults }).eq('id', profile.id);
+                  setProfile({ ...profile, results: updatedResults });
                 }
               } catch (e: any) {
                 toast.error('שגיאה בייצור ההמלצות');
