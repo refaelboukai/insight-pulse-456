@@ -113,7 +113,7 @@ export default function AcademicMappingSection({ studentId }: Props) {
             <ClipboardCheck className="h-4 w-4 text-primary" />
             מיפוי לימודי
           </div>
-          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={() => setEditing(true)}>
+          <Button variant="ghost" size="sm" className="h-7 text-xs gap-1" onClick={(e) => { e.preventDefault(); e.stopPropagation(); setEditing(true); }}>
             <Pencil className="h-3 w-3" />
             עריכה
           </Button>

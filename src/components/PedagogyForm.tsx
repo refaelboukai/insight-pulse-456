@@ -394,6 +394,89 @@ export default function PedagogyForm() {
     toast.success('קובץ Excel הורד בהצלחה');
   };
 
+  const [exportingFullSummary, setExportingFullSummary] = useState(false);
+
+  const handleExportFullSummary = async () => {
+    if (!selectedStudentId) return;
+    setExportingFullSummary(true);
+    try {
+      // Load all goals for all subjects
+      const { data: allGoals } = await supabase.from('pedagogical_goals')
+        .select('*')
+        .eq('student_id', selectedStudentId)
+        .eq('school_year', selectedYear);
+
+      // Load mapping data
+      const { data: mappingData } = await supabase
+        .from('student_mappings' as any)
+        .select('*')
+        .eq('student_id', selectedStudentId);
+
+      // Load exams
+      const { data: examData } = await supabase.from('exam_schedule')
+        .select('*, managed_subjects(name)')
+        .eq('student_id', selectedStudentId)
+        .eq('school_year', selectedYear)
+        .order('exam_date');
+
+      const mappingLabels: Record<string, string> = { math: 'מתמטיקה', hebrew: 'עברית', language: 'שפה', english: 'אנגלית' };
+      const mappingLines = (mappingData as any[] || [])
+        .filter((m: any) => m.has_mapping)
+        .map((m: any) => `${mappingLabels[m.subject_area] || m.subject_area}: כיתה ${m.grade_level || '—'}׳`)
+        .join('\n') || 'לא בוצע מיפוי';
+
+      // Build text summary
+      let text = `סיכום פדגוגי מלא — ${studentFullName}\nשנת לימודים: ${selectedYear}\n`;
+      text += `\n══════════════════════\nמיפוי לימודי\n══════════════════════\n${mappingLines}\n`;
+
+      // Group goals by subject
+      const goalsBySubject: Record<string, any[]> = {};
+      (allGoals || []).forEach((g: any) => {
+        const subj = subjects.find(s => s.id === g.subject_id);
+        const key = subj ? (g.sub_subject ? `${subj.name} — ${g.sub_subject}` : subj.name) : g.subject_id;
+        if (!goalsBySubject[key]) goalsBySubject[key] = [];
+        goalsBySubject[key].push(g);
+      });
+
+      for (const [subjName, goals] of Object.entries(goalsBySubject)) {
+        text += `\n══════════════════════\n${subjName}\n══════════════════════\n`;
+        const sorted = goals.sort((a, b) => MONTHS.indexOf(a.month) - MONTHS.indexOf(b.month));
+        for (const g of sorted) {
+          text += `\n📅 ${g.month}:\n`;
+          if (g.current_status) text += `  מצב נוכחי: ${g.current_status}\n`;
+          if (g.learning_goals) text += `  יעדים: ${g.learning_goals}\n`;
+          if (g.measurement_methods) text += `  דרכי מדידה: ${g.measurement_methods}\n`;
+          if (g.what_was_done) text += `  מה בוצע: ${g.what_was_done}\n`;
+          if (g.what_was_not_done) text += `  מה לא בוצע: ${g.what_was_not_done}\n`;
+          if (g.teacher_notes) text += `  הערות מורה: ${g.teacher_notes}\n`;
+          if (g.admin_notes) text += `  הערות מנהל: ${g.admin_notes}\n`;
+        }
+      }
+
+      if ((examData || []).length > 0) {
+        text += `\n══════════════════════\nלוח מבחנים\n══════════════════════\n`;
+        (examData as any[]).forEach((e: any) => {
+          const subj = (e as any).managed_subjects?.name || '';
+          text += `${format(new Date(e.exam_date), 'dd/MM/yyyy')} — ${subj}${e.sub_subject ? ` (${e.sub_subject})` : ''}${e.exam_description ? `: ${e.exam_description}` : ''}\n`;
+        });
+      }
+
+      // Download or share
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const fileName = `סיכום-פדגוגי-${studentFullName}-${selectedYear}.txt`;
+      const file = new File([blob], fileName, { type: 'text/plain' });
+      if (navigator.share && navigator.canShare?.({ files: [file] })) {
+        await navigator.share({ title: fileName, files: [file] });
+      } else {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = fileName; a.click();
+        URL.revokeObjectURL(url);
+      }
+      toast.success('סיכום פדגוגי מלא הופק');
+    } catch (err) { console.error(err); toast.error('שגיאה בהפקת סיכום'); }
+    setExportingFullSummary(false);
+  };
+
   const selectedSubject = subjects.find(s => s.id === selectedSubjectId);
   const filteredStudents = selectedClass ? students.filter(s => s.class_name === selectedClass) : students;
 
@@ -445,6 +528,20 @@ export default function PedagogyForm() {
 
         {selectedStudentId && (
           <>
+            {/* Full pedagogy summary export */}
+            <div className="flex justify-end">
+              <Button
+                variant="outline"
+                size="sm"
+                className="h-8 text-xs gap-1.5"
+                onClick={handleExportFullSummary}
+                disabled={exportingFullSummary}
+              >
+                {exportingFullSummary ? <Loader2 className="h-3 w-3 animate-spin" /> : <Download className="h-3 w-3" />}
+                סיכום פדגוגי מלא
+              </Button>
+            </div>
+
             {/* Academic Mapping - above learning style */}
             <AcademicMappingSection studentId={selectedStudentId} />
 
