@@ -37,6 +37,8 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
         setProfile(data);
         const existingNotes = (data.results as any)?.staffNotes || '';
         setStaffNotes(existingNotes);
+        const existingAi = (data.results as any)?.aiRecommendations || '';
+        setAiRecommendations(existingAi);
       }
       setLoading(false);
     };
