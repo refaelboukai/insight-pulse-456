@@ -494,7 +494,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
         </div>
 
         {/* Day cells */}
-        <div className="grid grid-cols-7 gap-px bg-border/20">
+        <div className="grid gap-px bg-border/20" style={{ gridTemplateColumns: 'repeat(5, 1fr) 0.6fr 0.6fr' }}>
           {calendarDays.map((day, i) => {
             if (!day) return <div key={i} className="min-h-[56px] bg-muted/5" />;
 
