@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Checkbox } from '@/components/ui/checkbox';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain, FileText, FileSpreadsheet, BarChart3, Download, Share2, Users } from 'lucide-react';
+import { BookOpen, Save, Plus, Trash2, CalendarDays, Brain, FileText, FileSpreadsheet, BarChart3, Download, Share2, Users, Loader2, Lightbulb } from 'lucide-react';
 import { format } from 'date-fns';
 import LearningStyleResults from '@/components/LearningStyleResults';
 import { g } from '@/lib/genderUtils';
