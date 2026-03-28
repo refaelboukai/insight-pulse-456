@@ -320,6 +320,23 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
     }
   };
 
+  const getIntervention = async (studentId: string, studentName: string, reason: string, consecutiveDays: number) => {
+    setInterventionLoading(studentId);
+    try {
+      const { data, error } = await supabase.functions.invoke('intervention-recommendations', {
+        body: { studentId, studentName, reason, consecutiveDays },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setInterventions(prev => new Map(prev).set(studentId, data.recommendations));
+    } catch (e) {
+      toast.error('שגיאה בייצור המלצות');
+      console.error(e);
+    } finally {
+      setInterventionLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center p-12">
