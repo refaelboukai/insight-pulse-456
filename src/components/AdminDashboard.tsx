@@ -1243,12 +1243,13 @@ export default function AdminDashboard() {
         support: renderSupportContent(cls),
         'long-absent': renderLongAbsentContent(cls),
         reflections: renderReflectionsContent(cls),
+        pedagogy: renderPedagogyContent(cls),
         'monthly-report': renderMonthlyReportContent(cls),
       };
       const panelLabels: Record<string, string> = {
         students: 'תלמידים', reports: 'דיווחים', events: 'אירועים חריגים',
         support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים',
-        reflections: 'תובנות והערכה עצמית', 'monthly-report': 'דוח חודשי AI',
+        reflections: 'תובנות והערכה עצמית', pedagogy: 'פדגוגיה', 'monthly-report': 'דוח חודשי AI',
       };
       return (
         <div className="space-y-2">
