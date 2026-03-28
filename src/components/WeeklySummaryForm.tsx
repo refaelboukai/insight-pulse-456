@@ -146,6 +146,46 @@ export default function WeeklySummaryForm() {
             />
           </div>
 
+          {/* AI Enrich button */}
+          {summaryText.trim().length > 10 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                const student = students.find(s => s.id === selectedStudentId);
+                if (!student) return;
+                setEnriching(true);
+                try {
+                  const { data, error } = await supabase.functions.invoke('enrich-weekly-summary', {
+                    body: {
+                      studentId: selectedStudentId,
+                      studentName: `${student.first_name} ${student.last_name}`,
+                      summaryText: summaryText.trim(),
+                      weekStart,
+                    },
+                  });
+                  if (error) throw error;
+                  if (data?.error) {
+                    toast.error(data.error);
+                  } else if (data?.enrichedSummary) {
+                    setSummaryText(data.enrichedSummary);
+                    toast.success('הסיכום הועשר בהמלצות להורים');
+                  }
+                } catch (e: any) {
+                  toast.error('שגיאה בהעשרת הסיכום');
+                  console.error(e);
+                } finally {
+                  setEnriching(false);
+                }
+              }}
+              disabled={enriching}
+              className="gap-1.5 text-xs w-full"
+            >
+              {enriching ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Sparkles className="h-3.5 w-3.5" />}
+              {enriching ? 'מעשיר בהמלצות...' : 'העשר בהמלצות AI להורים'}
+            </Button>
+          )}
+
           {savedIds.has(selectedStudentId) && (
             <Badge variant="secondary" className="gap-1 text-xs">
               <CheckCircle2 className="h-3 w-3" /> נשמר סיכום לשבוע זה
