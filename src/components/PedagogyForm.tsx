@@ -954,14 +954,14 @@ export default function PedagogyForm() {
               </Select>
             </div>
 
-            {/* Compact student info: mapping + learning style */}
-            <AcademicMappingSection studentId={selectedStudentId} />
+            {/* Learning style recommendations only for goal planning context */}
             <LearningStyleResults
               studentId={selectedStudentId}
               studentName={studentFullName}
               isEditable={false}
               gender={filteredStudents.find(s => s.id === selectedStudentId)?.gender}
               compact={true}
+              recommendationsOnly={true}
             />
 
             <Accordion type="multiple" defaultValue={['goals', 'exams']} className="space-y-2">

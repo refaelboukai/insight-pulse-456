@@ -16,6 +16,7 @@ interface LearningStyleResultsProps {
   isEditable?: boolean;
   gender?: Gender;
   compact?: boolean;
+  recommendationsOnly?: boolean;
 }
 
 export default function LearningStyleResults({ studentId, studentName, isEditable = false, gender, compact = false }: LearningStyleResultsProps) {
