@@ -75,6 +75,13 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
   const averages = results?.averages || {};
   const catLabels = CATEGORIES as Record<string, string>;
 
+  const getScoreLabel = (avg: number): { label: string; color: string } => {
+    if (avg >= 4) return { label: 'גבוה — מעדיף מאוד', color: 'text-green-700' };
+    if (avg >= 3) return { label: 'בינוני — מתפקד היטב', color: 'text-blue-700' };
+    if (avg >= 2) return { label: 'נמוך — פחות מתאים', color: 'text-amber-700' };
+    return { label: 'נמוך מאוד', color: 'text-red-700' };
+  };
+
   return (
     <div className="space-y-3 border rounded-xl p-3 bg-card">
       <div className="flex items-center gap-2">
@@ -85,12 +92,16 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
       {/* Category averages */}
       {!compact && (
         <div className="grid grid-cols-3 gap-2">
-          {Object.entries(averages).map(([cat, avg]) => (
-            <div key={cat} className="text-center p-2 rounded-lg bg-muted/50">
-              <span className="text-[10px] text-muted-foreground block">{catLabels[cat] || cat}</span>
-              <span className="font-bold text-sm">{String(avg)}</span>
-            </div>
-          ))}
+          {Object.entries(averages).map(([cat, avg]) => {
+            const score = getScoreLabel(Number(avg));
+            return (
+              <div key={cat} className="text-center p-2 rounded-lg bg-muted/50">
+                <span className="text-[10px] text-muted-foreground block">{catLabels[cat] || cat}</span>
+                <span className="font-bold text-sm">{String(avg)}</span>
+                <span className={`text-[9px] block mt-0.5 ${score.color}`}>{score.label}</span>
+              </div>
+            );
+          })}
         </div>
       )}
 
