@@ -441,9 +441,7 @@ export default function AdminDashboard() {
         socialEmotionalSummary: latestEval?.social_emotional_summary || null,
       });
       const semSuffix = reportCardSemester === 'all' ? 'שנתי' : SEMESTER_LABELS[reportCardSemester];
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement('a'); a.href = url; a.download = `תעודה_${semSuffix}_${student.first_name}_${student.last_name}.pdf`; a.click();
-      URL.revokeObjectURL(url);
+      downloadBlob(blob, `תעודה_${semSuffix}_${student.first_name}_${student.last_name}.pdf`);
       toast.success(`תעודה הופקה עבור ${student.first_name}`);
     } catch { toast.error('שגיאה בהפקת התעודה'); } finally { setGeneratingCard(null); }
   };
