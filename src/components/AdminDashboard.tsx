@@ -1407,13 +1407,14 @@ export default function AdminDashboard() {
         events: renderEventsContent(),
         support: renderSupportContent(),
         'long-absent': renderLongAbsentContent(),
+        pedagogy: renderPedagogyContent(),
         'monthly-report': renderMonthlyReportContent(),
         calendar: <SharedCalendar editable />,
         settings: renderSettingsContent(),
       };
       const panelLabels: Record<string, string> = {
         students: 'תלמידים', reports: 'דיווחים', events: 'אירועים חריגים',
-        support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים',
+        support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים', pedagogy: 'פדגוגיה',
         'monthly-report': 'דוח חודשי AI', calendar: 'לוח שנה', settings: 'הגדרות מערכת',
       };
       return (
