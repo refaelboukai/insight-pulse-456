@@ -1,4 +1,5 @@
 import * as XLSX from 'xlsx';
+import { downloadWorkbook } from '@/lib/excelDownload';
 
 interface GoalRow {
   month: string;
@@ -46,5 +47,5 @@ export function exportPedagogyToExcel(
   XLSX.utils.book_append_sheet(wb, ws, 'מעקב פדגוגי');
 
   const fileName = `מעקב-פדגוגי-${studentName}-${subjectTitle}-${schoolYear}.xlsx`;
-  XLSX.writeFile(wb, fileName);
+  downloadWorkbook(wb, fileName);
 }

@@ -11,6 +11,7 @@ import { useAuth } from '@/hooks/useAuth';
 import * as XLSX from 'xlsx';
 import { getHebrewDay, getJewishHolidaysForMonth, getBirthdaysForMonth, type BirthdayEntry } from '@/lib/hebrewCalendar';
 import { HDate } from '@hebcal/core';
+import { downloadWorkbook } from '@/lib/excelDownload';
 
 interface CalendarEvent {
   id: string;
@@ -326,7 +327,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
     ws['!cols'] = [{ wch: 25 }, { wch: 20 }, { wch: 15 }, { wch: 30 }, { wch: 15 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'אירועים');
-    XLSX.writeFile(wb, 'תבנית_לוח_שנה.xlsx');
+    downloadWorkbook(wb, 'תבנית_לוח_שנה.xlsx');
     toast.success('תבנית הורדה בהצלחה');
   };
 
@@ -487,7 +488,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
         {/* Day headers */}
         <div className="grid grid-cols-7 bg-primary/8">
           {HEBREW_DAYS.map((d, idx) => (
-            <div key={d} className={`text-center text-sm font-bold py-3 ${idx === 6 ? 'text-primary' : idx === 5 ? 'text-muted-foreground/70' : 'text-foreground/70'}`}>
+              <div key={d} className={`text-center text-base font-bold py-3 ${idx === 6 ? 'text-primary' : idx === 5 ? 'text-muted-foreground' : 'text-foreground'}`}>
               {d}
             </div>
           ))}
@@ -524,7 +525,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
               >
                 {/* Date numbers row */}
                 <div className="flex items-start justify-between mb-1">
-                  <span className="text-[9px] sm:text-[10px] text-muted-foreground/60 leading-none mt-0.5 font-medium">
+                    <span className="text-[10px] sm:text-xs text-muted-foreground leading-none mt-0.5 font-semibold">
                     {getHebrewDay(year, month, day)}
                   </span>
                   <span className={`text-sm sm:text-base font-bold leading-none inline-flex items-center justify-center rounded-full
@@ -544,11 +545,11 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                       {nonBdayEvents.slice(0, 2).map(ev => (
                         <div key={ev.id} className="flex items-center gap-1">
                           <div className={`w-[6px] h-[6px] sm:w-2 sm:h-2 rounded-full shrink-0 ${getColorConfig(ev.color).dot}`} />
-                          <span className="text-[8px] sm:text-[10px] text-foreground/60 truncate leading-tight hidden sm:inline">{ev.title.substring(0, 12)}</span>
+                           <span className="text-[10px] sm:text-xs text-foreground truncate leading-tight font-medium hidden sm:inline">{ev.title.substring(0, 14)}</span>
                         </div>
                       ))}
                       {nonBdayEvents.length > 2 && (
-                        <span className="text-[8px] sm:text-[10px] text-muted-foreground font-semibold">+{nonBdayEvents.length - 2}</span>
+                         <span className="text-[10px] sm:text-xs text-foreground font-semibold">+{nonBdayEvents.length - 2}</span>
                       )}
                       {/* Mobile: just dots when no room for text */}
                       <div className="flex gap-[3px] flex-wrap sm:hidden">
@@ -556,7 +557,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                           <div key={ev.id} className={`w-[6px] h-[6px] rounded-full ${getColorConfig(ev.color).dot}`} />
                         ))}
                         {nonBdayEvents.length > 5 && (
-                          <span className="text-[8px] text-muted-foreground font-medium">+{nonBdayEvents.length - 5}</span>
+                         <span className="text-[10px] text-foreground font-semibold">+{nonBdayEvents.length - 5}</span>
                         )}
                       </div>
                     </div>
@@ -600,13 +601,13 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
                         <div className={`w-2.5 h-2.5 rounded-full shrink-0 ${color.dot}`} />
-                        <p className={`text-xs font-bold ${color.text}`}>{ev.title}</p>
+                        <p className={`text-sm font-bold ${color.text}`}>{ev.title}</p>
                       </div>
                       {ev.event_time && (
-                        <p className={`text-[10px] ${color.text} opacity-70 mr-4 mt-0.5`}>🕐 {ev.event_time}</p>
+                        <p className={`text-xs ${color.text} opacity-90 mr-4 mt-0.5 font-medium`}>🕐 {ev.event_time}</p>
                       )}
                       {ev.description && (
-                        <p className="text-[10px] text-foreground/50 mr-4 mt-1 whitespace-pre-line leading-relaxed">{ev.description}</p>
+                        <p className="text-xs text-foreground mr-4 mt-1 whitespace-pre-line leading-relaxed">{ev.description}</p>
                       )}
                     </div>
                     {editable && !ev.id.startsWith('exam-') && !ev.id.startsWith('holiday-') && !ev.id.startsWith('bday-') && (

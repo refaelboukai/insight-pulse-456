@@ -7,17 +7,21 @@ export function downloadBlob(blob: Blob, fileName: string): void {
   const a = document.createElement('a');
   a.href = url;
   a.download = fileName;
+  a.rel = 'noopener';
+  a.target = '_blank';
   a.style.display = 'none';
 
   // Chrome requires the element to be in the DOM for .click() to work
   document.body.appendChild(a);
-  a.click();
+  requestAnimationFrame(() => a.click());
 
   // Delay cleanup to ensure the download starts
   setTimeout(() => {
-    document.body.removeChild(a);
+    if (a.parentNode) {
+      document.body.removeChild(a);
+    }
     URL.revokeObjectURL(url);
-  }, 250);
+  }, 600);
 }
 
 /**

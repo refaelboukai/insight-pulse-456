@@ -10,6 +10,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { toast } from 'sonner';
 import { INCIDENT_TYPE_LABELS, VIOLENCE_LABELS } from '@/lib/constants';
 import { generateEventPdf } from '@/lib/generateEventPdf';
+import { shareOrDownload } from '@/lib/downloadFile';
 import { Send, FileWarning, MessageCircle, Users, Shield, X, Sparkles, Loader2 } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -189,19 +190,8 @@ export default function ExceptionalEventForm() {
       const blob = await generateEventPdf(eventData);
       const typeName = INCIDENT_TYPE_LABELS[eventData.incidentType] || eventData.incidentType;
       const fileName = `אירוע-חריג-${eventData.date}.pdf`;
-      const file = new File([blob], fileName, { type: 'application/pdf' });
-
-      if (navigator.share && navigator.canShare?.({ files: [file] })) {
-        await navigator.share({
-          title: `דיווח אירוע חריג - ${typeName}`,
-          text: `אירוע חריג: ${typeName}\n${eventData.description}`,
-          files: [file],
-        });
-      } else {
-        const { downloadBlob } = await import('@/lib/downloadFile');
-        downloadBlob(blob, fileName);
-        toast.info('הדוח הורד — ניתן לשתף דרך וואטסאפ או מייל');
-      }
+      await shareOrDownload(blob, fileName, 'application/pdf');
+      toast.info('הדוח מוכן לשיתוף או הורדה');
 
       resetForm();
     } catch (err) {

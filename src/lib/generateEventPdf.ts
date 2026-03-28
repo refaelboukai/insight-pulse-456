@@ -2,6 +2,7 @@ import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import { INCIDENT_TYPE_LABELS } from '@/lib/constants';
 import logoSrc from '@/assets/logo.jpeg';
+import { canvasToPdfBlob, waitForPrintableRender } from '@/lib/pdfExport';
 
 interface EventData {
   incidentType: string;
@@ -79,21 +80,17 @@ export async function generateEventPdf(data: EventData): Promise<Blob> {
   `;
 
   document.body.appendChild(container);
-  await new Promise((r) => setTimeout(r, 100));
+  await waitForPrintableRender();
 
   try {
     const canvas = await html2canvas(container, {
       scale: 2,
       useCORS: true,
       allowTaint: true,
+      backgroundColor: '#ffffff',
       logging: false,
     });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    return pdf.output('blob');
+    return canvasToPdfBlob(canvas, { imageFormat: 'PNG', marginMm: 8, orientation: 'portrait' });
   } finally {
     document.body.removeChild(container);
   }

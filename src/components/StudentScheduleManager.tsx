@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Calendar, Plus, Trash2, Save, Upload, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
+import { downloadWorkbook } from '@/lib/excelDownload';
 
 const DAYS = ['ראשון', 'שני', 'שלישי', 'רביעי', 'חמישי'] as const;
 
@@ -158,7 +159,7 @@ export default function StudentScheduleManager({ student, schedule, onSave }: Pr
     ws['!cols'] = [{ wch: 10 }, { wch: 8 }, { wch: 20 }, { wch: 10 }];
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, 'מערכת שעות');
-    XLSX.writeFile(wb, `תבנית_מערכת_שעות.xlsx`);
+    downloadWorkbook(wb, 'תבנית_מערכת_שעות.xlsx');
   };
   const removeEntry = (idx: number) => {
     setEntries(entries.filter((_, i) => i !== idx));
