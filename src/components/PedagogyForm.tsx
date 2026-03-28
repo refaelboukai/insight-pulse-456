@@ -503,7 +503,7 @@ export default function PedagogyForm() {
       try {
         const img = new Image();
         img.crossOrigin = 'anonymous';
-        await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = rej; img.src = '/logo.png'; });
+        await new Promise<void>((res, rej) => { img.onload = () => res(); img.onerror = rej; img.src = logoImport; });
         const c = document.createElement('canvas'); c.width = img.width; c.height = img.height;
         c.getContext('2d')!.drawImage(img, 0, 0);
         logoDataUrl = c.toDataURL('image/jpeg', 0.8);
