@@ -78,6 +78,9 @@ export default function AdminDashboard() {
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
   const [newStaffName, setNewStaffName] = useState('');
   const [addingStaff, setAddingStaff] = useState(false);
+  const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
+  const [editStaffName, setEditStaffName] = useState('');
+  const [editStaffDob, setEditStaffDob] = useState('');
 
   // Support assignments
   const [supportAssignments, setSupportAssignments] = useState<any[]>([]);
@@ -241,6 +244,14 @@ export default function AdminDashboard() {
     if (!error) { toast.success('נמחק'); fetchAll(); }
   };
 
+  const handleSaveStaffEdit = async () => {
+    if (!editingStaffId) return;
+    const updates: any = { name: editStaffName.trim() };
+    if (editStaffDob) updates.date_of_birth = editStaffDob;
+    else updates.date_of_birth = null;
+    const { error } = await supabase.from('staff_members').update(updates).eq('id', editingStaffId);
+    if (error) { toast.error('שגיאה בעדכון'); } else { toast.success('עודכן בהצלחה'); setEditingStaffId(null); fetchAll(); }
+  };
   const handleAddAssignment = async () => {
     if (!user || !assignStudentId || !assignStaffId || assignSupportTypes.length === 0) {
       toast.error('נא למלא את כל השדות'); return;
@@ -1194,9 +1205,39 @@ export default function AdminDashboard() {
               <Button size="sm" onClick={handleAddStaff} disabled={addingStaff} className="gap-1 h-9"><Plus className="h-3.5 w-3.5" /> הוסף</Button>
             </div>
             {staffMembers.map(sm => (
-              <div key={sm.id} className="flex items-center justify-between p-2 rounded-lg border bg-card">
-                <span className="text-sm font-medium">{sm.name}</span>
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDeleteStaff(sm.id)}><X className="h-3.5 w-3.5" /></Button>
+              <div key={sm.id} className="p-2 rounded-lg border bg-card space-y-1.5">
+                {editingStaffId === sm.id ? (
+                  <div className="space-y-2">
+                    <Input value={editStaffName} onChange={e => setEditStaffName(e.target.value)} className="h-8 text-sm" placeholder="שם" />
+                    <div className="flex items-center gap-2">
+                      <label className="text-[10px] text-muted-foreground shrink-0">תאריך לידה:</label>
+                      <Input type="date" value={editStaffDob} onChange={e => setEditStaffDob(e.target.value)} className="h-8 text-sm flex-1" />
+                    </div>
+                    <div className="flex gap-1 justify-end">
+                      <Button size="sm" variant="ghost" className="h-7 text-[10px]" onClick={() => setEditingStaffId(null)}>ביטול</Button>
+                      <Button size="sm" className="h-7 text-[10px]" onClick={handleSaveStaffEdit}>שמור</Button>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <span className="text-sm font-medium">{sm.name}</span>
+                      {sm.date_of_birth && (
+                        <span className="text-[10px] text-muted-foreground mr-2">
+                          🎂 {new Date(sm.date_of_birth).toLocaleDateString('he-IL')}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => {
+                        setEditingStaffId(sm.id);
+                        setEditStaffName(sm.name);
+                        setEditStaffDob(sm.date_of_birth || '');
+                      }}><Pencil className="h-3 w-3 text-muted-foreground" /></Button>
+                      <Button size="sm" variant="ghost" className="h-7 w-7 p-0 text-destructive" onClick={() => handleDeleteStaff(sm.id)}><X className="h-3.5 w-3.5" /></Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))}
           </div>
