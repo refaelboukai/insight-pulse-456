@@ -446,20 +446,20 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 -mx-3 sm:mx-0">
       {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-3">
+      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-3 mx-3 sm:mx-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
-            <button onClick={nextMonth} className="p-2 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
-              <ChevronRight className="h-4 w-4 text-primary" />
+            <button onClick={nextMonth} className="p-2.5 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
+              <ChevronRight className="h-5 w-5 text-primary" />
             </button>
-            <div className="text-center min-w-[130px]">
-              <h3 className="text-base font-bold text-foreground">{HEBREW_MONTHS[month]}</h3>
-              <p className="text-[10px] text-muted-foreground">{year}</p>
+            <div className="text-center min-w-[140px]">
+              <h3 className="text-lg font-bold text-foreground">{HEBREW_MONTHS[month]}</h3>
+              <p className="text-xs text-muted-foreground">{year}</p>
             </div>
-            <button onClick={prevMonth} className="p-2 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
-              <ChevronLeft className="h-4 w-4 text-primary" />
+            <button onClick={prevMonth} className="p-2.5 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
+              <ChevronLeft className="h-5 w-5 text-primary" />
             </button>
           </div>
           {editable && (
