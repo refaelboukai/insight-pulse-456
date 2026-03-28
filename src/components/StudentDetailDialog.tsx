@@ -343,6 +343,26 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
           </div>
         )}
 
+        {/* Pattern Recognition */}
+        <div className="flex gap-2">
+          <Button onClick={generatePatterns} disabled={generatingPatterns} size="sm" variant="outline" className="gap-1.5 flex-1">
+            {generatingPatterns ? (
+              <><Loader2 className="h-3.5 w-3.5 animate-spin" /> מנתח דפוסים...</>
+            ) : (
+              <><Brain className="h-3.5 w-3.5" /> זיהוי דפוסים (14 ימים)</>
+            )}
+          </Button>
+        </div>
+        {patterns && (
+          <div className="rounded-xl border border-amber-500/20 bg-amber-50/50 dark:bg-amber-950/20 p-3">
+            <div className="flex items-center gap-1.5 mb-2">
+              <Brain className="h-3.5 w-3.5 text-amber-600" />
+              <p className="text-xs font-semibold text-amber-700 dark:text-amber-400">דפוסים שזוהו</p>
+            </div>
+            <div className="text-xs leading-relaxed whitespace-pre-wrap text-foreground">{patterns}</div>
+          </div>
+        )}
+
 
         {loading ? (
           <div className="flex items-center justify-center py-8">
