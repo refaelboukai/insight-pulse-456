@@ -162,13 +162,9 @@ export default function StudentDetailDialog({ student, open, onOpenChange }: Stu
   const downloadSummary = () => {
     if (!aiSummary || !student) return;
     const header = `סיכום ${g(student.gender, 'תלמיד', 'תלמידה')}: ${student.first_name} ${student.last_name}\nכיתה: ${student.class_name || 'לא ידוע'}\nתאריך הפקה: ${format(new Date(), 'dd/MM/yyyy', { locale: he })}\n${'='.repeat(50)}\n\n`;
+    const { downloadBlob } = require('@/lib/downloadFile');
     const blob = new Blob([header + aiSummary], { type: 'text/plain;charset=utf-8' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `סיכום_${student.first_name}_${student.last_name}_${format(new Date(), 'yyyy-MM-dd')}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+    downloadBlob(blob, `סיכום_${student.first_name}_${student.last_name}_${format(new Date(), 'yyyy-MM-dd')}.txt`);
   };
 
   const shareSummary = async () => {

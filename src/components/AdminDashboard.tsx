@@ -700,9 +700,7 @@ export default function AdminDashboard() {
                       };
                       const blob = await generateEventPdf(eventData);
                       const fileName = `אירוע-חריג-${eventData.date}.pdf`;
-                      const file = new File([blob], fileName, { type: 'application/pdf' });
-                      if (navigator.share && navigator.canShare?.({ files: [file] })) { await navigator.share({ title: fileName, files: [file] }); }
-                      else { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); }
+                      await shareOrDownload(blob, fileName);
                     } catch { toast.error('שגיאה בהפקת הדוח'); }
                   }}>
                     <Share2 className="h-3 w-3" /> שתף

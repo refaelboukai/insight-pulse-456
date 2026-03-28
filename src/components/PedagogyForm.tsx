@@ -736,9 +736,7 @@ export default function PedagogyForm() {
                   }).filter(r => r.currentStatus || r.learningGoals || r.whatWasDone);
                   if (rows.length > 0) {
                     const blob = await generatePedagogyTrackingPdf(sData.name, mySubjectFilter, null, selectedYear, rows);
-                    const url = URL.createObjectURL(blob);
-                    const a = document.createElement('a'); a.href = url; a.download = `מעקב-${sData.name}-${mySubjectFilter}.pdf`; a.click();
-                    URL.revokeObjectURL(url);
+                    downloadBlob(blob, `מעקב-${sData.name}-${mySubjectFilter}.pdf`);
                   }
                 }
                 toast.success('קבצי PDF הורדו');
