@@ -526,9 +526,7 @@ export default function AdminDashboard() {
         pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
         const blob = pdf.output('blob');
         const fileName = `יעדים-פדגוגיים-${sName}-${selectedYear}.pdf`;
-        const file = new File([blob], fileName, { type: 'application/pdf' });
-        if (navigator.share && navigator.canShare?.({ files: [file] })) { await navigator.share({ title: fileName, files: [file] }); }
-        else { const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = fileName; a.click(); URL.revokeObjectURL(url); }
+        await shareOrDownload(blob, fileName);
         toast.success('דוח PDF הופק');
       }
     } catch { toast.error('שגיאה בייצוא'); }
