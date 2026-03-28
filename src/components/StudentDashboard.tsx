@@ -412,6 +412,33 @@ export default function StudentDashboard() {
           </Button>
         </>
       )}
+
+      {/* Insights section integrated into reflection */}
+      <div className="border-t border-border/40 pt-4 space-y-3">
+        <div className="flex items-center gap-2">
+          <PenLine className="h-4 w-4 text-accent" />
+          <span className="text-sm font-bold">תובנות שלי על היום</span>
+        </div>
+        <Textarea value={insightText} onChange={(e) => setInsightText(e.target.value)}
+          placeholder={`${terms.write} כאן מה עבר עליך היום, מה למדת על עצמך, מה הרגשת...`}
+          className="min-h-[100px] rounded-xl border-muted text-sm resize-none" disabled={insightSaved} />
+        {!insightSaved ? (
+          <Button size="sm" className="w-full btn-primary-gradient text-primary-foreground rounded-lg h-9" disabled={insightSaving || !insightText.trim()}
+            onClick={async () => {
+              if (!selectedStudentId || !selectedStudent) return;
+              setInsightSaving(true);
+              const { error } = await (supabase.from as any)('student_insights').insert({ student_id: selectedStudentId, content: insightText.trim() });
+              setInsightSaving(false);
+              if (error) { toast.error('שגיאה בשמירה'); return; }
+              setInsightSaved(true);
+              toast.success('התובנה נשמרה!');
+            }}>
+            {insightSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : 'שמור תובנה'}
+          </Button>
+        ) : (
+          <p className="text-xs text-center text-muted-foreground">✓ התובנה נשמרה להיום</p>
+        )}
+      </div>
     </div>
   );
 
@@ -600,24 +627,20 @@ export default function StudentDashboard() {
   type StudentCard = { key: string; icon: React.ElementType; label: string; value?: string | number; iconBg: string; iconColor: string };
 
   const studentCards: StudentCard[] = [
-    { key: 'reminders', icon: CalendarDays, label: 'תזכורות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
     { key: 'reflection', icon: Smile, label: 'היום שלי', iconBg: 'bg-primary/10', iconColor: 'text-primary', value: reflectionSaved ? '✓' : undefined },
-    { key: 'insights', icon: PenLine, label: 'תובנות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
     { key: 'reports', icon: FileText, label: 'דיווחים', value: reports.length, iconBg: 'bg-primary/10', iconColor: 'text-primary' },
     { key: 'grades', icon: GraduationCap, label: 'ציונים', value: grades.length, iconBg: 'bg-[hsl(35,60%,90%)]', iconColor: 'text-[hsl(35,60%,30%)]' },
     { key: 'pedagogy', icon: BookOpen, label: 'יעדים פדגוגיים', value: pedagogyGoals.length, iconBg: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,35%)]' },
     { key: 'exams', icon: CalendarDays, label: 'לוח מבחנים', value: examSchedule.length, iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
     { key: 'support', icon: HeartHandshake, label: 'תכנית תמיכה', value: assignments.length, iconBg: 'bg-[hsl(145,40%,90%)]', iconColor: 'text-[hsl(145,40%,30%)]' },
     { key: 'schedule', icon: Calendar, label: 'מערכת שעות', iconBg: 'bg-[hsl(220,45%,92%)]', iconColor: 'text-[hsl(220,45%,35%)]' },
-    { key: 'weekly_summary', icon: MessageSquareText, label: 'סיכום מחנכות', value: weeklySummaries.length, iconBg: 'bg-[hsl(50,55%,90%)]', iconColor: 'text-[hsl(50,55%,30%)]' },
+    ...(weeklySummaries.length > 0 ? [{ key: 'weekly_summary', icon: MessageSquareText, label: 'סיכום מחנכות', value: weeklySummaries.length, iconBg: 'bg-[hsl(50,55%,90%)]', iconColor: 'text-[hsl(50,55%,30%)]' }] : []),
   ];
 
   // If a panel is open, render it
   if (activePanel) {
     const panelContent: Record<string, React.ReactNode> = {
-      reminders: renderRemindersPanel(),
       reflection: renderReflectionPanel(),
-      insights: renderInsightsPanel(),
       reports: renderReportsPanel(),
       grades: renderGradesPanel(),
       pedagogy: renderPedagogyPanel(),
@@ -627,7 +650,7 @@ export default function StudentDashboard() {
       weekly_summary: renderWeeklySummaryPanel(),
     };
     const panelLabels: Record<string, string> = {
-      reminders: 'תזכורות להיום', reflection: 'היום שלי', insights: 'תובנות שלי על היום',
+      reflection: 'היום שלי',
       reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
       exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
       weekly_summary: 'סיכום שבועי מהמחנכת',
@@ -719,15 +742,15 @@ export default function StudentDashboard() {
       {/* Pinned panels */}
       {pinnedPanels.size > 0 && (() => {
         const pinnedRenderers: Record<string, () => React.ReactNode> = {
-          reminders: renderRemindersPanel, reflection: renderReflectionPanel,
-          insights: renderInsightsPanel, reports: renderReportsPanel,
+          reflection: renderReflectionPanel,
+          reports: renderReportsPanel,
           grades: renderGradesPanel, pedagogy: renderPedagogyPanel,
           exams: renderExamsPanel, support: renderSupportPanel,
           schedule: renderSchedulePanel,
           weekly_summary: renderWeeklySummaryPanel,
         };
         const pinnedLabels: Record<string, string> = {
-          reminders: 'תזכורות להיום', reflection: 'היום שלי', insights: 'תובנות שלי על היום',
+          reflection: 'היום שלי',
           reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
           exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
           weekly_summary: 'סיכום שבועי מהמחנכת',
