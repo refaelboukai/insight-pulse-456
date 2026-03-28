@@ -44,6 +44,7 @@ export default function Index() {
       return (
         <div className="space-y-4" dir="rtl">
           <DailyReminderBanner />
+          <BirthdayBanner />
           <div className="grid grid-cols-3 gap-2.5">
             {staffCards.map(card => (
               <button key={card.key} onClick={() => setStaffPanel(card.key as StaffPanel)}
