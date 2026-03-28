@@ -50,9 +50,9 @@ function MappingStatusBadge({ studentId, gender }: { studentId: string; gender?:
     });
   }, [studentId]);
   if (hasMappings === null) return null;
-  if (hasMappings) return null; // Don't show anything if mapping exists
+  if (hasMappings) return null;
   return (
-    <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-lg flex items-center gap-1.5">
+    <div className="text-xs p-2 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-1.5">
       <ClipboardCheck className="h-3.5 w-3.5" />
       {g(gender, 'התלמיד לא ביצע', 'התלמידה לא ביצעה')} מיפוי לימודי.
     </div>
@@ -690,8 +690,7 @@ export default function PedagogyForm() {
                     </button>
                     {isExpanded && (
                       <div className="border-t p-3 space-y-3 bg-muted/10">
-                        {/* Academic Mapping */}
-                        <AcademicMappingSection studentId={sid} />
+                        {/* Learning Style - compact (AI summary only) */}
                         {/* Learning Style - compact (AI summary only) */}
                         <LearningStyleResults
                           studentId={sid}
@@ -786,11 +785,11 @@ export default function PedagogyForm() {
           </CardTitle>
           <div className="flex gap-1 p-0.5 rounded-lg bg-muted/40 border">
             <button onClick={() => setTeacherView('profile')}
-              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all flex-1 ${teacherView === 'profile' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
+              className={`text-sm py-2.5 px-4 rounded-md font-semibold transition-all flex-1 ${teacherView === 'profile' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
               פרופיל תלמיד
             </button>
             <button onClick={() => { setTeacherView('goals'); setGoalsStep('subjects'); }}
-              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all flex-1 ${teacherView === 'goals' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
+              className={`text-sm py-2.5 px-4 rounded-md font-semibold transition-all flex-1 ${teacherView === 'goals' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
               יעדים פדגוגיים
             </button>
           </div>
