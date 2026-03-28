@@ -143,6 +143,10 @@ export default function AdminDashboard() {
   const [reflectionCustomTo, setReflectionCustomTo] = useState<Record<string, string>>({});
   const [reflectionVisibility, setReflectionVisibility] = useState<Record<string, boolean>>({});
 
+  // Pedagogy stats
+  const [pedagogyGoals, setPedagogyGoals] = useState<any[]>([]);
+  const [learningProfiles, setLearningProfiles] = useState<any[]>([]);
+
   const fetchAll = async () => {
     const { from: yearFrom, to: yearTo } = getYearDateRange(selectedYear);
     const [reportsRes, studentsRes, alertsRes, eventsRes, attendanceRes, supportRes, staffRes, assignRes, schedulesRes, reflectionsRes, insightsRes] = await Promise.all([
@@ -183,6 +187,15 @@ export default function AdminDashboard() {
     if (reflectionsRes.data) setDailyReflections(reflectionsRes.data as any[]);
     if (insightsRes.data) setStudentInsights(insightsRes.data as any[]);
     if (studentsRes.data) loadLongAbsent(studentsRes.data);
+    
+    // Fetch pedagogy data
+    const [pedGoalsRes, learnProfilesRes] = await Promise.all([
+      supabase.from('pedagogical_goals').select('student_id, subject_id').eq('school_year', selectedYear),
+      supabase.from('learning_style_profiles').select('student_id, is_completed'),
+    ]);
+    if (pedGoalsRes.data) setPedagogyGoals(pedGoalsRes.data);
+    if (learnProfilesRes.data) setLearningProfiles(learnProfilesRes.data);
+    
     setLoading(false);
   };
 
@@ -634,7 +647,7 @@ export default function AdminDashboard() {
   // ===== PANEL BACK BUTTON =====
   const renderBackButton = () => (
     <button onClick={() => setActivePanel(null)}
-      className="flex items-center gap-1.5 text-sm font-medium text-primary mb-3 hover:underline">
+      className="flex items-center gap-2 text-sm font-bold text-primary bg-primary/10 px-4 py-2.5 rounded-xl mb-3 hover:bg-primary/15 transition-all w-full">
       <ChevronDown className="h-4 w-4 rotate-90" /> חזרה לתפריט
     </button>
   );
@@ -1125,6 +1138,76 @@ export default function AdminDashboard() {
     toast.success(classFilter ? `קובץ אקסל הורד — כיתת ${classFilter}` : 'קובץ אקסל הורד');
   };
 
+  // ===== RENDER PEDAGOGY CONTENT =====
+  const renderPedagogyContent = (classFilter?: string) => {
+    const targetStudents = classFilter ? activeStudents.filter(s => s.class_name === classFilter) : activeStudents;
+    const studentsWithGoals = new Set(pedagogyGoals.map(g => g.student_id));
+    const completedProfiles = new Set(learningProfiles.filter(p => p.is_completed).map((p: any) => p.student_id));
+
+    const withGoals = targetStudents.filter(s => studentsWithGoals.has(s.id));
+    const withoutGoals = targetStudents.filter(s => !studentsWithGoals.has(s.id));
+    const withLearning = targetStudents.filter(s => completedProfiles.has(s.id));
+    const withoutLearning = targetStudents.filter(s => !completedProfiles.has(s.id));
+
+    return (
+      <div className="space-y-4">
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl border bg-emerald-50 dark:bg-emerald-950/20 p-3 text-center">
+            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{withGoals.length}/{targetStudents.length}</p>
+            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">הוזנו יעדים פדגוגיים</p>
+          </div>
+          <div className="rounded-xl border bg-blue-50 dark:bg-blue-950/20 p-3 text-center">
+            <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{withLearning.length}/{targetStudents.length}</p>
+            <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">מילאו שאלון למידה</p>
+          </div>
+        </div>
+
+        {/* Without goals */}
+        {withoutGoals.length > 0 && (
+          <div className="rounded-xl border p-3">
+            <p className="text-xs font-bold text-destructive mb-2">טרם הוזנו יעדים ({withoutGoals.length})</p>
+            <div className="flex flex-wrap gap-1">
+              {withoutGoals.map(s => (
+                <Badge key={s.id} variant="outline" className="text-[10px] border-destructive/30 text-destructive">
+                  {s.first_name} {s.last_name} {s.class_name && `(${s.class_name})`}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Without learning style */}
+        {withoutLearning.length > 0 && (
+          <div className="rounded-xl border p-3">
+            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-2">טרם מילאו שאלון למידה ({withoutLearning.length})</p>
+            <div className="flex flex-wrap gap-1">
+              {withoutLearning.map(s => (
+                <Badge key={s.id} variant="outline" className="text-[10px] border-amber-400/30 text-amber-600">
+                  {s.first_name} {s.last_name} {s.class_name && `(${s.class_name})`}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* With goals */}
+        {withGoals.length > 0 && (
+          <div className="rounded-xl border p-3">
+            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-2">הוזנו יעדים ({withGoals.length})</p>
+            <div className="flex flex-wrap gap-1">
+              {withGoals.map(s => (
+                <Badge key={s.id} variant="secondary" className="text-[10px]">
+                  {s.first_name} {s.last_name} {s.class_name && `(${s.class_name})`}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // ===== RENDER CLASS VIEW =====
   const renderClassView = (cls: string) => {
     const filteredStudents = getClassStudents(cls);
@@ -1141,6 +1224,7 @@ export default function AdminDashboard() {
       { key: 'support', icon: HeartHandshake, value: filteredAssignments.length, label: 'תמיכות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
       { key: 'long-absent', icon: AlertTriangle, value: longAbsentStudents.filter(la => la.student.class_name === cls).length, label: 'לא מגיעים', iconBg: 'bg-warning/10', iconColor: 'text-warning' },
       { key: 'reflections', icon: MessageSquare, label: 'תובנות והערכה', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'pedagogy', icon: BookOpen, label: 'פדגוגיה', iconBg: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,35%)]' },
       { key: 'monthly-report', icon: Sparkles, label: 'דוח חודשי AI', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'excel', icon: Download, label: 'הורד אקסל', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
     ];
@@ -1159,12 +1243,13 @@ export default function AdminDashboard() {
         support: renderSupportContent(cls),
         'long-absent': renderLongAbsentContent(cls),
         reflections: renderReflectionsContent(cls),
+        pedagogy: renderPedagogyContent(cls),
         'monthly-report': renderMonthlyReportContent(cls),
       };
       const panelLabels: Record<string, string> = {
         students: 'תלמידים', reports: 'דיווחים', events: 'אירועים חריגים',
         support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים',
-        reflections: 'תובנות והערכה עצמית', 'monthly-report': 'דוח חודשי AI',
+        reflections: 'תובנות והערכה עצמית', pedagogy: 'פדגוגיה', 'monthly-report': 'דוח חודשי AI',
       };
       return (
         <div className="space-y-2">
@@ -1304,6 +1389,7 @@ export default function AdminDashboard() {
       { key: 'events', icon: ShieldAlert, value: filteredEvents.length, label: 'אירועים חריגים', iconBg: 'bg-destructive/10', iconColor: 'text-destructive' },
       { key: 'support', icon: HeartHandshake, value: supportAssignments.length, label: 'תמיכות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
       { key: 'long-absent', icon: AlertTriangle, value: longAbsentStudents.length, label: 'לא מגיעים', iconBg: 'bg-warning/10', iconColor: 'text-warning' },
+      { key: 'pedagogy', icon: BookOpen, label: 'פדגוגיה', iconBg: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,35%)]' },
       { key: 'monthly-report', icon: Sparkles, label: 'דוח חודשי AI', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'calendar', icon: Calendar, label: 'לוח שנה', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'sms', icon: MessageSquare, label: 'SMS תזכורות', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
@@ -1323,13 +1409,14 @@ export default function AdminDashboard() {
         events: renderEventsContent(),
         support: renderSupportContent(),
         'long-absent': renderLongAbsentContent(),
+        pedagogy: renderPedagogyContent(),
         'monthly-report': renderMonthlyReportContent(),
         calendar: <SharedCalendar editable />,
         settings: renderSettingsContent(),
       };
       const panelLabels: Record<string, string> = {
         students: 'תלמידים', reports: 'דיווחים', events: 'אירועים חריגים',
-        support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים',
+        support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים', pedagogy: 'פדגוגיה',
         'monthly-report': 'דוח חודשי AI', calendar: 'לוח שנה', settings: 'הגדרות מערכת',
       };
       return (

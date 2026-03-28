@@ -446,20 +446,20 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3 -mx-3 sm:mx-0">
       {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-3">
+      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-3 mx-3 sm:mx-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1">
-            <button onClick={nextMonth} className="p-2 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
-              <ChevronRight className="h-4 w-4 text-primary" />
+            <button onClick={nextMonth} className="p-2.5 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
+              <ChevronRight className="h-5 w-5 text-primary" />
             </button>
-            <div className="text-center min-w-[130px]">
-              <h3 className="text-base font-bold text-foreground">{HEBREW_MONTHS[month]}</h3>
-              <p className="text-[10px] text-muted-foreground">{year}</p>
+            <div className="text-center min-w-[140px]">
+              <h3 className="text-lg font-bold text-foreground">{HEBREW_MONTHS[month]}</h3>
+              <p className="text-xs text-muted-foreground">{year}</p>
             </div>
-            <button onClick={prevMonth} className="p-2 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
-              <ChevronLeft className="h-4 w-4 text-primary" />
+            <button onClick={prevMonth} className="p-2.5 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
+              <ChevronLeft className="h-5 w-5 text-primary" />
             </button>
           </div>
           {editable && (
@@ -483,11 +483,11 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       </div>
 
       {/* Calendar Grid */}
-      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm">
+      <div className="sm:rounded-2xl border-y sm:border border-border/50 bg-card overflow-hidden shadow-sm">
         {/* Day headers */}
         <div className="grid bg-primary/5" style={{ gridTemplateColumns: 'repeat(5, 1fr) 0.6fr 0.6fr' }}>
           {HEBREW_DAYS.map((d, idx) => (
-            <div key={d} className={`text-center text-[10px] font-bold py-2 ${idx === 6 ? 'text-primary' : idx === 5 ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
+            <div key={d} className={`text-center text-xs font-bold py-2.5 ${idx === 6 ? 'text-primary' : idx === 5 ? 'text-muted-foreground/70' : 'text-muted-foreground'}`}>
               {d}
             </div>
           ))}
@@ -496,7 +496,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
         {/* Day cells */}
         <div className="grid gap-px bg-border/20" style={{ gridTemplateColumns: 'repeat(5, 1fr) 0.6fr 0.6fr' }}>
           {calendarDays.map((day, i) => {
-            if (!day) return <div key={i} className="min-h-[56px] bg-muted/5" />;
+            if (!day) return <div key={i} className="min-h-[64px] sm:min-h-[72px] bg-muted/5" />;
 
             const dayStr = getDayStr(day);
             const dayEvents = getEventsForDay(day);
@@ -515,7 +515,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                     setSelectedDay(dayStr === selectedDay ? null : dayStr);
                   }
                 }}
-                className={`min-h-[56px] p-1 text-right transition-all relative bg-card
+                className={`min-h-[64px] sm:min-h-[72px] p-1.5 text-right transition-all relative bg-card
                   ${isSelected ? 'bg-primary/8 ring-1 ring-primary/30 ring-inset' : 'hover:bg-muted/30'}
                   ${isSat ? 'bg-primary/3' : ''}
                   ${hasHoliday ? 'bg-amber-50/50 dark:bg-amber-950/10' : ''}
