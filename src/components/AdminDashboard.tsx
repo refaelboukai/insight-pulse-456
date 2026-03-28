@@ -1224,6 +1224,7 @@ export default function AdminDashboard() {
       { key: 'support', icon: HeartHandshake, value: filteredAssignments.length, label: 'תמיכות', iconBg: 'bg-accent/10', iconColor: 'text-accent' },
       { key: 'long-absent', icon: AlertTriangle, value: longAbsentStudents.filter(la => la.student.class_name === cls).length, label: 'לא מגיעים', iconBg: 'bg-warning/10', iconColor: 'text-warning' },
       { key: 'reflections', icon: MessageSquare, label: 'תובנות והערכה', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
+      { key: 'pedagogy', icon: BookOpen, label: 'פדגוגיה', iconBg: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,35%)]' },
       { key: 'monthly-report', icon: Sparkles, label: 'דוח חודשי AI', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'excel', icon: Download, label: 'הורד אקסל', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
     ];
