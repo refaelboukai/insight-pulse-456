@@ -474,11 +474,16 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
                   isSelected ? 'bg-primary/10' : 'hover:bg-muted/40'
                 }`}
               >
-                <span className={`text-[11px] font-medium inline-flex items-center justify-center w-5 h-5 rounded-full ${
-                  isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
-                }`}>
-                  {day}
-                </span>
+                <div className="flex items-center justify-between">
+                  <span className="text-[8px] text-muted-foreground leading-none">
+                    {getHebrewDay(year, month, day)}
+                  </span>
+                  <span className={`text-[11px] font-medium inline-flex items-center justify-center w-5 h-5 rounded-full ${
+                    isToday ? 'bg-primary text-primary-foreground' : 'text-foreground'
+                  }`}>
+                    {day}
+                  </span>
+                </div>
                 {dayEvents.length > 0 && (
                   <div className="flex gap-0.5 mt-0.5 flex-wrap">
                     {dayEvents.slice(0, 3).map(ev => (
