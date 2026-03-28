@@ -588,8 +588,8 @@ export default function PedagogyForm() {
   }, [user, selectedYear]);
 
   useEffect(() => {
-    if (teacherView === 'my-subjects') loadMyGoals();
-  }, [teacherView, loadMyGoals]);
+    if (teacherView === 'goals' && goalsStep === 'subjects') loadMyGoals();
+  }, [teacherView, goalsStep, loadMyGoals]);
 
   // Group goals by subject for teacher view
   const mySubjectsGrouped = (() => {
