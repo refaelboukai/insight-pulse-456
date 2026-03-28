@@ -785,11 +785,11 @@ export default function PedagogyForm() {
           </CardTitle>
           <div className="flex gap-1 p-0.5 rounded-lg bg-muted/40 border">
             <button onClick={() => setTeacherView('profile')}
-              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all flex-1 ${teacherView === 'profile' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
+              className={`text-sm py-2.5 px-4 rounded-md font-semibold transition-all flex-1 ${teacherView === 'profile' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
               פרופיל תלמיד
             </button>
             <button onClick={() => { setTeacherView('goals'); setGoalsStep('subjects'); }}
-              className={`text-[10px] py-1.5 px-3 rounded-md font-medium transition-all flex-1 ${teacherView === 'goals' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
+              className={`text-sm py-2.5 px-4 rounded-md font-semibold transition-all flex-1 ${teacherView === 'goals' ? 'bg-primary text-primary-foreground shadow-sm' : 'hover:bg-background/50'}`}>
               יעדים פדגוגיים
             </button>
           </div>
