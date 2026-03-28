@@ -260,6 +260,37 @@ export default function PedagogyForm() {
     else loadExams();
   };
 
+  const handleSuggestGoals = async () => {
+    if (!selectedStudentId || !selectedSubjectId) {
+      toast.error('יש לבחור תלמיד ומקצוע');
+      return;
+    }
+    const student = filteredStudents.find(s => s.id === selectedStudentId);
+    const subject = subjects.find(s => s.id === selectedSubjectId);
+    if (!student || !subject) return;
+    setLoadingGoalSuggestion(true);
+    setGoalSuggestion(null);
+    try {
+      const { data, error } = await supabase.functions.invoke('suggest-goals', {
+        body: {
+          studentId: selectedStudentId,
+          studentName: `${student.first_name} ${student.last_name}`,
+          subjectName: subject.name,
+          currentMonth: selectedMonth,
+          currentGoal: existingGoalId ? goal : null,
+        },
+      });
+      if (error) throw error;
+      if (data?.error) { toast.error(data.error); return; }
+      setGoalSuggestion(data.suggestions);
+    } catch (e) {
+      toast.error('שגיאה בייצור הצעת יעדים');
+      console.error(e);
+    } finally {
+      setLoadingGoalSuggestion(false);
+    }
+  };
+
   const loadAllMonthGoals = useCallback(async () => {
     if (!selectedStudentId || !selectedSubjectId) return;
     const query = supabase.from('pedagogical_goals')
