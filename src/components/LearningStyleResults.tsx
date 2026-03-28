@@ -5,7 +5,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
-import { Brain, Save, Sparkles, AlertTriangle } from 'lucide-react';
+import { Brain, Save, Sparkles, AlertTriangle, Loader2, Lightbulb } from 'lucide-react';
 import { CATEGORIES } from './LearningStyleQuestionnaire';
 
 import { g, type Gender } from '@/lib/genderUtils';
@@ -22,6 +22,8 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
   const [loading, setLoading] = useState(true);
   const [staffNotes, setStaffNotes] = useState('');
   const [saving, setSaving] = useState(false);
+  const [aiRecommendations, setAiRecommendations] = useState('');
+  const [loadingAi, setLoadingAi] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -126,7 +128,57 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
         </div>
       )}
 
-      {/* Staff notes */}
+      {/* AI Recommendations button */}
+      {isEditable && profile?.is_completed && (
+        <div className="space-y-2 pt-2 border-t">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={async () => {
+              setLoadingAi(true);
+              setAiRecommendations('');
+              try {
+                const results = profile.results as any;
+                const { data, error } = await supabase.functions.invoke('learning-style-recommendations', {
+                  body: {
+                    studentName,
+                    dominant: results?.dominant || [],
+                    averages: results?.averages || {},
+                    challenges: results?.challenges || [],
+                    staffNotes: (results?.staffNotes || ''),
+                    gender: gender || 'male',
+                  },
+                });
+                if (error) throw error;
+                if (data?.error) {
+                  toast.error(data.error);
+                } else {
+                  setAiRecommendations(data.recommendations);
+                }
+              } catch (e: any) {
+                toast.error('שגיאה בייצור ההמלצות');
+                console.error(e);
+              } finally {
+                setLoadingAi(false);
+              }
+            }}
+            disabled={loadingAi}
+            className="gap-1.5 text-xs"
+          >
+            {loadingAi ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Lightbulb className="h-3.5 w-3.5" />}
+            {loadingAi ? 'מייצר המלצות...' : 'צור המלצות AI למורה'}
+          </Button>
+
+          {aiRecommendations && (
+            <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-1">
+              <span className="text-xs font-bold text-primary flex items-center gap-1">
+                <Lightbulb className="h-3.5 w-3.5" /> המלצות AI מותאמות אישית
+              </span>
+              <p className="text-xs text-foreground/80 whitespace-pre-line leading-relaxed">{aiRecommendations}</p>
+            </div>
+          )}
+        </div>
+      )}
       {isEditable && (
         <div className="space-y-2 pt-2 border-t">
           <Label className="text-xs">הערות צוות — סגנונות/שיטות נוספות שנמצאו כעובדות:</Label>
