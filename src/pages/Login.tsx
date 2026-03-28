@@ -71,7 +71,9 @@ export default function Login() {
 
       <div className="w-full max-w-sm relative animate-scale-in">
         <div className="card-styled rounded-2xl overflow-hidden">
-          <div className="h-1.5 w-full" style={{ background: 'var(--gradient-primary)' }} />
+          <div className="w-full py-2 text-center" style={{ background: 'var(--gradient-primary)' }}>
+            <span className="text-xs font-bold text-primary-foreground tracking-wide">בית ספר מרום בית אקשטיין</span>
+          </div>
 
           <div className="px-8 pt-8 pb-7">
             {/* Logo */}
@@ -80,7 +82,7 @@ export default function Login() {
               <h1 className="text-xl font-bold text-foreground mb-1">מערכת דיווח תלמידים</h1>
               <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
                 <Sparkles className="w-3 h-3" />
-                מערכת פנימית לצוות חינוכי
+                מערכת פנימית לצוות החינוכי ולתלמידים
               </p>
             </div>
 
