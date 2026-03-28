@@ -244,6 +244,14 @@ export default function AdminDashboard() {
     if (!error) { toast.success('נמחק'); fetchAll(); }
   };
 
+  const handleSaveStaffEdit = async () => {
+    if (!editingStaffId) return;
+    const updates: any = { name: editStaffName.trim() };
+    if (editStaffDob) updates.date_of_birth = editStaffDob;
+    else updates.date_of_birth = null;
+    const { error } = await supabase.from('staff_members').update(updates).eq('id', editingStaffId);
+    if (error) { toast.error('שגיאה בעדכון'); } else { toast.success('עודכן בהצלחה'); setEditingStaffId(null); fetchAll(); }
+  };
   const handleAddAssignment = async () => {
     if (!user || !assignStudentId || !assignStaffId || assignSupportTypes.length === 0) {
       toast.error('נא למלא את כל השדות'); return;
