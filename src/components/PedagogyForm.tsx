@@ -648,22 +648,45 @@ export default function PedagogyForm() {
             <p className="text-xs text-muted-foreground text-center py-4">אין תלמידים בסינון זה</p>
           ) : (
             <div className="space-y-2">
-              {studentEntries.map(([sid, sData]) => (
-                <div key={sid} className="rounded-xl border bg-card p-3 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-sm font-bold">{sData.name}</p>
-                      {sData.className && <Badge variant="secondary" className="text-[9px] h-4 px-1.5">{sData.className}</Badge>}
-                    </div>
-                    <Badge variant="outline" className="text-[10px]">{sData.goals.length} חודשים</Badge>
+              {studentEntries.map(([sid, sData]) => {
+                const isExpanded = expandedStudentId === sid;
+                const studentObj = students.find(s => s.id === sid);
+                return (
+                  <div key={sid} className="rounded-xl border bg-card overflow-hidden">
+                    <button
+                      onClick={() => setExpandedStudentId(isExpanded ? null : sid)}
+                      className="w-full p-3 text-right hover:bg-muted/30 transition-all"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm font-bold">{sData.name}</p>
+                          {sData.className && <Badge variant="secondary" className="text-[9px] h-4 px-1.5">{sData.className}</Badge>}
+                        </div>
+                        <Badge variant="outline" className="text-[10px]">{sData.goals.length} חודשים</Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-1 mt-1.5">
+                        {MONTHS.filter(m => sData.goals.some((g: any) => g.month === m)).map(m => (
+                          <span key={m} className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{m}</span>
+                        ))}
+                      </div>
+                    </button>
+                    {isExpanded && (
+                      <div className="border-t p-3 space-y-3 bg-muted/10">
+                        {/* Academic Mapping */}
+                        <AcademicMappingSection studentId={sid} />
+                        {/* Learning Style - compact (AI summary only) */}
+                        <LearningStyleResults
+                          studentId={sid}
+                          studentName={sData.name}
+                          isEditable={false}
+                          gender={studentObj?.gender}
+                          compact={true}
+                        />
+                      </div>
+                    )}
                   </div>
-                  <div className="flex flex-wrap gap-1">
-                    {MONTHS.filter(m => sData.goals.some((g: any) => g.month === m)).map(m => (
-                      <span key={m} className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{m}</span>
-                    ))}
-                  </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           )}
           {/* Export buttons */}
