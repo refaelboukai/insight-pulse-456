@@ -1138,6 +1138,76 @@ export default function AdminDashboard() {
     toast.success(classFilter ? `קובץ אקסל הורד — כיתת ${classFilter}` : 'קובץ אקסל הורד');
   };
 
+  // ===== RENDER PEDAGOGY CONTENT =====
+  const renderPedagogyContent = (classFilter?: string) => {
+    const targetStudents = classFilter ? activeStudents.filter(s => s.class_name === classFilter) : activeStudents;
+    const studentsWithGoals = new Set(pedagogyGoals.map(g => g.student_id));
+    const completedProfiles = new Set(learningProfiles.filter(p => p.is_completed).map((p: any) => p.student_id));
+
+    const withGoals = targetStudents.filter(s => studentsWithGoals.has(s.id));
+    const withoutGoals = targetStudents.filter(s => !studentsWithGoals.has(s.id));
+    const withLearning = targetStudents.filter(s => completedProfiles.has(s.id));
+    const withoutLearning = targetStudents.filter(s => !completedProfiles.has(s.id));
+
+    return (
+      <div className="space-y-4">
+        {/* Stats */}
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-xl border bg-emerald-50 dark:bg-emerald-950/20 p-3 text-center">
+            <p className="text-2xl font-bold text-emerald-700 dark:text-emerald-300">{withGoals.length}/{targetStudents.length}</p>
+            <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">הוזנו יעדים פדגוגיים</p>
+          </div>
+          <div className="rounded-xl border bg-blue-50 dark:bg-blue-950/20 p-3 text-center">
+            <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{withLearning.length}/{targetStudents.length}</p>
+            <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium">מילאו שאלון למידה</p>
+          </div>
+        </div>
+
+        {/* Without goals */}
+        {withoutGoals.length > 0 && (
+          <div className="rounded-xl border p-3">
+            <p className="text-xs font-bold text-destructive mb-2">טרם הוזנו יעדים ({withoutGoals.length})</p>
+            <div className="flex flex-wrap gap-1">
+              {withoutGoals.map(s => (
+                <Badge key={s.id} variant="outline" className="text-[10px] border-destructive/30 text-destructive">
+                  {s.first_name} {s.last_name} {s.class_name && `(${s.class_name})`}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Without learning style */}
+        {withoutLearning.length > 0 && (
+          <div className="rounded-xl border p-3">
+            <p className="text-xs font-bold text-amber-600 dark:text-amber-400 mb-2">טרם מילאו שאלון למידה ({withoutLearning.length})</p>
+            <div className="flex flex-wrap gap-1">
+              {withoutLearning.map(s => (
+                <Badge key={s.id} variant="outline" className="text-[10px] border-amber-400/30 text-amber-600">
+                  {s.first_name} {s.last_name} {s.class_name && `(${s.class_name})`}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* With goals */}
+        {withGoals.length > 0 && (
+          <div className="rounded-xl border p-3">
+            <p className="text-xs font-bold text-emerald-600 dark:text-emerald-400 mb-2">הוזנו יעדים ({withGoals.length})</p>
+            <div className="flex flex-wrap gap-1">
+              {withGoals.map(s => (
+                <Badge key={s.id} variant="secondary" className="text-[10px]">
+                  {s.first_name} {s.last_name} {s.class_name && `(${s.class_name})`}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   // ===== RENDER CLASS VIEW =====
   const renderClassView = (cls: string) => {
     const filteredStudents = getClassStudents(cls);
