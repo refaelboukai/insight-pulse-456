@@ -18,6 +18,7 @@ import LearningStyleResults from '@/components/LearningStyleResults';
 import { g } from '@/lib/genderUtils';
 import { generatePedagogyPdf, generatePedagogyTrackingPdf, type MonthlyGoalRow } from '@/lib/generatePedagogyPdf';
 import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
+import AcademicMappingSection from '@/components/AcademicMappingSection';
 
 type Student = { id: string; first_name: string; last_name: string; class_name: string | null; is_active: boolean; gender?: string | null };
 type ManagedSubject = { id: string; name: string; has_sub_subjects: boolean; sub_subjects: string[]; is_active: boolean };
