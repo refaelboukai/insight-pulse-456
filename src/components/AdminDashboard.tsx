@@ -30,6 +30,7 @@ import { exportPedagogyToExcel } from '@/lib/exportPedagogyToExcel';
 import { toast } from 'sonner';
 import { exportReportsToExcel, exportFullActivityToExcel } from '@/lib/exportReportsToExcel';
 import { shareOrDownload, shareOrDownloadText, downloadBlob } from '@/lib/downloadFile';
+import { downloadWorkbook } from '@/lib/excelDownload';
 import SharedCalendar from '@/components/SharedCalendar';
 import type { Database } from '@/integrations/supabase/types';
 
@@ -493,7 +494,7 @@ export default function AdminDashboard() {
         const data = allRows.map(r => ({ 'מקצוע': r.subject, 'חודש': r.month, 'סגנון למידה': r.learningStyle || '', 'מצב נוכחי': r.currentStatus || '', 'יעדים לימודיים': r.learningGoals || '', 'דרכי מדידה': r.measurementMethods || '', 'מה נעשה': r.whatWasDone || '', 'פערים': r.whatWasNotDone || '', 'הערות מורה': r.teacherNotes || '', 'הערות הנהלה': r.adminNotes || '' }));
         const ws = XLSX.utils.json_to_sheet(data);
         XLSX.utils.book_append_sheet(wb, ws, 'יעדים פדגוגיים');
-        XLSX.writeFile(wb, `יעדים-פדגוגיים-${sName}-${selectedYear}.xlsx`);
+        downloadWorkbook(wb, `יעדים-פדגוגיים-${sName}-${selectedYear}.xlsx`);
         toast.success('קובץ Excel הורד');
       } else {
         const { default: jsPDF } = await import('jspdf');

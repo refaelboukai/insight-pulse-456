@@ -3,6 +3,7 @@ import html2canvas from 'html2canvas';
 import logoSrc from '@/assets/logo.jpeg';
 import principalSigSrc from '@/assets/principal-signature.jpeg';
 import { g, type Gender } from '@/lib/genderUtils';
+import { waitForPrintableRender } from '@/lib/pdfExport';
 
 interface GradeEntry {
   subject: string;
@@ -128,9 +129,9 @@ async function renderPageToCanvas(html: string): Promise<HTMLCanvasElement> {
   container.style.cssText = 'position:fixed;left:-9999px;top:0;width:595px;padding:0;background:white;font-family:Arial,sans-serif;direction:rtl;z-index:-1;';
   container.innerHTML = html;
   document.body.appendChild(container);
-  await new Promise((r) => setTimeout(r, 100));
+  await waitForPrintableRender();
   try {
-    return await html2canvas(container, { scale: 2, useCORS: true, allowTaint: true, logging: false });
+    return await html2canvas(container, { scale: 2, useCORS: true, allowTaint: true, logging: false, backgroundColor: '#ffffff' });
   } finally {
     document.body.removeChild(container);
   }

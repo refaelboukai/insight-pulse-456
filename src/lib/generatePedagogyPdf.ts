@@ -1,6 +1,7 @@
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 import logoImport from '@/assets/logo.jpeg';
+import { canvasToPdfBlob, waitForPrintableRender } from '@/lib/pdfExport';
 
 interface PedagogyGoalData {
   studentName: string;
@@ -87,17 +88,13 @@ export async function generatePedagogyPdf(data: PedagogyGoalData): Promise<Blob>
   `;
 
   document.body.appendChild(container);
-
-  const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-  document.body.removeChild(container);
-
-  const imgData = canvas.toDataURL('image/jpeg', 0.95);
-  const pdfWidth = 595;
-  const pdfHeight = (canvas.height / canvas.width) * pdfWidth;
-  const pdf = new jsPDF({ orientation: pdfHeight > pdfWidth ? 'portrait' : 'landscape', unit: 'px', format: [pdfWidth, pdfHeight] });
-  pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-
-  return pdf.output('blob');
+  try {
+    await waitForPrintableRender();
+    const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, allowTaint: true });
+    return canvasToPdfBlob(canvas, { imageFormat: 'JPEG', marginMm: 8, orientation: 'portrait' });
+  } finally {
+    document.body.removeChild(container);
+  }
 }
 
 export interface MonthlyGoalRow {
@@ -160,14 +157,11 @@ export async function generatePedagogyTrackingPdf(
   `;
 
   document.body.appendChild(container);
-  const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff' });
-  document.body.removeChild(container);
-
-  const imgData = canvas.toDataURL('image/jpeg', 0.95);
-  const pdfWidth = 842;
-  const pdfHeight = (canvas.height / canvas.width) * pdfWidth;
-  const pdf = new jsPDF({ orientation: 'landscape', unit: 'px', format: [pdfWidth, Math.max(pdfHeight, 595)] });
-  pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
-
-  return pdf.output('blob');
+  try {
+    await waitForPrintableRender();
+    const canvas = await html2canvas(container, { scale: 2, useCORS: true, backgroundColor: '#ffffff', logging: false, allowTaint: true });
+    return canvasToPdfBlob(canvas, { imageFormat: 'JPEG', marginMm: 6, orientation: 'landscape' });
+  } finally {
+    document.body.removeChild(container);
+  }
 }

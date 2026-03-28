@@ -4,6 +4,7 @@ import {
   SEVERITY_LABELS, ABSENCE_REASON_LABELS, INCIDENT_TYPE_LABELS,
 } from '@/lib/constants';
 import type { Database } from '@/integrations/supabase/types';
+import { downloadWorkbook } from '@/lib/excelDownload';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
 type Student = Database['public']['Tables']['students']['Row'];
@@ -157,7 +158,7 @@ export function exportReportsToExcel(data: ExportData) {
   });
 
   const today = new Date().toLocaleDateString('he-IL').replace(/\./g, '-');
-  XLSX.writeFile(wb, `דוח_מערכת_${today}.xlsx`, { bookType: 'xlsx', bookSST: true });
+  downloadWorkbook(wb, `דוח_מערכת_${today}.xlsx`);
 }
 
 // ===== FULL ACTIVITY EXPORT =====
@@ -347,7 +348,7 @@ export async function exportFullActivityToExcel(data: FullExportData) {
   addSheet(wb, 'אנשי צוות', staffRows);
 
   const today = new Date().toLocaleDateString('he-IL').replace(/\./g, '-');
-  XLSX.writeFile(wb, `ייצוא_מלא_כל_הפעולות_${today}.xlsx`, { bookType: 'xlsx', bookSST: true });
+  downloadWorkbook(wb, `ייצוא_מלא_כל_הפעולות_${today}.xlsx`);
 }
 
 function addSheet(wb: XLSX.WorkBook, name: string, rows: Record<string, any>[]) {
