@@ -714,18 +714,21 @@ export type Database = {
       staff_members: {
         Row: {
           created_at: string
+          date_of_birth: string | null
           id: string
           is_active: boolean
           name: string
         }
         Insert: {
           created_at?: string
+          date_of_birth?: string | null
           id?: string
           is_active?: boolean
           name: string
         }
         Update: {
           created_at?: string
+          date_of_birth?: string | null
           id?: string
           is_active?: boolean
           name?: string
