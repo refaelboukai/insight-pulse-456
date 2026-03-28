@@ -63,6 +63,7 @@ export default function PedagogyForm() {
   const [mySubjectFilter, setMySubjectFilter] = useState<string | null>(null);
   const [myClassFilter, setMyClassFilter] = useState<string | null>(null);
   const [loadingMyGoals, setLoadingMyGoals] = useState(false);
+  const [expandedStudentId, setExpandedStudentId] = useState<string | null>(null);
 
   // Exam schedule
   const [exams, setExams] = useState<ExamEntry[]>([]);
