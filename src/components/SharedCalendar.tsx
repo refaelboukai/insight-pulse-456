@@ -5,10 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
-import { Calendar, Plus, Trash2, Pencil, ChevronLeft, ChevronRight, ClipboardPaste, X, Download, Upload } from 'lucide-react';
+import { Calendar, Plus, Trash2, Pencil, ChevronLeft, ChevronRight, ClipboardPaste, X, Download, Upload, Cake } from 'lucide-react';
 import { toast } from 'sonner';
 import { useAuth } from '@/hooks/useAuth';
 import * as XLSX from 'xlsx';
+import { getHebrewDay, getJewishHolidaysForMonth, getBirthdaysForMonth, type BirthdayEntry } from '@/lib/hebrewCalendar';
+import { HDate } from '@hebcal/core';
 
 interface CalendarEvent {
   id: string;
