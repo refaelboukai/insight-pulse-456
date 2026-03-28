@@ -87,14 +87,6 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
   // Recommendations-only mode for pedagogy goals context
   if (recommendationsOnly) {
     const hasRecommendations = results.recommendations?.length > 0 || results.aiRecommendations;
-    if (!hasRecommendations) {
-      return (
-        <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-lg flex items-center gap-1.5">
-          <Brain className="h-3.5 w-3.5" />
-          {g(gender, 'התלמיד ביצע', 'התלמידה ביצעה')} שאלון למידה, אך אין עדיין המלצות. ניתן ליצור המלצות בפרופיל התלמיד.
-        </div>
-      );
-    }
     return (
       <div className="space-y-2 border rounded-lg p-3 bg-primary/5 border-primary/20">
         <div className="flex items-center gap-2">
@@ -114,6 +106,47 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
         {results.aiRecommendations && (
           <p className="text-xs text-foreground/80 whitespace-pre-line leading-relaxed">{results.aiRecommendations}</p>
         )}
+        {/* AI generate button - always available in recommendationsOnly mode */}
+        <Button
+          size="sm"
+          variant={hasRecommendations ? "ghost" : "default"}
+          onClick={async () => {
+            setLoadingAi(true);
+            setAiRecommendations('');
+            try {
+              const { data, error } = await supabase.functions.invoke('learning-style-recommendations', {
+                body: {
+                  studentName,
+                  dominant: results?.dominant || [],
+                  averages: results?.averages || {},
+                  challenges: results?.challenges || [],
+                  staffNotes: (results?.staffNotes || ''),
+                  gender: gender || 'male',
+                },
+              });
+              if (error) throw error;
+              if (data?.error) {
+                toast.error(data.error);
+              } else {
+                setAiRecommendations(data.recommendations);
+                const updatedResults = { ...profile.results, aiRecommendations: data.recommendations };
+                await supabase.from('learning_style_profiles').update({ results: updatedResults }).eq('id', profile.id);
+                setProfile({ ...profile, results: updatedResults });
+                toast.success('המלצות AI נוצרו ונשמרו');
+              }
+            } catch (e: any) {
+              toast.error('שגיאה בייצור ההמלצות');
+              console.error(e);
+            } finally {
+              setLoadingAi(false);
+            }
+          }}
+          disabled={loadingAi}
+          className="gap-1.5 text-xs"
+        >
+          {loadingAi ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Lightbulb className="h-3.5 w-3.5" />}
+          {loadingAi ? 'מייצר המלצות...' : hasRecommendations ? 'חדש המלצות AI' : 'צור המלצות AI'}
+        </Button>
       </div>
     );
   }
