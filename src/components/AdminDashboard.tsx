@@ -78,6 +78,9 @@ export default function AdminDashboard() {
   const [staffMembers, setStaffMembers] = useState<any[]>([]);
   const [newStaffName, setNewStaffName] = useState('');
   const [addingStaff, setAddingStaff] = useState(false);
+  const [editingStaffId, setEditingStaffId] = useState<string | null>(null);
+  const [editStaffName, setEditStaffName] = useState('');
+  const [editStaffDob, setEditStaffDob] = useState('');
 
   // Support assignments
   const [supportAssignments, setSupportAssignments] = useState<any[]>([]);
