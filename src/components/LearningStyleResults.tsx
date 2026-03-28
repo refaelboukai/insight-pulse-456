@@ -66,7 +66,7 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
   if (loading) return null;
   if (!profile || !profile.is_completed) {
     return (
-      <div className="text-xs text-muted-foreground p-2 bg-muted/50 rounded-lg flex items-center gap-1.5">
+      <div className="text-xs p-2 bg-red-50 border border-red-200 text-red-600 rounded-lg flex items-center gap-1.5">
         <Brain className="h-3.5 w-3.5" />
         {g(gender, 'התלמיד לא ביצע', 'התלמידה לא ביצעה')} שאלון סגנון למידה.
       </div>
