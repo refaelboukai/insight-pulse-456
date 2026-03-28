@@ -211,6 +211,18 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
           <p className="text-xs text-foreground/80 mt-1 bg-muted/50 rounded-lg p-2">{results.staffNotes}</p>
         </div>
       )}
+
+      {/* Show saved AI recommendations in read-only mode */}
+      {!isEditable && results.aiRecommendations && (
+        <div className="pt-2 border-t">
+          <div className="rounded-xl bg-primary/5 border border-primary/20 p-3 space-y-1">
+            <span className="text-xs font-bold text-primary flex items-center gap-1">
+              <Lightbulb className="h-3.5 w-3.5" /> המלצות AI
+            </span>
+            <p className="text-xs text-foreground/80 whitespace-pre-line leading-relaxed">{results.aiRecommendations}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
