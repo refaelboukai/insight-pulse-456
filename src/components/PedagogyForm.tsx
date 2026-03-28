@@ -574,6 +574,168 @@ export default function PedagogyForm() {
     setGoal(prev => ({ ...prev, [field]: value }));
   };
 
+  const loadMyGoals = useCallback(async () => {
+    if (!user) return;
+    setLoadingMyGoals(true);
+    const { data } = await supabase.from('pedagogical_goals')
+      .select('*')
+      .eq('staff_user_id', user.id)
+      .eq('school_year', selectedYear);
+    setMyGoals(data || []);
+    setLoadingMyGoals(false);
+  }, [user, selectedYear]);
+
+  useEffect(() => {
+    if (teacherView === 'my-subjects') loadMyGoals();
+  }, [teacherView, loadMyGoals]);
+
+  // Group goals by subject for teacher view
+  const mySubjectsGrouped = (() => {
+    const groups: Record<string, { subjectName: string; subjectId: string; students: Record<string, { name: string; className: string | null; goals: any[] }> }> = {};
+    for (const g of myGoals) {
+      const subj = subjects.find(s => s.id === g.subject_id);
+      if (!subj) continue;
+      const key = g.sub_subject ? `${subj.name} — ${g.sub_subject}` : subj.name;
+      if (!groups[key]) groups[key] = { subjectName: key, subjectId: g.subject_id, students: {} };
+      if (!groups[key].students[g.student_id]) {
+        const st = students.find(s => s.id === g.student_id);
+        groups[key].students[g.student_id] = { name: st ? `${st.first_name} ${st.last_name}` : g.student_id, className: st?.class_name || null, goals: [] };
+      }
+      groups[key].students[g.student_id].goals.push(g);
+    }
+    return groups;
+  })();
+
+  const mySubjectKeys = Object.keys(mySubjectsGrouped);
+
+  const renderTeacherSubjectView = () => {
+    if (loadingMyGoals) return <div className="flex justify-center py-8"><Loader2 className="h-6 w-6 animate-spin text-primary" /></div>;
+    if (mySubjectKeys.length === 0) return <p className="text-sm text-muted-foreground text-center py-8">עדיין לא הוזנו יעדים פדגוגיים</p>;
+
+    // If a subject is selected
+    if (mySubjectFilter) {
+      const group = mySubjectsGrouped[mySubjectFilter];
+      if (!group) { setMySubjectFilter(null); return null; }
+      const studentEntries = Object.entries(group.students)
+        .filter(([, s]) => !myClassFilter || s.className === myClassFilter);
+
+      return (
+        <div className="space-y-3">
+          <button onClick={() => setMySubjectFilter(null)}
+            className="flex items-center gap-2 text-sm font-bold text-primary bg-primary/10 px-4 py-2.5 rounded-xl hover:bg-primary/15 transition-all w-full">
+            <ChevronLeft className="h-4 w-4" />
+            חזרה למקצועות שלי
+          </button>
+          <h3 className="text-sm font-bold flex items-center gap-2">
+            <BookOpen className="h-4 w-4 text-primary" />
+            {mySubjectFilter}
+          </h3>
+          {/* Class filter */}
+          <div className="flex gap-1.5">
+            <button onClick={() => setMyClassFilter(null)}
+              className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${!myClassFilter ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
+              הכל
+            </button>
+            {CLASS_OPTIONS.map(cls => (
+              <button key={cls} onClick={() => setMyClassFilter(cls)}
+                className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${myClassFilter === cls ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
+                {cls}
+              </button>
+            ))}
+          </div>
+          {studentEntries.length === 0 ? (
+            <p className="text-xs text-muted-foreground text-center py-4">אין תלמידים בסינון זה</p>
+          ) : (
+            <div className="space-y-2">
+              {studentEntries.map(([sid, sData]) => (
+                <div key={sid} className="rounded-xl border bg-card p-3 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-bold">{sData.name}</p>
+                      {sData.className && <Badge variant="secondary" className="text-[9px] h-4 px-1.5">{sData.className}</Badge>}
+                    </div>
+                    <Badge variant="outline" className="text-[10px]">{sData.goals.length} חודשים</Badge>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    {MONTHS.filter(m => sData.goals.some((g: any) => g.month === m)).map(m => (
+                      <span key={m} className="text-[9px] bg-primary/10 text-primary px-2 py-0.5 rounded-full font-medium">{m}</span>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+          {/* Export buttons */}
+          <div className="flex gap-2 pt-2">
+            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs" onClick={async () => {
+              // Export all students in this subject as PDF
+              setExporting(true);
+              try {
+                for (const [sid, sData] of studentEntries) {
+                  const rows: MonthlyGoalRow[] = MONTHS.map(month => {
+                    const g = sData.goals.find((gl: any) => gl.month === month);
+                    return { month, learningStyle: g?.learning_style || null, currentStatus: g?.current_status || null, learningGoals: g?.learning_goals || null, measurementMethods: g?.measurement_methods || null, whatWasDone: g?.what_was_done || null, whatWasNotDone: g?.what_was_not_done || null, teacherNotes: g?.teacher_notes || null, adminNotes: g?.admin_notes || null };
+                  }).filter(r => r.currentStatus || r.learningGoals || r.whatWasDone);
+                  if (rows.length > 0) {
+                    const blob = await generatePedagogyTrackingPdf(sData.name, mySubjectFilter, null, selectedYear, rows);
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a'); a.href = url; a.download = `מעקב-${sData.name}-${mySubjectFilter}.pdf`; a.click();
+                    URL.revokeObjectURL(url);
+                  }
+                }
+                toast.success('קבצי PDF הורדו');
+              } catch { toast.error('שגיאה בהפקת PDF'); }
+              setExporting(false);
+            }} disabled={exporting}>
+              <FileText className="h-3.5 w-3.5" />
+              {exporting ? 'מפיק...' : 'הורד PDF'}
+            </Button>
+            <Button variant="outline" size="sm" className="flex-1 gap-1.5 text-xs" onClick={() => {
+              // Export all to Excel
+              for (const [sid, sData] of studentEntries) {
+                const rows: MonthlyGoalRow[] = MONTHS.map(month => {
+                  const g = sData.goals.find((gl: any) => gl.month === month);
+                  return { month, learningStyle: g?.learning_style || null, currentStatus: g?.current_status || null, learningGoals: g?.learning_goals || null, measurementMethods: g?.measurement_methods || null, whatWasDone: g?.what_was_done || null, whatWasNotDone: g?.what_was_not_done || null, teacherNotes: g?.teacher_notes || null, adminNotes: g?.admin_notes || null };
+                }).filter(r => r.currentStatus || r.learningGoals || r.whatWasDone);
+                if (rows.length > 0) exportPedagogyToExcel(sData.name, mySubjectFilter, null, selectedYear, rows);
+              }
+              toast.success('קבצי Excel הורדו');
+            }}>
+              <FileSpreadsheet className="h-3.5 w-3.5" />
+              הורד Excel
+            </Button>
+          </div>
+        </div>
+      );
+    }
+
+    // Show subject list
+    return (
+      <div className="space-y-3">
+        <p className="text-xs text-muted-foreground">המקצועות שלך עם יעדים שמורים:</p>
+        <div className="grid grid-cols-2 gap-2">
+          {mySubjectKeys.map(key => {
+            const group = mySubjectsGrouped[key];
+            const studentCount = Object.keys(group.students).length;
+            return (
+              <button key={key} onClick={() => { setMySubjectFilter(key); setMyClassFilter(null); }}
+                className="rounded-xl border bg-card p-3 text-right hover:shadow-md hover:border-primary/20 transition-all active:scale-[0.97]">
+                <div className="w-10 h-10 rounded-xl mb-2 flex items-center justify-center bg-[hsl(270,40%,92%)]">
+                  <BookOpen className="h-5 w-5 text-[hsl(270,40%,35%)]" />
+                </div>
+                <p className="text-sm font-bold">{key}</p>
+                <p className="text-[10px] text-muted-foreground">{studentCount} תלמידים</p>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
+
+  // Import ChevronLeft for back button
+  const { ChevronLeft: ChevronLeftIcon } = require('lucide-react');
+
   return (
     <><Card className="shadow-soft border-0">
       <CardHeader className="pb-3">
