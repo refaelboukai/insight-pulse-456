@@ -36,9 +36,29 @@ export async function shareOrDownload(blob: Blob, fileName: string, mimeType = '
     }
   } catch (e) {
     if ((e as Error).name === 'AbortError') return;
-    // Fall through to download
+    // Fall through to open/download
   }
-  downloadBlob(blob, fileName);
+
+  // On desktop: open PDF in a new tab so Windows users can view it directly
+  if (mimeType === 'application/pdf') {
+    openBlobInNewTab(blob, mimeType);
+  } else {
+    downloadBlob(blob, fileName);
+  }
+}
+
+/**
+ * Open a blob in a new browser tab. Works great for PDFs on desktop (Chrome/Edge/Firefox).
+ */
+export function openBlobInNewTab(blob: Blob, mimeType = 'application/pdf'): void {
+  const url = URL.createObjectURL(new Blob([blob], { type: mimeType }));
+  const win = window.open(url, '_blank');
+  // If popup was blocked, fall back to download
+  if (!win) {
+    downloadBlob(blob, 'document.pdf');
+  }
+  // Revoke after a delay to let the new tab load
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
 }
 
 /**
