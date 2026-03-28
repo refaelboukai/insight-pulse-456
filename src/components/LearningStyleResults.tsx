@@ -175,7 +175,7 @@ export default function LearningStyleResults({ studentId, studentName, isEditabl
             className="gap-1.5 text-xs"
           >
             {loadingAi ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Lightbulb className="h-3.5 w-3.5" />}
-            {loadingAi ? 'מייצר המלצות...' : 'צור המלצות AI למורה'}
+            {loadingAi ? 'מייצר המלצות...' : aiRecommendations ? 'חדש המלצות AI' : 'צור המלצות AI למורה'}
           </Button>
 
           {aiRecommendations && (
