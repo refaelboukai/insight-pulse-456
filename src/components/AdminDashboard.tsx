@@ -634,7 +634,7 @@ export default function AdminDashboard() {
   // ===== PANEL BACK BUTTON =====
   const renderBackButton = () => (
     <button onClick={() => setActivePanel(null)}
-      className="flex items-center gap-1.5 text-sm font-medium text-primary mb-3 hover:underline">
+      className="flex items-center gap-2 text-sm font-bold text-primary bg-primary/10 px-4 py-2.5 rounded-xl mb-3 hover:bg-primary/15 transition-all w-full">
       <ChevronDown className="h-4 w-4 rotate-90" /> חזרה לתפריט
     </button>
   );

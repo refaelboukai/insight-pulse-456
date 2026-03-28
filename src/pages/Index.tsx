@@ -76,7 +76,7 @@ export default function Index() {
     return (
       <div className="space-y-2 animate-fade-in" dir="rtl">
         <button onClick={() => setStaffPanel(null)}
-          className="flex items-center gap-1.5 text-sm font-medium text-primary hover:underline">
+          className="flex items-center gap-2 text-sm font-bold text-primary bg-primary/10 px-4 py-2.5 rounded-xl hover:bg-primary/15 transition-all w-full">
           <ChevronLeft className="h-4 w-4" /> חזרה לתפריט
         </button>
         <h3 className="text-sm font-bold flex items-center gap-2">
