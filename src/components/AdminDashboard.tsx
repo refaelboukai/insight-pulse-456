@@ -964,14 +964,12 @@ export default function AdminDashboard() {
           </>
         )}
 
-        {/* Class-level trend chart */}
-        {!reportSelectedStudentId && classFilter && (() => {
-          const classReports = getClassReports(classFilter);
-          return classReports.length >= 2 ? (
-            <ReportTrendCharts
-              reports={classReports}
-              title={`מגמות כיתת ${classFilter}`}
-            />
+        {/* Trend chart when no student selected */}
+        {!reportSelectedStudentId && (() => {
+          const chartReports = classFilter ? getClassReports(classFilter) : reports;
+          const chartTitle = classFilter ? `מגמות כיתת ${classFilter}` : 'מגמות כלליות';
+          return chartReports.length >= 2 ? (
+            <ReportTrendCharts reports={chartReports} title={chartTitle} />
           ) : null;
         })()}
       </div>
