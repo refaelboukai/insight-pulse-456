@@ -39,11 +39,12 @@ interface FollowupRecord {
   id?: string;
 }
 
-const CLASS_OPTIONS = ['טלי', 'עדן'];
+// Dynamic class list - derived from students
 
 export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceProps) {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
+  const dynamicClasses = [...new Set(students.map(s => s.class_name).filter(Boolean))] as string[];
   const [attendance, setAttendance] = useState<Map<string, AttendanceRecord>>(new Map());
   const [loading, setLoading] = useState(true);
   const [expandedClasses, setExpandedClasses] = useState<Record<string, boolean>>({});
@@ -362,7 +363,7 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
         </Badge>
       </div>
 
-      {CLASS_OPTIONS.map(cls => {
+      {dynamicClasses.map(cls => {
         const classStudents = students.filter(s => s.class_name === cls);
         if (classStudents.length === 0) return null;
         const classPresentCount = classStudents.filter(s => {

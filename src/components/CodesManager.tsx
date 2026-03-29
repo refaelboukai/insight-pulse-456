@@ -123,7 +123,7 @@ export default function CodesManager({ students, onRefresh }: Props) {
       </div>
 
       {/* Student codes by class */}
-      {['טלי', 'עדן'].map(cls => {
+      {[...new Set(students.map(s => s.class_name).filter(Boolean))].map(cls => {
         const classStudents = students.filter(s => s.class_name === cls);
         if (classStudents.length === 0) return null;
         return (

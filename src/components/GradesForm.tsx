@@ -22,7 +22,7 @@ type Student = {
 
 type SubGrade = { grade: string; weight: string };
 
-const CLASS_OPTIONS = ['טלי', 'עדן'];
+// Dynamic class list - derived from students
 const SCHOOL_YEARS = ['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'];
 
 const SEMESTER_OPTIONS = [
@@ -57,6 +57,7 @@ const ALL_TEAM_KEYS = TEAM_CATEGORIES_SECTIONS.flatMap(s => s.items.map(i => i.k
 export default function GradesForm() {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
+  const dynamicClasses = [...new Set(students.map(s => s.class_name).filter(Boolean))] as string[];
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [semester, setSemester] = useState('semester_a');
   const [subject, setSubject] = useState('');
@@ -360,7 +361,7 @@ export default function GradesForm() {
           </Select>
         </div>
 
-        {CLASS_OPTIONS.map(cls => {
+        {dynamicClasses.map(cls => {
           const classStudents = students.filter(s => s.class_name === cls);
           const isExpanded = expandedClass === cls;
           return (

@@ -36,7 +36,7 @@ type ExamEntry = {
   exam_date: string; exam_description: string | null; created_by: string;
 };
 
-const CLASS_OPTIONS = ['טלי', 'עדן'];
+// Dynamic class list - derived from students
 const SCHOOL_YEARS = ['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'];
 const MONTHS = [
   'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר',
@@ -100,6 +100,7 @@ export default function PedagogyForm() {
   const isAdmin = role === 'admin';
 
   const [students, setStudents] = useState<Student[]>([]);
+  const dynamicClasses = [...new Set(students.map(s => s.class_name).filter(Boolean))] as string[];
   const [subjects, setSubjects] = useState<ManagedSubject[]>([]);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState('');
@@ -673,7 +674,7 @@ export default function PedagogyForm() {
               className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${!myClassFilter ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
               הכל
             </button>
-            {CLASS_OPTIONS.map(cls => (
+            {dynamicClasses.map(cls => (
               <button key={cls} onClick={() => setMyClassFilter(cls)}
                 className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${myClassFilter === cls ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
                 {cls}
@@ -830,7 +831,7 @@ export default function PedagogyForm() {
                 <Select value={selectedClass || ''} onValueChange={v => { setSelectedClass(v || null); setSelectedStudentId(''); }}>
                   <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר כיתה" /></SelectTrigger>
                   <SelectContent>
-                    {CLASS_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {dynamicClasses.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -937,7 +938,7 @@ export default function PedagogyForm() {
                 className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${!myClassFilter ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
                 הכל
               </button>
-              {CLASS_OPTIONS.map(cls => (
+              {dynamicClasses.map(cls => (
                 <button key={cls} onClick={() => { setMyClassFilter(cls); setSelectedClass(cls); }}
                   className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${myClassFilter === cls ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
                   {cls}
