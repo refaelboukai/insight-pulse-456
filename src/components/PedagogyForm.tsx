@@ -36,7 +36,7 @@ type ExamEntry = {
   exam_date: string; exam_description: string | null; created_by: string;
 };
 
-const CLASS_OPTIONS = ['טלי', 'עדן'];
+// Dynamic class list - derived from students
 const SCHOOL_YEARS = ['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'];
 const MONTHS = [
   'ספטמבר', 'אוקטובר', 'נובמבר', 'דצמבר',

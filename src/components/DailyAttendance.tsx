@@ -39,7 +39,7 @@ interface FollowupRecord {
   id?: string;
 }
 
-const CLASS_OPTIONS = ['טלי', 'עדן'];
+// Dynamic class list - derived from students
 
 export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceProps) {
   const { user } = useAuth();

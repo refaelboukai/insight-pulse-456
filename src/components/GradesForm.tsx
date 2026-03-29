@@ -22,7 +22,7 @@ type Student = {
 
 type SubGrade = { grade: string; weight: string };
 
-const CLASS_OPTIONS = ['טלי', 'עדן'];
+// Dynamic class list - derived from students
 const SCHOOL_YEARS = ['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'];
 
 const SEMESTER_OPTIONS = [
