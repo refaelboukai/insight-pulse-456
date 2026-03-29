@@ -301,13 +301,18 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </div>
   `;
 
-  // Content sections for page 1 area (educator report)
+  // Content sections for page 1 area (educator report) - respect sectionOrder
+  const sectionHtmlMap: Record<string, string> = {
+    personalNote: personalNoteHtml,
+    teamEvaluation: teamTableHtml,
+    socialEmotional: socialEmotionalHtml,
+    reflections: reflectionHtml,
+  };
+  const defaultOrder = ['personalNote', 'teamEvaluation', 'socialEmotional', 'reflections'];
+  const order = (data.sectionOrder || defaultOrder).filter(k => k !== 'grades');
   const page1Sections = [
     `<div style="font-size:14px;font-weight:700;color:${colors.accent};margin-bottom:16px;text-align:center;letter-spacing:1px;">📝 דיווח ${g(data.gender, 'מחנך', 'מחנכת')}</div>`,
-    personalNoteHtml,
-    teamTableHtml,
-    socialEmotionalHtml,
-    reflectionHtml,
+    ...order.map(k => sectionHtmlMap[k]).filter(Boolean),
   ].filter(Boolean);
 
   if (page1Sections.length === 0) {
