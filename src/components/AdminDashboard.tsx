@@ -15,6 +15,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS, INCIDENT_TYPE_LABELS,
   SEVERITY_LABELS, ABSENCE_REASON_LABELS, LONG_ABSENT_REASONS,
@@ -123,6 +124,27 @@ export default function AdminDashboard() {
   const [resetPasswordError, setResetPasswordError] = useState('');
   const [resetting, setResetting] = useState(false);
   const [exportingFull, setExportingFull] = useState(false);
+
+  const RESET_CATEGORIES = [
+    { key: 'lesson_reports', label: 'דיווחי שיעורים', tables: ['lesson_reports'] },
+    { key: 'alerts', label: 'התראות', tables: ['alerts'] },
+    { key: 'attendance', label: 'נוכחות יומית', tables: ['daily_attendance'] },
+    { key: 'events', label: 'אירועים חריגים', tables: ['exceptional_events'] },
+    { key: 'support', label: 'מפגשי תמיכה והשלמות', tables: ['support_sessions', 'support_completions'] },
+    { key: 'grades', label: 'ציונים', tables: ['student_grades'] },
+    { key: 'evaluations', label: 'הערכות תלמידים', tables: ['student_evaluations'] },
+    { key: 'followups', label: 'מעקב נעדרים', tables: ['absent_student_followups'] },
+    { key: 'activity', label: 'יומני פעילות (אזור רגוע)', tables: ['activity_logs'] },
+    { key: 'reflections', label: 'שיקופים יומיים', tables: ['daily_reflections'] },
+    { key: 'brain', label: 'אימון מוח', tables: ['brain_training_scores', 'brain_training_history'] },
+    { key: 'checkins', label: 'צ׳ק-אין מערכת שעות', tables: ['schedule_checkins'] },
+    { key: 'pedagogy', label: 'יעדים פדגוגיים', tables: ['pedagogical_goals'] },
+    { key: 'insights', label: 'תובנות תלמיד', tables: ['student_insights'] },
+    { key: 'exams', label: 'לוח מבחנים', tables: ['exam_schedule'] },
+    { key: 'learning_style', label: 'פרופילי סגנון למידה', tables: ['learning_style_profiles'] },
+    { key: 'weekly_summaries', label: 'סיכומים שבועיים', tables: ['weekly_summaries'] },
+  ] as const;
+  const [resetCategories, setResetCategories] = useState<string[]>([]);
   const [generatingCard, setGeneratingCard] = useState<string | null>(null);
   const [reportCardSemester, setReportCardSemester] = useState<string>('all');
 
@@ -344,6 +366,7 @@ export default function AdminDashboard() {
   };
 
   const handleResetPasswordSubmit = () => {
+    if (resetCategories.length === 0) { setResetPasswordError('יש לבחור לפחות קטגוריה אחת'); return; }
     if (resetPassword !== '9020') { setResetPasswordError('קוד שגוי'); return; }
     if (resetPasswordConfirm !== '9020') { setResetPasswordError('יש להזין את הקוד פעמיים לאישור'); return; }
     setResetPasswordError(''); setShowResetPassword(false); setResetPassword(''); setResetPasswordConfirm(''); setShowResetConfirm(true);
@@ -352,29 +375,22 @@ export default function AdminDashboard() {
   const handleResetAllReports = async () => {
     setResetting(true); setShowResetConfirm(false);
     try {
-      const results = await Promise.all([
-        supabase.from('alerts').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('lesson_reports').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('daily_attendance').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('exceptional_events').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('support_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('student_grades' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('student_evaluations' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('absent_student_followups' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('activity_logs' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('daily_reflections' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('brain_training_scores' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('brain_training_history' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('schedule_checkins' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('pedagogical_goals' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('student_insights' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('exam_schedule' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('support_completions' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('learning_style_profiles' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-      ]);
+      const selectedTables: string[] = [];
+      for (const cat of RESET_CATEGORIES) {
+        if (resetCategories.includes(cat.key)) {
+          selectedTables.push(...cat.tables);
+        }
+      }
+      const results = await Promise.all(
+        selectedTables.map(table =>
+          supabase.from(table as any).delete().neq('id', '00000000-0000-0000-0000-000000000000')
+        )
+      );
       const errors = results.filter(r => r.error);
+      const selectedLabels = RESET_CATEGORIES.filter(c => resetCategories.includes(c.key)).map(c => c.label);
       if (errors.length > 0) toast.error('שגיאה באיפוס חלק מהנתונים');
-      else toast.success('כל הנתונים אופסו בהצלחה!');
+      else toast.success(`אופסו בהצלחה: ${selectedLabels.join(', ')}`);
+      setResetCategories([]);
       fetchAll();
     } catch { toast.error('שגיאה באיפוס'); } finally { setResetting(false); }
   };
@@ -1355,10 +1371,10 @@ export default function AdminDashboard() {
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-2">
-            <p className="text-xs text-destructive/80">⚠️ פעולה זו תמחק את כל הנתונים באפליקציה (דיווחים, ציונים, תמיכות, רפלקציות, שאלונים ועוד). שימו לב: לא ניתן לבטל פעולה זו!</p>
+            <p className="text-xs text-destructive/80">⚠️ ניתן לבחור אילו קטגוריות לאפס — הכל או רק חלק. שימו לב: לא ניתן לבטל פעולה זו!</p>
             <Button variant="destructive" size="sm" className="gap-1.5 w-full"
-              onClick={() => { setResetPassword(''); setResetPasswordConfirm(''); setResetPasswordError(''); setShowResetPassword(true); }} disabled={resetting}>
-              <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס כל הנתונים'}
+              onClick={() => { setResetPassword(''); setResetPasswordConfirm(''); setResetPasswordError(''); setResetCategories([]); setShowResetPassword(true); }} disabled={resetting}>
+              <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס נתונים'}
             </Button>
           </div>
         </AccordionContent>
@@ -1528,39 +1544,73 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Reset Password Dialog - Double Code */}
+      {/* Reset Password Dialog with Category Selection */}
       <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
-        <DialogContent dir="rtl" className="max-w-xs">
+        <DialogContent dir="rtl" className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-sm flex items-center gap-2"><Trash2 className="h-4 w-4 text-destructive" /> אימות כפול — איפוס מערכת</DialogTitle>
-            <DialogDescription className="text-xs">יש להזין את קוד המנהל פעמיים לאישור המחיקה</DialogDescription>
+            <DialogTitle className="text-sm flex items-center gap-2"><Trash2 className="h-4 w-4 text-destructive" /> איפוס נתונים — בחירת קטגוריות</DialogTitle>
+            <DialogDescription className="text-xs">בחר אילו קטגוריות למחוק, ואשר עם קוד מנהל</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה ראשונה:</label>
-              <Input type="password" placeholder="קוד מנהל" value={resetPassword} onChange={e => { setResetPassword(e.target.value); setResetPasswordError(''); }}
-                className="h-10 text-sm" />
+            {/* Select all / deselect all */}
+            <div className="flex items-center justify-between border-b pb-2">
+              <label className="text-xs font-bold text-foreground">קטגוריות למחיקה:</label>
+              <Button variant="outline" size="sm" className="text-xs h-7 px-2"
+                onClick={() => {
+                  if (resetCategories.length === RESET_CATEGORIES.length) setResetCategories([]);
+                  else setResetCategories(RESET_CATEGORIES.map(c => c.key));
+                }}>
+                {resetCategories.length === RESET_CATEGORIES.length ? 'בטל הכל' : 'בחר הכל'}
+              </Button>
             </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה שנייה:</label>
-              <Input type="password" placeholder="הזן שוב לאישור" value={resetPasswordConfirm} onChange={e => { setResetPasswordConfirm(e.target.value); setResetPasswordError(''); }}
-                onKeyDown={e => { if (e.key === 'Enter') handleResetPasswordSubmit(); }} className="h-10 text-sm" />
+            <div className="grid grid-cols-1 gap-1.5 max-h-[280px] overflow-y-auto pr-1">
+              {RESET_CATEGORIES.map(cat => (
+                <label key={cat.key} className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 transition-colors">
+                  <Checkbox
+                    checked={resetCategories.includes(cat.key)}
+                    onCheckedChange={(checked) => {
+                      if (checked) setResetCategories(prev => [...prev, cat.key]);
+                      else setResetCategories(prev => prev.filter(k => k !== cat.key));
+                    }}
+                  />
+                  <span className="text-xs">{cat.label}</span>
+                </label>
+              ))}
+            </div>
+            {resetCategories.length > 0 && (
+              <p className="text-xs text-muted-foreground">נבחרו {resetCategories.length} מתוך {RESET_CATEGORIES.length} קטגוריות</p>
+            )}
+            <div className="border-t pt-3 space-y-2">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה ראשונה:</label>
+                <Input type="password" placeholder="קוד מנהל" value={resetPassword} onChange={e => { setResetPassword(e.target.value); setResetPasswordError(''); }}
+                  className="h-10 text-sm" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה שנייה:</label>
+                <Input type="password" placeholder="הזן שוב לאישור" value={resetPasswordConfirm} onChange={e => { setResetPasswordConfirm(e.target.value); setResetPasswordError(''); }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleResetPasswordSubmit(); }} className="h-10 text-sm" />
+              </div>
             </div>
             {resetPasswordError && <p className="text-xs text-destructive font-medium">{resetPasswordError}</p>}
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="ghost" size="sm" onClick={() => setShowResetPassword(false)}>ביטול</Button>
-            <Button variant="destructive" size="sm" onClick={handleResetPasswordSubmit}>אישור איפוס</Button>
+            <Button variant="destructive" size="sm" onClick={handleResetPasswordSubmit} disabled={resetCategories.length === 0}>אישור איפוס</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
-        <AlertDialogContent dir="rtl" className="max-w-xs">
+        <AlertDialogContent dir="rtl" className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-sm">האם אתה בטוח?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs">
-              פעולה זו תמחק את כל הנתונים.<br /><strong className="text-destructive">אינה ניתנת לביטול!</strong>
+            <AlertDialogDescription className="text-xs space-y-2">
+              <span>פעולה זו תמחק את הקטגוריות הבאות:</span>
+              <span className="block font-semibold text-destructive">
+                {RESET_CATEGORIES.filter(c => resetCategories.includes(c.key)).map(c => c.label).join(' • ')}
+              </span>
+              <strong className="text-destructive block">אינה ניתנת לביטול!</strong>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0">
