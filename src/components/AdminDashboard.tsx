@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import StudentDetailDialog from '@/components/StudentDetailDialog';
 import CodesManager from '@/components/CodesManager';
 import SubjectManager from '@/components/SubjectManager';
+import ReportCardPreview from '@/components/ReportCardPreview';
 import WeeklySupportSummary from '@/components/WeeklySupportSummary';
 import StudentScheduleManager from '@/components/StudentScheduleManager';
 import SmsReminderSection from '@/components/SmsReminderSection';

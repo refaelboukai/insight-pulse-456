@@ -78,8 +78,8 @@ export default function Login() {
           <div className="px-8 pt-8 pb-7">
             {/* Logo */}
             <div className="text-center mb-6">
-              <div className="mx-auto w-20 h-20 rounded-2xl overflow-hidden shadow-lg border-2 border-primary/10 mb-4">
-                <img src={logoSrc} alt="לוגו" className="w-full h-full object-cover" />
+              <div className="mx-auto w-24 h-24 rounded-2xl overflow-hidden shadow-lg border-2 border-primary/10 mb-4 bg-white flex items-center justify-center p-1">
+                <img src={logoSrc} alt="לוגו" className="w-full h-full object-contain" />
               </div>
               <h1 className="text-xl font-bold text-foreground mb-1">מערכת דיווח תלמידים</h1>
               <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
