@@ -453,9 +453,9 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
   });
 
   return (
-    <div className="space-y-4 -mx-6 sm:-mx-4 lg:-mx-8 xl:-mx-12">
+    <div className="space-y-4" style={{ width: '100vw', marginRight: 'calc(-50vw + 50%)', marginLeft: 'calc(-50vw + 50%)', padding: '0 1rem' }}>
       {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-4 mx-3 sm:mx-0">
+      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-4">
         <div className="flex items-center justify-between">
           {editable && (
             <div className="flex gap-1.5 flex-wrap justify-start">
@@ -491,7 +491,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
 
       {/* Today's birthdays banner */}
       {todayBirthdays.length > 0 && (
-        <div className="rounded-2xl bg-gradient-to-l from-amber-100 via-yellow-50 to-amber-50 dark:from-amber-950/40 dark:via-yellow-950/20 dark:to-amber-950/30 border border-amber-200 dark:border-amber-800/40 p-4 mx-3 sm:mx-0 flex items-center gap-3 shadow-sm">
+        <div className="rounded-2xl bg-gradient-to-l from-amber-100 via-yellow-50 to-amber-50 dark:from-amber-950/40 dark:via-yellow-950/20 dark:to-amber-950/30 border border-amber-200 dark:border-amber-800/40 p-4 flex items-center gap-3 shadow-sm">
           <div className="text-3xl">🎂</div>
           <div className="flex-1">
             <p className="text-sm font-bold text-amber-900 dark:text-amber-200">יום הולדת שמח היום!</p>
@@ -507,7 +507,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       )}
 
       {/* Calendar Grid */}
-      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm mx-3 sm:mx-0">
+      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm">
         {/* Day headers */}
         <div className="grid grid-cols-7 bg-primary/8">
           {HEBREW_DAYS.map((d, idx) => (
@@ -548,7 +548,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
               >
                 {/* Date numbers row */}
                 <div className="flex items-start justify-between mb-1">
-                    <span className="text-[10px] sm:text-xs text-muted-foreground leading-none mt-0.5 font-semibold">
+                    <span className="text-[9px] sm:text-[10px] lg:text-xs text-muted-foreground leading-none mt-0.5 font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-[70px] sm:max-w-[90px] lg:max-w-none">
                     {getHebrewDay(year, month, day)}
                   </span>
                   <span className={`text-sm sm:text-base font-bold leading-none inline-flex items-center justify-center rounded-full
