@@ -117,6 +117,29 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
   const maxY = selectedMetric === 'attendance' ? 3 : 4;
   const yTicks = selectedMetric === 'attendance' ? [1, 2, 3] : [1, 2, 3, 4];
 
+  // Color based on score position in range: top 1/3 green, middle 1/3 orange, bottom 1/3 red
+  const getScoreColor = (score: number): string => {
+    const range = maxY - 1; // e.g. 2 for attendance (1-3), 3 for behavior (1-4)
+    const normalizedPosition = (score - 1) / range; // 0 to 1
+    if (normalizedPosition >= 0.667) return '#16a34a'; // green
+    if (normalizedPosition >= 0.333) return '#f59e0b'; // orange/amber
+    return '#ef4444'; // red
+  };
+
+  // Build segments: each pair of consecutive points gets a color based on average score
+  const segments = useMemo(() => {
+    if (chartData.length < 2) return [];
+    const segs: { data: typeof chartData; color: string }[] = [];
+    for (let i = 0; i < chartData.length - 1; i++) {
+      const avgScore = (chartData[i].score + chartData[i + 1].score) / 2;
+      segs.push({
+        data: [chartData[i], chartData[i + 1]],
+        color: getScoreColor(avgScore),
+      });
+    }
+    return segs;
+  }, [chartData, maxY]);
+
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
     const val = payload[0].value;
@@ -128,6 +151,13 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
         <p className="text-primary">{labels[rounded] || val} ({val})</p>
       </div>
     );
+  };
+
+  const CustomDot = (props: any) => {
+    const { cx, cy, payload } = props;
+    if (!cx || !cy) return null;
+    const color = getScoreColor(payload.score);
+    return <circle cx={cx} cy={cy} r={5} fill={color} stroke="white" strokeWidth={2} />;
   };
 
   return (
@@ -185,20 +215,44 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
         {chartData.length < 2 ? (
           <p className="text-xs text-muted-foreground text-center py-4">אין מספיק נתונים להצגת מגמה</p>
         ) : (
-          <div className="h-48">
+          <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}>
+              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                <YAxis domain={[1, maxY]} ticks={yTicks} tickFormatter={formatYTick} tick={{ fontSize: 9 }} width={55} />
+                <YAxis
+                  domain={[1, maxY]}
+                  ticks={yTicks}
+                  tickFormatter={formatYTick}
+                  tick={{ fontSize: 11, fontWeight: 600, fill: 'hsl(var(--foreground))' }}
+                  width={70}
+                  tickMargin={8}
+                />
                 <Tooltip content={<CustomTooltip />} />
+                {/* Render colored segments */}
+                {segments.map((seg, idx) => (
+                  <Line
+                    key={`seg-${idx}`}
+                    type="monotone"
+                    data={seg.data}
+                    dataKey="score"
+                    stroke={seg.color}
+                    strokeWidth={3}
+                    dot={false}
+                    activeDot={false}
+                    isAnimationActive={false}
+                    connectNulls
+                  />
+                ))}
+                {/* Render colored dots on top */}
                 <Line
                   type="monotone"
                   dataKey="score"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: 'hsl(var(--primary))' }}
-                  activeDot={{ r: 6 }}
+                  stroke="transparent"
+                  strokeWidth={0}
+                  dot={<CustomDot />}
+                  activeDot={{ r: 7 }}
+                  isAnimationActive={false}
                 />
               </LineChart>
             </ResponsiveContainer>
