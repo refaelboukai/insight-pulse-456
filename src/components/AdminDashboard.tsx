@@ -366,6 +366,7 @@ export default function AdminDashboard() {
   };
 
   const handleResetPasswordSubmit = () => {
+    if (resetCategories.length === 0) { setResetPasswordError('יש לבחור לפחות קטגוריה אחת'); return; }
     if (resetPassword !== '9020') { setResetPasswordError('קוד שגוי'); return; }
     if (resetPasswordConfirm !== '9020') { setResetPasswordError('יש להזין את הקוד פעמיים לאישור'); return; }
     setResetPasswordError(''); setShowResetPassword(false); setResetPassword(''); setResetPasswordConfirm(''); setShowResetConfirm(true);
