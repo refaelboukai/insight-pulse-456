@@ -49,6 +49,7 @@ interface ReportCardData {
   reflectionSummary?: ReflectionSummary | null;
   socialEmotionalSummary?: string | null;
   gender?: Gender;
+  sectionOrder?: string[];
 }
 
 function getHebrewDate(): string {
