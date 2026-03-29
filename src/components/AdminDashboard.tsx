@@ -621,6 +621,8 @@ export default function AdminDashboard() {
   const todayAbsent = dailyAttendance.filter(a => !a.is_present && a.attendance_date === todayStr);
   const todayReports = reports.filter(r => r.report_date?.startsWith(todayStr));
   const activeStudents = students.filter(s => s.is_active);
+  // Dynamic class list derived from active students
+  const dynamicClasses = [...new Set(activeStudents.map(s => s.class_name).filter(Boolean))] as string[];
 
   const getClassStudents = (cls: string) => activeStudents.filter(s => s.class_name === cls);
   const getClassReports = (cls: string) => {
