@@ -229,22 +229,7 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
                   tickMargin={8}
                 />
                 <Tooltip content={<CustomTooltip />} />
-                {/* Render colored segments */}
-                {segments.map((seg, idx) => (
-                  <Line
-                    key={`seg-${idx}`}
-                    type="monotone"
-                    data={seg.data}
-                    dataKey="score"
-                    stroke={seg.color}
-                    strokeWidth={3}
-                    dot={false}
-                    activeDot={false}
-                    isAnimationActive={false}
-                    connectNulls
-                  />
-                ))}
-                {/* Render colored dots on top */}
+                {/* Hidden line for tooltip + coordinate system, then colored dots */}
                 <Line
                   type="monotone"
                   dataKey="score"
@@ -253,6 +238,38 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
                   dot={<CustomDot />}
                   activeDot={{ r: 7 }}
                   isAnimationActive={false}
+                />
+                {/* Colored line segments drawn via Customized */}
+                <Customized
+                  component={(props: any) => {
+                    const { formattedGraphicalItems } = props;
+                    if (!formattedGraphicalItems?.length) return null;
+                    const lineItem = formattedGraphicalItems[0];
+                    const points = lineItem?.props?.points;
+                    if (!points || points.length < 2) return null;
+                    return (
+                      <g>
+                        {points.map((point: any, i: number) => {
+                          if (i === 0) return null;
+                          const prev = points[i - 1];
+                          const avgScore = (chartData[i - 1].score + chartData[i].score) / 2;
+                          const color = getScoreColor(avgScore);
+                          return (
+                            <line
+                              key={`seg-${i}`}
+                              x1={prev.x}
+                              y1={prev.y}
+                              x2={point.x}
+                              y2={point.y}
+                              stroke={color}
+                              strokeWidth={3}
+                              strokeLinecap="round"
+                            />
+                          );
+                        })}
+                      </g>
+                    );
+                  }}
                 />
               </LineChart>
             </ResponsiveContainer>
