@@ -829,11 +829,9 @@ export default function AdminDashboard() {
                 <Select value={newClass} onValueChange={v => { setNewClass(v); if (v !== '__custom__') setCustomClassName(''); }}>
                   <SelectTrigger className="h-10 text-sm"><SelectValue placeholder="בחר/י כיתה" /></SelectTrigger>
                   <SelectContent>
-                    {CLASS_OPTIONS.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}
-                    {/* Show existing non-standard classes */}
-                    {[...new Set(students.map(s => s.class_name).filter(c => c && !CLASS_OPTIONS.includes(c)))].map(c => (
-                      <SelectItem key={c!} value={c!}>הכיתה של {c}</SelectItem>
-                    ))}
+                    {dynamicClasses.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}
+                    <SelectItem value="__custom__">➕ כיתה חדשה...</SelectItem>
+                  </SelectContent>
                     <SelectItem value="__custom__">➕ כיתה חדשה...</SelectItem>
                   </SelectContent>
                 </Select>
