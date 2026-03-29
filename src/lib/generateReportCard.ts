@@ -438,23 +438,27 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
   // ── Build educator pages ──
   const educatorPages = await buildPages(page1Sections);
 
-  // ── Build grades pages ──
-  const gradesSections: string[] = [gradesTitle];
+  // ── Build grades pages (title+header merged as one block, signatures stick to last row) ──
+  const gradesSections: string[] = [];
 
   if (data.grades.length > 0) {
-    gradesSections.push(gradeTableHeader);
+    // Merge title + table header so they never separate
+    gradesSections.push(gradesTitle + gradeTableHeader);
     data.grades.forEach((gr, i) => {
       const isLast = i === data.grades.length - 1;
       const rowBg = i % 2 === 0 ? colors.tableAltRow : colors.white;
       const borderRadius = isLast ? 'border-radius:0 0 6px 6px;overflow:hidden;' : '';
       const rowHtml = `<div style="border-left:1px solid ${colors.tableBorder};border-right:1px solid ${colors.tableBorder};${isLast ? `border-bottom:1px solid ${colors.tableBorder};${borderRadius}` : ''}"><div style="display:flex;border-bottom:1px solid ${colors.tableBorder};background:${rowBg};"><div style="padding:${sz(9)} ${sz(14)};font-weight:600;font-size:${sz(11)};color:${colors.text};width:${sz(80)};flex-shrink:0;border-left:1px solid ${colors.tableBorder};">${gr.subject}</div><div style="padding:${sz(9)} ${sz(14)};font-size:${sz(13)};color:${colors.accent};text-align:center;width:${sz(45)};flex-shrink:0;font-weight:700;border-left:1px solid ${colors.tableBorder};">${gr.grade ?? '—'}</div><div style="padding:${sz(9)} ${sz(14)};font-size:${sz(11)};color:${colors.text};line-height:1.8;white-space:pre-wrap;flex:1;">${gr.ai_enhanced_evaluation || gr.verbal_evaluation || '—'}</div></div></div>`;
-      gradesSections.push(rowHtml);
+      // Merge last grade row with signatures so they stay together
+      if (isLast) {
+        gradesSections.push(rowHtml + signaturesHtml);
+      } else {
+        gradesSections.push(rowHtml);
+      }
     });
   } else {
-    gradesSections.push(`<div style="border:1px solid ${colors.tableBorder};padding:${sz(16)};text-align:center;color:${colors.textLight};font-size:${sz(11)};border-radius:6px;">אין ציונים להצגה</div>`);
+    gradesSections.push(gradesTitle + `<div style="border:1px solid ${colors.tableBorder};padding:${sz(16)};text-align:center;color:${colors.textLight};font-size:${sz(11)};border-radius:6px;">אין ציונים להצגה</div>` + signaturesHtml);
   }
-
-  gradesSections.push(signaturesHtml);
 
   const gradesPages = await buildPages(gradesSections);
 
