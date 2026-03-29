@@ -246,21 +246,11 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </div>
   ` : '';
 
-  const teamTableHtml = allTeamRows ? `
-    <div style="margin-bottom:${sz(18)};">
+  const teamTitleHtml = allTeamRows ? `
+    <div style="margin-bottom:${sz(6)};">
       ${makeSectionTitle('📊', 'הערכה תפקודית')}
-      <table style="width:100%;border-collapse:collapse;border:1px solid ${colors.tableBorder};border-radius:4px;overflow:hidden;">
-        <thead>
-          <tr style="background:${colors.tableHeaderBg};">
-            <th style="padding:${sz(8)} ${sz(16)};font-size:${sz(11)};text-align:right;font-weight:600;color:${colors.sectionTitle};border-bottom:2px solid ${colors.headerBorder};">תחום</th>
-            <th style="padding:${sz(8)} ${sz(16)};font-size:${sz(11)};text-align:center;font-weight:600;color:${colors.sectionTitle};border-bottom:2px solid ${colors.headerBorder};width:${sz(120)};">דירוג</th>
-          </tr>
-        </thead>
-        <tbody>${allTeamRows}</tbody>
-      </table>
     </div>
   ` : '';
-
   // ── Header ──
   const headerHtml = `
     ${decorTopLine}
