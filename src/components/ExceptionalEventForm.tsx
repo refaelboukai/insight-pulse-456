@@ -332,63 +332,39 @@ export default function ExceptionalEventForm() {
             )}
 
             <Accordion type="multiple" className="rounded-xl border-2 overflow-hidden">
-              <AccordionItem value="eden" className="border-b">
-                <AccordionTrigger className="px-4 py-3 text-sm font-semibold hover:no-underline">
-                  <span className="flex items-center gap-2">
-                    הכיתה של עדן
-                    {selectedStudentCount(classEden) > 0 && (
-                      <Badge variant="secondary" className="text-xs">{selectedStudentCount(classEden)}</Badge>
-                    )}
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-3">
-                  <div className="flex flex-wrap gap-1.5">
-                    {classEden.map(s => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => toggleStudent(s.id)}
-                        className={`text-sm py-1.5 px-3 rounded-lg border transition-all ${
-                          selectedStudents.includes(s.id)
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
-                        }`}
-                      >
-                        {s.first_name} {s.last_name}
-                      </button>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-
-              <AccordionItem value="tali" className="border-b">
-                <AccordionTrigger className="px-4 py-3 text-sm font-semibold hover:no-underline">
-                  <span className="flex items-center gap-2">
-                    הכיתה של טלי
-                    {selectedStudentCount(classTali) > 0 && (
-                      <Badge variant="secondary" className="text-xs">{selectedStudentCount(classTali)}</Badge>
-                    )}
-                  </span>
-                </AccordionTrigger>
-                <AccordionContent className="px-4 pb-3">
-                  <div className="flex flex-wrap gap-1.5">
-                    {classTali.map(s => (
-                      <button
-                        key={s.id}
-                        type="button"
-                        onClick={() => toggleStudent(s.id)}
-                        className={`text-sm py-1.5 px-3 rounded-lg border transition-all ${
-                          selectedStudents.includes(s.id)
-                            ? 'bg-primary text-primary-foreground border-primary'
-                            : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
-                        }`}
-                      >
-                        {s.first_name} {s.last_name}
-                      </button>
-                    ))}
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
+              {dynamicClasses.map(cls => {
+                const classStudents = students.filter(s => s.class_name === cls);
+                return (
+                  <AccordionItem key={cls} value={cls} className="border-b">
+                    <AccordionTrigger className="px-4 py-3 text-sm font-semibold hover:no-underline">
+                      <span className="flex items-center gap-2">
+                        הכיתה של {cls}
+                        {selectedStudentCount(classStudents) > 0 && (
+                          <Badge variant="secondary" className="text-xs">{selectedStudentCount(classStudents)}</Badge>
+                        )}
+                      </span>
+                    </AccordionTrigger>
+                    <AccordionContent className="px-4 pb-3">
+                      <div className="flex flex-wrap gap-1.5">
+                        {classStudents.map(s => (
+                          <button
+                            key={s.id}
+                            type="button"
+                            onClick={() => toggleStudent(s.id)}
+                            className={`text-sm py-1.5 px-3 rounded-lg border transition-all ${
+                              selectedStudents.includes(s.id)
+                                ? 'bg-primary text-primary-foreground border-primary'
+                                : 'border-border bg-card hover:bg-primary/10 hover:border-primary/30'
+                            }`}
+                          >
+                            {s.first_name} {s.last_name}
+                          </button>
+                        ))}
+                      </div>
+                    </AccordionContent>
+                  </AccordionItem>
+                );
+              })}
 
               <AccordionItem value="staff" className="border-0">
                 <AccordionTrigger className="px-4 py-3 text-sm font-semibold hover:no-underline">
