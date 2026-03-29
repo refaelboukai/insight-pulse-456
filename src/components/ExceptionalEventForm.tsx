@@ -201,8 +201,7 @@ export default function ExceptionalEventForm() {
     setSubmitting(false);
   };
 
-  const classTali = students.filter(s => s.class_name === 'טלי');
-  const classEden = students.filter(s => s.class_name === 'עדן');
+  const dynamicClasses = [...new Set(students.map(s => s.class_name).filter(Boolean))] as string[];
 
   const selectedStudentCount = (group: Student[]) =>
     group.filter(s => selectedStudents.includes(s.id)).length;
