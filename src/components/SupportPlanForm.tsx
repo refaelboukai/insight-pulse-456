@@ -3,9 +3,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from 'sonner';
-import { CheckCircle2, Clock, User, Plus, Minus } from 'lucide-react';
+import { CheckCircle2, Clock, User, Plus, X, CalendarCheck } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
 
 type Student = Database['public']['Tables']['students']['Row'];
@@ -16,6 +15,8 @@ const SUPPORT_TYPE_LABELS: Record<string, string> = {
   academic: 'לימודית',
   behavioral: 'התנהגותית',
 };
+
+const HEBREW_DAYS = ['א׳', 'ב׳', 'ג׳', 'ד׳', 'ה׳', 'ו׳', 'ש׳'];
 
 interface StaffMember {
   id: string;
@@ -76,7 +77,6 @@ export default function SupportPlanForm() {
     const load = async () => {
       const today = new Date();
       const todayStr = today.toISOString().split('T')[0];
-      // Get start of current week (Sunday)
       const dayOfWeek = today.getDay();
       const weekStart = new Date(today);
       weekStart.setDate(today.getDate() - dayOfWeek);
@@ -101,18 +101,26 @@ export default function SupportPlanForm() {
     return s ? `${s.first_name} ${s.last_name}` : 'לא ידוע';
   };
 
+  const getAssignmentCompletions = (assignmentId: string) => {
+    return completions
+      .filter(c => c.assignment_id === assignmentId && c.is_completed)
+      .sort((a, b) => a.completion_date.localeCompare(b.completion_date));
+  };
+
   const getCompletionCount = (assignment: Assignment) => {
     const today = new Date().toISOString().split('T')[0];
     if (assignment.frequency === 'daily') {
       return completions.filter(c => c.assignment_id === assignment.id && c.is_completed && c.completion_date === today).length;
     }
-    // weekly - count all completions this week
     return completions.filter(c => c.assignment_id === assignment.id && c.is_completed).length;
   };
 
-  const getTodayCount = (assignmentId: string) => {
-    const today = new Date().toISOString().split('T')[0];
-    return completions.filter(c => c.assignment_id === assignmentId && c.is_completed && c.completion_date === today).length;
+  const formatCompletionDate = (dateStr: string) => {
+    const date = new Date(dateStr + 'T00:00:00');
+    const dayName = HEBREW_DAYS[date.getDay()];
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    return { dayName, formatted: `${day}/${month}`, full: `יום ${dayName} ${day}/${month}` };
   };
 
   const handleAddCompletion = async (assignmentId: string) => {
@@ -132,23 +140,17 @@ export default function SupportPlanForm() {
       toast.error('שגיאה בעדכון');
     } else if (data) {
       setCompletions(prev => [...prev, data as any]);
-      toast.success('מופע נוסף בהצלחה');
+      toast.success('ביצוע נרשם בהצלחה');
     }
     setSubmitting(null);
   };
 
-  const handleRemoveCompletion = async (assignmentId: string) => {
+  const handleRemoveCompletion = async (completionId: string, assignmentId: string) => {
     if (!user) return;
     setSubmitting(assignmentId);
-    const assignmentCompletions = completions.filter(
-      c => c.assignment_id === assignmentId && c.is_completed
-    );
-    const lastCompletion = assignmentCompletions[assignmentCompletions.length - 1];
-    if (lastCompletion) {
-      await supabase.from('support_completions').delete().eq('id', lastCompletion.id);
-      setCompletions(prev => prev.filter(c => c.id !== lastCompletion.id));
-      toast.success('מופע הוסר');
-    }
+    await supabase.from('support_completions').delete().eq('id', completionId);
+    setCompletions(prev => prev.filter(c => c.id !== completionId));
+    toast.success('ביצוע הוסר');
     setSubmitting(null);
   };
 
@@ -203,95 +205,127 @@ export default function SupportPlanForm() {
             <span className="text-xs text-muted-foreground">החלף ←</span>
           </button>
 
-      {selectedStaffId && assignments.length === 0 && (
-        <div className="card-styled rounded-2xl p-6 text-center">
-          <p className="text-sm text-muted-foreground">אין תלמידים משויכים</p>
-        </div>
-      )}
+          {assignments.length === 0 && (
+            <div className="card-styled rounded-2xl p-6 text-center">
+              <p className="text-sm text-muted-foreground">אין תלמידים משויכים</p>
+            </div>
+          )}
 
-      {assignments.map(a => {
-        const count = getCompletionCount(a);
-        const required = a.frequency_count || 1;
-        const allDone = count >= required;
-        return (
-          <div
-            key={a.id}
-            className={`card-styled rounded-2xl p-3 transition-all ${allDone ? 'border-success/30 bg-success/5' : ''}`}
-          >
-            <div className="flex items-center justify-between mb-2">
-              <div>
-                <p className="font-bold text-base">{studentName(a.student_id)}</p>
-                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-                  <Badge variant="outline" className="text-xs">
-                    {a.frequency === 'daily' ? 'יומי' : 'שבועי'} · {required} {a.frequency === 'daily' ? 'ביום' : 'בשבוע'}
-                  </Badge>
-                  {a.target_date && (
-                    <span className="text-xs text-muted-foreground flex items-center gap-0.5">
-                      <Clock className="h-3 w-3" />
-                      {new Date(a.target_date).toLocaleDateString('he-IL')}
-                    </span>
+          {assignments.map(a => {
+            const assignmentCompletions = getAssignmentCompletions(a.id);
+            const count = getCompletionCount(a);
+            const required = a.frequency_count || 1;
+            const allDone = count >= required;
+            const todayStr = new Date().toISOString().split('T')[0];
+            const alreadyDoneToday = assignmentCompletions.some(c => c.completion_date === todayStr);
+
+            return (
+              <div
+                key={a.id}
+                className={`card-styled rounded-2xl p-3 transition-all ${allDone ? 'border-success/30 bg-success/5' : ''}`}
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div>
+                    <p className="font-bold text-base">{studentName(a.student_id)}</p>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <Badge variant="outline" className="text-xs">
+                        {a.frequency === 'daily' ? 'יומי' : 'שבועי'} · {required} {a.frequency === 'daily' ? 'ביום' : 'בשבוע'}
+                      </Badge>
+                      {a.target_date && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-0.5">
+                          <Clock className="h-3 w-3" />
+                          {new Date(a.target_date).toLocaleDateString('he-IL')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap gap-1 mb-2">
+                  {(a.support_types || []).map((t: string) => (
+                    <Badge key={t} variant="secondary" className="text-xs px-1.5 py-0">
+                      {SUPPORT_TYPE_LABELS[t] || t}
+                    </Badge>
+                  ))}
+                </div>
+
+                {a.support_description && (
+                  <p className="text-xs text-foreground/80 mb-2">📝 {a.support_description}</p>
+                )}
+
+                {/* Completion dates timeline */}
+                <div className={`rounded-xl px-3 py-2.5 ${allDone ? 'bg-success/10 border border-success/30' : 'bg-muted/50 border border-border'}`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-1.5">
+                      <CalendarCheck className={`h-4 w-4 ${allDone ? 'text-success' : 'text-muted-foreground'}`} />
+                      <span className={`text-sm font-bold ${allDone ? 'text-success' : 'text-foreground'}`}>
+                        {count}/{required}
+                      </span>
+                      <span className="text-xs text-muted-foreground">
+                        בוצעו {a.frequency === 'daily' ? 'היום' : 'השבוע'}
+                      </span>
+                    </div>
+                    {!allDone && !(a.frequency === 'daily' && alreadyDoneToday) && (
+                      <Button
+                        size="sm"
+                        variant={allDone ? 'default' : 'outline'}
+                        className="h-7 text-xs gap-1 rounded-full"
+                        disabled={submitting === a.id}
+                        onClick={() => handleAddCompletion(a.id)}
+                      >
+                        {submitting === a.id ? (
+                          <div className="w-3 h-3 rounded-full border-2 border-current border-t-transparent animate-spin" />
+                        ) : (
+                          <>
+                            <Plus className="h-3 w-3" />
+                            סמן ביצוע היום
+                          </>
+                        )}
+                      </Button>
+                    )}
+                  </div>
+
+                  {/* Date chips */}
+                  {assignmentCompletions.length > 0 && (
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {assignmentCompletions.map(c => {
+                        const { dayName, formatted } = formatCompletionDate(c.completion_date);
+                        return (
+                          <div
+                            key={c.id}
+                            className="flex items-center gap-1 bg-background rounded-lg px-2 py-1 border border-success/30 text-xs"
+                          >
+                            <CheckCircle2 className="h-3 w-3 text-success" />
+                            <span className="font-medium">יום {dayName}</span>
+                            <span className="text-muted-foreground">{formatted}</span>
+                            <button
+                              onClick={() => handleRemoveCompletion(c.id, a.id)}
+                              className="mr-0.5 text-muted-foreground hover:text-destructive transition-colors"
+                              disabled={submitting === a.id}
+                            >
+                              <X className="h-3 w-3" />
+                            </button>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+
+                  {assignmentCompletions.length === 0 && (
+                    <p className="text-xs text-muted-foreground">טרם בוצעו מפגשים {a.frequency === 'daily' ? 'היום' : 'השבוע'}</p>
                   )}
                 </div>
               </div>
+            );
+          })}
+
+          {assignments.length > 0 && (
+            <div className="flex items-center justify-between rounded-xl px-3 py-2 bg-primary/5 border border-primary/20">
+              <p className="text-xs font-medium text-primary">
+                {assignments.filter(a => getCompletionCount(a) >= (a.frequency_count || 1)).length}/{assignments.length} הושלמו {assignments.some(a => a.frequency === 'weekly') ? 'השבוע' : 'היום'}
+              </p>
             </div>
-
-            <div className="flex flex-wrap gap-1 mb-2">
-              {(a.support_types || []).map((t: string) => (
-                <Badge key={t} variant="secondary" className="text-xs px-1.5 py-0">
-                  {SUPPORT_TYPE_LABELS[t] || t}
-                </Badge>
-              ))}
-            </div>
-
-            {a.support_description && (
-              <p className="text-xs text-foreground/80 mb-2">📝 {a.support_description}</p>
-            )}
-
-            {/* Completion counter */}
-            <div className={`flex items-center justify-between rounded-xl px-3 py-2 ${allDone ? 'bg-success/10 border border-success/30' : 'bg-muted/50 border border-border'}`}>
-              <div className="flex items-center gap-2">
-                <CheckCircle2 className={`h-4 w-4 ${allDone ? 'text-success' : 'text-muted-foreground'}`} />
-                <span className={`text-base font-bold ${allDone ? 'text-success' : 'text-foreground'}`}>
-                  {count}/{required}
-                </span>
-                <span className="text-xs text-muted-foreground">בוצעו {a.frequency === 'daily' ? 'היום' : 'השבוע'}</span>
-              </div>
-              <div className="flex items-center gap-1.5">
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="h-8 w-8 rounded-full"
-                  disabled={submitting === a.id || count === 0}
-                  onClick={() => handleRemoveCompletion(a.id)}
-                >
-                  <Minus className="h-3.5 w-3.5" />
-                </Button>
-                <Button
-                  size="icon"
-                  variant={allDone ? 'default' : 'outline'}
-                  className={`h-8 w-8 rounded-full ${allDone ? 'bg-success hover:bg-success/90 text-white' : ''}`}
-                  disabled={submitting === a.id || count >= required}
-                  onClick={() => handleAddCompletion(a.id)}
-                >
-                  {submitting === a.id ? (
-                    <div className="w-3.5 h-3.5 rounded-full border-2 border-current border-t-transparent animate-spin" />
-                  ) : (
-                    <Plus className="h-3.5 w-3.5" />
-                  )}
-                </Button>
-              </div>
-            </div>
-          </div>
-        );
-      })}
-
-      {selectedStaffId && assignments.length > 0 && (
-        <div className="flex items-center justify-between rounded-xl px-3 py-2 bg-primary/5 border border-primary/20">
-          <p className="text-xs font-medium text-primary">
-            {assignments.filter(a => getCompletionCount(a) >= (a.frequency_count || 1)).length}/{assignments.length} הושלמו {assignments.some(a => a.frequency === 'weekly') ? 'השבוע' : 'היום'}
-          </p>
-        </div>
-      )}
+          )}
         </>
       )}
     </div>
