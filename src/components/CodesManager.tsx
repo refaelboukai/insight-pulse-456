@@ -4,8 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { RefreshCw, Shield, Users, User, Copy, UserRound, Eye, EyeOff } from 'lucide-react';
+import { RefreshCw, Shield, Users, User, Copy, UserRound, Eye, EyeOff, Download } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import * as XLSX from 'xlsx';
+import { downloadWorkbook } from '@/lib/excelDownload';
 
 type Student = Database['public']['Tables']['students']['Row'] & { parent_code?: string };
 
@@ -65,33 +67,59 @@ export default function CodesManager({ students, onRefresh }: Props) {
     onRefresh();
   };
 
+  const handleExportCodes = () => {
+    const rows = [
+      { סוג: 'מנהל', שם: 'מנהל', כיתה: '—', 'קוד כניסה': '9020', 'קוד הורה': '—' },
+      { סוג: 'צוות', שם: 'צוות', כיתה: '—', 'קוד כניסה': '1001', 'קוד הורה': '—' },
+      ...students.map(s => ({
+        סוג: 'תלמיד',
+        שם: `${s.first_name} ${s.last_name}`,
+        כיתה: s.class_name || '—',
+        'קוד כניסה': s.student_code,
+        'קוד הורה': (s as any).parent_code || '—',
+        פעיל: s.is_active ? 'כן' : 'לא',
+      })),
+    ];
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 8 }, { wch: 20 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 6 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'קודים');
+    const today = new Date().toISOString().split('T')[0];
+    downloadWorkbook(wb, `קודי_כניסה_${today}.xlsx`);
+    toast.success('הקובץ הורד בהצלחה');
+  };
+
   return (
     <div className="space-y-4">
-      {/* System codes */}
-      <div>
-        <p className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+      {/* Header with export */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold flex items-center gap-1.5">
           <Shield className="h-3.5 w-3.5 text-primary" />
           קודי מערכת
         </p>
-        <div className="space-y-1.5">
-          {[
-            { label: 'מנהל', code: '9020', icon: Shield, color: 'text-primary' },
-            { label: 'צוות', code: '1001', icon: Users, color: 'text-muted-foreground' },
-          ].map(item => (
-            <div key={item.code} className="flex items-center justify-between p-2.5 rounded-lg border bg-card">
-              <div className="flex items-center gap-2">
-                <item.icon className={`h-3.5 w-3.5 ${item.color}`} />
-                <span className="text-sm font-medium">{item.label}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="font-mono text-xs">{item.code}</Badge>
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleCopy(item.code)}>
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
+        <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={handleExportCodes}>
+          <Download className="h-3 w-3" />
+          הורד אקסל קודים
+        </Button>
+      </div>
+      <div className="space-y-1.5">
+        {[
+          { label: 'מנהל', code: '9020', icon: Shield, color: 'text-primary' },
+          { label: 'צוות', code: '1001', icon: Users, color: 'text-muted-foreground' },
+        ].map(item => (
+          <div key={item.code} className="flex items-center justify-between p-2.5 rounded-lg border bg-card">
+            <div className="flex items-center gap-2">
+              <item.icon className={`h-3.5 w-3.5 ${item.color}`} />
+              <span className="text-sm font-medium">{item.label}</span>
             </div>
-          ))}
-        </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="font-mono text-xs">{item.code}</Badge>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleCopy(item.code)}>
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Student codes by class */}
