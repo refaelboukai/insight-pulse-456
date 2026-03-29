@@ -57,6 +57,7 @@ const ALL_TEAM_KEYS = TEAM_CATEGORIES_SECTIONS.flatMap(s => s.items.map(i => i.k
 export default function GradesForm() {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
+  const dynamicClasses = [...new Set(students.map(s => s.class_name).filter(Boolean))] as string[];
   const [selectedStudentId, setSelectedStudentId] = useState('');
   const [semester, setSemester] = useState('semester_a');
   const [subject, setSubject] = useState('');
