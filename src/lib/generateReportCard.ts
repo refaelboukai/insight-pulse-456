@@ -201,24 +201,37 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
       : '');
 
   // ── Build section HTML blocks ──
-  const allTeamRows = teamEval ? TEAM_SECTIONS.map(section => {
-    const rows = section.items.map(item => {
-      const val = teamEval[item.key as keyof TeamEvaluation];
-      if (!val) return '';
-      return `
-        <tr>
-          <td style="padding:${sz(7)} ${sz(16)};border-bottom:1px solid ${colors.tableBorder};font-size:${sz(11)};color:${colors.text};">${item.label}</td>
-          <td style="padding:${sz(7)} ${sz(16)};border-bottom:1px solid ${colors.tableBorder};font-size:${sz(11)};color:${colors.text};text-align:center;font-weight:500;">${val}</td>
-        </tr>
-      `;
-    }).filter(Boolean).join('');
-    if (!rows) return '';
-    return `
-      <tr><td colspan="2" style="padding:${sz(8)} ${sz(16)} ${sz(4)};font-size:${sz(11)};font-weight:700;color:${colors.sectionTitle};border-bottom:1px solid ${colors.headerBorder};background:${colors.accentLighter};">${section.title}</td></tr>
-      ${rows}
-    `;
-  }).filter(Boolean).join('') : '';
+  // Build team evaluation as individual sub-group blocks (one per category) to avoid page-cut
+  const teamSubBlocks: string[] = [];
+  if (teamEval) {
+    TEAM_SECTIONS.forEach(section => {
+      const rows = section.items.map(item => {
+        const val = teamEval[item.key as keyof TeamEvaluation];
+        if (!val) return '';
+        return `
+          <tr>
+            <td style="padding:${sz(7)} ${sz(16)};border-bottom:1px solid ${colors.tableBorder};font-size:${sz(11)};color:${colors.text};">${item.label}</td>
+            <td style="padding:${sz(7)} ${sz(16)};border-bottom:1px solid ${colors.tableBorder};font-size:${sz(11)};color:${colors.text};text-align:center;font-weight:500;">${val}</td>
+          </tr>
+        `;
+      }).filter(Boolean).join('');
+      if (!rows) return;
+      teamSubBlocks.push(`
+        <div style="margin-bottom:${sz(4)};">
+          <table style="width:100%;border-collapse:collapse;border:1px solid ${colors.tableBorder};border-radius:4px;overflow:hidden;">
+            <thead>
+              <tr style="background:${colors.accentLighter};">
+                <td colspan="2" style="padding:${sz(8)} ${sz(16)} ${sz(4)};font-size:${sz(11)};font-weight:700;color:${colors.sectionTitle};border-bottom:1px solid ${colors.headerBorder};">${section.title}</td>
+              </tr>
+            </thead>
+            <tbody>${rows}</tbody>
+          </table>
+        </div>
+      `);
+    });
+  }
 
+  const allTeamRows = teamSubBlocks.length > 0 ? 'HAS_TEAM' : '';
   const sectionDivider = `<div style="margin:${sz(6)} 0;border-top:1px dashed ${colors.headerBorder};"></div>`;
 
   const makeSectionTitle = (icon: string, text: string) =>
