@@ -495,9 +495,9 @@ export default function StudentDashboard() {
               </span>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              <Badge variant="outline" className="text-xs rounded-md">{ATTENDANCE_LABELS[r.attendance]}</Badge>
-              {r.behavior_types?.map(b => <Badge key={b} variant={b === 'respectful' ? 'default' : 'destructive'} className="text-xs rounded-md">{BEHAVIOR_LABELS[b]}</Badge>)}
-              {r.participation?.map(p => <Badge key={p} variant="secondary" className="text-xs rounded-md">{PARTICIPATION_LABELS[p]}</Badge>)}
+              <AttendanceBadge status={r.attendance} />
+              {r.behavior_types?.map(b => <BehaviorBadge key={b} type={b} allTypes={r.behavior_types} />)}
+              {r.participation?.map(p => <ParticipationBadge key={p} level={p} />)}
             </div>
             {r.comment && <p className="text-xs text-muted-foreground mt-2 bg-muted/50 rounded-lg px-3 py-2 border leading-relaxed">{r.comment}</p>}
           </div>
