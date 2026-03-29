@@ -157,6 +157,8 @@ export default function AdminDashboard() {
   const [resetCategories, setResetCategories] = useState<string[]>([]);
   const [generatingCard, setGeneratingCard] = useState<string | null>(null);
   const [reportCardSemester, setReportCardSemester] = useState<string>('all');
+  const [previewStudent, setPreviewStudent] = useState<Student | null>(null);
+  const [previewData, setPreviewData] = useState<any>(null);
 
   // Edit report
   const [editingReport, setEditingReport] = useState<Report | null>(null);
