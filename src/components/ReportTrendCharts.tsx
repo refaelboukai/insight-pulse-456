@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ATTENDANCE_LABELS, BEHAVIOR_LABELS, PARTICIPATION_LABELS } from '@/lib/constants';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Customized } from 'recharts';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { TrendingUp } from 'lucide-react';
@@ -109,13 +109,36 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
     }));
   }, [reports, selectedSubject, selectedMetric]);
 
+  const maxY = selectedMetric === 'attendance' ? 3 : 4;
+  const yTicks = selectedMetric === 'attendance' ? [1, 2, 3] : [1, 2, 3, 4];
+
   const yLabels = METRIC_Y_LABELS[selectedMetric];
   const formatYTick = (value: number) => yLabels[value] || '';
 
-  if (reports.length < 2) return null;
+  // Color based on score position in range: top 1/3 green, middle 1/3 orange, bottom 1/3 red
+  const getScoreColor = (score: number): string => {
+    const range = maxY - 1;
+    const normalizedPosition = (score - 1) / range;
+    if (normalizedPosition >= 0.667) return '#16a34a';
+    if (normalizedPosition >= 0.333) return '#f59e0b';
+    return '#ef4444';
+  };
 
-  const maxY = selectedMetric === 'attendance' ? 3 : 4;
-  const yTicks = selectedMetric === 'attendance' ? [1, 2, 3] : [1, 2, 3, 4];
+  // Build segments: each pair of consecutive points gets a color based on average score
+  const segments = useMemo(() => {
+    if (chartData.length < 2) return [];
+    const segs: { data: typeof chartData; color: string }[] = [];
+    for (let i = 0; i < chartData.length - 1; i++) {
+      const avgScore = (chartData[i].score + chartData[i + 1].score) / 2;
+      segs.push({
+        data: [chartData[i], chartData[i + 1]],
+        color: getScoreColor(avgScore),
+      });
+    }
+    return segs;
+  }, [chartData, maxY]);
+
+  if (reports.length < 2) return null;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
@@ -128,6 +151,13 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
         <p className="text-primary">{labels[rounded] || val} ({val})</p>
       </div>
     );
+  };
+
+  const CustomDot = (props: any) => {
+    const { cx, cy, payload } = props;
+    if (!cx || !cy) return null;
+    const color = getScoreColor(payload.score);
+    return <circle cx={cx} cy={cy} r={5} fill={color} stroke="white" strokeWidth={2} />;
   };
 
   return (
@@ -185,20 +215,61 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
         {chartData.length < 2 ? (
           <p className="text-xs text-muted-foreground text-center py-4">אין מספיק נתונים להצגת מגמה</p>
         ) : (
-          <div className="h-48">
+          <div className="h-52">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}>
+              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 10, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                <YAxis domain={[1, maxY]} ticks={yTicks} tickFormatter={formatYTick} tick={{ fontSize: 9 }} width={55} />
+                <YAxis
+                  domain={[1, maxY]}
+                  ticks={yTicks}
+                  tickFormatter={formatYTick}
+                  tick={{ fontSize: 11, fontWeight: 600, fill: 'hsl(var(--foreground))' }}
+                  width={70}
+                  tickMargin={8}
+                />
                 <Tooltip content={<CustomTooltip />} />
+                {/* Hidden line for tooltip + coordinate system, then colored dots */}
                 <Line
                   type="monotone"
                   dataKey="score"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2.5}
-                  dot={{ r: 4, fill: 'hsl(var(--primary))' }}
-                  activeDot={{ r: 6 }}
+                  stroke="transparent"
+                  strokeWidth={0}
+                  dot={<CustomDot />}
+                  activeDot={{ r: 7 }}
+                  isAnimationActive={false}
+                />
+                {/* Colored line segments drawn via Customized */}
+                <Customized
+                  component={(props: any) => {
+                    const { formattedGraphicalItems } = props;
+                    if (!formattedGraphicalItems?.length) return null;
+                    const lineItem = formattedGraphicalItems[0];
+                    const points = lineItem?.props?.points;
+                    if (!points || points.length < 2) return null;
+                    return (
+                      <g>
+                        {points.map((point: any, i: number) => {
+                          if (i === 0) return null;
+                          const prev = points[i - 1];
+                          const avgScore = (chartData[i - 1].score + chartData[i].score) / 2;
+                          const color = getScoreColor(avgScore);
+                          return (
+                            <line
+                              key={`seg-${i}`}
+                              x1={prev.x}
+                              y1={prev.y}
+                              x2={point.x}
+                              y2={point.y}
+                              stroke={color}
+                              strokeWidth={3}
+                              strokeLinecap="round"
+                            />
+                          );
+                        })}
+                      </g>
+                    );
+                  }}
                 />
               </LineChart>
             </ResponsiveContainer>
