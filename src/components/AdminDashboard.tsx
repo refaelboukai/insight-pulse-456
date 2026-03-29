@@ -1718,6 +1718,22 @@ export default function AdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Report Card Preview */}
+      {previewStudent && previewData && (
+        <ReportCardPreview
+          open={!!previewStudent}
+          onOpenChange={(open) => { if (!open) { setPreviewStudent(null); setPreviewData(null); } }}
+          student={previewStudent}
+          semester={reportCardSemester}
+          semesterLabel={SEMESTER_LABELS[reportCardSemester] || ''}
+          grades={previewData.grades}
+          personalNote={previewData.personalNote}
+          teamEvaluation={previewData.teamEvaluation}
+          reflectionSummary={previewData.reflectionSummary}
+          socialEmotionalSummary={previewData.socialEmotionalSummary}
+        />
+      )}
     </div>
   );
 }
