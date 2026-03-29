@@ -52,10 +52,15 @@ export default function StudentDashboard() {
   const [students, setStudents] = useState<Student[]>([]);
   const [selectedStudentId, setSelectedStudentId] = useState(lockedStudentId || '');
   const [reports, setReports] = useState<Report[]>([]);
+  const [allReports, setAllReports] = useState<Report[]>([]);
   const [grades, setGrades] = useState<any[]>([]);
   const [assignments, setAssignments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [activePanel, setActivePanel] = useState<string | null>(null);
+  const [reportDateFilter, setReportDateFilter] = useState<'today' | 'yesterday' | 'week' | 'custom'>('today');
+  const [reportSubjectFilter, setReportSubjectFilter] = useState<string>('all');
+  const [reportCustomFrom, setReportCustomFrom] = useState<Date | undefined>(undefined);
+  const [reportCustomTo, setReportCustomTo] = useState<Date | undefined>(undefined);
   const [pinnedPanels, setPinnedPanels] = useState<Set<string>>(() => {
     const saved = localStorage.getItem('student-pinned-panels');
     return saved ? new Set(JSON.parse(saved)) : new Set();
