@@ -187,10 +187,10 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
         ) : (
           <div className="h-48">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={chartData} margin={{ top: 5, right: 10, left: -15, bottom: 5 }}>
+              <LineChart data={chartData} margin={{ top: 5, right: 10, left: 5, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.3} />
                 <XAxis dataKey="date" tick={{ fontSize: 10 }} />
-                <YAxis domain={[1, maxY]} tick={{ fontSize: 10 }} />
+                <YAxis domain={[1, maxY]} ticks={yTicks} tickFormatter={formatYTick} tick={{ fontSize: 9 }} width={55} />
                 <Tooltip content={<CustomTooltip />} />
                 <Line
                   type="monotone"
