@@ -102,25 +102,24 @@ export default function CodesManager({ students, onRefresh }: Props) {
           הורד אקסל קודים
         </Button>
       </div>
-        <div className="space-y-1.5">
-          {[
-            { label: 'מנהל', code: '9020', icon: Shield, color: 'text-primary' },
-            { label: 'צוות', code: '1001', icon: Users, color: 'text-muted-foreground' },
-          ].map(item => (
-            <div key={item.code} className="flex items-center justify-between p-2.5 rounded-lg border bg-card">
-              <div className="flex items-center gap-2">
-                <item.icon className={`h-3.5 w-3.5 ${item.color}`} />
-                <span className="text-sm font-medium">{item.label}</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary" className="font-mono text-xs">{item.code}</Badge>
-                <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleCopy(item.code)}>
-                  <Copy className="h-3 w-3" />
-                </Button>
-              </div>
+      <div className="space-y-1.5">
+        {[
+          { label: 'מנהל', code: '9020', icon: Shield, color: 'text-primary' },
+          { label: 'צוות', code: '1001', icon: Users, color: 'text-muted-foreground' },
+        ].map(item => (
+          <div key={item.code} className="flex items-center justify-between p-2.5 rounded-lg border bg-card">
+            <div className="flex items-center gap-2">
+              <item.icon className={`h-3.5 w-3.5 ${item.color}`} />
+              <span className="text-sm font-medium">{item.label}</span>
             </div>
-          ))}
-        </div>
+            <div className="flex items-center gap-2">
+              <Badge variant="secondary" className="font-mono text-xs">{item.code}</Badge>
+              <Button size="sm" variant="ghost" className="h-7 w-7 p-0" onClick={() => handleCopy(item.code)}>
+                <Copy className="h-3 w-3" />
+              </Button>
+            </div>
+          </div>
+        ))}
       </div>
 
       {/* Student codes by class */}
