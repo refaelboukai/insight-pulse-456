@@ -375,29 +375,22 @@ export default function AdminDashboard() {
   const handleResetAllReports = async () => {
     setResetting(true); setShowResetConfirm(false);
     try {
-      const results = await Promise.all([
-        supabase.from('alerts').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('lesson_reports').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('daily_attendance').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('exceptional_events').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('support_sessions').delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('student_grades' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('student_evaluations' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('absent_student_followups' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('activity_logs' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('daily_reflections' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('brain_training_scores' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('brain_training_history' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('schedule_checkins' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('pedagogical_goals' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('student_insights' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('exam_schedule' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('support_completions' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-        supabase.from('learning_style_profiles' as any).delete().neq('id', '00000000-0000-0000-0000-000000000000'),
-      ]);
+      const selectedTables: string[] = [];
+      for (const cat of RESET_CATEGORIES) {
+        if (resetCategories.includes(cat.key)) {
+          selectedTables.push(...cat.tables);
+        }
+      }
+      const results = await Promise.all(
+        selectedTables.map(table =>
+          supabase.from(table as any).delete().neq('id', '00000000-0000-0000-0000-000000000000')
+        )
+      );
       const errors = results.filter(r => r.error);
+      const selectedLabels = RESET_CATEGORIES.filter(c => resetCategories.includes(c.key)).map(c => c.label);
       if (errors.length > 0) toast.error('שגיאה באיפוס חלק מהנתונים');
-      else toast.success('כל הנתונים אופסו בהצלחה!');
+      else toast.success(`אופסו בהצלחה: ${selectedLabels.join(', ')}`);
+      setResetCategories([]);
       fetchAll();
     } catch { toast.error('שגיאה באיפוס'); } finally { setResetting(false); }
   };
