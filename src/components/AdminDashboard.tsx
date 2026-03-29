@@ -1371,10 +1371,10 @@ export default function AdminDashboard() {
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-2">
-            <p className="text-xs text-destructive/80">⚠️ פעולה זו תמחק את כל הנתונים באפליקציה (דיווחים, ציונים, תמיכות, רפלקציות, שאלונים ועוד). שימו לב: לא ניתן לבטל פעולה זו!</p>
+            <p className="text-xs text-destructive/80">⚠️ ניתן לבחור אילו קטגוריות לאפס — הכל או רק חלק. שימו לב: לא ניתן לבטל פעולה זו!</p>
             <Button variant="destructive" size="sm" className="gap-1.5 w-full"
-              onClick={() => { setResetPassword(''); setResetPasswordConfirm(''); setResetPasswordError(''); setShowResetPassword(true); }} disabled={resetting}>
-              <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס כל הנתונים'}
+              onClick={() => { setResetPassword(''); setResetPasswordConfirm(''); setResetPasswordError(''); setResetCategories([]); setShowResetPassword(true); }} disabled={resetting}>
+              <Trash2 className="h-3.5 w-3.5" />{resetting ? 'מאפס...' : 'איפוס נתונים'}
             </Button>
           </div>
         </AccordionContent>
