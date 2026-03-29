@@ -251,34 +251,7 @@ export default function StudentDashboard() {
     setDailySummary(null);
   }, [selectedStudentId]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center p-12">
-        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-      </div>
-    );
-  }
-
-  if (!selectedStudent) {
-    return (
-      <div className="space-y-4 max-w-2xl mx-auto animate-fade-in">
-        <div className="text-center py-12">
-          <p className="text-muted-foreground text-sm">לא נמצא חשבון משויך.</p>
-          <p className="text-muted-foreground text-xs mt-1">יש לפנות למנהל המערכת.</p>
-        </div>
-      </div>
-    );
-  }
-
-  const greeting = getGreeting();
-  const GreetingIcon = greeting.icon;
-  const todayStr = getTodayHebrew();
-
-  // Quick stats
-  const positiveReports = reports.filter(r => r.behavior_types?.includes('respectful')).length;
-  const totalReports = reports.length;
-
-  // Filtered reports for the reports panel
+  // Filtered reports for the reports panel (must be before early returns)
   const dateFilteredReports = useMemo(() => {
     return allReports.filter(r => {
       const reportDate = startOfDay(new Date(r.report_date));
@@ -306,6 +279,33 @@ export default function StudentDashboard() {
   const visibleReports = reportSubjectFilter === 'all'
     ? dateFilteredReports
     : dateFilteredReports.filter(r => r.lesson_subject === reportSubjectFilter);
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center p-12">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </div>
+    );
+  }
+
+  if (!selectedStudent) {
+    return (
+      <div className="space-y-4 max-w-2xl mx-auto animate-fade-in">
+        <div className="text-center py-12">
+          <p className="text-muted-foreground text-sm">לא נמצא חשבון משויך.</p>
+          <p className="text-muted-foreground text-xs mt-1">יש לפנות למנהל המערכת.</p>
+        </div>
+      </div>
+    );
+  }
+
+  const greeting = getGreeting();
+  const GreetingIcon = greeting.icon;
+  const todayStr = getTodayHebrew();
+
+  // Quick stats
+  const positiveReports = reports.filter(r => r.behavior_types?.includes('respectful')).length;
+  const totalReports = reports.length;
 
   const SectionHeader = ({ title, icon: Icon, count, sectionKey, color }: {
     title: string; icon: React.ElementType; count?: number; sectionKey: string; color?: string;
