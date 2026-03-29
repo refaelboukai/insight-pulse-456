@@ -518,50 +518,136 @@ export default function StudentDashboard() {
     </div>
   );
 
-  const renderReportsPanel = () => (
-    <div className="space-y-2">
-      {reports.length === 0 ? (
-        <div className="text-center py-8">
-          <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3"><FileText className="h-5 w-5 text-muted-foreground" /></div>
-          <p className="text-sm text-muted-foreground">עדיין אין דיווחים להיום</p>
-          <p className="text-xs text-muted-foreground/60 mt-1">הדיווחים יופיעו כאן במהלך היום</p>
+  const renderReportsPanel = () => {
+    const filterButtons: { key: typeof reportDateFilter; label: string }[] = [
+      { key: 'today', label: 'היום' },
+      { key: 'yesterday', label: 'אתמול' },
+      { key: 'week', label: 'השבוע' },
+      { key: 'custom', label: 'טווח תאריכים' },
+    ];
+
+    return (
+      <div className="space-y-3">
+        {/* Date filter */}
+        <div className="flex flex-wrap gap-1.5">
+          {filterButtons.map(fb => (
+            <button key={fb.key} onClick={() => setReportDateFilter(fb.key)}
+              className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-all ${
+                reportDateFilter === fb.key
+                  ? 'bg-primary text-primary-foreground border-primary'
+                  : 'bg-card text-muted-foreground border-border hover:border-primary/30'
+              }`}>
+              {fb.label}
+            </button>
+          ))}
         </div>
-      ) : (
-        reports.map(r => (
-          <div key={r.id} className="p-3.5 rounded-xl border bg-card hover:shadow-sm transition-shadow">
-            <div className="flex justify-between items-center mb-2.5">
-              <p className="font-bold text-sm">{r.lesson_subject}</p>
-              <span className="text-xs text-muted-foreground bg-muted rounded-md px-2 py-0.5">
-                {new Date(r.report_date).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit' })}
-              </span>
-            </div>
-            <div className="flex flex-wrap gap-1.5">
-              <AttendanceBadge status={r.attendance} />
-              {r.behavior_types?.map(b => <BehaviorBadge key={b} type={b} allTypes={r.behavior_types} />)}
-              {r.participation?.map(p => <ParticipationBadge key={p} level={p} />)}
-            </div>
-            {r.comment && <p className="text-xs text-muted-foreground mt-2 bg-muted/50 rounded-lg px-3 py-2 border leading-relaxed">{r.comment}</p>}
+
+        {/* Custom date pickers */}
+        {reportDateFilter === 'custom' && (
+          <div className="flex gap-2 items-center">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("text-xs h-8 gap-1", !reportCustomFrom && "text-muted-foreground")}>
+                  <CalendarDays className="h-3 w-3" />
+                  {reportCustomFrom ? format(reportCustomFrom, 'dd/MM/yy') : 'מתאריך'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarPicker mode="single" selected={reportCustomFrom} onSelect={setReportCustomFrom} initialFocus className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+            <span className="text-xs text-muted-foreground">עד</span>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="sm" className={cn("text-xs h-8 gap-1", !reportCustomTo && "text-muted-foreground")}>
+                  <CalendarDays className="h-3 w-3" />
+                  {reportCustomTo ? format(reportCustomTo, 'dd/MM/yy') : 'עד תאריך'}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <CalendarPicker mode="single" selected={reportCustomTo} onSelect={setReportCustomTo} initialFocus className="p-3 pointer-events-auto" />
+              </PopoverContent>
+            </Popover>
+            {(reportCustomFrom || reportCustomTo) && (
+              <Button variant="ghost" size="sm" className="text-xs h-8" onClick={() => { setReportCustomFrom(undefined); setReportCustomTo(undefined); }}>נקה</Button>
+            )}
           </div>
-        ))
-      )}
-      {/* AI Summary */}
-      {reports.length > 0 && (
-        <div className="mt-3 p-3 rounded-xl border bg-muted/20 space-y-2">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-accent" /> סיכום יומי חכם</span>
-            <Button onClick={generateSummary} disabled={summaryLoading} size="sm" className="gap-1 text-[10px] h-7 px-2.5 rounded-lg">
-              {summaryLoading ? <><Loader2 className="h-3 w-3 animate-spin" /> מכין...</> : 'צור סיכום'}
-            </Button>
+        )}
+
+        {/* Subject filter */}
+        {reportSubjects.length > 1 && (
+          <div className="flex flex-wrap gap-1.5">
+            <button onClick={() => setReportSubjectFilter('all')}
+              className={`px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ${
+                reportSubjectFilter === 'all' ? 'bg-primary/10 text-primary border-primary/30' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/20'
+              }`}>
+              כל המקצועות ({dateFilteredReports.length})
+            </button>
+            {reportSubjects.map(subj => {
+              const count = dateFilteredReports.filter(r => r.lesson_subject === subj).length;
+              return (
+                <button key={subj} onClick={() => setReportSubjectFilter(subj)}
+                  className={`px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ${
+                    reportSubjectFilter === subj ? 'bg-primary/10 text-primary border-primary/30' : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/20'
+                  }`}>
+                  {subj} ({count})
+                </button>
+              );
+            })}
           </div>
-          {dailySummary && <p className="text-sm leading-relaxed text-foreground whitespace-pre-line rounded-lg border bg-card p-3">{dailySummary}</p>}
-        </div>
-      )}
-      {/* Trend Charts */}
-      {reports.length >= 2 && (
-        <ReportTrendCharts reports={reports} />
-      )}
-    </div>
-  );
+        )}
+
+        {/* Reports count */}
+        <p className="text-[10px] text-muted-foreground">
+          {visibleReports.length === 0 ? 'אין דיווחים בתקופה זו' : `${visibleReports.length} דיווחים`}
+        </p>
+
+        {visibleReports.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mx-auto mb-3"><FileText className="h-5 w-5 text-muted-foreground" /></div>
+            <p className="text-sm text-muted-foreground">
+              {reportDateFilter === 'today' ? 'עדיין אין דיווחים להיום' : 'אין דיווחים בתקופה זו'}
+            </p>
+          </div>
+        ) : (
+          visibleReports.map(r => (
+            <div key={r.id} className="p-3.5 rounded-xl border bg-card hover:shadow-sm transition-shadow">
+              <div className="flex justify-between items-center mb-2.5">
+                <p className="font-bold text-sm">{r.lesson_subject}</p>
+                <span className="text-xs text-muted-foreground bg-muted rounded-md px-2 py-0.5">
+                  {format(new Date(r.report_date), 'dd/MM/yyyy HH:mm', { locale: he })}
+                </span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                <AttendanceBadge status={r.attendance} />
+                {r.behavior_types?.map(b => <BehaviorBadge key={b} type={b} allTypes={r.behavior_types} />)}
+                {r.participation?.map(p => <ParticipationBadge key={p} level={p} />)}
+              </div>
+              {r.comment && <p className="text-xs text-muted-foreground mt-2 bg-muted/50 rounded-lg px-3 py-2 border leading-relaxed">{r.comment}</p>}
+            </div>
+          ))
+        )}
+
+        {/* AI Summary (today only) */}
+        {reports.length > 0 && reportDateFilter === 'today' && (
+          <div className="mt-3 p-3 rounded-xl border bg-muted/20 space-y-2">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-semibold flex items-center gap-1.5"><Sparkles className="h-3.5 w-3.5 text-accent" /> סיכום יומי חכם</span>
+              <Button onClick={generateSummary} disabled={summaryLoading} size="sm" className="gap-1 text-[10px] h-7 px-2.5 rounded-lg">
+                {summaryLoading ? <><Loader2 className="h-3 w-3 animate-spin" /> מכין...</> : 'צור סיכום'}
+              </Button>
+            </div>
+            {dailySummary && <p className="text-sm leading-relaxed text-foreground whitespace-pre-line rounded-lg border bg-card p-3">{dailySummary}</p>}
+          </div>
+        )}
+
+        {/* Trend Charts */}
+        {allReports.length >= 2 && (
+          <ReportTrendCharts reports={allReports} />
+        )}
+      </div>
+    );
+  };
 
   const renderGradesPanel = () => (
     <div className="space-y-1.5">
