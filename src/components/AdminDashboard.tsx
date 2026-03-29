@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import StudentDetailDialog from '@/components/StudentDetailDialog';
 import CodesManager from '@/components/CodesManager';
 import SubjectManager from '@/components/SubjectManager';
+import ReportCardPreview from '@/components/ReportCardPreview';
 import WeeklySupportSummary from '@/components/WeeklySupportSummary';
 import StudentScheduleManager from '@/components/StudentScheduleManager';
 import SmsReminderSection from '@/components/SmsReminderSection';
@@ -156,6 +157,8 @@ export default function AdminDashboard() {
   const [resetCategories, setResetCategories] = useState<string[]>([]);
   const [generatingCard, setGeneratingCard] = useState<string | null>(null);
   const [reportCardSemester, setReportCardSemester] = useState<string>('all');
+  const [previewStudent, setPreviewStudent] = useState<Student | null>(null);
+  const [previewData, setPreviewData] = useState<any>(null);
 
   // Edit report
   const [editingReport, setEditingReport] = useState<Report | null>(null);
@@ -449,9 +452,8 @@ export default function AdminDashboard() {
         const summary = computeReflectionSummary(student.id, mode, reflectionCustomFrom[student.id], reflectionCustomTo[student.id]);
         if (summary) reflectionSummary = summary.averages;
       }
-      const blob = await generateReportCard({
-        studentName: `${student.first_name} ${student.last_name}`, className: student.class_name || '',
-        semesterLabel: SEMESTER_LABELS[reportCardSemester] || '', gender: student.gender,
+      setPreviewStudent(student);
+      setPreviewData({
         grades: (grades || []).map((g: any) => ({ subject: g.subject, grade: g.grade, verbal_evaluation: g.verbal_evaluation, ai_enhanced_evaluation: g.ai_enhanced_evaluation })),
         personalNote: latestEval?.personal_note || null,
         teamEvaluation: latestEval ? {
@@ -466,10 +468,7 @@ export default function AdminDashboard() {
         reflectionSummary,
         socialEmotionalSummary: latestEval?.social_emotional_summary || null,
       });
-      const semSuffix = reportCardSemester === 'all' ? 'שנתי' : SEMESTER_LABELS[reportCardSemester];
-      downloadBlob(blob, `תעודה_${semSuffix}_${student.first_name}_${student.last_name}.pdf`);
-      toast.success(`תעודה הופקה עבור ${student.first_name}`);
-    } catch { toast.error('שגיאה בהפקת התעודה'); } finally { setGeneratingCard(null); }
+    } catch { toast.error('שגיאה בטעינת נתוני התעודה'); } finally { setGeneratingCard(null); }
   };
 
   const openEditReport = (r: Report) => {
@@ -1719,6 +1718,22 @@ export default function AdminDashboard() {
           )}
         </DialogContent>
       </Dialog>
+
+      {/* Report Card Preview */}
+      {previewStudent && previewData && (
+        <ReportCardPreview
+          open={!!previewStudent}
+          onOpenChange={(open) => { if (!open) { setPreviewStudent(null); setPreviewData(null); } }}
+          student={previewStudent}
+          semester={reportCardSemester}
+          semesterLabel={SEMESTER_LABELS[reportCardSemester] || ''}
+          grades={previewData.grades}
+          personalNote={previewData.personalNote}
+          teamEvaluation={previewData.teamEvaluation}
+          reflectionSummary={previewData.reflectionSummary}
+          socialEmotionalSummary={previewData.socialEmotionalSummary}
+        />
+      )}
     </div>
   );
 }
