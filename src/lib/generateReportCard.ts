@@ -357,10 +357,10 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
     </div>
   `;
 
-  // ── Build section map ──
-  const sectionHtmlMap: Record<string, string> = {
+  // ── Build section map (teamEvaluation expands into sub-blocks to prevent page-cut) ──
+  const sectionHtmlMap: Record<string, string | string[]> = {
     personalNote: personalNoteHtml,
-    teamEvaluation: teamTableHtml,
+    teamEvaluation: teamSubBlocks.length > 0 ? [teamTitleHtml, ...teamSubBlocks] : '',
     socialEmotional: socialEmotionalHtml,
     reflections: reflectionHtml,
   };
@@ -369,14 +369,17 @@ export async function generateReportCard(data: ReportCardData): Promise<Blob> {
 
   const educatorTitle = `<div style="font-size:${sz(14)};font-weight:700;color:${colors.accent};margin-bottom:${sz(14)};text-align:center;letter-spacing:${sz(1)};">📝 דיווח ${g(data.gender, 'מחנך', 'מחנכת')}</div>`;
 
-  const page1Sections = [
-    educatorTitle,
-    ...order.map((k, i) => {
-      const html = sectionHtmlMap[k];
-      // Add a subtle divider between sections (not before the first)
-      return i > 0 && html ? sectionDivider + html : html;
-    }).filter(Boolean),
-  ].filter(Boolean);
+  const page1Sections: string[] = [educatorTitle];
+  order.forEach((k, i) => {
+    const val = sectionHtmlMap[k];
+    if (!val || (Array.isArray(val) && val.length === 0)) return;
+    if (i > 0) page1Sections.push(sectionDivider);
+    if (Array.isArray(val)) {
+      page1Sections.push(...val);
+    } else {
+      page1Sections.push(val);
+    }
+  });
 
   if (page1Sections.length <= 1) {
     page1Sections.push(`<div style="padding:${sz(30)};text-align:center;color:${colors.textLight};font-size:${sz(12)};">לא הוזנה הערכת ${g(data.gender, 'מחנך', 'מחנכת')}</div>`);
