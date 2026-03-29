@@ -832,8 +832,6 @@ export default function AdminDashboard() {
                     {dynamicClasses.map(c => (<SelectItem key={c} value={c}>הכיתה של {c}</SelectItem>))}
                     <SelectItem value="__custom__">➕ כיתה חדשה...</SelectItem>
                   </SelectContent>
-                    <SelectItem value="__custom__">➕ כיתה חדשה...</SelectItem>
-                  </SelectContent>
                 </Select>
                 {newClass === '__custom__' && (
                   <Input placeholder="שם הכיתה החדשה" value={customClassName} onChange={e => setCustomClassName(e.target.value)} className="h-10 text-sm" />
