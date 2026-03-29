@@ -446,25 +446,19 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
     return hebrewHolidays.get(dateStr) || [];
   };
 
+  // Today's birthdays
+  const todayBirthdays = birthdays.filter(b => {
+    const todayDate = new Date();
+    return b.dayOfMonth === todayDate.getDate() && month === todayDate.getMonth() && year === todayDate.getFullYear();
+  });
+
   return (
-    <div className="space-y-4 -mx-3 sm:mx-0">
+    <div className="space-y-4 -mx-6 sm:-mx-4 lg:-mx-8 xl:-mx-12">
       {/* Header */}
       <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-4 mx-3 sm:mx-0">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <button onClick={nextMonth} className="p-3 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
-              <ChevronRight className="h-6 w-6 text-primary" />
-            </button>
-            <div className="text-center min-w-[160px]">
-              <h3 className="text-xl font-bold text-foreground">{HEBREW_MONTHS[month]}</h3>
-              <p className="text-sm text-muted-foreground">{year}</p>
-            </div>
-            <button onClick={prevMonth} className="p-3 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
-              <ChevronLeft className="h-6 w-6 text-primary" />
-            </button>
-          </div>
           {editable && (
-            <div className="flex gap-1.5 flex-wrap justify-end">
+            <div className="flex gap-1.5 flex-wrap justify-start">
               <Button size="sm" variant="ghost" className="h-8 text-xs gap-1 text-muted-foreground hover:text-primary" onClick={handleDownloadTemplate}>
                 <Download className="h-3.5 w-3.5" />
               </Button>
@@ -480,8 +474,37 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
               </Button>
             </div>
           )}
+          <div className="flex items-center gap-2 mr-auto">
+            <button onClick={nextMonth} className="p-3 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
+              <ChevronRight className="h-6 w-6 text-primary" />
+            </button>
+            <div className="text-center min-w-[160px]">
+              <h3 className="text-xl font-bold text-foreground">{HEBREW_MONTHS[month]}</h3>
+              <p className="text-sm text-muted-foreground">{year}</p>
+            </div>
+            <button onClick={prevMonth} className="p-3 rounded-xl hover:bg-primary/10 transition-all active:scale-95">
+              <ChevronLeft className="h-6 w-6 text-primary" />
+            </button>
+          </div>
         </div>
       </div>
+
+      {/* Today's birthdays banner */}
+      {todayBirthdays.length > 0 && (
+        <div className="rounded-2xl bg-gradient-to-l from-amber-100 via-yellow-50 to-amber-50 dark:from-amber-950/40 dark:via-yellow-950/20 dark:to-amber-950/30 border border-amber-200 dark:border-amber-800/40 p-4 mx-3 sm:mx-0 flex items-center gap-3 shadow-sm">
+          <div className="text-3xl">🎂</div>
+          <div className="flex-1">
+            <p className="text-sm font-bold text-amber-900 dark:text-amber-200">יום הולדת שמח היום!</p>
+            <div className="flex flex-wrap gap-2 mt-1">
+              {todayBirthdays.map(b => (
+                <Badge key={b.id} className="bg-amber-200/80 text-amber-900 dark:bg-amber-800/60 dark:text-amber-100 border-amber-300 dark:border-amber-700 text-sm px-3 py-1">
+                  🎉 {b.name} (בן/בת {b.age})
+                </Badge>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Calendar Grid */}
       <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm mx-3 sm:mx-0">
