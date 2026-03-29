@@ -56,6 +56,12 @@ function participationScore(levels: string[]): number {
   return 2.5;
 }
 
+const METRIC_Y_LABELS: Record<MetricKey, Record<number, string>> = {
+  attendance: { 1: 'חיסור', 2: 'חלקית', 3: 'מלאה' },
+  behavior: { 1: 'אלימה', 2: 'מפריעה', 3: 'סבירה', 4: 'מכבדת' },
+  participation: { 1: 'אין תפקוד', 2: 'חלקי', 3: 'משימות', 4: 'פעיל' },
+};
+
 const METRIC_LABELS: Record<MetricKey, Record<number, string>> = {
   attendance: { 1: 'חיסור', 2: 'חלקית', 3: 'מלאה' },
   behavior: { 1: 'אלימה', 2: 'מפריעה', 3: 'בינונית', 4: 'מכבדת' },
