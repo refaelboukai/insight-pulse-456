@@ -491,7 +491,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
 
       {/* Today's birthdays banner */}
       {todayBirthdays.length > 0 && (
-        <div className="rounded-2xl bg-gradient-to-l from-amber-100 via-yellow-50 to-amber-50 dark:from-amber-950/40 dark:via-yellow-950/20 dark:to-amber-950/30 border border-amber-200 dark:border-amber-800/40 p-4 mx-3 sm:mx-0 flex items-center gap-3 shadow-sm">
+        <div className="rounded-2xl bg-gradient-to-l from-amber-100 via-yellow-50 to-amber-50 dark:from-amber-950/40 dark:via-yellow-950/20 dark:to-amber-950/30 border border-amber-200 dark:border-amber-800/40 p-4 flex items-center gap-3 shadow-sm">
           <div className="text-3xl">🎂</div>
           <div className="flex-1">
             <p className="text-sm font-bold text-amber-900 dark:text-amber-200">יום הולדת שמח היום!</p>
