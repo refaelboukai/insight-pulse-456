@@ -77,7 +77,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedYear, setSelectedYear] = useState(SCHOOL_YEARS[0]);
 
-  const [mainView, setMainView] = useState<'management' | 'tali' | 'eden'>('management');
+  const [mainView, setMainView] = useState<string>('management');
   const [activePanel, setActivePanel] = useState<string | null>(null);
 
   // Events time filter
