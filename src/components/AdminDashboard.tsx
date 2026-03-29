@@ -41,7 +41,15 @@ type Student = Database['public']['Tables']['students']['Row'];
 type Alert = Database['public']['Tables']['alerts']['Row'];
 type ExceptionalEvent = Database['public']['Tables']['exceptional_events']['Row'];
 
-const CLASS_OPTIONS = ['טלי', 'עדן'];
+// Dynamic class list - derived from students data
+const PASTEL_COLORS = [
+  { activeBg: 'bg-emerald-100 dark:bg-emerald-950/40', activeText: 'text-emerald-700 dark:text-emerald-300', activeBorder: 'border-emerald-400 dark:border-emerald-600' },
+  { activeBg: 'bg-sky-100 dark:bg-sky-950/40', activeText: 'text-sky-700 dark:text-sky-300', activeBorder: 'border-sky-400 dark:border-sky-600' },
+  { activeBg: 'bg-rose-100 dark:bg-rose-950/40', activeText: 'text-rose-700 dark:text-rose-300', activeBorder: 'border-rose-400 dark:border-rose-600' },
+  { activeBg: 'bg-amber-100 dark:bg-amber-950/40', activeText: 'text-amber-700 dark:text-amber-300', activeBorder: 'border-amber-400 dark:border-amber-600' },
+  { activeBg: 'bg-purple-100 dark:bg-purple-950/40', activeText: 'text-purple-700 dark:text-purple-300', activeBorder: 'border-purple-400 dark:border-purple-600' },
+  { activeBg: 'bg-teal-100 dark:bg-teal-950/40', activeText: 'text-teal-700 dark:text-teal-300', activeBorder: 'border-teal-400 dark:border-teal-600' },
+];
 const SCHOOL_YEARS = ['תשפ"ו', 'תשפ"ז', 'תשפ"ח', 'תשפ"ט'];
 const PEDAGOGY_MONTHS = ['ספטמבר','אוקטובר','נובמבר','דצמבר','ינואר','פברואר','מרץ','אפריל','מאי','יוני','יולי','אוגוסט'];
 
