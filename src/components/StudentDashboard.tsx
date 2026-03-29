@@ -20,7 +20,8 @@ import {
 } from '@/lib/constants';
 import { AttendanceBadge, BehaviorBadge, ParticipationBadge } from '@/components/ReportBadges';
 import ReportTrendCharts from '@/components/ReportTrendCharts';
-import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, ChevronLeft, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile, Star, Pin, PinOff, MessageSquareText } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, ChevronLeft, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile, Star, Pin, PinOff, MessageSquareText, ShieldCheck } from 'lucide-react';
+import ResetCalmZone from '@/components/ResetCalmZone';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
@@ -780,6 +781,7 @@ export default function StudentDashboard() {
     { key: 'support', icon: HeartHandshake, label: 'תכנית תמיכה', value: assignments.length, iconBg: 'bg-[hsl(145,40%,90%)]', iconColor: 'text-[hsl(145,40%,30%)]' },
     ...(hasSchedule ? [{ key: 'schedule', icon: Calendar, label: 'מערכת שעות', iconBg: 'bg-[hsl(220,45%,92%)]', iconColor: 'text-[hsl(220,45%,35%)]' }] : []),
     ...(weeklySummaries.length > 0 ? [{ key: 'weekly_summary', icon: MessageSquareText, label: 'סיכום מחנכות', value: weeklySummaries.length, iconBg: 'bg-[hsl(50,55%,90%)]', iconColor: 'text-[hsl(50,55%,30%)]' }] : []),
+    { key: 'calm_zone', icon: ShieldCheck, label: 'אזור הרגעה', iconBg: 'bg-[hsl(180,40%,90%)]', iconColor: 'text-[hsl(180,40%,30%)]' },
   ];
 
   // If a panel is open, render it
@@ -793,12 +795,14 @@ export default function StudentDashboard() {
       support: renderSupportPanel(),
       schedule: renderSchedulePanel(),
       weekly_summary: renderWeeklySummaryPanel(),
+      calm_zone: <ResetCalmZone />,
     };
     const panelLabels: Record<string, string> = {
       reflection: 'היום שלי',
       reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
       exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
       weekly_summary: 'סיכום שבועי מהמחנכת',
+      calm_zone: 'אזור הרגעה',
     };
     const currentCard = studentCards.find(c => c.key === activePanel);
     const isPinned = pinnedPanels.has(activePanel);
@@ -893,12 +897,14 @@ export default function StudentDashboard() {
           exams: renderExamsPanel, support: renderSupportPanel,
           schedule: renderSchedulePanel,
           weekly_summary: renderWeeklySummaryPanel,
+          calm_zone: () => <ResetCalmZone />,
         };
         const pinnedLabels: Record<string, string> = {
           reflection: 'היום שלי',
           reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
           exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
           weekly_summary: 'סיכום שבועי מהמחנכת',
+          calm_zone: 'אזור הרגעה',
         };
         return [...pinnedPanels].map(key => {
           const card = studentCards.find(c => c.key === key);
