@@ -507,7 +507,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
       )}
 
       {/* Calendar Grid */}
-      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm mx-3 sm:mx-0">
+      <div className="rounded-2xl border border-border/50 bg-card overflow-hidden shadow-sm">
         {/* Day headers */}
         <div className="grid grid-cols-7 bg-primary/8">
           {HEBREW_DAYS.map((d, idx) => (
