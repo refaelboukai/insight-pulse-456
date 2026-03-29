@@ -172,19 +172,36 @@ export default function SupportPlanForm() {
 
   return (
     <div className="space-y-3 max-w-2xl mx-auto">
-      <div className="card-styled rounded-2xl p-3">
-        <p className="text-sm font-bold mb-2">בחר/י את שמך</p>
-        <Select value={selectedStaffId} onValueChange={setSelectedStaffId}>
-          <SelectTrigger className="h-11 text-sm">
-            <SelectValue placeholder="בחר/י איש צוות" />
-          </SelectTrigger>
-          <SelectContent>
+      {!selectedStaffId ? (
+        <div className="space-y-3">
+          <p className="text-sm font-bold text-center">בחר/י את שמך</p>
+          <div className="grid grid-cols-3 gap-2">
             {staffMembers.map(sm => (
-              <SelectItem key={sm.id} value={sm.id}>{sm.name}</SelectItem>
+              <button
+                key={sm.id}
+                onClick={() => setSelectedStaffId(sm.id)}
+                className="card-styled rounded-2xl p-4 text-center transition-all hover:shadow-md hover:border-primary/40 hover:bg-primary/5 active:scale-95"
+              >
+                <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center mx-auto mb-2 text-lg font-bold">
+                  {sm.name.charAt(0)}
+                </div>
+                <p className="text-sm font-semibold leading-tight">{sm.name}</p>
+              </button>
             ))}
-          </SelectContent>
-        </Select>
-      </div>
+          </div>
+        </div>
+      ) : (
+        <>
+          <button
+            onClick={() => setSelectedStaffId('')}
+            className="card-styled rounded-2xl p-2.5 flex items-center gap-2 w-full hover:bg-muted/50 transition-colors"
+          >
+            <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center text-sm font-bold">
+              {staffMembers.find(s => s.id === selectedStaffId)?.name.charAt(0)}
+            </div>
+            <p className="text-sm font-bold flex-1 text-right">{staffMembers.find(s => s.id === selectedStaffId)?.name}</p>
+            <span className="text-xs text-muted-foreground">החלף ←</span>
+          </button>
 
       {selectedStaffId && assignments.length === 0 && (
         <div className="card-styled rounded-2xl p-6 text-center">
@@ -274,6 +291,8 @@ export default function SupportPlanForm() {
             {assignments.filter(a => getCompletionCount(a) >= (a.frequency_count || 1)).length}/{assignments.length} הושלמו {assignments.some(a => a.frequency === 'weekly') ? 'השבוע' : 'היום'}
           </p>
         </div>
+      )}
+        </>
       )}
     </div>
   );
