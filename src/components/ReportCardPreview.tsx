@@ -1,11 +1,11 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Eye, Download, Share2, Pencil, Save, X, GraduationCap, ChevronUp, ChevronDown } from 'lucide-react';
+import { Eye, Download, Share2, Pencil, Save, GraduationCap, ChevronUp, ChevronDown, GripVertical } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { shareOrDownload, downloadBlob } from '@/lib/downloadFile';
 import { toast } from 'sonner';
@@ -81,12 +81,15 @@ const TEAM_LABELS: Record<string, string> = {
   cognitive_flexibility: 'גמישות מחשבתית', self_efficacy: 'מסוגלות עצמית',
 };
 
+const DEFAULT_ORDER = SECTION_OPTIONS.map(s => s.key);
+
 export default function ReportCardPreview({
   open, onOpenChange, student, semester, semesterLabel,
   grades: initialGrades, personalNote: initialNote,
   teamEvaluation: initialTeamEval, reflectionSummary, socialEmotionalSummary: initialSocialSummary,
 }: ReportCardPreviewProps) {
-  const [enabledSections, setEnabledSections] = useState<Set<string>>(new Set(SECTION_OPTIONS.map(s => s.key)));
+  const [enabledSections, setEnabledSections] = useState<Set<string>>(new Set(DEFAULT_ORDER));
+  const [sectionOrder, setSectionOrder] = useState<string[]>(DEFAULT_ORDER);
   const [editingSection, setEditingSection] = useState<string | null>(null);
 
   // Editable data
@@ -105,7 +108,8 @@ export default function ReportCardPreview({
       setSocialEmotional(initialSocialSummary || '');
       setGrades(initialGrades);
       setTeamEval(initialTeamEval);
-      setEnabledSections(new Set(SECTION_OPTIONS.map(s => s.key)));
+      setEnabledSections(new Set(DEFAULT_ORDER));
+      setSectionOrder(DEFAULT_ORDER);
       setEditingSection(null);
       setPreviewUrl(null);
       setShowPreview(false);
@@ -117,6 +121,16 @@ export default function ReportCardPreview({
       const next = new Set(prev);
       if (next.has(key)) next.delete(key);
       else next.add(key);
+      return next;
+    });
+  };
+
+  const moveSection = (index: number, direction: 'up' | 'down') => {
+    setSectionOrder(prev => {
+      const next = [...prev];
+      const targetIdx = direction === 'up' ? index - 1 : index + 1;
+      if (targetIdx < 0 || targetIdx >= next.length) return prev;
+      [next[index], next[targetIdx]] = [next[targetIdx], next[index]];
       return next;
     });
   };
@@ -149,7 +163,8 @@ export default function ReportCardPreview({
     teamEvaluation: enabledSections.has('teamEvaluation') ? teamEval : null,
     reflectionSummary: enabledSections.has('reflections') ? reflectionSummary : null,
     socialEmotionalSummary: enabledSections.has('socialEmotional') ? socialEmotional || null : null,
-  }), [enabledSections, grades, personalNote, teamEval, reflectionSummary, socialEmotional, student, semesterLabel]);
+    sectionOrder: sectionOrder.filter(k => enabledSections.has(k)),
+  }), [enabledSections, sectionOrder, grades, personalNote, teamEval, reflectionSummary, socialEmotional, student, semesterLabel]);
 
   const handlePreview = async () => {
     setGenerating(true);
@@ -195,23 +210,20 @@ export default function ReportCardPreview({
   // Save edits back to DB
   const handleSaveEdits = async () => {
     try {
-      // Save personal note & social emotional back to evaluations
-      if (personalNote !== initialNote || socialEmotional !== initialSocialSummary) {
-        const updates: any = {};
-        if (personalNote !== initialNote) updates.personal_note = personalNote;
-        if (socialEmotional !== initialSocialSummary) updates.social_emotional_summary = socialEmotional;
-        if (teamEval) {
-          Object.entries(teamEval).forEach(([k, v]) => {
-            if (v !== (initialTeamEval as any)?.[k]) updates[k] = v;
-          });
-        }
-        if (Object.keys(updates).length > 0) {
-          await supabase.from('student_evaluations')
-            .update(updates)
-            .eq('student_id', student.id)
-            .order('created_at', { ascending: false })
-            .limit(1);
-        }
+      const updates: any = {};
+      if (personalNote !== initialNote) updates.personal_note = personalNote;
+      if (socialEmotional !== initialSocialSummary) updates.social_emotional_summary = socialEmotional;
+      if (teamEval) {
+        Object.entries(teamEval).forEach(([k, v]) => {
+          if (v !== (initialTeamEval as any)?.[k]) updates[k] = v;
+        });
+      }
+      if (Object.keys(updates).length > 0) {
+        await supabase.from('student_evaluations')
+          .update(updates)
+          .eq('student_id', student.id)
+          .order('created_at', { ascending: false })
+          .limit(1);
       }
       // Save grade changes
       for (let i = 0; i < grades.length; i++) {
@@ -267,6 +279,8 @@ export default function ReportCardPreview({
     );
   }
 
+  const sectionOptionsMap = Object.fromEntries(SECTION_OPTIONS.map(s => [s.key, s]));
+
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent dir="rtl" className="max-w-lg max-h-[90vh] overflow-y-auto">
@@ -275,40 +289,56 @@ export default function ReportCardPreview({
             <GraduationCap className="h-4 w-4 text-primary" />
             הפקת תעודה — {student.first_name} {student.last_name}
           </DialogTitle>
-          <DialogDescription className="text-xs">בחר/י מה להציג ועריכת תוכן לפני ההפקה</DialogDescription>
+          <DialogDescription className="text-xs">בחר/י מה להציג, שנה סדר בלוקים, וערוך תוכן לפני ההפקה</DialogDescription>
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Section toggles */}
+          {/* Section toggles with reorder */}
           <div className="space-y-2">
-            <p className="text-xs font-bold text-muted-foreground">בחירת תבניות להצגה:</p>
-            <div className="grid grid-cols-1 gap-1.5">
-              {SECTION_OPTIONS.map(opt => {
-                const hasData = opt.key === 'personalNote' ? !!personalNote
-                  : opt.key === 'teamEvaluation' ? !!teamEval
-                  : opt.key === 'socialEmotional' ? !!socialEmotional
-                  : opt.key === 'reflections' ? !!reflectionSummary
-                  : opt.key === 'grades' ? grades.length > 0
+            <p className="text-xs font-bold text-muted-foreground">בחירת תבניות וסדר הצגה (גרור למעלה/למטה):</p>
+            <div className="grid grid-cols-1 gap-1">
+              {sectionOrder.map((key, idx) => {
+                const opt = sectionOptionsMap[key];
+                if (!opt) return null;
+                const hasData = key === 'personalNote' ? !!personalNote
+                  : key === 'teamEvaluation' ? !!teamEval
+                  : key === 'socialEmotional' ? !!socialEmotional
+                  : key === 'reflections' ? !!reflectionSummary
+                  : key === 'grades' ? grades.length > 0
                   : true;
                 return (
-                  <label key={opt.key} className="flex items-center gap-2.5 cursor-pointer hover:bg-muted/50 rounded-lg px-2.5 py-2 transition-colors">
-                    <Checkbox
-                      checked={enabledSections.has(opt.key)}
-                      onCheckedChange={() => toggleSection(opt.key)}
-                    />
-                    <span className="text-xs font-medium flex-1">{opt.label}</span>
-                    {!hasData && <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground">אין נתונים</Badge>}
+                  <div key={key} className="flex items-center gap-1.5 hover:bg-muted/50 rounded-lg px-2 py-1.5 transition-colors border border-transparent hover:border-border">
+                    {/* Reorder arrows */}
+                    <div className="flex flex-col gap-0">
+                      <button onClick={() => moveSection(idx, 'up')} disabled={idx === 0}
+                        className="text-muted-foreground hover:text-primary disabled:opacity-20 p-0.5">
+                        <ChevronUp className="h-3 w-3" />
+                      </button>
+                      <button onClick={() => moveSection(idx, 'down')} disabled={idx === sectionOrder.length - 1}
+                        className="text-muted-foreground hover:text-primary disabled:opacity-20 p-0.5">
+                        <ChevronDown className="h-3 w-3" />
+                      </button>
+                    </div>
+                    <GripVertical className="h-3.5 w-3.5 text-muted-foreground/50 shrink-0" />
+                    <label className="flex items-center gap-2 cursor-pointer flex-1 min-w-0">
+                      <Checkbox
+                        checked={enabledSections.has(key)}
+                        onCheckedChange={() => toggleSection(key)}
+                      />
+                      <span className="text-xs font-medium flex-1 truncate">{opt.label}</span>
+                    </label>
+                    {!hasData && <Badge variant="outline" className="text-[9px] px-1.5 py-0 text-muted-foreground shrink-0">אין נתונים</Badge>}
                     {hasData && (
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 px-1.5 text-[10px] gap-0.5 text-primary"
-                        onClick={(e) => { e.preventDefault(); setEditingSection(editingSection === opt.key ? null : opt.key); }}
+                        className="h-6 px-1.5 text-[10px] gap-0.5 text-primary shrink-0"
+                        onClick={() => setEditingSection(editingSection === key ? null : key)}
                       >
                         <Pencil className="h-3 w-3" /> ערוך
                       </Button>
                     )}
-                  </label>
+                  </div>
                 );
               })}
             </div>
