@@ -5,6 +5,7 @@ import SubjectManager from '@/components/SubjectManager';
 import WeeklySupportSummary from '@/components/WeeklySupportSummary';
 import StudentScheduleManager from '@/components/StudentScheduleManager';
 import SmsReminderSection from '@/components/SmsReminderSection';
+import ReportTrendCharts from '@/components/ReportTrendCharts';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
