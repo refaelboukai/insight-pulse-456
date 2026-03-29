@@ -922,32 +922,57 @@ export default function AdminDashboard() {
           <p className="text-center text-muted-foreground text-xs py-4">אין דיווחים לתלמיד זה</p>
         )}
 
-        {selectedReports.length > 0 && (
-          <div className="space-y-2 max-h-[400px] overflow-y-auto">
-            {selectedReports.slice(0, 30).map(r => (
-              <div key={r.id} className="p-2.5 rounded-xl border bg-card">
-                <div className="flex justify-between items-start mb-1.5">
-                  <p className="text-xs font-medium">{r.lesson_subject}</p>
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[10px] text-muted-foreground">{new Date(r.report_date).toLocaleDateString('he-IL')}</span>
-                    <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditReport(r)}><Pencil className="h-3 w-3 text-muted-foreground" /></Button>
-                  </div>
-                </div>
-                <div className="flex flex-wrap gap-1">
-                  <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
-                    {r.attendance === 'full' && <CheckCircle2 className="h-2.5 w-2.5 ml-0.5" />}
-                    {r.attendance === 'partial' && <Clock className="h-2.5 w-2.5 ml-0.5" />}
-                    {r.attendance === 'absent' && <XCircle className="h-2.5 w-2.5 ml-0.5" />}
-                    {ATTENDANCE_LABELS[r.attendance]}
-                  </Badge>
-                  {r.behavior_types?.map(b => <Badge key={b} variant={b === 'violent' ? 'destructive' : 'outline'} className="text-[10px] px-1.5 py-0">{BEHAVIOR_LABELS[b]}</Badge>)}
-                  {r.participation?.map(p => <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>)}
-                </div>
-                {r.comment && <p className="text-[10px] text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2 py-1">{r.comment}</p>}
-              </div>
-            ))}
-          </div>
+        {reportSelectedStudentId && selectedReports.length === 0 && (
+          <p className="text-center text-muted-foreground text-xs py-4">אין דיווחים לתלמיד זה</p>
         )}
+
+        {selectedReports.length > 0 && (
+          <>
+            <div className="space-y-2 max-h-[400px] overflow-y-auto">
+              {selectedReports.slice(0, 30).map(r => (
+                <div key={r.id} className="p-2.5 rounded-xl border bg-card">
+                  <div className="flex justify-between items-start mb-1.5">
+                    <p className="text-xs font-medium">{r.lesson_subject}</p>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[10px] text-muted-foreground">{new Date(r.report_date).toLocaleDateString('he-IL')}</span>
+                      <Button size="sm" variant="ghost" className="h-6 w-6 p-0" onClick={() => openEditReport(r)}><Pencil className="h-3 w-3 text-muted-foreground" /></Button>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1">
+                    <Badge variant="secondary" className="text-[10px] px-1.5 py-0">
+                      {r.attendance === 'full' && <CheckCircle2 className="h-2.5 w-2.5 ml-0.5" />}
+                      {r.attendance === 'partial' && <Clock className="h-2.5 w-2.5 ml-0.5" />}
+                      {r.attendance === 'absent' && <XCircle className="h-2.5 w-2.5 ml-0.5" />}
+                      {ATTENDANCE_LABELS[r.attendance]}
+                    </Badge>
+                    {r.behavior_types?.map(b => <Badge key={b} variant={b === 'violent' ? 'destructive' : 'outline'} className="text-[10px] px-1.5 py-0">{BEHAVIOR_LABELS[b]}</Badge>)}
+                    {r.participation?.map(p => <Badge key={p} variant="secondary" className="text-[10px] px-1.5 py-0">{PARTICIPATION_LABELS[p]}</Badge>)}
+                  </div>
+                  {r.comment && <p className="text-[10px] text-muted-foreground mt-1.5 bg-muted/50 rounded-lg px-2 py-1">{r.comment}</p>}
+                </div>
+              ))}
+            </div>
+            {/* Trend chart for selected student */}
+            {selectedReports.length >= 2 && (
+              <ReportTrendCharts
+                reports={selectedReports}
+                title={`מגמות - ${filteredStudents.find(s => s.id === reportSelectedStudentId)?.first_name || ''}`}
+                compact
+              />
+            )}
+          </>
+        )}
+
+        {/* Class-level trend chart */}
+        {!reportSelectedStudentId && classFilter && (() => {
+          const classReports = getClassReports(classFilter);
+          return classReports.length >= 2 ? (
+            <ReportTrendCharts
+              reports={classReports}
+              title={`מגמות כיתת ${classFilter}`}
+            />
+          ) : null;
+        })()}
       </div>
     );
   };
