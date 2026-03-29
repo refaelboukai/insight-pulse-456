@@ -548,7 +548,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
               >
                 {/* Date numbers row */}
                 <div className="flex items-start justify-between mb-1">
-                    <span className="text-[10px] sm:text-xs text-muted-foreground leading-none mt-0.5 font-semibold">
+                    <span className="text-[9px] sm:text-[10px] lg:text-xs text-muted-foreground leading-none mt-0.5 font-semibold whitespace-nowrap overflow-hidden text-ellipsis max-w-[70px] sm:max-w-[90px] lg:max-w-none">
                     {getHebrewDay(year, month, day)}
                   </span>
                   <span className={`text-sm sm:text-base font-bold leading-none inline-flex items-center justify-center rounded-full
