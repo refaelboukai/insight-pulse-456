@@ -1544,39 +1544,73 @@ export default function AdminDashboard() {
         </DialogContent>
       </Dialog>
 
-      {/* Reset Password Dialog - Double Code */}
+      {/* Reset Password Dialog with Category Selection */}
       <Dialog open={showResetPassword} onOpenChange={setShowResetPassword}>
-        <DialogContent dir="rtl" className="max-w-xs">
+        <DialogContent dir="rtl" className="max-w-md max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="text-sm flex items-center gap-2"><Trash2 className="h-4 w-4 text-destructive" /> אימות כפול — איפוס מערכת</DialogTitle>
-            <DialogDescription className="text-xs">יש להזין את קוד המנהל פעמיים לאישור המחיקה</DialogDescription>
+            <DialogTitle className="text-sm flex items-center gap-2"><Trash2 className="h-4 w-4 text-destructive" /> איפוס נתונים — בחירת קטגוריות</DialogTitle>
+            <DialogDescription className="text-xs">בחר אילו קטגוריות למחוק, ואשר עם קוד מנהל</DialogDescription>
           </DialogHeader>
           <div className="space-y-3">
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה ראשונה:</label>
-              <Input type="password" placeholder="קוד מנהל" value={resetPassword} onChange={e => { setResetPassword(e.target.value); setResetPasswordError(''); }}
-                className="h-10 text-sm" />
+            {/* Select all / deselect all */}
+            <div className="flex items-center justify-between border-b pb-2">
+              <label className="text-xs font-bold text-foreground">קטגוריות למחיקה:</label>
+              <Button variant="outline" size="sm" className="text-xs h-7 px-2"
+                onClick={() => {
+                  if (resetCategories.length === RESET_CATEGORIES.length) setResetCategories([]);
+                  else setResetCategories(RESET_CATEGORIES.map(c => c.key));
+                }}>
+                {resetCategories.length === RESET_CATEGORIES.length ? 'בטל הכל' : 'בחר הכל'}
+              </Button>
             </div>
-            <div>
-              <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה שנייה:</label>
-              <Input type="password" placeholder="הזן שוב לאישור" value={resetPasswordConfirm} onChange={e => { setResetPasswordConfirm(e.target.value); setResetPasswordError(''); }}
-                onKeyDown={e => { if (e.key === 'Enter') handleResetPasswordSubmit(); }} className="h-10 text-sm" />
+            <div className="grid grid-cols-1 gap-1.5 max-h-[280px] overflow-y-auto pr-1">
+              {RESET_CATEGORIES.map(cat => (
+                <label key={cat.key} className="flex items-center gap-2 cursor-pointer hover:bg-muted/50 rounded px-2 py-1.5 transition-colors">
+                  <Checkbox
+                    checked={resetCategories.includes(cat.key)}
+                    onCheckedChange={(checked) => {
+                      if (checked) setResetCategories(prev => [...prev, cat.key]);
+                      else setResetCategories(prev => prev.filter(k => k !== cat.key));
+                    }}
+                  />
+                  <span className="text-xs">{cat.label}</span>
+                </label>
+              ))}
+            </div>
+            {resetCategories.length > 0 && (
+              <p className="text-xs text-muted-foreground">נבחרו {resetCategories.length} מתוך {RESET_CATEGORIES.length} קטגוריות</p>
+            )}
+            <div className="border-t pt-3 space-y-2">
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה ראשונה:</label>
+                <Input type="password" placeholder="קוד מנהל" value={resetPassword} onChange={e => { setResetPassword(e.target.value); setResetPasswordError(''); }}
+                  className="h-10 text-sm" />
+              </div>
+              <div>
+                <label className="text-xs font-medium text-muted-foreground mb-1 block">קוד מנהל — הזנה שנייה:</label>
+                <Input type="password" placeholder="הזן שוב לאישור" value={resetPasswordConfirm} onChange={e => { setResetPasswordConfirm(e.target.value); setResetPasswordError(''); }}
+                  onKeyDown={e => { if (e.key === 'Enter') handleResetPasswordSubmit(); }} className="h-10 text-sm" />
+              </div>
             </div>
             {resetPasswordError && <p className="text-xs text-destructive font-medium">{resetPasswordError}</p>}
           </div>
           <DialogFooter className="gap-2 sm:gap-0">
             <Button variant="ghost" size="sm" onClick={() => setShowResetPassword(false)}>ביטול</Button>
-            <Button variant="destructive" size="sm" onClick={handleResetPasswordSubmit}>אישור איפוס</Button>
+            <Button variant="destructive" size="sm" onClick={handleResetPasswordSubmit} disabled={resetCategories.length === 0}>אישור איפוס</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       <AlertDialog open={showResetConfirm} onOpenChange={setShowResetConfirm}>
-        <AlertDialogContent dir="rtl" className="max-w-xs">
+        <AlertDialogContent dir="rtl" className="max-w-sm">
           <AlertDialogHeader>
             <AlertDialogTitle className="text-sm">האם אתה בטוח?</AlertDialogTitle>
-            <AlertDialogDescription className="text-xs">
-              פעולה זו תמחק את כל הנתונים.<br /><strong className="text-destructive">אינה ניתנת לביטול!</strong>
+            <AlertDialogDescription className="text-xs space-y-2">
+              <span>פעולה זו תמחק את הקטגוריות הבאות:</span>
+              <span className="block font-semibold text-destructive">
+                {RESET_CATEGORIES.filter(c => resetCategories.includes(c.key)).map(c => c.label).join(' • ')}
+              </span>
+              <strong className="text-destructive block">אינה ניתנת לביטול!</strong>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0">
