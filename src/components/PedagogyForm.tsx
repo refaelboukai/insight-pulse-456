@@ -674,7 +674,7 @@ export default function PedagogyForm() {
               className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${!myClassFilter ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
               הכל
             </button>
-            {CLASS_OPTIONS.map(cls => (
+            {dynamicClasses.map(cls => (
               <button key={cls} onClick={() => setMyClassFilter(cls)}
                 className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${myClassFilter === cls ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
                 {cls}
@@ -831,7 +831,7 @@ export default function PedagogyForm() {
                 <Select value={selectedClass || ''} onValueChange={v => { setSelectedClass(v || null); setSelectedStudentId(''); }}>
                   <SelectTrigger className="h-9 text-sm"><SelectValue placeholder="בחר כיתה" /></SelectTrigger>
                   <SelectContent>
-                    {CLASS_OPTIONS.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                    {dynamicClasses.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                   </SelectContent>
                 </Select>
               </div>
@@ -938,7 +938,7 @@ export default function PedagogyForm() {
                 className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${!myClassFilter ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
                 הכל
               </button>
-              {CLASS_OPTIONS.map(cls => (
+              {dynamicClasses.map(cls => (
                 <button key={cls} onClick={() => { setMyClassFilter(cls); setSelectedClass(cls); }}
                   className={`text-[10px] py-1.5 px-3 rounded-full border font-medium transition-all ${myClassFilter === cls ? 'bg-primary text-primary-foreground border-primary' : 'border-border bg-card hover:bg-muted'}`}>
                   {cls}
