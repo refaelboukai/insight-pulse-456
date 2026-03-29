@@ -278,6 +278,35 @@ export default function StudentDashboard() {
   const positiveReports = reports.filter(r => r.behavior_types?.includes('respectful')).length;
   const totalReports = reports.length;
 
+  // Filtered reports for the reports panel
+  const dateFilteredReports = useMemo(() => {
+    return allReports.filter(r => {
+      const reportDate = startOfDay(new Date(r.report_date));
+      const today = startOfDay(new Date());
+      switch (reportDateFilter) {
+        case 'today': return reportDate.getTime() === today.getTime();
+        case 'yesterday': return reportDate.getTime() === subDays(today, 1).getTime();
+        case 'week': { const ws = startOfWeek(today, { weekStartsOn: 0 }); return reportDate >= ws && reportDate <= today; }
+        case 'custom': {
+          if (!reportCustomFrom && !reportCustomTo) return true;
+          const from = reportCustomFrom ? startOfDay(reportCustomFrom) : new Date(0);
+          const to = reportCustomTo ? startOfDay(reportCustomTo) : new Date(9999, 11, 31);
+          return reportDate >= from && reportDate <= to;
+        }
+        default: return true;
+      }
+    });
+  }, [allReports, reportDateFilter, reportCustomFrom, reportCustomTo]);
+
+  const reportSubjects = useMemo(() => {
+    const set = new Set(dateFilteredReports.map(r => r.lesson_subject));
+    return Array.from(set).sort();
+  }, [dateFilteredReports]);
+
+  const visibleReports = reportSubjectFilter === 'all'
+    ? dateFilteredReports
+    : dateFilteredReports.filter(r => r.lesson_subject === reportSubjectFilter);
+
   const SectionHeader = ({ title, icon: Icon, count, sectionKey, color }: {
     title: string; icon: React.ElementType; count?: number; sectionKey: string; color?: string;
   }) => (
