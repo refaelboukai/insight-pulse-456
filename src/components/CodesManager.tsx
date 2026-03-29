@@ -4,8 +4,10 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { toast } from 'sonner';
-import { RefreshCw, Shield, Users, User, Copy, UserRound, Eye, EyeOff } from 'lucide-react';
+import { RefreshCw, Shield, Users, User, Copy, UserRound, Eye, EyeOff, Download } from 'lucide-react';
 import type { Database } from '@/integrations/supabase/types';
+import * as XLSX from 'xlsx';
+import { downloadWorkbook } from '@/lib/excelDownload';
 
 type Student = Database['public']['Tables']['students']['Row'] & { parent_code?: string };
 
