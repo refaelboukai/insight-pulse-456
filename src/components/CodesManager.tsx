@@ -91,12 +91,17 @@ export default function CodesManager({ students, onRefresh }: Props) {
 
   return (
     <div className="space-y-4">
-      {/* System codes */}
-      <div>
-        <p className="text-xs font-semibold mb-2 flex items-center gap-1.5">
+      {/* Header with export */}
+      <div className="flex items-center justify-between">
+        <p className="text-xs font-semibold flex items-center gap-1.5">
           <Shield className="h-3.5 w-3.5 text-primary" />
           קודי מערכת
         </p>
+        <Button size="sm" variant="outline" className="h-7 text-[10px] gap-1" onClick={handleExportCodes}>
+          <Download className="h-3 w-3" />
+          הורד אקסל קודים
+        </Button>
+      </div>
         <div className="space-y-1.5">
           {[
             { label: 'מנהל', code: '9020', icon: Shield, color: 'text-primary' },
