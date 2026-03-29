@@ -1132,7 +1132,7 @@ export default function AdminDashboard() {
           </button>
         ))}
       </div>
-      {CLASS_OPTIONS.map(cls => {
+      {dynamicClasses.map(cls => {
         const classStudents = activeStudents.filter(s => s.class_name === cls);
         return (
           <div key={cls} className="space-y-1">
