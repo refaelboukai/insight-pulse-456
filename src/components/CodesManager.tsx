@@ -67,6 +67,28 @@ export default function CodesManager({ students, onRefresh }: Props) {
     onRefresh();
   };
 
+  const handleExportCodes = () => {
+    const rows = [
+      { סוג: 'מנהל', שם: 'מנהל', כיתה: '—', 'קוד כניסה': '9020', 'קוד הורה': '—' },
+      { סוג: 'צוות', שם: 'צוות', כיתה: '—', 'קוד כניסה': '1001', 'קוד הורה': '—' },
+      ...students.map(s => ({
+        סוג: 'תלמיד',
+        שם: `${s.first_name} ${s.last_name}`,
+        כיתה: s.class_name || '—',
+        'קוד כניסה': s.student_code,
+        'קוד הורה': (s as any).parent_code || '—',
+        פעיל: s.is_active ? 'כן' : 'לא',
+      })),
+    ];
+    const ws = XLSX.utils.json_to_sheet(rows);
+    ws['!cols'] = [{ wch: 8 }, { wch: 20 }, { wch: 10 }, { wch: 14 }, { wch: 14 }, { wch: 6 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'קודים');
+    const today = new Date().toISOString().split('T')[0];
+    downloadWorkbook(wb, `קודי_כניסה_${today}.xlsx`);
+    toast.success('הקובץ הורד בהצלחה');
+  };
+
   return (
     <div className="space-y-4">
       {/* System codes */}
