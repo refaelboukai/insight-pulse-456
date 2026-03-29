@@ -1376,7 +1376,7 @@ export default function AdminDashboard() {
         </AccordionTrigger>
         <AccordionContent>
           <div className="space-y-2">
-            {CLASS_OPTIONS.map(cls => (
+            {dynamicClasses.map(cls => (
               <Button key={cls} variant="outline" size="sm" className="w-full gap-2 text-xs" onClick={() => handleExcelExport(cls)}>
                 <Download className="h-3.5 w-3.5" /> הורד אקסל — כיתת {cls}
               </Button>
