@@ -21,11 +21,11 @@ import logoSrc from '@/assets/logo.jpeg';
 type StaffPanel = 'attendance' | 'report' | 'pedagogy' | 'grades' | 'support' | 'event' | 'calendar' | 'weekly_summary' | null;
 
 const staffCards: { key: StaffPanel & string; icon: React.ElementType; label: string; iconBg: string; iconColor: string; activeBg: string }[] = [
-  { key: 'attendance', icon: ClipboardCheck, label: 'ביקור', iconBg: 'bg-[hsl(168,40%,92%)]', iconColor: 'text-[hsl(168,50%,30%)]', activeBg: 'bg-[hsl(168,40%,92%)]' },
-  { key: 'report', icon: FileText, label: 'דיווח', iconBg: 'bg-[hsl(220,45%,92%)]', iconColor: 'text-[hsl(220,45%,35%)]', activeBg: 'bg-[hsl(220,45%,92%)]' },
+  { key: 'attendance', icon: ClipboardCheck, label: 'ביקור סדיר', iconBg: 'bg-[hsl(168,40%,92%)]', iconColor: 'text-[hsl(168,50%,30%)]', activeBg: 'bg-[hsl(168,40%,92%)]' },
+  { key: 'report', icon: FileText, label: 'דיווחים', iconBg: 'bg-[hsl(220,45%,92%)]', iconColor: 'text-[hsl(220,45%,35%)]', activeBg: 'bg-[hsl(220,45%,92%)]' },
   { key: 'pedagogy', icon: BookOpen, label: 'פדגוגיה', iconBg: 'bg-[hsl(270,40%,92%)]', iconColor: 'text-[hsl(270,40%,35%)]', activeBg: 'bg-[hsl(270,40%,92%)]' },
-  { key: 'grades', icon: GraduationCap, label: 'ציונים', iconBg: 'bg-[hsl(35,60%,90%)]', iconColor: 'text-[hsl(35,60%,30%)]', activeBg: 'bg-[hsl(35,60%,90%)]' },
-  { key: 'support', icon: HeartHandshake, label: 'תמיכה', iconBg: 'bg-[hsl(145,40%,90%)]', iconColor: 'text-[hsl(145,40%,30%)]', activeBg: 'bg-[hsl(145,40%,90%)]' },
+  { key: 'grades', icon: GraduationCap, label: 'ציונים והערכות', iconBg: 'bg-[hsl(35,60%,90%)]', iconColor: 'text-[hsl(35,60%,30%)]', activeBg: 'bg-[hsl(35,60%,90%)]' },
+  { key: 'support', icon: HeartHandshake, label: 'תמיכות', iconBg: 'bg-[hsl(145,40%,90%)]', iconColor: 'text-[hsl(145,40%,30%)]', activeBg: 'bg-[hsl(145,40%,90%)]' },
   { key: 'event', icon: AlertTriangle, label: 'אירוע חריג', iconBg: 'bg-[hsl(0,55%,92%)]', iconColor: 'text-[hsl(0,55%,35%)]', activeBg: 'bg-[hsl(0,55%,92%)]' },
   { key: 'calendar', icon: Calendar, label: 'לוח שנה', iconBg: 'bg-[hsl(200,45%,92%)]', iconColor: 'text-[hsl(200,45%,35%)]', activeBg: 'bg-[hsl(200,45%,92%)]' },
   { key: 'weekly_summary', icon: MessageSquareText, label: 'סיכום שבועי מחנכות', iconBg: 'bg-[hsl(50,55%,90%)]', iconColor: 'text-[hsl(50,55%,30%)]', activeBg: 'bg-[hsl(50,55%,90%)]' },
