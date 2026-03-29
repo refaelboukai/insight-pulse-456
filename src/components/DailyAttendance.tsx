@@ -44,6 +44,7 @@ interface FollowupRecord {
 export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceProps) {
   const { user } = useAuth();
   const [students, setStudents] = useState<Student[]>([]);
+  const dynamicClasses = [...new Set(students.map(s => s.class_name).filter(Boolean))] as string[];
   const [attendance, setAttendance] = useState<Map<string, AttendanceRecord>>(new Map());
   const [loading, setLoading] = useState(true);
   const [expandedClasses, setExpandedClasses] = useState<Record<string, boolean>>({});
