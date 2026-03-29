@@ -515,6 +515,10 @@ export default function StudentDashboard() {
           {dailySummary && <p className="text-sm leading-relaxed text-foreground whitespace-pre-line rounded-lg border bg-card p-3">{dailySummary}</p>}
         </div>
       )}
+      {/* Trend Charts */}
+      {reports.length >= 2 && (
+        <ReportTrendCharts reports={reports} />
+      )}
     </div>
   );
 
