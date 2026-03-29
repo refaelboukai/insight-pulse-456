@@ -167,6 +167,7 @@ export default function StudentDashboard() {
         supabase.from('managed_subjects').select('id, name').eq('is_active', true),
       ]);
       if (reportsRes.data) setReports(reportsRes.data);
+      if (allReportsRes.data) setAllReports(allReportsRes.data);
       if (gradesRes.data) setGrades(gradesRes.data);
       if (assignRes.data) setAssignments(assignRes.data as any[]);
       if (pedRes.data) setPedagogyGoals(pedRes.data as any[]);
