@@ -781,6 +781,7 @@ export default function StudentDashboard() {
     { key: 'support', icon: HeartHandshake, label: 'תכנית תמיכה', value: assignments.length, iconBg: 'bg-[hsl(145,40%,90%)]', iconColor: 'text-[hsl(145,40%,30%)]' },
     ...(hasSchedule ? [{ key: 'schedule', icon: Calendar, label: 'מערכת שעות', iconBg: 'bg-[hsl(220,45%,92%)]', iconColor: 'text-[hsl(220,45%,35%)]' }] : []),
     ...(weeklySummaries.length > 0 ? [{ key: 'weekly_summary', icon: MessageSquareText, label: 'סיכום מחנכות', value: weeklySummaries.length, iconBg: 'bg-[hsl(50,55%,90%)]', iconColor: 'text-[hsl(50,55%,30%)]' }] : []),
+    { key: 'calm_zone', icon: ShieldCheck, label: 'אזור הרגעה', iconBg: 'bg-[hsl(180,40%,90%)]', iconColor: 'text-[hsl(180,40%,30%)]' },
   ];
 
   // If a panel is open, render it
