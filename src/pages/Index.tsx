@@ -94,7 +94,9 @@ export default function Index() {
       <header className="header-gradient sticky top-0 z-50 shadow-lg">
         <div className="container mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-2.5">
-            <img src={logoSrc} alt="לוגו בית ספר מרום" className="h-9 w-9 rounded-full object-cover bg-white border border-white/30" />
+            <div className="h-9 w-20 rounded-lg overflow-hidden bg-white border border-white/30 p-0.5">
+              <img src={logoSrc} alt="לוגו בית ספר מרום" className="w-full h-full object-contain" />
+            </div>
             <div>
               <h1 className="font-bold text-primary-foreground text-base leading-tight">בית ספר מרום בית אקשטיין</h1>
               <p className="text-xs text-primary-foreground/70 flex items-center gap-1">

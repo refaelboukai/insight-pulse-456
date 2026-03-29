@@ -78,8 +78,8 @@ export default function Login() {
           <div className="px-8 pt-8 pb-7">
             {/* Logo */}
             <div className="text-center mb-6">
-              <div className="mx-auto w-20 h-20 rounded-full overflow-hidden shadow-lg border-2 border-primary/20 mb-4 bg-white">
-                <img src={logoSrc} alt="לוגו בית ספר מרום" className="w-full h-full object-cover" />
+              <div className="mx-auto w-48 h-14 rounded-xl overflow-hidden shadow-lg border-2 border-primary/20 mb-4 bg-white p-1.5">
+                <img src={logoSrc} alt="לוגו בית ספר מרום" className="w-full h-full object-contain" />
               </div>
               <h1 className="text-xl font-bold text-foreground mb-1">מערכת דיווח תלמידים</h1>
               <p className="text-xs text-muted-foreground flex items-center justify-center gap-1">
