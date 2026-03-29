@@ -109,9 +109,13 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
     }));
   }, [reports, selectedSubject, selectedMetric]);
 
+  const yLabels = METRIC_Y_LABELS[selectedMetric];
+  const formatYTick = (value: number) => yLabels[value] || '';
+
   if (reports.length < 2) return null;
 
   const maxY = selectedMetric === 'attendance' ? 3 : 4;
+  const yTicks = selectedMetric === 'attendance' ? [1, 2, 3] : [1, 2, 3, 4];
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
