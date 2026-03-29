@@ -140,12 +140,16 @@ export default function StudentDashboard() {
     if (!selectedStudentId) return;
     const fetchData = async () => {
       const today = new Date().toISOString().split('T')[0];
-      const [reportsRes, gradesRes, assignRes, pedRes, examRes, subjRes] = await Promise.all([
+      const [reportsRes, allReportsRes, gradesRes, assignRes, pedRes, examRes, subjRes] = await Promise.all([
         supabase.from('lesson_reports').select('*')
           .eq('student_id', selectedStudentId)
           .gte('report_date', `${today}T00:00:00`)
           .lte('report_date', `${today}T23:59:59`)
           .order('created_at', { ascending: false }),
+        supabase.from('lesson_reports').select('*')
+          .eq('student_id', selectedStudentId)
+          .order('report_date', { ascending: false })
+          .limit(200),
         supabase.from('student_grades').select('*')
           .eq('student_id', selectedStudentId)
           .eq('school_year', selectedYear),
