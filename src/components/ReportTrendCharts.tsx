@@ -109,21 +109,19 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
     }));
   }, [reports, selectedSubject, selectedMetric]);
 
-  const yLabels = METRIC_Y_LABELS[selectedMetric];
-  const formatYTick = (value: number) => yLabels[value] || '';
-
-  if (reports.length < 2) return null;
-
   const maxY = selectedMetric === 'attendance' ? 3 : 4;
   const yTicks = selectedMetric === 'attendance' ? [1, 2, 3] : [1, 2, 3, 4];
 
+  const yLabels = METRIC_Y_LABELS[selectedMetric];
+  const formatYTick = (value: number) => yLabels[value] || '';
+
   // Color based on score position in range: top 1/3 green, middle 1/3 orange, bottom 1/3 red
   const getScoreColor = (score: number): string => {
-    const range = maxY - 1; // e.g. 2 for attendance (1-3), 3 for behavior (1-4)
-    const normalizedPosition = (score - 1) / range; // 0 to 1
-    if (normalizedPosition >= 0.667) return '#16a34a'; // green
-    if (normalizedPosition >= 0.333) return '#f59e0b'; // orange/amber
-    return '#ef4444'; // red
+    const range = maxY - 1;
+    const normalizedPosition = (score - 1) / range;
+    if (normalizedPosition >= 0.667) return '#16a34a';
+    if (normalizedPosition >= 0.333) return '#f59e0b';
+    return '#ef4444';
   };
 
   // Build segments: each pair of consecutive points gets a color based on average score
@@ -139,6 +137,8 @@ export default function ReportTrendCharts({ reports, subjects }: ReportTrendChar
     }
     return segs;
   }, [chartData, maxY]);
+
+  if (reports.length < 2) return null;
 
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (!active || !payload?.length) return null;
