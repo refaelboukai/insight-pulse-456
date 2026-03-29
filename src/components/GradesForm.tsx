@@ -361,7 +361,7 @@ export default function GradesForm() {
           </Select>
         </div>
 
-        {CLASS_OPTIONS.map(cls => {
+        {dynamicClasses.map(cls => {
           const classStudents = students.filter(s => s.class_name === cls);
           const isExpanded = expandedClass === cls;
           return (

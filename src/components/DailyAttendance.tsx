@@ -363,7 +363,7 @@ export default function DailyAttendance({ onAttendanceChange }: DailyAttendanceP
         </Badge>
       </div>
 
-      {CLASS_OPTIONS.map(cls => {
+      {dynamicClasses.map(cls => {
         const classStudents = students.filter(s => s.class_name === cls);
         if (classStudents.length === 0) return null;
         const classPresentCount = classStudents.filter(s => {

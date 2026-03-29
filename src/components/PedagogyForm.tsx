@@ -100,6 +100,7 @@ export default function PedagogyForm() {
   const isAdmin = role === 'admin';
 
   const [students, setStudents] = useState<Student[]>([]);
+  const dynamicClasses = [...new Set(students.map(s => s.class_name).filter(Boolean))] as string[];
   const [subjects, setSubjects] = useState<ManagedSubject[]>([]);
   const [selectedClass, setSelectedClass] = useState<string | null>(null);
   const [selectedStudentId, setSelectedStudentId] = useState('');
