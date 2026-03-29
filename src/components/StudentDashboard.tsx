@@ -20,7 +20,8 @@ import {
 } from '@/lib/constants';
 import { AttendanceBadge, BehaviorBadge, ParticipationBadge } from '@/components/ReportBadges';
 import ReportTrendCharts from '@/components/ReportTrendCharts';
-import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, ChevronLeft, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile, Star, Pin, PinOff, MessageSquareText } from 'lucide-react';
+import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, ChevronLeft, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile, Star, Pin, PinOff, MessageSquareText, ShieldCheck } from 'lucide-react';
+import ResetCalmZone from '@/components/ResetCalmZone';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Database } from '@/integrations/supabase/types';
 import { toast } from 'sonner';
