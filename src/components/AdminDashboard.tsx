@@ -452,9 +452,8 @@ export default function AdminDashboard() {
         const summary = computeReflectionSummary(student.id, mode, reflectionCustomFrom[student.id], reflectionCustomTo[student.id]);
         if (summary) reflectionSummary = summary.averages;
       }
-      const blob = await generateReportCard({
-        studentName: `${student.first_name} ${student.last_name}`, className: student.class_name || '',
-        semesterLabel: SEMESTER_LABELS[reportCardSemester] || '', gender: student.gender,
+      setPreviewStudent(student);
+      setPreviewData({
         grades: (grades || []).map((g: any) => ({ subject: g.subject, grade: g.grade, verbal_evaluation: g.verbal_evaluation, ai_enhanced_evaluation: g.ai_enhanced_evaluation })),
         personalNote: latestEval?.personal_note || null,
         teamEvaluation: latestEval ? {
@@ -469,10 +468,7 @@ export default function AdminDashboard() {
         reflectionSummary,
         socialEmotionalSummary: latestEval?.social_emotional_summary || null,
       });
-      const semSuffix = reportCardSemester === 'all' ? 'שנתי' : SEMESTER_LABELS[reportCardSemester];
-      downloadBlob(blob, `תעודה_${semSuffix}_${student.first_name}_${student.last_name}.pdf`);
-      toast.success(`תעודה הופקה עבור ${student.first_name}`);
-    } catch { toast.error('שגיאה בהפקת התעודה'); } finally { setGeneratingCard(null); }
+    } catch { toast.error('שגיאה בטעינת נתוני התעודה'); } finally { setGeneratingCard(null); }
   };
 
   const openEditReport = (r: Report) => {
