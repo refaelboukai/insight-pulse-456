@@ -455,7 +455,7 @@ export default function SharedCalendar({ editable = false }: SharedCalendarProps
   return (
     <div className="space-y-4" style={{ width: '100vw', marginRight: 'calc(-50vw + 50%)', marginLeft: 'calc(-50vw + 50%)', padding: '0 1rem' }}>
       {/* Header */}
-      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-4 mx-3 sm:mx-0">
+      <div className="rounded-2xl bg-gradient-to-l from-primary/10 via-primary/5 to-transparent p-4">
         <div className="flex items-center justify-between">
           {editable && (
             <div className="flex gap-1.5 flex-wrap justify-start">
