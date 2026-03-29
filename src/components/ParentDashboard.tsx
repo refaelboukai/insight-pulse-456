@@ -1,14 +1,15 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
-import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Calendar } from '@/components/ui/calendar';
+import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
-import { BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS } from '@/lib/constants';
+import { AttendanceBadge, BehaviorBadge, ParticipationBadge } from '@/components/ReportBadges';
+import ReportTrendCharts from '@/components/ReportTrendCharts';
 import { FileText, Calendar as CalendarIcon, BookOpen, Clock, CheckCircle2, XCircle, CalendarDays, MessageSquareText } from 'lucide-react';
-import { format, startOfDay, subDays, startOfWeek, isWithinInterval, parseISO } from 'date-fns';
+import { format, startOfDay, subDays, startOfWeek } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 
@@ -23,9 +24,10 @@ export default function ParentDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<'reports' | 'exams' | 'summaries'>('reports');
   const [weeklySummaries, setWeeklySummaries] = useState<any[]>([]);
-  const [dateFilter, setDateFilter] = useState<DateFilter>('today');
+  const [dateFilter, setDateFilter] = useState<DateFilter>('week');
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
   const [customTo, setCustomTo] = useState<Date | undefined>(undefined);
+  const [selectedSubject, setSelectedSubject] = useState<string>('all');
 
   useEffect(() => {
     if (!lockedStudentId) return;
@@ -61,7 +63,7 @@ export default function ParentDashboard() {
   const showCalendar = student?.parent_show_calendar !== false;
 
   // Filter reports by date
-  const filteredReports = allReports.filter(r => {
+  const dateFilteredReports = allReports.filter(r => {
     const reportDate = startOfDay(new Date(r.report_date));
     const today = startOfDay(new Date());
 
@@ -84,7 +86,17 @@ export default function ParentDashboard() {
     }
   });
 
-  // Build greeting with parent first names only (no family status)
+  // Subject filtering
+  const reportSubjects = useMemo(() => {
+    const set = new Set(dateFilteredReports.map((r: any) => r.lesson_subject));
+    return Array.from(set).sort();
+  }, [dateFilteredReports]);
+
+  const filteredReports = selectedSubject === 'all'
+    ? dateFilteredReports
+    : dateFilteredReports.filter((r: any) => r.lesson_subject === selectedSubject);
+
+  // Build greeting with parent first names only
   const getGreeting = () => {
     if (!student) return '';
     const names: string[] = [];
@@ -114,19 +126,6 @@ export default function ParentDashboard() {
       </div>
     );
   }
-
-  const attendanceIcon = (status: string) => {
-    if (status === 'full') return <CheckCircle2 className="h-3.5 w-3.5 text-green-500" />;
-    if (status === 'partial') return <Clock className="h-3.5 w-3.5 text-amber-500" />;
-    return <XCircle className="h-3.5 w-3.5 text-red-500" />;
-  };
-
-  const behaviorColor = (types: string[]) => {
-    if (types.includes('violent')) return 'text-red-600';
-    if (types.includes('disruptive')) return 'text-amber-600';
-    if (types.includes('non_respectful')) return 'text-orange-500';
-    return 'text-green-600';
-  };
 
   const filterButtons: { key: DateFilter; label: string }[] = [
     { key: 'today', label: 'היום' },
@@ -253,6 +252,38 @@ export default function ParentDashboard() {
             </div>
           )}
 
+          {/* Subject filter */}
+          {reportSubjects.length > 1 && (
+            <div className="flex flex-wrap gap-1.5">
+              <button
+                onClick={() => setSelectedSubject('all')}
+                className={`px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ${
+                  selectedSubject === 'all'
+                    ? 'bg-primary/10 text-primary border-primary/30'
+                    : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/20'
+                }`}
+              >
+                כל המקצועות ({dateFilteredReports.length})
+              </button>
+              {reportSubjects.map(subj => {
+                const count = dateFilteredReports.filter((r: any) => r.lesson_subject === subj).length;
+                return (
+                  <button
+                    key={subj}
+                    onClick={() => setSelectedSubject(subj)}
+                    className={`px-2.5 py-1 rounded-lg text-[10px] font-medium border transition-all ${
+                      selectedSubject === subj
+                        ? 'bg-primary/10 text-primary border-primary/30'
+                        : 'bg-muted/50 text-muted-foreground border-border hover:border-primary/20'
+                    }`}
+                  >
+                    {subj} ({count})
+                  </button>
+                );
+              })}
+            </div>
+          )}
+
           {/* Reports count */}
           <p className="text-[10px] text-muted-foreground">
             {filteredReports.length === 0 ? 'אין דיווחים בתקופה זו' : `${filteredReports.length} דיווחים`}
@@ -277,21 +308,12 @@ export default function ParentDashboard() {
                   </div>
 
                   <div className="flex flex-wrap gap-1.5">
-                    <div className="flex items-center gap-1 bg-muted/50 rounded-md px-2 py-0.5">
-                      {attendanceIcon(r.attendance)}
-                      <span className="text-[10px]">{ATTENDANCE_LABELS[r.attendance] || r.attendance}</span>
-                    </div>
-
+                    <AttendanceBadge status={r.attendance} />
                     {r.behavior_types?.map((bt: string) => (
-                      <Badge key={bt} variant="outline" className={`text-[10px] ${behaviorColor(r.behavior_types)}`}>
-                        {BEHAVIOR_LABELS[bt] || bt}
-                      </Badge>
+                      <BehaviorBadge key={bt} type={bt} allTypes={r.behavior_types} />
                     ))}
-
                     {r.participation?.map((p: string) => (
-                      <Badge key={p} variant="secondary" className="text-[10px]">
-                        {PARTICIPATION_LABELS[p] || p}
-                      </Badge>
+                      <ParticipationBadge key={p} level={p} />
                     ))}
                   </div>
 
@@ -303,6 +325,11 @@ export default function ParentDashboard() {
                 </CardContent>
               </Card>
             ))
+          )}
+
+          {/* Trend Charts */}
+          {allReports.length >= 2 && (
+            <ReportTrendCharts reports={allReports} />
           )}
         </div>
       )}

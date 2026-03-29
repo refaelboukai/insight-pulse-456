@@ -13,6 +13,8 @@ import LearningStyleQuestionnaire from '@/components/LearningStyleQuestionnaire'
 import {
   BEHAVIOR_LABELS, ATTENDANCE_LABELS, PARTICIPATION_LABELS,
 } from '@/lib/constants';
+import { AttendanceBadge, BehaviorBadge, ParticipationBadge } from '@/components/ReportBadges';
+import ReportTrendCharts from '@/components/ReportTrendCharts';
 import { FileText, GraduationCap, HeartHandshake, ChevronDown, ChevronUp, ChevronLeft, Loader2, Sparkles, BookOpen, CalendarDays, Sun, Moon, CloudSun, Calendar, Heart, Brain, PenLine, Leaf, Smile, Star, Pin, PinOff, MessageSquareText } from 'lucide-react';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import type { Database } from '@/integrations/supabase/types';
@@ -493,9 +495,9 @@ export default function StudentDashboard() {
               </span>
             </div>
             <div className="flex flex-wrap gap-1.5">
-              <Badge variant="outline" className="text-xs rounded-md">{ATTENDANCE_LABELS[r.attendance]}</Badge>
-              {r.behavior_types?.map(b => <Badge key={b} variant={b === 'respectful' ? 'default' : 'destructive'} className="text-xs rounded-md">{BEHAVIOR_LABELS[b]}</Badge>)}
-              {r.participation?.map(p => <Badge key={p} variant="secondary" className="text-xs rounded-md">{PARTICIPATION_LABELS[p]}</Badge>)}
+              <AttendanceBadge status={r.attendance} />
+              {r.behavior_types?.map(b => <BehaviorBadge key={b} type={b} allTypes={r.behavior_types} />)}
+              {r.participation?.map(p => <ParticipationBadge key={p} level={p} />)}
             </div>
             {r.comment && <p className="text-xs text-muted-foreground mt-2 bg-muted/50 rounded-lg px-3 py-2 border leading-relaxed">{r.comment}</p>}
           </div>
@@ -512,6 +514,10 @@ export default function StudentDashboard() {
           </div>
           {dailySummary && <p className="text-sm leading-relaxed text-foreground whitespace-pre-line rounded-lg border bg-card p-3">{dailySummary}</p>}
         </div>
+      )}
+      {/* Trend Charts */}
+      {reports.length >= 2 && (
+        <ReportTrendCharts reports={reports} />
       )}
     </div>
   );
