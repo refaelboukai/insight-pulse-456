@@ -1,8 +1,8 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useCallback } from 'react';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
 import { ATTENDANCE_LABELS, BEHAVIOR_LABELS, PARTICIPATION_LABELS } from '@/lib/constants';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Customized } from 'recharts';
 import { format } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { TrendingUp } from 'lucide-react';
