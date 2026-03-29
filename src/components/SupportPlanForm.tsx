@@ -292,6 +292,8 @@ export default function SupportPlanForm() {
           </p>
         </div>
       )}
+        </>
+      )}
     </div>
   );
 }
