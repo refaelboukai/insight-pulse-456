@@ -124,6 +124,27 @@ export default function AdminDashboard() {
   const [resetPasswordError, setResetPasswordError] = useState('');
   const [resetting, setResetting] = useState(false);
   const [exportingFull, setExportingFull] = useState(false);
+
+  const RESET_CATEGORIES = [
+    { key: 'lesson_reports', label: 'דיווחי שיעורים', tables: ['lesson_reports'] },
+    { key: 'alerts', label: 'התראות', tables: ['alerts'] },
+    { key: 'attendance', label: 'נוכחות יומית', tables: ['daily_attendance'] },
+    { key: 'events', label: 'אירועים חריגים', tables: ['exceptional_events'] },
+    { key: 'support', label: 'מפגשי תמיכה והשלמות', tables: ['support_sessions', 'support_completions'] },
+    { key: 'grades', label: 'ציונים', tables: ['student_grades'] },
+    { key: 'evaluations', label: 'הערכות תלמידים', tables: ['student_evaluations'] },
+    { key: 'followups', label: 'מעקב נעדרים', tables: ['absent_student_followups'] },
+    { key: 'activity', label: 'יומני פעילות (אזור רגוע)', tables: ['activity_logs'] },
+    { key: 'reflections', label: 'שיקופים יומיים', tables: ['daily_reflections'] },
+    { key: 'brain', label: 'אימון מוח', tables: ['brain_training_scores', 'brain_training_history'] },
+    { key: 'checkins', label: 'צ׳ק-אין מערכת שעות', tables: ['schedule_checkins'] },
+    { key: 'pedagogy', label: 'יעדים פדגוגיים', tables: ['pedagogical_goals'] },
+    { key: 'insights', label: 'תובנות תלמיד', tables: ['student_insights'] },
+    { key: 'exams', label: 'לוח מבחנים', tables: ['exam_schedule'] },
+    { key: 'learning_style', label: 'פרופילי סגנון למידה', tables: ['learning_style_profiles'] },
+    { key: 'weekly_summaries', label: 'סיכומים שבועיים', tables: ['weekly_summaries'] },
+  ] as const;
+  const [resetCategories, setResetCategories] = useState<string[]>([]);
   const [generatingCard, setGeneratingCard] = useState<string | null>(null);
   const [reportCardSemester, setReportCardSemester] = useState<string>('all');
 
