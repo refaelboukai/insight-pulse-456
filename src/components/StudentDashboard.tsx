@@ -795,12 +795,14 @@ export default function StudentDashboard() {
       support: renderSupportPanel(),
       schedule: renderSchedulePanel(),
       weekly_summary: renderWeeklySummaryPanel(),
+      calm_zone: <ResetCalmZone />,
     };
     const panelLabels: Record<string, string> = {
       reflection: 'היום שלי',
       reports: 'הדיווחים שלי — היום', grades: 'הציונים שלי', pedagogy: 'יעדים פדגוגיים',
       exams: 'לוח מבחנים', support: 'תכנית התמיכה שלי', schedule: 'מערכת שעות',
       weekly_summary: 'סיכום שבועי מהמחנכת',
+      calm_zone: 'אזור הרגעה',
     };
     const currentCard = studentCards.find(c => c.key === activePanel);
     const isPinned = pinnedPanels.has(activePanel);
