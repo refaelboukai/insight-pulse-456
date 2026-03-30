@@ -120,7 +120,11 @@ export default function AdminDashboard() {
   const [customClassName, setCustomClassName] = useState('');
   const [newMotherName, setNewMotherName] = useState('');
   const [newFatherName, setNewFatherName] = useState('');
+  const [newStudentCode, setNewStudentCode] = useState('');
+  const [newParentCode, setNewParentCode] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
+  const [removeStudentId, setRemoveStudentId] = useState<string | null>(null);
+  const [removingStudent, setRemovingStudent] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   // Monthly report
