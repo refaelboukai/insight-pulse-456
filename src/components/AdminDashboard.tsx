@@ -855,12 +855,33 @@ export default function AdminDashboard() {
                 )}
                 <Input placeholder="שם האם (אופציונלי)" value={newMotherName} onChange={e => setNewMotherName(e.target.value)} className="h-10 text-sm" />
                 <Input placeholder="שם האב (אופציונלי)" value={newFatherName} onChange={e => setNewFatherName(e.target.value)} className="h-10 text-sm" />
-                <p className="text-[10px] text-muted-foreground">קוד תלמיד וקוד הורה ייוצרו אוטומטית</p>
+                <Input placeholder="קוד תלמיד *" value={newStudentCode} onChange={e => setNewStudentCode(e.target.value)} className="h-10 text-sm" dir="ltr" />
+                <Input placeholder="קוד הורה *" value={newParentCode} onChange={e => setNewParentCode(e.target.value)} className="h-10 text-sm" dir="ltr" />
+                <p className="text-[10px] text-muted-foreground">* שדות חובה</p>
                 <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">{addingStudent ? 'מוסיף...' : 'הוספה'}</Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Remove student confirm dialog */}
+        <AlertDialog open={!!removeStudentId} onOpenChange={(open) => { if (!open) setRemoveStudentId(null); }}>
+          <AlertDialogContent dir="rtl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>הסרת תלמיד/ה</AlertDialogTitle>
+              <AlertDialogDescription>
+                האם להסיר את התלמיד/ה מהמערכת? (ניתן לשחזר בהמשך)
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row-reverse gap-2">
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRemoveStudent} disabled={removingStudent} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {removingStudent ? 'מסיר...' : 'הסרה'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm" dir="rtl">
             <thead>
