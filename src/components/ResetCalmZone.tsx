@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2 } from 'lucide-react';
+import ResetModule from '@/features/reset/ResetModule';
 
 export default function ResetCalmZone() {
   const { lockedStudentId } = useAuth();
@@ -40,16 +41,9 @@ export default function ResetCalmZone() {
     );
   }
 
-  const resetUrl = `https://reset-calm-zone.lovable.app/?auto_login=${studentCode}`;
-
   return (
-    <div className="rounded-2xl overflow-hidden border bg-card shadow-soft" style={{ height: 'calc(100vh - 180px)', minHeight: '500px' }}>
-      <iframe
-        src={resetUrl}
-        className="w-full h-full border-0"
-        allow="autoplay; microphone"
-        title="Reset Calm Zone"
-      />
+    <div className="rounded-2xl overflow-hidden" style={{ minHeight: '500px' }}>
+      <ResetModule studentCode={studentCode} />
     </div>
   );
 }

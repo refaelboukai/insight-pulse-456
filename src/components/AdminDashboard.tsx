@@ -24,7 +24,7 @@ import {
 } from '@/lib/constants';
 import {
   AlertTriangle, TrendingUp, Users, FileText, UserPlus, ShieldAlert, Shield, Download,
-  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare, Brain, RotateCcw, BookOpen, FileSpreadsheet, Eye, Settings, BarChart3, Building2,
+  ChevronDown, ChevronUp, Clock, CheckCircle2, XCircle, ClipboardCheck, HeartHandshake, Sparkles, Trash2, GraduationCap, UserCog, Plus, X, Pencil, Key, Share2, Calendar, MessageSquare, Brain, RotateCcw, BookOpen, FileSpreadsheet, Eye, Settings, BarChart3, Building2, ShieldCheck, ClipboardList,
 } from 'lucide-react';
 import { generateReportCard } from '@/lib/generateReportCard';
 import { generateEventPdf } from '@/lib/generateEventPdf';
@@ -35,6 +35,8 @@ import { exportReportsToExcel, exportFullActivityToExcel } from '@/lib/exportRep
 import { shareOrDownload, shareOrDownloadText, downloadBlob } from '@/lib/downloadFile';
 import { downloadWorkbook } from '@/lib/excelDownload';
 import SharedCalendar from '@/components/SharedCalendar';
+import WelcomeAdminModule from '@/features/welcome/WelcomeAdminModule';
+import ResetAdminDashboard from '@/features/reset/ResetAdminDashboard';
 import type { Database } from '@/integrations/supabase/types';
 
 type Report = Database['public']['Tables']['lesson_reports']['Row'];
@@ -1428,6 +1430,8 @@ export default function AdminDashboard() {
       { key: 'sms', icon: MessageSquare, label: 'SMS תזכורות', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'excel', icon: Download, label: 'הפקת אקסל', iconBg: 'bg-primary/10', iconColor: 'text-primary' },
       { key: 'settings', icon: Settings, label: 'הגדרות מערכת', iconBg: 'bg-muted', iconColor: 'text-muted-foreground' },
+      { key: 'reset-admin', icon: ShieldCheck, label: 'ניהול Reset', iconBg: 'bg-[hsl(180,40%,90%)]', iconColor: 'text-[hsl(180,40%,30%)]' },
+      { key: 'welcome-admin', icon: ClipboardList, label: 'ניהול Welcome', iconBg: 'bg-[hsl(260,45%,92%)]', iconColor: 'text-[hsl(260,45%,35%)]' },
     ];
 
     if (activePanel === 'excel') {
@@ -1446,11 +1450,14 @@ export default function AdminDashboard() {
         'monthly-report': renderMonthlyReportContent(),
         calendar: <SharedCalendar editable />,
         settings: renderSettingsContent(),
+        'reset-admin': <ResetAdminDashboard />,
+        'welcome-admin': <WelcomeAdminModule />,
       };
       const panelLabels: Record<string, string> = {
         students: 'תלמידים', reports: 'דיווחים', events: 'אירועים חריגים',
         support: 'תמיכות', 'long-absent': 'תלמידים שלא מגיעים', pedagogy: 'פדגוגיה',
         'monthly-report': 'דוח חודשי AI', calendar: 'לוח שנה', settings: 'הגדרות מערכת',
+        'reset-admin': 'ניהול Reset – ויסות רגשי', 'welcome-admin': 'ניהול Welcome – שאלוני אמידה',
       };
       return (
         <div className="space-y-2">

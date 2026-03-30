@@ -17,9 +17,9 @@
     "noUnusedLocals": false,
     "noUnusedParameters": false,
     "paths": {
-      "@/*": [
-        "./src/*"
-      ]
+      "@/*": ["./src/*"],
+      "@reset/*": ["./src/features/reset/*"],
+      "@welcome/*": ["./src/features/welcome/*"]
     },
     "skipLibCheck": true,
     "strict": false,

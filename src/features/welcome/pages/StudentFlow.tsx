@@ -1,0 +1,376 @@
+import { useState, useEffect, useCallback, useRef, useMemo } from "react";
+import { useParams, useNavigate } from "react-router-dom";
+import { getSessionDB, updateSessionDB, getActiveRoundForSession, updateAssessmentRound, AssessmentRound } from "@welcome/lib/supabase-storage";
+import { IntakeSession } from "@welcome/lib/types";
+import QuestionnaireFlow from "@welcome/components/QuestionnaireFlow";
+import logo from "@welcome/assets/logo.jpeg";
+import { Heart, BookOpen, Brain, Lightbulb, Star, Sparkles, Loader2, RotateCcw, CheckCircle, LogOut } from "lucide-react";
+import SignatureCanvas from "react-signature-canvas";
+import { supabase } from "@welcome/integrations/supabase/client";
+import { getStudentGender, createGenderedText, Gender } from "@welcome/lib/gender-utils";
+
+type Step = "welcome" | "consent" | "explanation" | "questionnaire" | "complete";
+
+function getExplanationCards(g: (m: string, f: string) => string) {
+  return [
+    { icon: Heart, title: "איכות חיים", desc: `עד כמה טוב לך בחיים שלך – בבית, בבית הספר, עם חברים, ועם ${g("עצמך", "עצמך")}.` },
+    { icon: Star, title: "מסוגלות עצמית", desc: `עד כמה ${g("אתה מאמין שאתה יכול", "את מאמינה שאת יכולה")} להצליח, להתמודד, ולהשיג מטרות.` },
+    { icon: Lightbulb, title: "מיקוד שליטה", desc: `עד כמה ${g("אתה מרגיש", "את מרגישה")} שיש לך השפעה על מה שקורה לך.` },
+    { icon: Brain, title: "גמישות קוגניטיבית", desc: `עד כמה ${g("אתה מצליח", "את מצליחה")} לחשוב על אפשרויות שונות, לשנות כיוון כשצריך, ולהתמודד עם מצבים קשים.` },
+    { icon: Sparkles, title: "למה זה חשוב?", desc: "השאלונים עוזרים לנו להבין איך לתמוך בך בצורה הכי טובה." },
+  ];
+}
+
+const schoolRules = [
+  "בית הספר שלנו הינו מרחב לימודי-חינוכי-טיפולי, שבו כל תלמיד ותלמידה ירכשו כלים בתחומים מקצועיים להתמודדות מיטיבה בהמשך חייכם.",
+  "לכל תלמיד הזכות למוגנות, שייכות ומשמעות. לכל תלמיד הזכות להתפתחות רגשית, חברתית, לימודית ואישית תוך חיזוק המסוגלות העצמית.",
+  "אנחנו מאמינים בחינוך המבוסס על ערכים של הכלה ואמפתיה, עם גבולות ברורים, שיתוף והתייעצות.",
+  "כבוד הדדי — בשיחה, במרחב האישי ובלבוש. מותר להתווכח, מותר לא להסכים, אך חובה לכבד את האחד.ה את השני.ה, תלמידים וצוות כאחד.",
+  "יש להקפיד על לבוש מכבד את עצמנו ואת הסביבה (לא גופיות, חולצות מכבדות).",
+  "מותר להתווכח, מותר לטעון אחרת — אך חובה להקשיב לצוות בית הספר. נשמע, נעשה ונהיה ביקורתיים.",
+  "חובה להגיע בזמן לשיעור, להגיע מוכנים עם הציוד הנחוץ. מערכת שעות מחייבת אך גמישה.",
+  "חובה להיות נוכחים בשיעורים בכיתות לאורך כל שעות היום, אלא אם קיבלתם אישור לצאת מהכיתה.",
+  "הפלאפונים יאוחסנו לאורך כל היום בארון במזכירות בית הספר.",
+  "חובה על כל איש צוות ותלמיד למלא את התורנות שלו בצורה הטובה ביותר.",
+  "⛔ איסור מוחלט על אלימות מכל סוג — פיזית (כולל ונדליזם והרס רכוש), מינית ומילולית. אלימות בכל צורה שהיא תטופל בחומרה מרבית.",
+  "אסור לעשן, להכניס אמצעים לעישון או לעשות שימוש באלכוהול בשום צורה ואופן.",
+  "אסור לצאת מבית הספר ללא אישור. יציאה ללא אישור מסכנת אתכם ותפקידנו לשמור עליכם.",
+  "אם נפגעת או שנחשפת לפגיעה באחר.ת — יש לדווח במיידי לצוות.",
+  "שמירה על הכללים תוביל תמיד להערכה והוקרה. הפרה של הכללים תוביל תמיד לתגובה והשלכות.",
+];
+
+const StudentFlow = () => {
+  const { sessionId } = useParams<{ sessionId: string }>();
+  const navigate = useNavigate();
+  const [session, setSession] = useState<IntakeSession | null>(null);
+  const [step, setStep] = useState<Step>("welcome");
+  const [loading, setLoading] = useState(true);
+  const [consentChecked, setConsentChecked] = useState(false);
+  const [hasSigned, setHasSigned] = useState(false);
+  const [isReassessment, setIsReassessment] = useState(false);
+  const [activeRound, setActiveRound] = useState<AssessmentRound | null>(null);
+  const sigCanvasRef = useRef<SignatureCanvas>(null);
+
+  const gender = useMemo(() => session ? getStudentGender(session.studentName) : "unknown" as Gender, [session?.studentName]);
+  const g = useMemo(() => createGenderedText(gender), [gender]);
+  const explanationCards = useMemo(() => getExplanationCards(g), [g]);
+
+  useEffect(() => {
+    if (!sessionId) return;
+    getSessionDB(sessionId).then(async (s) => {
+      if (!s) { setLoading(false); navigate("/"); return; }
+      setSession(s);
+
+      // Check for active assessment round
+      const round = await getActiveRoundForSession(sessionId, 'student');
+      if (round) {
+        setActiveRound(round);
+        setIsReassessment(true);
+        setLoading(false);
+        setStep("welcome");
+        return;
+      }
+
+      // Legacy reassessment check
+      const rStatus = s.reassessmentStatus;
+      if (rStatus === "open" || rStatus === "parent_completed") {
+        if (!s.reassessmentStudentResponses || Object.keys(s.reassessmentStudentResponses).length < 52) {
+          setIsReassessment(true);
+          setLoading(false);
+          setStep("welcome");
+          return;
+        }
+      }
+
+      if (["student_completed", "parent_started", "parent_completed", "under_review", "completed"].includes(s.status)) {
+        setStep("complete");
+      } else if (Object.keys(s.studentResponses).length > 0) {
+        setStep("questionnaire");
+      }
+      setLoading(false);
+    });
+  }, [sessionId, navigate]);
+
+  const handleConsentAndContinue = useCallback(async () => {
+    if (!session || !sigCanvasRef.current) return;
+    const signatureData = sigCanvasRef.current.toDataURL("image/png");
+    await (supabase as any).from("intake_sessions").update({
+      consent_signature: signatureData,
+      consent_date: new Date().toISOString(),
+    }).eq("id", session.id);
+    setStep("explanation");
+  }, [session]);
+
+  const handleStartQuestionnaire = useCallback(async () => {
+    if (!session) return;
+    if (isReassessment) {
+      setStep("questionnaire");
+      return;
+    }
+    if (session.status === "not_started") {
+      await updateSessionDB(session.id, { status: "student_started" });
+      setSession((prev) => prev ? { ...prev, status: "student_started" } : null);
+    }
+    setStep("questionnaire");
+  }, [session, isReassessment]);
+
+  const handleUpdateResponse = useCallback(async (itemId: string, value: number) => {
+    if (!session) return;
+    if (isReassessment && activeRound) {
+      const updated = { ...activeRound.student_responses, [itemId]: value };
+      setActiveRound((prev) => prev ? { ...prev, student_responses: updated } : null);
+      await updateAssessmentRound(activeRound.id, { student_responses: updated } as any);
+      return;
+    }
+    if (isReassessment) {
+      const current = session.reassessmentStudentResponses || {};
+      const updated = { ...current, [itemId]: value };
+      setSession((prev) => prev ? { ...prev, reassessmentStudentResponses: updated } : null);
+      await updateSessionDB(session.id, { reassessmentStudentResponses: updated });
+      return;
+    }
+    const updated = { ...session.studentResponses, [itemId]: value };
+    setSession((prev) => prev ? { ...prev, studentResponses: updated } : null);
+    await updateSessionDB(session.id, { studentResponses: updated });
+  }, [session, isReassessment, activeRound]);
+
+  const handleUpdateOpenResponse = useCallback(async (key: string, value: string) => {
+    if (!session) return;
+    const updated = { ...session.studentOpenResponses, [key]: value };
+    setSession((prev) => prev ? { ...prev, studentOpenResponses: updated } : null);
+    await updateSessionDB(session.id, { studentOpenResponses: updated });
+  }, [session]);
+
+  const handleComplete = useCallback(async () => {
+    if (!session) return;
+    if (isReassessment && activeRound) {
+      const parentDone = activeRound.parent_status === 'completed' || activeRound.parent_status === 'not_required';
+      await updateAssessmentRound(activeRound.id, {
+        student_status: 'completed',
+        completed_at: parentDone ? new Date().toISOString() : undefined,
+      } as any);
+      setStep("complete");
+      return;
+    }
+    if (isReassessment) {
+      const parentDone = session.reassessmentStatus === "parent_completed";
+      const newStatus = parentDone ? "completed" : "student_completed";
+      await updateSessionDB(session.id, {
+        reassessmentStatus: newStatus,
+        reassessmentDate: new Date().toISOString(),
+      });
+      setStep("complete");
+      return;
+    }
+    await updateSessionDB(session.id, { status: "student_completed" });
+    setSession((prev) => prev ? { ...prev, status: "student_completed" } : null);
+    setStep("complete");
+  }, [session, isReassessment, activeRound]);
+
+  const handleSaveAndExit = useCallback(() => { navigate("/"); }, [navigate]);
+
+  const handleClearSignature = () => {
+    sigCanvasRef.current?.clear();
+    setHasSigned(false);
+  };
+
+  const handleSignEnd = () => {
+    if (sigCanvasRef.current && !sigCanvasRef.current.isEmpty()) {
+      setHasSigned(true);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
+  if (!session) return null;
+
+  if (step === "welcome") {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center px-4 sm:px-6 bg-background relative safe-top safe-bottom">
+        <button onClick={() => navigate("/")} className="absolute top-4 left-4 p-2 rounded-xl hover:bg-muted transition-colors" title="התנתק">
+          <LogOut className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <div className="w-full max-w-md md:max-w-lg animate-fade-in text-center">
+          <img src={logo} alt="מרום" className="h-20 mx-auto mb-6" />
+          <h1 className="text-3xl font-heading font-bold mb-2">{g("ברוך הבא", "ברוכה הבאה")}</h1>
+          <h2 className="text-xl font-heading text-primary font-semibold mb-1">לבית ספר מרום בית אקשטיין</h2>
+          <h3 className="text-lg text-muted-foreground mb-4">{session.studentName}</h3>
+          {isReassessment && (
+            <div className="intake-card border-primary/30 mb-4">
+              <p className="text-sm text-primary font-medium">📋 סיכום שנתי — מילוי שאלונים חוזר</p>
+              <p className="text-xs text-muted-foreground mt-1">השאלונים הפעם ישמשו להשוואה עם תוצאות הקליטה ולבדיקת התקדמות</p>
+            </div>
+          )}
+          <p className="text-muted-foreground leading-relaxed mb-2">
+            {g("אנחנו רוצים להכיר אותך טוב יותר כדי לעזור לך להרגיש טוב, להצליח ולהתקדם בבית הספר.", "אנחנו רוצות להכיר אותך טוב יותר כדי לעזור לך להרגיש טוב, להצליח ולהתקדם בבית הספר.")}
+          </p>
+          <div className="intake-card mt-6 text-right space-y-2 text-sm text-muted-foreground">
+            <p>✓ אין תשובות נכונות או לא נכונות</p>
+            <p>✓ חשוב לענות בכנות</p>
+            <p>✓ המידע נועד לעזור לך</p>
+          </div>
+          <button
+            onClick={() => isReassessment ? setStep("explanation") : setStep("consent")}
+            className="btn-intake w-full bg-primary text-primary-foreground shadow-md hover:shadow-lg text-lg py-4 mt-6"
+          >
+            {isReassessment ? "המשך לשאלונים" : g("התחל", "התחילי")}
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "consent") {
+    return (
+      <div className="min-h-screen px-4 sm:px-6 py-6 bg-background relative safe-top safe-bottom">
+        <button onClick={() => navigate("/")} className="absolute top-4 left-4 p-2 rounded-xl hover:bg-muted transition-colors" title="התנתק">
+          <LogOut className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <div className="max-w-md md:max-w-lg mx-auto animate-slide-up">
+          <div className="text-center mb-4">
+            <img src={logo} alt="מרום" className="h-12 mx-auto mb-3" />
+            <h2 className="text-xl font-heading font-bold">כללי בית הספר</h2>
+            <p className="text-sm text-muted-foreground">{g("אנא קרא בעיון ואשר בחתימתך", "אנא קראי בעיון ואשרי בחתימתך")}</p>
+          </div>
+
+          <div className="intake-card max-h-[45vh] overflow-y-auto text-right space-y-3 text-sm leading-relaxed mb-4">
+            <p className="font-semibold text-primary text-base mb-2">ברוכים הבאים לבית ספר מרום בית אקשטיין</p>
+            {schoolRules.map((rule, i) => (
+              <div key={i} className="flex gap-2 items-start">
+                <span className="text-primary font-bold text-xs mt-0.5 flex-shrink-0">{i + 1}.</span>
+                <p className="text-muted-foreground">{rule}</p>
+              </div>
+            ))}
+            <div className="pt-3 mt-3 border-t border-border">
+              <p className="font-semibold text-sm">שמירה על הכללים תוביל תמיד להערכה והוקרה, והטבות וזכויות נוספות בבית הספר.</p>
+            </div>
+          </div>
+
+          <label className="flex items-start gap-3 p-3 rounded-xl bg-muted/30 border border-border/50 cursor-pointer mb-4">
+            <input type="checkbox" checked={consentChecked} onChange={(e) => setConsentChecked(e.target.checked)}
+              className="mt-1 w-4 h-4 rounded border-input accent-primary" />
+            <span className="text-sm text-foreground leading-relaxed">{g("קראתי את הכללים ואני מסכים להם", "קראתי את הכללים ואני מסכימה להם")}</span>
+          </label>
+
+          <div className="intake-card-soft mb-4">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-sm font-medium">{g("חתימת התלמיד", "חתימת התלמידה")}</p>
+              <button onClick={handleClearSignature} className="text-xs text-muted-foreground flex items-center gap-1 hover:text-foreground">
+                <RotateCcw className="w-3 h-3" /> נקה
+              </button>
+            </div>
+            <div className="border-2 border-dashed border-border rounded-xl bg-card overflow-hidden" style={{ touchAction: "none" }}>
+              <SignatureCanvas ref={sigCanvasRef} penColor="hsl(220, 20%, 20%)"
+                canvasProps={{ width: 500, height: 150, className: "w-full", style: { width: "100%", height: "150px" } }}
+                onEnd={handleSignEnd} />
+            </div>
+            {hasSigned && (
+              <p className="text-xs text-success flex items-center gap-1 mt-1.5">
+                <CheckCircle className="w-3 h-3" /> חתימה התקבלה
+              </p>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <button onClick={() => setStep("welcome")} className="btn-intake bg-secondary text-secondary-foreground flex-1">חזרה</button>
+            <button onClick={handleConsentAndContinue} disabled={!consentChecked || !hasSigned}
+              className="btn-intake flex-1 bg-primary text-primary-foreground shadow-md hover:shadow-lg text-lg py-4 disabled:opacity-40 disabled:cursor-not-allowed">
+              אישור והמשך
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "explanation") {
+    return (
+      <div className="min-h-screen px-4 sm:px-6 py-8 bg-background relative safe-top safe-bottom">
+        <button onClick={() => navigate("/")} className="absolute top-4 left-4 p-2 rounded-xl hover:bg-muted transition-colors" title="התנתק">
+          <LogOut className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <div className="max-w-md md:max-w-lg mx-auto animate-slide-up">
+          <h2 className="text-xl font-heading font-bold mb-1 text-center">מה אנחנו הולכים לעשות?</h2>
+          <p className="text-sm text-muted-foreground text-center mb-6">הנה הסבר קצר על כל חלק</p>
+          <div className="space-y-3">
+            {explanationCards.map((card, i) => {
+              const Icon = card.icon;
+              return (
+                <div key={i} className="intake-card-soft flex gap-4 items-start animate-fade-in" style={{ animationDelay: `${i * 80}ms` }}>
+                  <div className="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <Icon className="w-5 h-5 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-sm mb-1">{card.title}</h3>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{card.desc}</p>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div className="flex gap-3 mt-6">
+            <button onClick={() => isReassessment ? setStep("welcome") : setStep("consent")} className="btn-intake bg-secondary text-secondary-foreground flex-1">חזרה</button>
+            <button onClick={handleStartQuestionnaire} className="btn-intake flex-1 bg-primary text-primary-foreground shadow-md hover:shadow-lg text-lg py-4">המשך לשאלונים</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (step === "questionnaire") {
+    const responses = isReassessment && activeRound ? activeRound.student_responses : isReassessment ? (session.reassessmentStudentResponses || {}) : session.studentResponses;
+    return (
+      <div className="min-h-screen py-6 px-0 sm:px-2 bg-background relative safe-top safe-bottom">
+        <button onClick={() => navigate("/")} className="absolute top-4 left-4 z-30 p-2 rounded-xl hover:bg-muted transition-colors" title="התנתק">
+          <LogOut className="w-5 h-5 text-muted-foreground" />
+        </button>
+        <QuestionnaireFlow
+          role="student"
+          responses={responses}
+          openResponses={session.studentOpenResponses}
+          onUpdateResponse={handleUpdateResponse}
+          onUpdateOpenResponse={handleUpdateOpenResponse}
+          onComplete={handleComplete}
+          onSaveAndExit={handleSaveAndExit}
+          gender={gender}
+        />
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen flex flex-col items-center justify-center px-4 bg-background relative">
+      <button onClick={() => navigate("/")} className="absolute top-4 left-4 p-2 rounded-xl hover:bg-muted transition-colors" title="התנתק">
+        <LogOut className="w-5 h-5 text-muted-foreground" />
+      </button>
+      <div className="w-full max-w-md animate-fade-in text-center">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-success/15 flex items-center justify-center">
+          <Star className="w-10 h-10 text-success" />
+        </div>
+        <h1 className="text-2xl font-heading font-bold mb-3">
+          {isReassessment ? g("סיימת את הסיכום השנתי!", "סיימת את הסיכום השנתי!") : g("סיימת בהצלחה!", "סיימת בהצלחה!")}
+        </h1>
+        <p className="text-muted-foreground leading-relaxed mb-2">
+          {g("תודה רבה. סיימת את השאלון בהצלחה.", "תודה רבה. סיימת את השאלון בהצלחה.")}
+        </p>
+        <p className="text-sm text-muted-foreground">
+          {g("המידע יעזור לנו להכיר אותך טוב יותר ולתמוך בך בצורה המתאימה.", "המידע יעזור לנו להכיר אותך טוב יותר ולתמוך בך בצורה המתאימה.")}
+        </p>
+        <div className="intake-card mt-6">
+          <p className="text-sm text-muted-foreground">{g("🌟 אתה חלק חשוב מהתהליך — תודה על השיתוף!", "🌟 את חלק חשוב מהתהליך — תודה על השיתוף!")}</p>
+        </div>
+        <button onClick={() => navigate("/")} className="btn-intake bg-secondary text-secondary-foreground mt-4">
+          חזרה למסך הראשי
+        </button>
+      </div>
+    </div>
+  );
+};
+
+export default StudentFlow;
