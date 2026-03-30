@@ -934,6 +934,9 @@ export default function AdminDashboard() {
                         <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="ייצוא Excel" onClick={() => handleExportStudentPedagogy(s, 'excel')}>
                           <FileSpreadsheet className="h-3 w-3 text-green-600" />
                         </Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="הסרת תלמיד/ה" onClick={() => setRemoveStudentId(s.id)}>
+                          <Trash2 className="h-3 w-3 text-destructive" />
+                        </Button>
                       </div>
                     </td>
                   </tr>
