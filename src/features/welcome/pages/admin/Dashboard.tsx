@@ -1,6 +1,8 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { getSessionsDB, resetAllSessionsDB } from "@welcome/lib/supabase-storage";
+import { supabase as welcomeDb } from "@welcome/integrations/supabase/client";
+import { supabase as insightSupabase } from "@/integrations/supabase/client";
 import { IntakeSession, IntakeStatus } from "@welcome/lib/types";
 import { questionnaireItems } from "@welcome/data/questionnaires";
 import { CLASS_GROUPS, ADMIN_CODE } from "@welcome/data/students";
@@ -8,7 +10,7 @@ import StatusBadge from "@welcome/components/StatusBadge";
 import CodeManagement from "@welcome/components/CodeManagement";
 
 import logo from "@welcome/assets/logo.jpeg";
-import { Plus, Users, AlertTriangle, CheckCircle, Clock, Search, LogOut, XCircle, Loader2, Download, Key, FileText, Copy, ClipboardList, Trash2, ShieldAlert, Calendar } from "lucide-react";
+import { Plus, Users, AlertTriangle, CheckCircle, Clock, Search, LogOut, XCircle, Loader2, Download, Key, FileText, Copy, ClipboardList, Trash2, ShieldAlert, Calendar, RefreshCcw } from "lucide-react";
 import { calculateScores, generateRiskFlags, getCompletionPercentage } from "@welcome/lib/scoring";
 import { exportToExcel } from "@welcome/lib/export-utils";
 import { generateStudentPDF } from "@welcome/lib/pdf-export";
@@ -31,6 +33,7 @@ const Dashboard = () => {
   const [resetPassword, setResetPassword] = useState("");
   const [resetError, setResetError] = useState("");
   const [resetting, setResetting] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   useEffect(() => {
     getSessionsDB().then((data) => { setSessions(data); setLoading(false); });
   }, []);
@@ -74,6 +77,38 @@ const Dashboard = () => {
     navigator.clipboard.writeText(text);
     setCopied(key);
     setTimeout(() => setCopied(null), 1500);
+  };
+
+  const syncFromInsight = async () => {
+    setSyncing(true);
+    const { data: insightStudents, error } = await (insightSupabase.from("students") as any)
+      .select("student_code, first_name, last_name, class_name, grade, parent_code")
+      .order("student_code");
+    if (error || !insightStudents?.length) {
+      alert("שגיאה בטעינת תלמידים מ-Insight");
+      setSyncing(false);
+      return;
+    }
+    let added = 0, skipped = 0;
+    for (const s of insightStudents) {
+      const code = (s.student_code as string).toUpperCase();
+      const name = `${s.first_name} ${s.last_name}`.trim();
+      const parentCode = s.parent_code ? (s.parent_code as string).toUpperCase() : `P${code}`;
+      const existing = sessions.find(sess => sess.studentCode?.toUpperCase() === code);
+      if (existing) { skipped++; continue; }
+      const { error: insertErr } = await welcomeDb.from("intake_sessions").insert({
+        student_name: name, student_id_number: "", grade: s.grade || "",
+        intake_date: new Date().toISOString().split("T")[0],
+        parent_name: "", parent_phone: "",
+        student_code: code, parent_code: parentCode, staff_code: `ST${code}`,
+        class_group: s.class_name || "tali", academic_year: selectedYear, status: "not_started",
+      } as any);
+      if (!insertErr) added++; else skipped++;
+    }
+    const data = await getSessionsDB();
+    setSessions(data);
+    setSyncing(false);
+    alert(`סנכרון הושלם: ${added} תלמידים נוספו, ${skipped} דולגו`);
   };
 
   const handleExportClass = (classKey: string) => {
@@ -125,6 +160,10 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="flex items-center gap-2">
+            <button onClick={syncFromInsight} disabled={syncing} className="btn-intake bg-secondary text-secondary-foreground text-sm px-3 py-2 border border-primary/30 hover:bg-secondary/80 transition-all">
+              <RefreshCcw className={`w-4 h-4 inline ml-1 ${syncing ? "animate-spin" : ""}`} />
+              {syncing ? "מסנכרן..." : "סנכרן מ-Insight"}
+            </button>
             <button onClick={() => navigate("/admin/new")} className="btn-intake bg-primary text-primary-foreground text-sm px-4 py-2 shadow-md hover:shadow-lg transition-all">
               <Plus className="w-4 h-4 inline ml-1" /> קליטה חדשה
             </button>
