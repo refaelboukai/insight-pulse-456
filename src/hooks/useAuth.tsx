@@ -15,34 +15,71 @@ interface AuthCtx {
 }
 
 const STUDENT_ACCOUNT = { email: 'student@school.local', password: 'student555secure!' };
-const PARENT_ACCOUNT = { email: 'parent@school.local', password: 'parent777secure!' };
+const PARENT_ACCOUNT  = { email: 'parent@school.local',  password: 'parent777secure!'  };
+const SHARED_EMAILS   = new Set([STUDENT_ACCOUNT.email, PARENT_ACCOUNT.email]);
 
 const CODE_MAP: Record<string, { email: string; password: string; name: string; role: AppRole }> = {
   '1001': { email: 'staff@school.local', password: 'staff1001secure!', name: 'צוות חינוכי', role: 'staff' },
   '9020': { email: 'admin@school.local', password: 'admin9020secure!', name: 'מנהל מערכת', role: 'admin' },
 };
 
+// sessionStorage keys – cleared when the browser tab is closed
 const LOCKED_STUDENT_KEY = 'locked_student_id';
-const LOGIN_ERROR_KEY = 'login_pending_error';
+const LOGIN_ERROR_KEY     = 'login_pending_error';
+const ROLE_KEY            = 'app_role';
+const FULLNAME_KEY        = 'app_full_name';
 
 const AuthContext = createContext<AuthCtx | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [role, setRole] = useState<AppRole | null>(null);
-  const [fullName, setFullName] = useState('');
+  const [user,    setUser]    = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const [lockedStudentId, setLockedStudentId] = useState<string | null>(
+
+  // Role and name are mirrored in sessionStorage so page-refresh works
+  const [role, setRoleState] = useState<AppRole | null>(
+    () => (sessionStorage.getItem(ROLE_KEY) as AppRole | null)
+  );
+  const [fullName, setFullNameState] = useState(
+    () => sessionStorage.getItem(FULLNAME_KEY) || ''
+  );
+  const [lockedStudentId, setLockedStudentIdState] = useState<string | null>(
     () => sessionStorage.getItem(LOCKED_STUDENT_KEY)
   );
-  // When loginWithCode sets an explicit role/name, skip the DB fetch that would override it
+
+  // Helpers that keep sessionStorage in sync
+  const setRole = (r: AppRole | null) => {
+    setRoleState(r);
+    if (r) sessionStorage.setItem(ROLE_KEY, r);
+    else   sessionStorage.removeItem(ROLE_KEY);
+  };
+  const setFullName = (n: string) => {
+    setFullNameState(n);
+    if (n) sessionStorage.setItem(FULLNAME_KEY, n);
+    else   sessionStorage.removeItem(FULLNAME_KEY);
+  };
+  const setLockedStudentId = (id: string | null) => {
+    setLockedStudentIdState(id);
+    if (id) sessionStorage.setItem(LOCKED_STUDENT_KEY, id);
+    else    sessionStorage.removeItem(LOCKED_STUDENT_KEY);
+  };
+
+  // When loginWithCode has already set role/name explicitly, skip the async DB fetch
   const skipRoleFetch = useRef(false);
+
+  const clearSession = () => {
+    setRole(null);
+    setFullName('');
+    setLockedStudentId(null);
+    skipRoleFetch.current = false;
+  };
 
   const fetchRoleAndProfile = async (userId: string) => {
     if (skipRoleFetch.current) {
       skipRoleFetch.current = false;
       return;
     }
+    // If sessionStorage already has role from this session, don't override it
+    if (sessionStorage.getItem(ROLE_KEY)) return;
     const [roleRes, profileRes] = await Promise.all([
       supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
       supabase.from('profiles').select('full_name').eq('user_id', userId).maybeSingle(),
@@ -54,29 +91,43 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let mounted = true;
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    // onAuthStateChange handles sign-in / sign-out events
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (!mounted) return;
       const u = session?.user ?? null;
       setUser(u);
       if (u) {
+        // Only fetch from DB if loginWithCode hasn't already set a role
         setTimeout(() => {
           if (mounted) fetchRoleAndProfile(u.id);
         }, 0);
       } else {
-        setRole(null);
-        setFullName('');
-        setLockedStudentId(null);
-        sessionStorage.removeItem(LOCKED_STUDENT_KEY);
+        clearSession();
       }
       setLoading(false);
     });
 
+    // getSession() handles the initial load (page refresh)
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (!mounted) return;
       const u = session?.user ?? null;
       setUser(u);
       if (u) {
-        fetchRoleAndProfile(u.id);
+        // Shared accounts (student / parent) need lockedStudentId to work.
+        // If it's missing (e.g. tab was closed and reopened), sign them out
+        // so they re-enter their personal code.
+        if (SHARED_EMAILS.has(u.email ?? '') && !sessionStorage.getItem(LOCKED_STUDENT_KEY)) {
+          supabase.auth.signOut();
+          clearSession();
+          setLoading(false);
+          return;
+        }
+        // Use sessionStorage role if available (avoids DB round-trip on refresh)
+        if (!sessionStorage.getItem(ROLE_KEY)) {
+          fetchRoleAndProfile(u.id);
+        }
+      } else {
+        clearSession();
       }
       setLoading(false);
     }).catch(() => {
@@ -89,51 +140,60 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
   }, []);
 
-  const signInOrCreateShared = async (account: { email: string; password: string }, roleName: AppRole, displayName: string) => {
+  // ─── Helpers ──────────────────────────────────────────────────────────────
+
+  const signInOrCreateShared = async (
+    account: { email: string; password: string },
+    roleName: AppRole,
+    displayName: string,
+  ) => {
     const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: account.email,
       password: account.password,
     });
 
     if (signInError) {
-      if (signInError.message.includes('Invalid login credentials')) {
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: account.email,
-          password: account.password,
-          options: { data: { full_name: displayName } },
-        });
-        if (signUpError) return { error: 'שגיאה בכניסה' };
-        if (signUpData.user) {
-          await supabase.from('user_roles').insert({ user_id: signUpData.user.id, role: roleName as any });
-        }
-        const { error: retryError } = await supabase.auth.signInWithPassword({
-          email: account.email,
-          password: account.password,
-        });
-        if (retryError) return { error: 'שגיאה בכניסה' };
-      } else {
+      if (!signInError.message.includes('Invalid login credentials')) {
         return { error: 'שגיאה בכניסה' };
       }
+      // Account doesn't exist yet – create it (trigger will insert role)
+      const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+        email: account.email,
+        password: account.password,
+        options: { data: { full_name: displayName } },
+      });
+      if (signUpError) return { error: 'שגיאה בכניסה' };
+      // Fallback: insert role manually in case trigger hasn't run yet
+      if (signUpData.user) {
+        await supabase
+          .from('user_roles')
+          .insert({ user_id: signUpData.user.id, role: roleName as any });
+      }
+      const { error: retryError } = await supabase.auth.signInWithPassword({
+        email: account.email,
+        password: account.password,
+      });
+      if (retryError) return { error: 'שגיאה בכניסה' };
     } else if (signInData.user) {
-      // Account already exists - ensure it has the correct role in user_roles
-      // (insert is ignored if role already exists due to unique constraint)
-      await supabase.from('user_roles').insert({ user_id: signInData.user.id, role: roleName as any }).then(() => {});
+      // Account exists – try to insert role in case it's missing (ignore conflicts)
+      await supabase
+        .from('user_roles')
+        .insert({ user_id: signInData.user.id, role: roleName as any })
+        .then(() => {});
     }
     return { error: null };
   };
 
+  // ─── Main login function ───────────────────────────────────────────────────
+
   const loginWithCode = async (code: string): Promise<{ error: string | null }> => {
-    // Check static codes first
+    // ── Static codes (staff 1001, admin 9020) ────────────────────────────────
     const account = CODE_MAP[code];
     if (account) {
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: account.email,
-        password: account.password,
-      });
+      const { data: signInData, error: signInError } =
+        await supabase.auth.signInWithPassword({ email: account.email, password: account.password });
 
-      if (!signInError && signInData.user) {
-        return { error: null };
-      }
+      if (!signInError && signInData.user) return { error: null };
 
       if (signInError?.message.includes('Invalid login credentials')) {
         const { error: signUpError } = await supabase.auth.signUp({
@@ -141,30 +201,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           password: account.password,
           options: { data: { full_name: account.name } },
         });
-
         if (signUpError) return { error: 'שגיאה ביצירת חשבון' };
-
         const { error: retryError } = await supabase.auth.signInWithPassword({
-          email: account.email,
-          password: account.password,
+          email: account.email, password: account.password,
         });
-
         if (retryError) return { error: 'שגיאה בכניסה' };
         return { error: null };
       }
-
       return { error: 'שגיאה בכניסה' };
     }
 
     const sanitizedCode = code.trim().replace(/\s/g, '');
 
-    // Check if it's a parent code (starts with P or p)
+    // ── Parent code (starts with P) ──────────────────────────────────────────
     if (sanitizedCode.toUpperCase().startsWith('P')) {
       skipRoleFetch.current = true;
       const result = await signInOrCreateShared(PARENT_ACCOUNT, 'parent', 'הורה');
       if (result.error) { skipRoleFetch.current = false; return result; }
 
-      // Look up student by parent_code (case-insensitive)
       const { data: student } = await (supabase.from('students') as any)
         .select('id, first_name, last_name')
         .ilike('parent_code', sanitizedCode)
@@ -174,17 +228,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         skipRoleFetch.current = false;
         sessionStorage.setItem(LOGIN_ERROR_KEY, 'קוד שגוי');
         await supabase.auth.signOut();
+        clearSession();
         return { error: 'קוד שגוי' };
       }
 
-      sessionStorage.setItem(LOCKED_STUDENT_KEY, student.id);
       setLockedStudentId(student.id);
       setRole('parent');
       setFullName(`הורה של ${student.first_name} ${student.last_name}`);
       return { error: null };
     }
 
-    // Personal student code
+    // ── Student personal code ────────────────────────────────────────────────
     skipRoleFetch.current = true;
     const result = await signInOrCreateShared(STUDENT_ACCOUNT, 'student', 'תלמיד/ה');
     if (result.error) { skipRoleFetch.current = false; return result; }
@@ -199,22 +253,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       skipRoleFetch.current = false;
       sessionStorage.setItem(LOGIN_ERROR_KEY, 'קוד שגוי');
       await supabase.auth.signOut();
+      clearSession();
       return { error: 'קוד שגוי' };
     }
 
-    sessionStorage.setItem(LOCKED_STUDENT_KEY, student.id);
     setLockedStudentId(student.id);
     setRole('student');
     setFullName(`${student.first_name} ${student.last_name}`);
-
     return { error: null };
   };
 
+  // ─── Sign-out ──────────────────────────────────────────────────────────────
+
   const signOut = async () => {
-    sessionStorage.removeItem(LOCKED_STUDENT_KEY);
-    setLockedStudentId(null);
-    setRole(null);
-    setFullName('');
+    clearSession();
     setUser(null);
     await supabase.auth.signOut();
   };
