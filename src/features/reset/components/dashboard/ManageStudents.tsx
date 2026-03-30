@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Student, ActivityLog } from '@reset/types';
 import { Filter } from 'lucide-react';
 import { supabase } from '@reset/integrations/supabase/client';
-import { ArrowRight, Download, Users, Plus, Pencil, RefreshCw, X, Check, Search, Activity } from 'lucide-react';
+import { supabase as insightSupabase } from '@/integrations/supabase/client';
+import { ArrowRight, Download, Users, Plus, Pencil, RefreshCw, X, Check, Search, Activity, RefreshCcw } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface Props {
@@ -35,6 +36,7 @@ export default function ManageStudents({ students, activities, setStudents, refr
   const [showAddForm, setShowAddForm] = useState(false);
   const [newStudent, setNewStudent] = useState<EditForm>({ name: '', nationalId: '', className: '', grade: '', homeroomTeacher: '' });
   const [saving, setSaving] = useState(false);
+  const [syncing, setSyncing] = useState(false);
   const [classFilter, setClassFilter] = useState<string>('all');
   const [sortBy, setSortBy] = useState<'name' | 'support' | 'lastLogin'>('name');
 
@@ -190,6 +192,33 @@ export default function ManageStudents({ students, activities, setStudents, refr
     setSaving(false);
   };
 
+  const syncFromInsight = async () => {
+    setSyncing(true);
+    const { data: insightStudents, error } = await (insightSupabase.from('students') as any)
+      .select('student_code, first_name, last_name, class_name, grade')
+      .order('student_code');
+    if (error || !insightStudents?.length) {
+      toast.error('שגיאה בטעינת תלמידים מ-Insight');
+      setSyncing(false);
+      return;
+    }
+    let added = 0, skipped = 0;
+    for (const s of insightStudents) {
+      const code = (s.student_code as string).toUpperCase();
+      const name = `${s.first_name} ${s.last_name}`.trim();
+      const { error: upsertErr } = await supabase
+        .from('students')
+        .upsert(
+          { name, access_code: code, class_name: s.class_name || null, grade: s.grade || null, active: true, national_id: code },
+          { onConflict: 'access_code' }
+        );
+      if (upsertErr) skipped++; else added++;
+    }
+    toast.success(`סנכרון הושלם: ${added} תלמידים עודכנו, ${skipped} שגיאות`);
+    await refreshData();
+    setSyncing(false);
+  };
+
   const exportCSV = () => {
     const rows = students.map(s => {
       const status = getStatus(s);
@@ -224,6 +253,10 @@ export default function ManageStudents({ students, activities, setStudents, refr
       <div className="flex gap-3 mb-4 flex-wrap">
         <button onClick={() => setShowAddForm(!showAddForm)} className="btn-primary text-sm flex items-center gap-1">
           <Plus size={14} /> הוסף תלמיד
+        </button>
+        <button onClick={syncFromInsight} disabled={syncing} className="btn-secondary text-sm flex items-center gap-1 border-primary/30 text-primary">
+          <RefreshCcw size={14} className={syncing ? 'animate-spin' : ''} />
+          {syncing ? 'מסנכרן...' : 'סנכרן מ-Insight'}
         </button>
         <button onClick={exportCSV} className="btn-secondary text-sm flex items-center gap-1">
           <Download size={14} /> ייצוא
