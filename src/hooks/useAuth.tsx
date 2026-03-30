@@ -23,6 +23,7 @@ const CODE_MAP: Record<string, { email: string; password: string; name: string; 
 };
 
 const LOCKED_STUDENT_KEY = 'locked_student_id';
+const LOGIN_ERROR_KEY = 'login_pending_error';
 
 const AuthContext = createContext<AuthCtx | undefined>(undefined);
 
@@ -159,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (!student) {
+        sessionStorage.setItem(LOGIN_ERROR_KEY, 'קוד שגוי');
         await supabase.auth.signOut();
         return { error: 'קוד שגוי' };
       }
@@ -181,12 +183,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     if (!student) {
+      sessionStorage.setItem(LOGIN_ERROR_KEY, 'קוד שגוי');
       await supabase.auth.signOut();
       return { error: 'קוד שגוי' };
     }
 
     sessionStorage.setItem(LOCKED_STUDENT_KEY, student.id);
     setLockedStudentId(student.id);
+    setRole('student');
     setFullName(`${student.first_name} ${student.last_name}`);
 
     return { error: null };

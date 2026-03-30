@@ -7,15 +7,21 @@ import { LogIn, KeyRound, Sparkles } from 'lucide-react';
 import logoSrc from '@/assets/logo.jpeg';
 
 const SAVED_CODE_KEY = 'saved_login_code';
+const LOGIN_ERROR_KEY = 'login_pending_error';
 
 export default function Login() {
   const { loginWithCode } = useAuth();
   const savedCode = localStorage.getItem(SAVED_CODE_KEY) || '';
+  const pendingError = sessionStorage.getItem(LOGIN_ERROR_KEY) || '';
   const [code, setCode] = useState(savedCode);
   const [saveCode, setSaveCode] = useState(!!savedCode);
-  const [error, setError] = useState('');
+  const [error, setError] = useState(() => {
+    const e = sessionStorage.getItem(LOGIN_ERROR_KEY) || '';
+    if (e) sessionStorage.removeItem(LOGIN_ERROR_KEY);
+    return e;
+  });
   const [loading, setLoading] = useState(false);
-  const [autoLogging, setAutoLogging] = useState(!!savedCode);
+  const [autoLogging, setAutoLogging] = useState(!!savedCode && !pendingError);
 
   // Auto-login if saved code exists
   useEffect(() => {
