@@ -120,7 +120,11 @@ export default function AdminDashboard() {
   const [customClassName, setCustomClassName] = useState('');
   const [newMotherName, setNewMotherName] = useState('');
   const [newFatherName, setNewFatherName] = useState('');
+  const [newStudentCode, setNewStudentCode] = useState('');
+  const [newParentCode, setNewParentCode] = useState('');
   const [addingStudent, setAddingStudent] = useState(false);
+  const [removeStudentId, setRemoveStudentId] = useState<string | null>(null);
+  const [removingStudent, setRemovingStudent] = useState(false);
   const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
 
   // Monthly report
@@ -342,24 +346,36 @@ export default function AdminDashboard() {
 
   const handleAddStudent = async () => {
     const finalClass = newClass === '__custom__' ? customClassName.trim() : newClass;
-    if (!newFirstName.trim() || !newLastName.trim() || !finalClass) { toast.error('נא למלא את כל השדות'); return; }
+    if (!newFirstName.trim() || !newLastName.trim() || !finalClass || !newStudentCode.trim() || !newParentCode.trim()) { toast.error('נא למלא את כל שדות החובה (שם, כיתה, קוד תלמיד וקוד הורה)'); return; }
     setAddingStudent(true);
-    const studentCode = generateRandomCode();
-    const parentCode = 'P' + crypto.randomUUID().replace(/-/g, '').slice(0, 7);
     const { error } = await supabase.from('students').insert({
-      student_code: studentCode, parent_code: parentCode,
+      student_code: newStudentCode.trim(), parent_code: newParentCode.trim(),
       first_name: newFirstName.trim(), last_name: newLastName.trim(),
       grade: finalClass, class_name: finalClass,
       mother_name: newMotherName.trim() || null,
       father_name: newFatherName.trim() || null,
     });
     if (!error) {
-      toast.success(`${newFirstName} ${newLastName} נוסף/ה — קוד תלמיד: ${studentCode}, קוד הורה: ${parentCode}`);
-      setNewFirstName(''); setNewLastName(''); setNewClass(''); setCustomClassName(''); setNewMotherName(''); setNewFatherName(''); setShowAddStudent(false); fetchAll();
+      toast.success(`${newFirstName} ${newLastName} נוסף/ה בהצלחה`);
+      setNewFirstName(''); setNewLastName(''); setNewClass(''); setCustomClassName(''); setNewMotherName(''); setNewFatherName(''); setNewStudentCode(''); setNewParentCode(''); setShowAddStudent(false); fetchAll();
     } else {
       toast.error('שגיאה בהוספת תלמיד');
     }
     setAddingStudent(false);
+  };
+
+  const handleRemoveStudent = async () => {
+    if (!removeStudentId) return;
+    setRemovingStudent(true);
+    const { error } = await supabase.from('students').update({ is_active: false }).eq('id', removeStudentId);
+    if (!error) {
+      toast.success('התלמיד/ה הוסר/ה בהצלחה');
+      fetchAll();
+    } else {
+      toast.error('שגיאה בהסרת תלמיד');
+    }
+    setRemovingStudent(false);
+    setRemoveStudentId(null);
   };
 
   const generateMonthlyReport = async (sid: string | null) => {
@@ -839,12 +855,33 @@ export default function AdminDashboard() {
                 )}
                 <Input placeholder="שם האם (אופציונלי)" value={newMotherName} onChange={e => setNewMotherName(e.target.value)} className="h-10 text-sm" />
                 <Input placeholder="שם האב (אופציונלי)" value={newFatherName} onChange={e => setNewFatherName(e.target.value)} className="h-10 text-sm" />
-                <p className="text-[10px] text-muted-foreground">קוד תלמיד וקוד הורה ייוצרו אוטומטית</p>
+                <Input placeholder="קוד תלמיד *" value={newStudentCode} onChange={e => setNewStudentCode(e.target.value)} className="h-10 text-sm" dir="ltr" />
+                <Input placeholder="קוד הורה *" value={newParentCode} onChange={e => setNewParentCode(e.target.value)} className="h-10 text-sm" dir="ltr" />
+                <p className="text-[10px] text-muted-foreground">* שדות חובה</p>
                 <Button onClick={handleAddStudent} disabled={addingStudent} className="w-full h-10 text-sm">{addingStudent ? 'מוסיף...' : 'הוספה'}</Button>
               </div>
             </DialogContent>
           </Dialog>
         </div>
+
+        {/* Remove student confirm dialog */}
+        <AlertDialog open={!!removeStudentId} onOpenChange={(open) => { if (!open) setRemoveStudentId(null); }}>
+          <AlertDialogContent dir="rtl">
+            <AlertDialogHeader>
+              <AlertDialogTitle>הסרת תלמיד/ה</AlertDialogTitle>
+              <AlertDialogDescription>
+                האם להסיר את התלמיד/ה מהמערכת? (ניתן לשחזר בהמשך)
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter className="flex-row-reverse gap-2">
+              <AlertDialogCancel>ביטול</AlertDialogCancel>
+              <AlertDialogAction onClick={handleRemoveStudent} disabled={removingStudent} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                {removingStudent ? 'מסיר...' : 'הסרה'}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+
         <div className="overflow-x-auto">
           <table className="w-full text-sm" dir="rtl">
             <thead>
@@ -896,6 +933,9 @@ export default function AdminDashboard() {
                         </Button>
                         <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="ייצוא Excel" onClick={() => handleExportStudentPedagogy(s, 'excel')}>
                           <FileSpreadsheet className="h-3 w-3 text-green-600" />
+                        </Button>
+                        <Button size="sm" variant="ghost" className="h-6 w-6 p-0" title="הסרת תלמיד/ה" onClick={() => setRemoveStudentId(s.id)}>
+                          <Trash2 className="h-3 w-3 text-destructive" />
                         </Button>
                       </div>
                     </td>
