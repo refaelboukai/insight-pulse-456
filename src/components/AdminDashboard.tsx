@@ -346,24 +346,36 @@ export default function AdminDashboard() {
 
   const handleAddStudent = async () => {
     const finalClass = newClass === '__custom__' ? customClassName.trim() : newClass;
-    if (!newFirstName.trim() || !newLastName.trim() || !finalClass) { toast.error('נא למלא את כל השדות'); return; }
+    if (!newFirstName.trim() || !newLastName.trim() || !finalClass || !newStudentCode.trim() || !newParentCode.trim()) { toast.error('נא למלא את כל שדות החובה (שם, כיתה, קוד תלמיד וקוד הורה)'); return; }
     setAddingStudent(true);
-    const studentCode = generateRandomCode();
-    const parentCode = 'P' + crypto.randomUUID().replace(/-/g, '').slice(0, 7);
     const { error } = await supabase.from('students').insert({
-      student_code: studentCode, parent_code: parentCode,
+      student_code: newStudentCode.trim(), parent_code: newParentCode.trim(),
       first_name: newFirstName.trim(), last_name: newLastName.trim(),
       grade: finalClass, class_name: finalClass,
       mother_name: newMotherName.trim() || null,
       father_name: newFatherName.trim() || null,
     });
     if (!error) {
-      toast.success(`${newFirstName} ${newLastName} נוסף/ה — קוד תלמיד: ${studentCode}, קוד הורה: ${parentCode}`);
-      setNewFirstName(''); setNewLastName(''); setNewClass(''); setCustomClassName(''); setNewMotherName(''); setNewFatherName(''); setShowAddStudent(false); fetchAll();
+      toast.success(`${newFirstName} ${newLastName} נוסף/ה בהצלחה`);
+      setNewFirstName(''); setNewLastName(''); setNewClass(''); setCustomClassName(''); setNewMotherName(''); setNewFatherName(''); setNewStudentCode(''); setNewParentCode(''); setShowAddStudent(false); fetchAll();
     } else {
       toast.error('שגיאה בהוספת תלמיד');
     }
     setAddingStudent(false);
+  };
+
+  const handleRemoveStudent = async () => {
+    if (!removeStudentId) return;
+    setRemovingStudent(true);
+    const { error } = await supabase.from('students').update({ is_active: false }).eq('id', removeStudentId);
+    if (!error) {
+      toast.success('התלמיד/ה הוסר/ה בהצלחה');
+      fetchAll();
+    } else {
+      toast.error('שגיאה בהסרת תלמיד');
+    }
+    setRemovingStudent(false);
+    setRemoveStudentId(null);
   };
 
   const generateMonthlyReport = async (sid: string | null) => {
