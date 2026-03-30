@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import type { User } from '@supabase/supabase-js';
 
@@ -35,8 +35,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [lockedStudentId, setLockedStudentId] = useState<string | null>(
     () => sessionStorage.getItem(LOCKED_STUDENT_KEY)
   );
+  // When loginWithCode sets an explicit role/name, skip the DB fetch that would override it
+  const skipRoleFetch = useRef(false);
 
   const fetchRoleAndProfile = async (userId: string) => {
+    if (skipRoleFetch.current) {
+      skipRoleFetch.current = false;
+      return;
+    }
     const [roleRes, profileRes] = await Promise.all([
       supabase.from('user_roles').select('role').eq('user_id', userId).maybeSingle(),
       supabase.from('profiles').select('full_name').eq('user_id', userId).maybeSingle(),
@@ -84,7 +90,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const signInOrCreateShared = async (account: { email: string; password: string }, roleName: AppRole, displayName: string) => {
-    const { error: signInError } = await supabase.auth.signInWithPassword({
+    const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
       email: account.email,
       password: account.password,
     });
@@ -108,6 +114,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       } else {
         return { error: 'שגיאה בכניסה' };
       }
+    } else if (signInData.user) {
+      // Account already exists - ensure it has the correct role in user_roles
+      // (insert is ignored if role already exists due to unique constraint)
+      await supabase.from('user_roles').insert({ user_id: signInData.user.id, role: roleName as any }).then(() => {});
     }
     return { error: null };
   };
@@ -150,8 +160,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
     // Check if it's a parent code (starts with P or p)
     if (sanitizedCode.toUpperCase().startsWith('P')) {
+      skipRoleFetch.current = true;
       const result = await signInOrCreateShared(PARENT_ACCOUNT, 'parent', 'הורה');
-      if (result.error) return result;
+      if (result.error) { skipRoleFetch.current = false; return result; }
 
       // Look up student by parent_code (case-insensitive)
       const { data: student } = await (supabase.from('students') as any)
@@ -160,6 +171,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         .maybeSingle();
 
       if (!student) {
+        skipRoleFetch.current = false;
         sessionStorage.setItem(LOGIN_ERROR_KEY, 'קוד שגוי');
         await supabase.auth.signOut();
         return { error: 'קוד שגוי' };
@@ -173,8 +185,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     // Personal student code
+    skipRoleFetch.current = true;
     const result = await signInOrCreateShared(STUDENT_ACCOUNT, 'student', 'תלמיד/ה');
-    if (result.error) return result;
+    if (result.error) { skipRoleFetch.current = false; return result; }
 
     const { data: student } = await supabase
       .from('students')
@@ -183,6 +196,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .maybeSingle();
 
     if (!student) {
+      skipRoleFetch.current = false;
       sessionStorage.setItem(LOGIN_ERROR_KEY, 'קוד שגוי');
       await supabase.auth.signOut();
       return { error: 'קוד שגוי' };
