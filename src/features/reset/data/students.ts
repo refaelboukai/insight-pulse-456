@@ -1,0 +1,25 @@
+import { Student } from '@reset/types';
+
+export const initialStudents: Student[] = [
+  { id: "1", name: "ליאן עמאר", nationalId: "220875173", accessCode: "2ES4CVZ9", createdAt: new Date().toISOString(), active: true },
+  { id: "2", name: "תאיר שקיר", nationalId: "338910508", accessCode: "2FMZ95WF", createdAt: new Date().toISOString(), active: true },
+  { id: "3", name: "הודיה אלחרר", nationalId: "338533714", accessCode: "2NYLMKY5", createdAt: new Date().toISOString(), active: true },
+  { id: "4", name: "ענהאל שמיאן דהן", nationalId: "336737879", accessCode: "2QAPD446", createdAt: new Date().toISOString(), active: true },
+  { id: "5", name: "אריאל עוז עזרא", nationalId: "338544315", accessCode: "2WHMZBQW", createdAt: new Date().toISOString(), active: true },
+  { id: "6", name: "נעם יחיאב", nationalId: "220569461", accessCode: "3JCKN2HT", createdAt: new Date().toISOString(), active: true },
+  { id: "7", name: "אוריאן שיקלי", nationalId: "336633144", accessCode: "3MWANYDP", createdAt: new Date().toISOString(), active: true },
+  { id: "8", name: "אלה בן דוד", nationalId: "221014160", accessCode: "3PV9ADF8", createdAt: new Date().toISOString(), active: true },
+  { id: "9", name: "להב נהוראי", nationalId: "221088404", accessCode: "4K63KH4F", createdAt: new Date().toISOString(), active: true },
+  { id: "10", name: "רון מרש", nationalId: "337179972", accessCode: "4KD6DSCL", createdAt: new Date().toISOString(), active: true },
+  { id: "11", name: "נעם נחמיאס", nationalId: "220086573", accessCode: "4LPEA7P3", createdAt: new Date().toISOString(), active: true },
+  { id: "12", name: "יובל אורטס", nationalId: "219875960", accessCode: "4WVZJ6C5", createdAt: new Date().toISOString(), active: true },
+  { id: "13", name: "איתמר דכינגר", nationalId: "334883121", accessCode: "5CQM2KMB", createdAt: new Date().toISOString(), active: true },
+  { id: "14", name: "אוריאן קדוש", nationalId: "334442019", accessCode: "5GW3XBN5", createdAt: new Date().toISOString(), active: true },
+  { id: "15", name: "ליה קרמר", nationalId: "220270474", accessCode: "5U7SZXQ3", createdAt: new Date().toISOString(), active: true },
+  { id: "16", name: "נעם טובי קרלן", nationalId: "220087241", accessCode: "6DDFP7Y2", createdAt: new Date().toISOString(), active: true },
+  { id: "17", name: "נחמן דרור", nationalId: "335205126", accessCode: "6SMMR6UD", createdAt: new Date().toISOString(), active: true },
+  { id: "18", name: "אילון שוורץ", nationalId: "220998827", accessCode: "6ZP6SNHT", createdAt: new Date().toISOString(), active: true },
+  { id: "19", name: "איתמר דהן", nationalId: "218904258", accessCode: "72Z96TWV", createdAt: new Date().toISOString(), active: true },
+  { id: "20", name: "עופר יוסף בכר", nationalId: "218961118", accessCode: "7CJRQ33K", createdAt: new Date().toISOString(), active: true },
+  { id: "21", name: "ליה פקנהיים", nationalId: "218706380", accessCode: "7E7BQBST", createdAt: new Date().toISOString(), active: true },
+];

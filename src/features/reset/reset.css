@@ -1,0 +1,158 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 220 25% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 25% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 25% 15%;
+
+    --primary: 210 60% 45%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 210 20% 96%;
+    --secondary-foreground: 220 25% 15%;
+
+    --muted: 210 15% 94%;
+    --muted-foreground: 215 15% 50%;
+
+    --accent: 210 20% 96%;
+    --accent-foreground: 220 25% 15%;
+
+    --destructive: 0 85% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 210 20% 92%;
+    --input: 210 20% 92%;
+    --ring: 210 60% 45%;
+
+    --radius: 1.5rem;
+
+    /* App-specific semantic colors */
+    --sage: 142 45% 93%;
+    --sage-text: 142 50% 25%;
+    --sage-icon: 142 45% 40%;
+
+    --check-blue: 210 80% 95%;
+    --check-blue-text: 210 70% 35%;
+    --check-blue-icon: 210 70% 50%;
+
+    --contact-pink: 350 70% 95%;
+    --contact-pink-text: 350 60% 40%;
+    --contact-pink-icon: 350 60% 55%;
+
+    --history-gray: 210 25% 94%;
+    --history-gray-text: 210 20% 35%;
+    --history-gray-icon: 210 20% 50%;
+
+    --lavender: 265 50% 94%;
+    --lavender-text: 265 45% 35%;
+    --lavender-icon: 265 45% 50%;
+
+    --sand: 35 50% 92%;
+    --sand-text: 35 60% 30%;
+    --sand-icon: 35 55% 45%;
+
+    --sos: 0 85% 60%;
+    --sos-foreground: 0 0% 100%;
+
+    --success: 142 50% 45%;
+    --success-foreground: 0 0% 100%;
+
+    --warning: 35 90% 55%;
+    --warning-foreground: 0 0% 100%;
+
+    --teal: 174 42% 65%;
+
+    /* Shadows */
+    --shadow-card: 0 2px 8px rgba(0,0,0,0.04);
+    --shadow-card-hover: 0 4px 16px rgba(0,0,0,0.08);
+    --shadow-soft: inset 0 0 0 1px rgba(0,0,0,0.03), 0 2px 4px rgba(0,0,0,0.05);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 240 5.3% 26.1%;
+    --sidebar-primary: 240 5.9% 10%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 240 4.8% 95.9%;
+    --sidebar-accent-foreground: 240 5.9% 10%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-assistant antialiased;
+    direction: rtl;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    text-wrap: balance;
+  }
+}
+
+@layer components {
+  .card-reset {
+    @apply rounded-3xl bg-card p-6;
+    box-shadow: var(--shadow-soft);
+    transition: box-shadow 200ms cubic-bezier(0.4, 0, 0.2, 1),
+                transform 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-reset:hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .card-reset:active {
+    transform: scale(0.98);
+  }
+
+  .btn-reset {
+    @apply rounded-xl px-6 py-3 font-semibold text-base transition-all duration-200;
+    @apply focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2;
+  }
+
+  .btn-primary {
+    @apply btn-reset bg-primary text-primary-foreground;
+  }
+
+  .btn-primary:hover {
+    @apply opacity-90;
+  }
+
+  .btn-secondary {
+    @apply btn-reset bg-secondary text-secondary-foreground;
+  }
+
+  .btn-sos {
+    @apply btn-reset bg-sos text-sos-foreground;
+  }
+
+  .btn-success {
+    @apply btn-reset bg-success text-success-foreground;
+  }
+
+  .home-card {
+    @apply card-reset flex flex-col items-center justify-center gap-3 p-8 cursor-pointer min-h-[140px];
+  }
+
+  .screen-container {
+    @apply min-h-screen bg-background px-4 py-6 pb-24 max-w-lg mx-auto;
+  }
+
+  .floating-adult-btn {
+    @apply fixed bottom-6 left-6 z-50 rounded-2xl px-4 py-3 font-semibold text-sm;
+    @apply bg-contact-pink text-contact-pink-text;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  }
+}

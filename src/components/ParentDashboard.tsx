@@ -8,7 +8,8 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { AttendanceBadge, BehaviorBadge, ParticipationBadge } from '@/components/ReportBadges';
 import ReportTrendCharts from '@/components/ReportTrendCharts';
-import { FileText, Calendar as CalendarIcon, BookOpen, Clock, CheckCircle2, XCircle, CalendarDays, MessageSquareText } from 'lucide-react';
+import { FileText, Calendar as CalendarIcon, BookOpen, Clock, CheckCircle2, XCircle, CalendarDays, MessageSquareText, ClipboardList } from 'lucide-react';
+import WelcomeParentModule from '@/features/welcome/WelcomeParentModule';
 import { format, startOfDay, subDays, startOfWeek } from 'date-fns';
 import { he } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
@@ -22,7 +23,7 @@ export default function ParentDashboard() {
   const [exams, setExams] = useState<any[]>([]);
   const [subjects, setSubjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'reports' | 'exams' | 'summaries'>('reports');
+  const [activeTab, setActiveTab] = useState<'reports' | 'exams' | 'summaries' | 'welcome'>('reports');
   const [weeklySummaries, setWeeklySummaries] = useState<any[]>([]);
   const [dateFilter, setDateFilter] = useState<DateFilter>('week');
   const [customFrom, setCustomFrom] = useState<Date | undefined>(undefined);
@@ -186,6 +187,18 @@ export default function ParentDashboard() {
           <p className="text-xs font-bold">סיכום שבועי</p>
           <p className={`text-[10px] mt-0.5 ${activeTab === 'summaries' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
             {weeklySummaries.length} סיכומים
+          </p>
+        </button>
+        <button
+          onClick={() => setActiveTab('welcome')}
+          className={`flex-1 rounded-xl p-3 text-center border transition-all ${
+            activeTab === 'welcome' ? 'bg-primary text-primary-foreground shadow-md' : 'bg-card hover:shadow-sm'
+          }`}
+        >
+          <ClipboardList className={`h-5 w-5 mx-auto mb-1 ${activeTab === 'welcome' ? '' : 'text-muted-foreground'}`} />
+          <p className="text-xs font-bold">שאלון Welcome</p>
+          <p className={`text-[10px] mt-0.5 ${activeTab === 'welcome' ? 'text-primary-foreground/70' : 'text-muted-foreground'}`}>
+            הערכה אישית
           </p>
         </button>
       </div>
@@ -370,6 +383,16 @@ export default function ParentDashboard() {
               );
             })
           )}
+        </div>
+      )}
+
+      {/* Welcome Questionnaire */}
+      {activeTab === 'welcome' && (
+        <div>
+          {student?.parent_code
+            ? <WelcomeParentModule parentCode={student.parent_code} />
+            : <div className="text-center py-8 text-sm text-muted-foreground">לא הוגדר קוד הורה עבור ילד זה.</div>
+          }
         </div>
       )}
 
