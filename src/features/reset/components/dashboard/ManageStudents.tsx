@@ -253,7 +253,8 @@ export default function ManageStudents({ students, activities, setStudents, refr
         </div>
       </div>
 
-      {/* Actions bar */}
+      <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm mb-5">
+        <p className="text-xs font-bold text-muted-foreground mb-3">פעולות</p>
       <div className="flex gap-3 mb-4 flex-wrap">
         <button onClick={() => setShowAddForm(!showAddForm)} className="btn-primary text-sm flex items-center gap-1">
           <Plus size={14} /> הוסף תלמיד
