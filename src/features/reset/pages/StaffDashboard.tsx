@@ -16,6 +16,13 @@ import ReflectionsDashboard from '@reset/components/dashboard/ReflectionsDashboa
 
 type ViewType = 'overview' | 'student' | 'manage' | 'alerts' | 'charts' | 'reports' | 'activity' | 'codes' | 'brain' | 'reflections';
 
+const RESET_CATEGORIES = [
+  { key: 'activity_logs', label: 'יומני פעילות' },
+  { key: 'daily_reflections', label: 'התבוננות עצמית' },
+  { key: 'brain_training_scores', label: 'ציוני אימון מוח' },
+  { key: 'brain_training_history', label: 'היסטוריית אימון מוח' },
+] as const;
+
 export default function StaffDashboard() {
   const { students, activities, logout, setStudents, refreshData, specialCodes, refreshSpecialCodes } = useApp();
 
