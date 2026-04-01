@@ -310,10 +310,10 @@ export default function ManageStudents({ students, activities, setStudents, refr
             />
           </div>
           <div className="flex gap-2">
-            <button onClick={addStudent} disabled={saving} className="btn-primary text-sm flex items-center gap-1">
+            <button onClick={addStudent} disabled={saving} className="rounded-xl bg-primary text-primary-foreground py-2 px-4 text-sm font-semibold flex items-center gap-1">
               <Check size={14} /> {saving ? 'שומר...' : 'הוסף'}
             </button>
-            <button onClick={() => setShowAddForm(false)} className="btn-secondary text-sm flex items-center gap-1">
+            <button onClick={() => setShowAddForm(false)} className="rounded-xl bg-secondary text-secondary-foreground py-2 px-4 text-sm font-semibold flex items-center gap-1">
               <X size={14} /> ביטול
             </button>
           </div>
