@@ -141,7 +141,7 @@ export default function StaffDashboard() {
       )}
 
       {/* Monitoring & Reports */}
-      <div className="mb-6">
+      <div className="mb-5 rounded-2xl border border-border bg-card/60 p-4 shadow-sm">
         <p className="text-xs font-bold text-muted-foreground mb-3 flex items-center gap-1.5">
           <BarChart3 size={13} /> מעקב ודוחות
         </p>
@@ -151,7 +151,7 @@ export default function StaffDashboard() {
       </div>
 
       {/* Management */}
-      <div className="mb-6">
+      <div className="mb-5 rounded-2xl border border-border bg-card/60 p-4 shadow-sm">
         <p className="text-xs font-bold text-muted-foreground mb-3 flex items-center gap-1.5">
           <Users size={13} /> ניהול
         </p>
