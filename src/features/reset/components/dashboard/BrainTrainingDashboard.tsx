@@ -330,39 +330,44 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 max-w-5xl mx-auto" dir="rtl">
-      <button onClick={onBack} className="btn-secondary text-sm mb-4 flex items-center gap-1">
-        <ArrowRight size={14} /> חזור
+    <div className="bg-background p-4 md:p-6 max-w-3xl mx-auto" dir="rtl">
+      <button onClick={onBack} className="mb-4 text-sm font-medium text-primary hover:underline flex items-center gap-1">
+        <ArrowRight size={14} /> חזור לדשבורד
       </button>
 
-      <div className="flex items-center gap-2 mb-6">
-        <Brain size={22} className="text-primary" />
-        <h2 className="text-xl font-bold text-foreground">התקדמות אימון מוח</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-[hsl(265,50%,92%)] flex items-center justify-center">
+          <Brain size={20} className="text-[hsl(265,45%,45%)]" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">התקדמות אימון מוח</h2>
+          <p className="text-xs text-muted-foreground">{summary.activeStudents} תלמידים פעילים</p>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-        <div className="card-reset p-4 text-center">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-sm">
           <Users size={18} className="text-primary mx-auto mb-1" />
           <p className="text-2xl font-bold text-foreground">{summary.activeStudents}/{summary.totalStudents}</p>
           <p className="text-xs text-muted-foreground">תלמידים פעילים</p>
         </div>
-        <div className="card-reset p-4 text-center">
-          <Flame size={18} className="text-warning mx-auto mb-1" />
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-sm">
+          <Flame size={18} className="text-[hsl(35,90%,55%)] mx-auto mb-1" />
           <p className="text-2xl font-bold text-foreground">{summary.totalGames}</p>
           <p className="text-xs text-muted-foreground">סה"כ משחקים</p>
         </div>
-        <div className="card-reset p-4 text-center">
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-sm">
           <TrendingUp size={18} className="text-primary mx-auto mb-1" />
           <p className="text-2xl font-bold text-foreground">{summary.avgLevel}</p>
           <p className="text-xs text-muted-foreground">ממוצע רמה</p>
         </div>
-        <div className="card-reset p-4 text-center">
-          <Trophy size={18} className="text-warning mx-auto mb-1" />
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-sm">
+          <Trophy size={18} className="text-[hsl(35,90%,55%)] mx-auto mb-1" />
           <p className="text-2xl font-bold text-foreground">{summary.highPerformers}</p>
           <p className="text-xs text-muted-foreground">מצטיינים (5+)</p>
         </div>
-        <div className="card-reset p-4 text-center">
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-sm">
           <Brain size={18} className="text-primary mx-auto mb-1" />
           <p className="text-2xl font-bold text-foreground">{Object.keys(GAME_LABELS).length}</p>
           <p className="text-xs text-muted-foreground">משחקים זמינים</p>
