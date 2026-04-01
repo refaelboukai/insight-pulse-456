@@ -255,23 +255,23 @@ export default function ManageStudents({ students, activities, setStudents, refr
 
       <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm mb-5">
         <p className="text-xs font-bold text-muted-foreground mb-3">פעולות</p>
-      <div className="flex gap-3 mb-4 flex-wrap">
-        <button onClick={() => setShowAddForm(!showAddForm)} className="btn-primary text-sm flex items-center gap-1">
-          <Plus size={14} /> הוסף תלמיד
-        </button>
-        <button onClick={syncFromInsight} disabled={syncing} className="btn-secondary text-sm flex items-center gap-1 border-primary/30 text-primary">
-          <RefreshCcw size={14} className={syncing ? 'animate-spin' : ''} />
-          {syncing ? 'מסנכרן...' : 'סנכרן מ-Insight'}
-        </button>
-        <button onClick={exportCSV} className="btn-secondary text-sm flex items-center gap-1">
-          <Download size={14} /> ייצוא
-        </button>
-      </div>
+        <div className="flex gap-3 mb-4 flex-wrap">
+          <button onClick={() => setShowAddForm(!showAddForm)} className="rounded-xl bg-primary text-primary-foreground py-2 px-4 text-sm font-semibold flex items-center gap-1">
+            <Plus size={14} /> הוסף תלמיד
+          </button>
+          <button onClick={syncFromInsight} disabled={syncing} className="rounded-xl bg-secondary text-secondary-foreground py-2 px-4 text-sm font-semibold flex items-center gap-1 border border-primary/30 text-primary">
+            <RefreshCcw size={14} className={syncing ? 'animate-spin' : ''} />
+            {syncing ? 'מסנכרן...' : 'סנכרן מ-Insight'}
+          </button>
+          <button onClick={exportCSV} className="rounded-xl bg-secondary text-secondary-foreground py-2 px-4 text-sm font-semibold flex items-center gap-1">
+            <Download size={14} /> ייצוא
+          </button>
+        </div>
 
-      {/* Add student form */}
-      {showAddForm && (
-        <div className="card-reset p-4 mb-4 border border-primary/20">
-          <h3 className="text-sm font-bold text-foreground mb-3">הוספת תלמיד/ה חדש/ה</h3>
+        {/* Add student form */}
+        {showAddForm && (
+          <div className="rounded-xl border border-primary/20 bg-card p-4 mb-4">
+            <h3 className="text-sm font-bold text-foreground mb-3">הוספת תלמיד/ה חדש/ה</h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
             <input
               value={newStudent.name}
