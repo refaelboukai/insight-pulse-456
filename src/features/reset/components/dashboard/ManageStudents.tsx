@@ -319,126 +319,135 @@ export default function ManageStudents({ students, activities, setStudents, refr
           </div>
         </div>
       )}
+      </div>
 
-      {/* Class filter */}
-      {classes.length > 2 && (
-        <div className="flex gap-2 mb-4 flex-wrap">
-          <Filter size={14} className="text-muted-foreground mt-1" />
-          {classes.map(c => (
-            <button key={c} onClick={() => setClassFilter(c)}
-              className={`text-xs py-1 px-3 rounded-lg ${classFilter === c ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>
-              {c === 'all' ? 'כל הכיתות' : c}
+      {/* Filters & Search section */}
+      <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm mb-5">
+        <p className="text-xs font-bold text-muted-foreground mb-3">סינון וחיפוש</p>
+
+        {/* Class filter */}
+        {classes.length > 2 && (
+          <div className="flex gap-2 mb-3 flex-wrap">
+            <Filter size={14} className="text-muted-foreground mt-1" />
+            {classes.map(c => (
+              <button key={c} onClick={() => setClassFilter(c)}
+                className={`text-xs py-1 px-3 rounded-lg ${classFilter === c ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>
+                {c === 'all' ? 'כל הכיתות' : c}
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* Search */}
+        <div className="relative mb-3">
+          <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            placeholder="חיפוש לפי שם, ת.ז או קוד..."
+            className="w-full rounded-xl border border-input bg-card pr-10 pl-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+          />
+        </div>
+
+        {/* Sort */}
+        <div className="flex gap-2">
+          {[
+            { key: 'name' as const, label: 'שם' },
+            { key: 'support' as const, label: 'בקשות עזרה' },
+            { key: 'lastLogin' as const, label: 'כניסה אחרונה' },
+          ].map(s => (
+            <button key={s.key} onClick={() => setSortBy(s.key)}
+              className={`text-xs py-1 px-3 rounded-lg ${sortBy === s.key ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>
+              {s.label}
             </button>
           ))}
         </div>
-      )}
-
-      {/* Search */}
-      <div className="relative mb-4">
-        <Search size={16} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
-        <input
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder="חיפוש לפי שם, ת.ז או קוד..."
-          className="w-full rounded-xl border border-input bg-card pr-10 pl-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-        />
-      </div>
-
-      {/* Sort */}
-      <div className="flex gap-2 mb-4">
-        {[
-          { key: 'name' as const, label: 'שם' },
-          { key: 'support' as const, label: 'בקשות עזרה' },
-          { key: 'lastLogin' as const, label: 'כניסה אחרונה' },
-        ].map(s => (
-          <button key={s.key} onClick={() => setSortBy(s.key)}
-            className={`text-xs py-1 px-3 rounded-lg ${sortBy === s.key ? 'bg-primary text-primary-foreground' : 'bg-secondary text-secondary-foreground'}`}>
-            {s.label}
-          </button>
-        ))}
       </div>
 
       {/* Student list */}
-      <div className="space-y-2">
-        {filtered.map(s => {
-          const status = getStatus(s);
-          const isEditing = editingId === s.id;
+      <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm">
+        <p className="text-xs font-bold text-muted-foreground mb-3">רשימת תלמידים ({filtered.length})</p>
+        <div className="space-y-2">
+          {filtered.map(s => {
+            const status = getStatus(s);
+            const isEditing = editingId === s.id;
 
-          if (isEditing) {
-            return (
-              <div key={s.id} className="card-reset p-4 border border-primary/20">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
-                  <div>
-                    <label className="text-xs text-muted-foreground">שם</label>
-                    <input value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))}
-                      maxLength={100} className="w-full rounded-lg border border-input bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+            if (isEditing) {
+              return (
+                <div key={s.id} className="rounded-xl border border-primary/20 bg-card p-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+                    <div>
+                      <label className="text-xs text-muted-foreground">שם</label>
+                      <input value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))}
+                        maxLength={100} className="w-full rounded-lg border border-input bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">ת.ז</label>
+                      <input value={editForm.nationalId} onChange={e => setEditForm(p => ({ ...p, nationalId: e.target.value }))}
+                        maxLength={20} className="w-full rounded-lg border border-input bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">כיתה</label>
+                      <input value={editForm.className} onChange={e => setEditForm(p => ({ ...p, className: e.target.value }))}
+                        maxLength={20} className="w-full rounded-lg border border-input bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                    </div>
+                    <div>
+                      <label className="text-xs text-muted-foreground">שכבה</label>
+                      <input value={editForm.grade} onChange={e => setEditForm(p => ({ ...p, grade: e.target.value }))}
+                        maxLength={20} className="w-full rounded-lg border border-input bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                    </div>
+                    <div className="sm:col-span-2">
+                      <label className="text-xs text-muted-foreground">מחנכ/ת</label>
+                      <input value={editForm.homeroomTeacher} onChange={e => setEditForm(p => ({ ...p, homeroomTeacher: e.target.value }))}
+                        maxLength={100} className="w-full rounded-lg border border-input bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                    </div>
                   </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">ת.ז</label>
-                    <input value={editForm.nationalId} onChange={e => setEditForm(p => ({ ...p, nationalId: e.target.value }))}
-                      maxLength={20} className="w-full rounded-lg border border-input bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">כיתה</label>
-                    <input value={editForm.className} onChange={e => setEditForm(p => ({ ...p, className: e.target.value }))}
-                      maxLength={20} className="w-full rounded-lg border border-input bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                  </div>
-                  <div>
-                    <label className="text-xs text-muted-foreground">שכבה</label>
-                    <input value={editForm.grade} onChange={e => setEditForm(p => ({ ...p, grade: e.target.value }))}
-                      maxLength={20} className="w-full rounded-lg border border-input bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <label className="text-xs text-muted-foreground">מחנכ/ת</label>
-                    <input value={editForm.homeroomTeacher} onChange={e => setEditForm(p => ({ ...p, homeroomTeacher: e.target.value }))}
-                      maxLength={100} className="w-full rounded-lg border border-input bg-card px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring" />
+                  <div className="flex gap-2">
+                    <button onClick={saveEdit} disabled={saving} className="rounded-lg bg-primary text-primary-foreground py-1.5 px-3 text-xs font-semibold flex items-center gap-1">
+                      <Check size={12} /> {saving ? 'שומר...' : 'שמור'}
+                    </button>
+                    <button onClick={() => setEditingId(null)} className="rounded-lg bg-secondary text-secondary-foreground py-1.5 px-3 text-xs font-semibold flex items-center gap-1">
+                      <X size={12} /> ביטול
+                    </button>
                   </div>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={saveEdit} disabled={saving} className="btn-primary text-xs flex items-center gap-1">
-                    <Check size={12} /> {saving ? 'שומר...' : 'שמור'}
-                  </button>
-                  <button onClick={() => setEditingId(null)} className="btn-secondary text-xs flex items-center gap-1">
-                    <X size={12} /> ביטול
-                  </button>
+              );
+            }
+
+            return (
+              <div key={s.id} className="rounded-xl border border-border/60 bg-card p-3">
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span className="text-sm font-medium text-foreground">{s.name}</span>
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full ${status.color}`}>{status.label}</span>
+                      {!s.active && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive">מושבת</span>}
+                    </div>
+                    <div className="text-xs text-muted-foreground mt-0.5">
+                      {s.nationalId} | <span dir="ltr">{s.accessCode}</span>
+                      {s.className && ` | ${s.className}`}
+                      {s.homeroomTeacher && ` | ${s.homeroomTeacher}`}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-1 shrink-0">
+                    <button onClick={() => startEdit(s)} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground" title="עריכה">
+                      <Pencil size={14} />
+                    </button>
+                    <button onClick={() => resetAccessCode(s.id, s.name)} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground" title="איפוס קוד">
+                      <RefreshCw size={14} />
+                    </button>
+                    <button
+                      onClick={() => toggleActive(s)}
+                      className={`text-xs py-1 px-2 rounded-lg ${s.active ? 'bg-destructive/10 text-destructive hover:bg-destructive/20' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
+                    >
+                      {s.active ? 'השבת' : 'הפעל'}
+                    </button>
+                  </div>
                 </div>
               </div>
             );
-          }
-
-          return (
-            <div key={s.id} className="card-reset p-3">
-              <div className="flex items-center justify-between gap-2">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-sm font-medium text-foreground">{s.name}</span>
-                    <span className={`text-[10px] px-2 py-0.5 rounded-full ${status.color}`}>{status.label}</span>
-                    {!s.active && <span className="text-[10px] px-2 py-0.5 rounded-full bg-destructive/10 text-destructive">מושבת</span>}
-                  </div>
-                  <div className="text-xs text-muted-foreground mt-0.5">
-                    {s.nationalId} | <span dir="ltr">{s.accessCode}</span>
-                    {s.className && ` | ${s.className}`}
-                    {s.homeroomTeacher && ` | ${s.homeroomTeacher}`}
-                  </div>
-                </div>
-                <div className="flex items-center gap-1 shrink-0">
-                  <button onClick={() => startEdit(s)} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground" title="עריכה">
-                    <Pencil size={14} />
-                  </button>
-                  <button onClick={() => resetAccessCode(s.id, s.name)} className="p-1.5 rounded-lg hover:bg-secondary text-muted-foreground hover:text-foreground" title="איפוס קוד">
-                    <RefreshCw size={14} />
-                  </button>
-                  <button
-                    onClick={() => toggleActive(s)}
-                    className={`text-xs py-1 px-2 rounded-lg ${s.active ? 'bg-destructive/10 text-destructive hover:bg-destructive/20' : 'bg-green-100 text-green-700 hover:bg-green-200'}`}
-                  >
-                    {s.active ? 'השבת' : 'הפעל'}
-                  </button>
-                </div>
-              </div>
-            </div>
-          );
-        })}
+          })}
+        </div>
       </div>
     </div>
   );
