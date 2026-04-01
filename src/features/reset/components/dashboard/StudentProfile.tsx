@@ -177,8 +177,8 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
   const intensityCount = studentActs.filter(a => a.intensityScore).length;
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 max-w-5xl mx-auto" dir="rtl">
-      <button onClick={onBack} className="btn-secondary text-sm mb-4 flex items-center gap-1">
+    <div className="bg-background p-4 md:p-6 max-w-3xl mx-auto" dir="rtl">
+      <button onClick={onBack} className="mb-4 text-sm font-medium text-primary hover:underline flex items-center gap-1">
         <ArrowRight size={14} /> חזור לדשבורד
       </button>
 
