@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useApp } from '@reset/contexts/AppContext';
-import { LogOut, AlertTriangle, BarChart3, FileText, Users, Shield, Activity, Key, Brain, Star } from 'lucide-react';
+import { LogOut, AlertTriangle, BarChart3, FileText, Users, Shield, Activity, Key, Brain, Star, Trash2 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { resetSupabase } from '../supabase';
 import DashboardStats from '@reset/components/dashboard/DashboardStats';
 import StudentProfile from '@reset/components/dashboard/StudentProfile';
 import AlertsView, { useAlerts } from '@reset/components/dashboard/AlertsView';
