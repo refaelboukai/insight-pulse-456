@@ -374,8 +374,8 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
         </div>
       </div>
 
-      {/* Student Filter */}
-      <div className="mb-6">
+      <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm mb-5">
+        <p className="text-xs font-bold text-muted-foreground mb-3">סינון</p>
         <select
           value={selectedStudent}
           onChange={e => setSelectedStudent(e.target.value)}
