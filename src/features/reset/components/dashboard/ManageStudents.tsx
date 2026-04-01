@@ -238,16 +238,20 @@ export default function ManageStudents({ students, activities, setStudents, refr
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 max-w-4xl mx-auto" dir="rtl">
-      <button onClick={onBack} className="btn-secondary text-sm mb-4 flex items-center gap-1">
-        <ArrowRight size={14} /> חזור
+    <div className="bg-background p-4 md:p-6 max-w-3xl mx-auto" dir="rtl">
+      <button onClick={onBack} className="mb-4 text-sm font-medium text-primary hover:underline flex items-center gap-1">
+        <ArrowRight size={14} /> חזור לדשבורד
       </button>
-      <div className="flex items-center gap-2 mb-2">
-        <Users size={20} className="text-primary" />
-        <h2 className="text-xl font-bold text-foreground">ניהול תלמידים</h2>
-        <span className="text-xs bg-secondary text-muted-foreground rounded-full px-2 py-0.5 mr-2">{students.length}</span>
+
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-[hsl(174,40%,90%)] flex items-center justify-center">
+          <Users size={20} className="text-[hsl(174,42%,35%)]" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">ניהול תלמידים</h2>
+          <p className="text-xs text-muted-foreground">{students.length} תלמידים רשומים</p>
+        </div>
       </div>
-      <p className="text-sm text-muted-foreground mb-4">ניהול רשימת תלמידים, קודים אישיים וסטטוס פעילות.</p>
 
       {/* Actions bar */}
       <div className="flex gap-3 mb-4 flex-wrap">
