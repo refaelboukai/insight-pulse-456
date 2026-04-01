@@ -51,46 +51,56 @@ export default function ChartsView({ activities, onBack }: Props) {
   }, [activities]);
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 max-w-5xl mx-auto" dir="rtl">
-      <button onClick={onBack} className="btn-secondary text-sm mb-4 flex items-center gap-1">
-        <ArrowRight size={14} /> חזור
+    <div className="bg-background p-4 md:p-6 max-w-3xl mx-auto" dir="rtl">
+      <button onClick={onBack} className="mb-4 text-sm font-medium text-primary hover:underline flex items-center gap-1">
+        <ArrowRight size={14} /> חזור לדשבורד
       </button>
-      <div className="flex items-center gap-2 mb-6">
-        <BarChart3 size={20} className="text-primary" />
-        <h2 className="text-xl font-bold text-foreground">גרפים ותרשימים – תמונה כוללת</h2>
+
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-[hsl(142,45%,91%)] flex items-center justify-center">
+          <BarChart3 size={20} className="text-[hsl(142,50%,35%)]" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">גרפים ותרשימים</h2>
+          <p className="text-xs text-muted-foreground">תמונה כוללת של הפעילות</p>
+        </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="card-reset p-5">
-          <h3 className="text-sm font-bold text-foreground mb-4">התפלגות רגשות</h3>
-          {emotionDistribution.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <PieChart>
-                <Pie data={emotionDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}
-                  label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={11}>
-                  {emotionDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
-                </Pie>
-                <Tooltip />
-              </PieChart>
-            </ResponsiveContainer>
-          ) : <p className="text-sm text-muted-foreground text-center py-8">אין נתונים</p>}
+      <div className="space-y-5">
+        {/* Emotion + Skill side by side on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="rounded-2xl border border-border bg-card/60 p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-foreground mb-4">התפלגות רגשות</h3>
+            {emotionDistribution.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <PieChart>
+                  <Pie data={emotionDistribution} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80}
+                    label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`} labelLine={false} fontSize={11}>
+                    {emotionDistribution.map((_, i) => <Cell key={i} fill={CHART_COLORS[i % CHART_COLORS.length]} />)}
+                  </Pie>
+                  <Tooltip />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : <p className="text-sm text-muted-foreground text-center py-8">אין נתונים</p>}
+          </div>
+
+          <div className="rounded-2xl border border-border bg-card/60 p-5 shadow-sm">
+            <h3 className="text-sm font-bold text-foreground mb-4">שימוש בכלים</h3>
+            {skillUsageData.length > 0 ? (
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart data={skillUsageData} layout="vertical">
+                  <XAxis type="number" fontSize={11} />
+                  <YAxis dataKey="name" type="category" width={80} fontSize={11} />
+                  <Tooltip />
+                  <Bar dataKey="value" fill="hsl(210, 60%, 45%)" radius={[0, 6, 6, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : <p className="text-sm text-muted-foreground text-center py-8">אין נתונים</p>}
+          </div>
         </div>
 
-        <div className="card-reset p-5">
-          <h3 className="text-sm font-bold text-foreground mb-4">שימוש בכלים</h3>
-          {skillUsageData.length > 0 ? (
-            <ResponsiveContainer width="100%" height={220}>
-              <BarChart data={skillUsageData} layout="vertical">
-                <XAxis type="number" fontSize={11} />
-                <YAxis dataKey="name" type="category" width={80} fontSize={11} />
-                <Tooltip />
-                <Bar dataKey="value" fill="hsl(210, 60%, 45%)" radius={[0, 6, 6, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
-          ) : <p className="text-sm text-muted-foreground text-center py-8">אין נתונים</p>}
-        </div>
-
-        <div className="card-reset p-5 md:col-span-2">
+        {/* Weekly trend full width */}
+        <div className="rounded-2xl border border-border bg-card/60 p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4">מגמה שבועית – בדיקות וממוצע עוצמה</h3>
           {weeklyTrend.length > 0 ? (
             <ResponsiveContainer width="100%" height={250}>

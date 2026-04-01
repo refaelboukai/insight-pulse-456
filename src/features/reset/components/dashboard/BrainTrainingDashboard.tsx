@@ -330,47 +330,52 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
   }
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 max-w-5xl mx-auto" dir="rtl">
-      <button onClick={onBack} className="btn-secondary text-sm mb-4 flex items-center gap-1">
-        <ArrowRight size={14} /> חזור
+    <div className="bg-background p-4 md:p-6 max-w-3xl mx-auto" dir="rtl">
+      <button onClick={onBack} className="mb-4 text-sm font-medium text-primary hover:underline flex items-center gap-1">
+        <ArrowRight size={14} /> חזור לדשבורד
       </button>
 
-      <div className="flex items-center gap-2 mb-6">
-        <Brain size={22} className="text-primary" />
-        <h2 className="text-xl font-bold text-foreground">התקדמות אימון מוח</h2>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-[hsl(265,50%,92%)] flex items-center justify-center">
+          <Brain size={20} className="text-[hsl(265,45%,45%)]" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">התקדמות אימון מוח</h2>
+          <p className="text-xs text-muted-foreground">{summary.activeStudents} תלמידים פעילים</p>
+        </div>
       </div>
 
       {/* Summary Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-        <div className="card-reset p-4 text-center">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-5">
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-sm">
           <Users size={18} className="text-primary mx-auto mb-1" />
           <p className="text-2xl font-bold text-foreground">{summary.activeStudents}/{summary.totalStudents}</p>
           <p className="text-xs text-muted-foreground">תלמידים פעילים</p>
         </div>
-        <div className="card-reset p-4 text-center">
-          <Flame size={18} className="text-warning mx-auto mb-1" />
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-sm">
+          <Flame size={18} className="text-[hsl(35,90%,55%)] mx-auto mb-1" />
           <p className="text-2xl font-bold text-foreground">{summary.totalGames}</p>
           <p className="text-xs text-muted-foreground">סה"כ משחקים</p>
         </div>
-        <div className="card-reset p-4 text-center">
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-sm">
           <TrendingUp size={18} className="text-primary mx-auto mb-1" />
           <p className="text-2xl font-bold text-foreground">{summary.avgLevel}</p>
           <p className="text-xs text-muted-foreground">ממוצע רמה</p>
         </div>
-        <div className="card-reset p-4 text-center">
-          <Trophy size={18} className="text-warning mx-auto mb-1" />
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-sm">
+          <Trophy size={18} className="text-[hsl(35,90%,55%)] mx-auto mb-1" />
           <p className="text-2xl font-bold text-foreground">{summary.highPerformers}</p>
           <p className="text-xs text-muted-foreground">מצטיינים (5+)</p>
         </div>
-        <div className="card-reset p-4 text-center">
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center shadow-sm">
           <Brain size={18} className="text-primary mx-auto mb-1" />
           <p className="text-2xl font-bold text-foreground">{Object.keys(GAME_LABELS).length}</p>
           <p className="text-xs text-muted-foreground">משחקים זמינים</p>
         </div>
       </div>
 
-      {/* Student Filter */}
-      <div className="mb-6">
+      <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm mb-5">
+        <p className="text-xs font-bold text-muted-foreground mb-3">סינון</p>
         <select
           value={selectedStudent}
           onChange={e => setSelectedStudent(e.target.value)}
@@ -382,10 +387,9 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
           ))}
         </select>
       </div>
-
       {/* Cognitive Profile for selected student */}
       {cognitiveProfile && selectedStudent !== 'all' && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-reset p-5 mb-6">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm mb-6">
           <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
             <Brain size={16} className="text-primary" />
             פרופיל קוגניטיבי – {activeStudentsList.find(s => s.id === selectedStudent)?.name}
@@ -431,7 +435,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Game Popularity */}
-        <div className="card-reset p-5">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4">פופולריות משחקים</h3>
           {gamePopularity.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
@@ -450,7 +454,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
         </div>
 
         {/* Avg Level Radar */}
-        <div className="card-reset p-5">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4">ממוצע רמה לפי יכולת</h3>
           {avgLevelByGame.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
@@ -471,7 +475,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
         <div className="space-y-4 mb-6">
           {/* Alerts */}
           {cognitiveChanges.alerts.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-reset p-5 border-r-4 border-warning">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm border-r-4 border-warning">
               <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                 <AlertTriangle size={16} className="text-warning" />
                 שינויים קוגניטיביים שזוהו
@@ -493,7 +497,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
           )}
 
           {/* Weekly Trend Chart */}
-          <div className="card-reset p-5">
+          <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
             <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
               <Activity size={16} className="text-primary" />
               מגמה שבועית – 4 שבועות אחרונים
@@ -515,7 +519,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
 
           {/* Significant Changes Table */}
           {cognitiveChanges.changes.filter(c => c.direction !== 'stable').length > 0 && (
-            <div className="card-reset p-5">
+            <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
               <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
                 <Sparkles size={16} className="text-primary" />
                 שינויים בולטים – השוואה שבועית
@@ -570,7 +574,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
       )}
 
 
-      <div className="card-reset p-5">
+      <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
         <h3 className="text-base font-bold text-foreground mb-4 flex items-center gap-2">
           <Users size={18} className="text-primary" />
           התקדמות תלמידים – פירוט אישי

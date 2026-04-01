@@ -177,13 +177,13 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
   const intensityCount = studentActs.filter(a => a.intensityScore).length;
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 max-w-5xl mx-auto" dir="rtl">
-      <button onClick={onBack} className="btn-secondary text-sm mb-4 flex items-center gap-1">
+    <div className="bg-background p-4 md:p-6 max-w-3xl mx-auto" dir="rtl">
+      <button onClick={onBack} className="mb-4 text-sm font-medium text-primary hover:underline flex items-center gap-1">
         <ArrowRight size={14} /> חזור לדשבורד
       </button>
 
       {/* Header */}
-      <div className="card-reset p-5 mb-6">
+      <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm mb-6">
         <div className="flex items-center justify-between flex-wrap gap-3">
           <div>
             <h2 className="text-xl font-bold text-foreground">{student.name}</h2>
@@ -202,23 +202,23 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-6">
-        <div className="card-reset p-4 text-center">
+        <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm text-center">
           <p className="text-2xl font-bold text-primary">{studentActs.length}</p>
           <p className="text-xs text-muted-foreground">בדיקות</p>
         </div>
-        <div className="card-reset p-4 text-center">
+        <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm text-center">
           <p className="text-2xl font-bold text-foreground">{intensityCount > 0 ? (totalIntensity / intensityCount).toFixed(1) : '—'}</p>
           <p className="text-xs text-muted-foreground">ממוצע עוצמה</p>
         </div>
-        <div className="card-reset p-4 text-center">
+        <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm text-center">
           <p className="text-2xl font-bold text-destructive">{studentActs.filter(a => a.supportRequested).length}</p>
           <p className="text-xs text-muted-foreground">בקשות עזרה</p>
         </div>
-        <div className="card-reset p-4 text-center">
+        <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm text-center">
           <p className="text-2xl font-bold text-foreground">{skillUsage.length}</p>
           <p className="text-xs text-muted-foreground">כלים שונים</p>
         </div>
-        <div className="card-reset p-4 text-center">
+        <div className="rounded-2xl border border-border/60 bg-card p-4 shadow-sm text-center">
           <p className="text-2xl font-bold text-foreground">
             {student.lastLoginAt ? new Date(student.lastLoginAt).toLocaleDateString('he-IL') : '—'}
           </p>
@@ -228,7 +228,7 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
 
       {/* Patterns Section */}
       {patterns.length > 0 && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-reset p-5 mb-6">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm mb-6">
           <h3 className="text-base font-bold text-foreground mb-3 flex items-center gap-2">
             <Activity size={16} className="text-primary" /> דפוסים וממצאים
           </h3>
@@ -246,7 +246,7 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
       {/* Charts Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Intensity Timeline */}
-        <div className="card-reset p-5">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
             <TrendingUp size={14} className="text-primary" /> רמת עוצמה לאורך זמן
           </h3>
@@ -276,7 +276,7 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
         </div>
 
         {/* Emotion Distribution */}
-        <div className="card-reset p-5">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4">התפלגות רגשות</h3>
           {emotionDist.length > 0 ? (
             <ResponsiveContainer width="100%" height={200}>
@@ -292,7 +292,7 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
         </div>
 
         {/* Hour of day */}
-        <div className="card-reset p-5">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
             <Clock size={14} className="text-primary" /> פעילות לפי שעה ביום
           </h3>
@@ -309,7 +309,7 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
         </div>
 
         {/* Day of week */}
-        <div className="card-reset p-5">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4">פעילות לפי יום בשבוע</h3>
           <ResponsiveContainer width="100%" height={200}>
             <BarChart data={dayDistribution}>
@@ -322,7 +322,7 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
         </div>
 
         {/* Skill usage */}
-        <div className="card-reset p-5">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
             <BarChart3 size={14} className="text-primary" /> שימוש בכלים
           </h3>
@@ -339,7 +339,7 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
         </div>
 
         {/* Support contacts */}
-        <div className="card-reset p-5">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
             <MessageSquare size={14} className="text-destructive" /> פניות לצוות
           </h3>
@@ -364,7 +364,7 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
 
       {/* Brain Training Progress */}
       {brainScores.length > 0 && (
-        <div className="card-reset p-5 mb-6">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm mb-6">
           <h3 className="text-base font-bold text-foreground mb-4 flex items-center gap-2">
             <Brain size={18} className="text-primary" /> אימון מוח – פרופיל קוגניטיבי
           </h3>
@@ -418,7 +418,7 @@ export default function StudentProfile({ student, activities, onBack }: Props) {
       )}
 
       {/* Activity Log */}
-      <div className="card-reset p-5">
+      <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
         <h3 className="text-base font-bold text-foreground mb-3">היסטוריית פעילות מלאה</h3>
         {studentActs.length === 0 ? (
           <p className="text-sm text-muted-foreground">אין פעילות עדיין.</p>
