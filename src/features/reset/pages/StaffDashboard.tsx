@@ -33,8 +33,32 @@ export default function StaffDashboard() {
 
   const [view, setView] = useState<ViewType>('overview');
   const [selectedStudentId, setSelectedStudentId] = useState<string | null>(null);
+  const [showResetDialog, setShowResetDialog] = useState(false);
+  const [resetSelected, setResetSelected] = useState<Record<string, boolean>>({});
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetting, setResetting] = useState(false);
 
   const alerts = useAlerts(students, activities);
+
+  const handleResetData = async () => {
+    if (resetPassword !== '9020') return;
+    const selected = RESET_CATEGORIES.filter(c => resetSelected[c.key]);
+    if (selected.length === 0) return;
+    setResetting(true);
+    try {
+      for (const cat of selected) {
+        await resetSupabase.from(cat.key).delete().neq('id', '00000000-0000-0000-0000-000000000000');
+      }
+      await refreshData();
+      setShowResetDialog(false);
+      setResetSelected({});
+      setResetPassword('');
+    } catch (e) {
+      console.error('Reset error:', e);
+    } finally {
+      setResetting(false);
+    }
+  };
 
   const handleSelectStudent = (id: string) => {
     setSelectedStudentId(id);
