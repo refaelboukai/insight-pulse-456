@@ -64,31 +64,72 @@ export default function StaffDashboard() {
   if (view === 'brain') return <BrainTrainingDashboard students={students} onBack={goOverview} onSelectStudent={handleSelectStudent} />;
   if (view === 'reflections') return <ReflectionsDashboard students={students} onBack={goOverview} onSelectStudent={handleSelectStudent} />;
 
+  const menuItems: { key: ViewType; icon: typeof Activity; label: string; iconBg: string; iconColor: string; badge?: number }[] = [
+    { key: 'activity', icon: Activity, label: 'פעילות אחרונה', iconBg: 'bg-[hsl(210,80%,93%)]', iconColor: 'text-[hsl(210,70%,45%)]', badge: activities.length || undefined },
+    { key: 'alerts', icon: Shield, label: 'התראות חכמות', iconBg: 'bg-[hsl(0,80%,93%)]', iconColor: 'text-[hsl(0,70%,50%)]', badge: alerts.length || undefined },
+    { key: 'charts', icon: BarChart3, label: 'גרפים ותרשימים', iconBg: 'bg-[hsl(142,45%,91%)]', iconColor: 'text-[hsl(142,50%,35%)]' },
+    { key: 'brain', icon: Brain, label: 'אימון מוח', iconBg: 'bg-[hsl(265,50%,92%)]', iconColor: 'text-[hsl(265,45%,45%)]' },
+    { key: 'reports', icon: FileText, label: 'דוחות תקופתיים', iconBg: 'bg-[hsl(35,50%,90%)]', iconColor: 'text-[hsl(35,60%,35%)]' },
+    { key: 'reflections', icon: Star, label: 'התבוננות עצמית', iconBg: 'bg-[hsl(45,80%,90%)]', iconColor: 'text-[hsl(45,70%,35%)]' },
+  ];
+
+  const managementItems: typeof menuItems = [
+    { key: 'manage', icon: Users, label: 'ניהול תלמידים', iconBg: 'bg-[hsl(174,40%,90%)]', iconColor: 'text-[hsl(174,42%,35%)]' },
+    { key: 'codes', icon: Key, label: 'קודים מיוחדים', iconBg: 'bg-[hsl(290,40%,92%)]', iconColor: 'text-[hsl(290,40%,40%)]' },
+  ];
+
+  const renderCard = (item: typeof menuItems[0]) => {
+    const Icon = item.icon;
+    return (
+      <motion.button
+        key={item.key}
+        whileHover={{ scale: 1.03 }}
+        whileTap={{ scale: 0.97 }}
+        onClick={() => setView(item.key)}
+        className="relative rounded-2xl bg-card border border-border/60 p-5 flex flex-col items-center gap-3 text-center cursor-pointer transition-shadow hover:shadow-md"
+      >
+        <div className={`w-12 h-12 rounded-xl ${item.iconBg} flex items-center justify-center`}>
+          <Icon size={22} className={item.iconColor} />
+        </div>
+        <span className="text-sm font-semibold text-foreground leading-tight">{item.label}</span>
+        {item.badge && item.badge > 0 && (
+          <span className="absolute top-2 left-2 min-w-[22px] h-[22px] flex items-center justify-center text-[11px] font-bold bg-primary text-primary-foreground rounded-full px-1.5">
+            {item.badge}
+          </span>
+        )}
+      </motion.button>
+    );
+  };
+
   // ---- MAIN OVERVIEW ----
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 max-w-5xl mx-auto" dir="rtl">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-2xl font-extrabold text-foreground">דשבורד צוות</h1>
-          <p className="text-sm text-muted-foreground">בית ספר מרום בית אקשטיין</p>
+    <div className="bg-background p-4 md:p-6 max-w-3xl mx-auto" dir="rtl">
+      {/* Stats row */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center">
+          <p className="text-2xl font-extrabold text-primary">{students.length}</p>
+          <p className="text-xs text-muted-foreground mt-1">תלמידים</p>
         </div>
-        <button onClick={logout} className="btn-secondary text-sm flex items-center gap-1">
-          <LogOut size={14} /> התנתקות
-        </button>
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center">
+          <p className="text-2xl font-extrabold text-[hsl(210,70%,45%)]">{activities.length}</p>
+          <p className="text-xs text-muted-foreground mt-1">פעילויות</p>
+        </div>
+        <div className="rounded-2xl bg-card border border-border/60 p-4 text-center">
+          <p className="text-2xl font-extrabold text-[hsl(0,70%,50%)]">{alerts.length}</p>
+          <p className="text-xs text-muted-foreground mt-1">התראות</p>
+        </div>
       </div>
-
-      <DashboardStats students={students} activities={activities} />
 
       {/* Alert banner */}
       {alerts.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="card-reset p-4 mb-6 border border-destructive/20 bg-destructive/5 cursor-pointer"
+          className="rounded-2xl p-4 mb-6 border border-destructive/20 bg-destructive/5 cursor-pointer"
           onClick={() => setView('alerts')}
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-destructive/10 flex items-center justify-center">
+            <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
               <AlertTriangle size={20} className="text-destructive" />
             </div>
             <div className="flex-1">
@@ -99,50 +140,25 @@ export default function StaffDashboard() {
         </motion.div>
       )}
 
-      {/* Upper group: Monitoring & Reports */}
-      <p className="text-xs font-bold text-muted-foreground mb-2">📊 מעקב ודוחות</p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <button onClick={() => setView('activity')} className="card-reset p-4 flex flex-col items-center gap-2 text-center cursor-pointer hover:bg-secondary/50">
-          <Activity size={22} className="text-primary" />
-          <span className="text-xs font-semibold text-foreground">פעילות אחרונה</span>
-          {activities.length > 0 && <span className="text-xs bg-primary/10 text-primary rounded-full px-2 py-0.5">{activities.length}</span>}
-        </button>
-        <button onClick={() => setView('alerts')} className="card-reset p-4 flex flex-col items-center gap-2 text-center cursor-pointer hover:bg-secondary/50">
-          <Shield size={22} className="text-destructive" />
-          <span className="text-xs font-semibold text-foreground">התראות חכמות</span>
-          {alerts.length > 0 && <span className="text-xs bg-destructive text-destructive-foreground rounded-full px-2 py-0.5">{alerts.length}</span>}
-        </button>
-        <button onClick={() => setView('charts')} className="card-reset p-4 flex flex-col items-center gap-2 text-center cursor-pointer hover:bg-secondary/50">
-          <BarChart3 size={22} className="text-primary" />
-          <span className="text-xs font-semibold text-foreground">גרפים ותרשימים</span>
-        </button>
-        <button onClick={() => setView('brain')} className="card-reset p-4 flex flex-col items-center gap-2 text-center cursor-pointer hover:bg-secondary/50">
-          <Brain size={22} className="text-primary" />
-          <span className="text-xs font-semibold text-foreground">אימון מוח</span>
-        </button>
-        <button onClick={() => setView('reports')} className="card-reset p-4 flex flex-col items-center gap-2 text-center cursor-pointer hover:bg-secondary/50">
-          <FileText size={22} className="text-primary" />
-          <span className="text-xs font-semibold text-foreground">דוחות תקופתיים</span>
-        </button>
-        <button onClick={() => setView('reflections')} className="card-reset p-4 flex flex-col items-center gap-2 text-center cursor-pointer hover:bg-secondary/50">
-          <Star size={22} className="text-primary" />
-          <span className="text-xs font-semibold text-foreground">התבוננות עצמית</span>
-        </button>
+      {/* Monitoring & Reports */}
+      <div className="mb-6">
+        <p className="text-xs font-bold text-muted-foreground mb-3 flex items-center gap-1.5">
+          <BarChart3 size={13} /> מעקב ודוחות
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          {menuItems.map(renderCard)}
+        </div>
       </div>
 
-      {/* Lower group: Management */}
-      <p className="text-xs font-bold text-muted-foreground mb-2">👥 ניהול ותלמידים</p>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <button onClick={() => setView('manage')} className="card-reset p-4 flex flex-col items-center gap-2 text-center cursor-pointer hover:bg-secondary/50">
-          <Users size={22} className="text-primary" />
-          <span className="text-xs font-semibold text-foreground">ניהול תלמידים</span>
-        </button>
-        <button onClick={() => setView('codes')} className="card-reset p-4 flex flex-col items-center gap-2 text-center cursor-pointer hover:bg-secondary/50">
-          <Key size={22} className="text-primary" />
-          <span className="text-xs font-semibold text-foreground">קודים מיוחדים</span>
-        </button>
+      {/* Management */}
+      <div className="mb-6">
+        <p className="text-xs font-bold text-muted-foreground mb-3 flex items-center gap-1.5">
+          <Users size={13} /> ניהול
+        </p>
+        <div className="grid grid-cols-3 gap-3">
+          {managementItems.map(renderCard)}
+        </div>
       </div>
-
     </div>
   );
 }
