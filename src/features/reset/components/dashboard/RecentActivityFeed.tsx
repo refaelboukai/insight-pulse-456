@@ -111,7 +111,7 @@ export default function RecentActivityFeed({ students, activities, onBack, onSel
       <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm">
         <div className="space-y-3">
         {groupedByStudent.length === 0 ? (
-          <div className="card-reset p-8 text-center">
+          <div className="py-8 text-center">
             <p className="text-muted-foreground">אין פעילות עדיין</p>
           </div>
         ) : (
@@ -121,7 +121,7 @@ export default function RecentActivityFeed({ students, activities, onBack, onSel
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: i * 0.03, duration: 0.2 }}
-              className="card-reset overflow-hidden"
+              className="rounded-xl border border-border/60 bg-card overflow-hidden"
             >
               {/* Student summary header */}
               <div
