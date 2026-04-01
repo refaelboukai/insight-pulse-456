@@ -93,18 +93,23 @@ export default function RecentActivityFeed({ students, activities, onBack, onSel
   };
 
   return (
-    <div className="min-h-screen bg-background p-4 md:p-6 max-w-4xl mx-auto" dir="rtl">
-      <button onClick={onBack} className="btn-secondary text-sm mb-4 flex items-center gap-1">
+    <div className="bg-background p-4 md:p-6 max-w-3xl mx-auto" dir="rtl">
+      <button onClick={onBack} className="mb-4 text-sm font-medium text-primary hover:underline flex items-center gap-1">
         <ArrowRight size={14} /> חזור לדשבורד
       </button>
 
-      <div className="flex items-center gap-2 mb-6">
-        <Activity size={20} className="text-primary" />
-        <h2 className="text-xl font-bold text-foreground">פעילות אחרונה</h2>
-        <span className="text-xs text-muted-foreground">({groupedByStudent.length} תלמידים)</span>
+      <div className="flex items-center gap-3 mb-6">
+        <div className="w-10 h-10 rounded-xl bg-[hsl(210,80%,93%)] flex items-center justify-center">
+          <Activity size={20} className="text-[hsl(210,70%,45%)]" />
+        </div>
+        <div>
+          <h2 className="text-lg font-bold text-foreground">פעילות אחרונה</h2>
+          <p className="text-xs text-muted-foreground">{groupedByStudent.length} תלמידים</p>
+        </div>
       </div>
 
-      <div className="space-y-3">
+      <div className="rounded-2xl border border-border bg-card/60 p-4 shadow-sm">
+        <div className="space-y-3">
         {groupedByStudent.length === 0 ? (
           <div className="card-reset p-8 text-center">
             <p className="text-muted-foreground">אין פעילות עדיין</p>
