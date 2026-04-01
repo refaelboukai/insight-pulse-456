@@ -189,8 +189,79 @@ export default function StaffDashboard() {
         </p>
         <div className="grid grid-cols-3 gap-3">
           {managementItems.map(renderCard)}
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setShowResetDialog(true)}
+            className="relative rounded-2xl bg-card border border-destructive/30 p-5 flex flex-col items-center gap-3 text-center cursor-pointer transition-shadow hover:shadow-md"
+          >
+            <div className="w-12 h-12 rounded-xl bg-destructive/10 flex items-center justify-center">
+              <Trash2 size={22} className="text-destructive" />
+            </div>
+            <span className="text-sm font-semibold text-foreground leading-tight">איפוס נתונים</span>
+          </motion.button>
         </div>
       </div>
+
+      {/* Reset Data Dialog */}
+      {showResetDialog && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50" onClick={() => setShowResetDialog(false)}>
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="bg-card rounded-2xl border border-border shadow-xl p-6 w-[90%] max-w-md mx-auto"
+            dir="rtl"
+            onClick={e => e.stopPropagation()}
+          >
+            <h3 className="text-lg font-bold text-foreground mb-1 flex items-center gap-2">
+              <Trash2 size={20} className="text-destructive" />
+              איפוס נתונים – ויסות רגשי
+            </h3>
+            <p className="text-xs text-muted-foreground mb-4">בחר את סוגי הנתונים לאיפוס. פעולה זו בלתי הפיכה!</p>
+
+            <div className="space-y-2 mb-4">
+              {RESET_CATEGORIES.map(cat => (
+                <label key={cat.key} className="flex items-center gap-3 p-3 rounded-xl border border-border/60 bg-background hover:bg-muted/50 cursor-pointer transition-colors">
+                  <input
+                    type="checkbox"
+                    checked={!!resetSelected[cat.key]}
+                    onChange={() => setResetSelected(prev => ({ ...prev, [cat.key]: !prev[cat.key] }))}
+                    className="w-4 h-4 rounded border-border accent-destructive"
+                  />
+                  <span className="text-sm font-medium text-foreground">{cat.label}</span>
+                </label>
+              ))}
+            </div>
+
+            <div className="mb-4">
+              <label className="text-xs font-medium text-muted-foreground mb-1 block">הזן קוד אישור (9020)</label>
+              <input
+                type="password"
+                value={resetPassword}
+                onChange={e => setResetPassword(e.target.value)}
+                placeholder="קוד אישור"
+                className="w-full rounded-xl border border-border bg-background px-3 py-2 text-sm text-foreground"
+              />
+            </div>
+
+            <div className="flex gap-2">
+              <button
+                onClick={handleResetData}
+                disabled={resetting || resetPassword !== '9020' || !RESET_CATEGORIES.some(c => resetSelected[c.key])}
+                className="flex-1 rounded-xl bg-destructive text-destructive-foreground py-2.5 text-sm font-bold disabled:opacity-40 transition-opacity"
+              >
+                {resetting ? 'מאפס...' : 'אפס נתונים'}
+              </button>
+              <button
+                onClick={() => { setShowResetDialog(false); setResetPassword(''); setResetSelected({}); }}
+                className="flex-1 rounded-xl border border-border bg-background text-foreground py-2.5 text-sm font-medium"
+              >
+                ביטול
+              </button>
+            </div>
+          </motion.div>
+        </div>
+      )}
     </div>
   );
 }
