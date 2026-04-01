@@ -389,7 +389,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
       </div>
       {/* Cognitive Profile for selected student */}
       {cognitiveProfile && selectedStudent !== 'all' && (
-        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-reset p-5 mb-6">
+        <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm mb-6">
           <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
             <Brain size={16} className="text-primary" />
             פרופיל קוגניטיבי – {activeStudentsList.find(s => s.id === selectedStudent)?.name}
@@ -435,7 +435,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         {/* Game Popularity */}
-        <div className="card-reset p-5">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4">פופולריות משחקים</h3>
           {gamePopularity.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
@@ -454,7 +454,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
         </div>
 
         {/* Avg Level Radar */}
-        <div className="card-reset p-5">
+        <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
           <h3 className="text-sm font-bold text-foreground mb-4">ממוצע רמה לפי יכולת</h3>
           {avgLevelByGame.length > 0 ? (
             <ResponsiveContainer width="100%" height={220}>
@@ -475,7 +475,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
         <div className="space-y-4 mb-6">
           {/* Alerts */}
           {cognitiveChanges.alerts.length > 0 && (
-            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="card-reset p-5 border-r-4 border-warning">
+            <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm border-r-4 border-warning">
               <h3 className="text-sm font-bold text-foreground mb-3 flex items-center gap-2">
                 <AlertTriangle size={16} className="text-warning" />
                 שינויים קוגניטיביים שזוהו
@@ -497,7 +497,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
           )}
 
           {/* Weekly Trend Chart */}
-          <div className="card-reset p-5">
+          <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
             <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
               <Activity size={16} className="text-primary" />
               מגמה שבועית – 4 שבועות אחרונים
@@ -519,7 +519,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
 
           {/* Significant Changes Table */}
           {cognitiveChanges.changes.filter(c => c.direction !== 'stable').length > 0 && (
-            <div className="card-reset p-5">
+            <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
               <h3 className="text-sm font-bold text-foreground mb-4 flex items-center gap-2">
                 <Sparkles size={16} className="text-primary" />
                 שינויים בולטים – השוואה שבועית
@@ -574,7 +574,7 @@ export default function BrainTrainingDashboard({ students, onBack, onSelectStude
       )}
 
 
-      <div className="card-reset p-5">
+      <div className="rounded-2xl border border-border/60 bg-card p-5 shadow-sm">
         <h3 className="text-base font-bold text-foreground mb-4 flex items-center gap-2">
           <Users size={18} className="text-primary" />
           התקדמות תלמידים – פירוט אישי
