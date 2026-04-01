@@ -266,6 +266,7 @@ export default function RecentActivityFeed({ students, activities, onBack, onSel
             </motion.div>
           ))
         )}
+        </div>
       </div>
     </div>
   );
